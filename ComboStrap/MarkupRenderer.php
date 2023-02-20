@@ -68,12 +68,17 @@ class MarkupRenderer
         return $this;
     }
 
-    public static function createFromInstructions($instructions, FetcherMarkup $fetcherMarkup): MarkupRenderer
+    public static function createFromMarkupInstructions($instructions, FetcherMarkup $fetcherMarkup): MarkupRenderer
     {
         return (new MarkupRenderer())
             ->setInstructions($instructions)
             ->setRequestedContextPath($fetcherMarkup->getRequestedContextPath())
             ->setRequestedExecutingPath($fetcherMarkup->getExecutingPathOrNull());
+    }
+
+    public static function createFromInstructions($instructions): MarkupRenderer
+    {
+        return (new MarkupRenderer())->setInstructions($instructions);
     }
 
 
@@ -185,7 +190,7 @@ class MarkupRenderer
      * @param WikiPath $path
      * @return $this
      */
-    private function setRequestedContextPath(WikiPath $path): MarkupRenderer
+    public function setRequestedContextPath(WikiPath $path): MarkupRenderer
     {
         $this->requestedContextPath = $path;
         return $this;
@@ -213,7 +218,7 @@ class MarkupRenderer
 
     }
 
-    private function setRequestedExecutingPath(?Path $executingPath): MarkupRenderer
+    public function setRequestedExecutingPath(?Path $executingPath): MarkupRenderer
     {
         $this->executingPath = $executingPath;
         return $this;

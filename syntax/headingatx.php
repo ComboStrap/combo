@@ -2,6 +2,7 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -84,16 +85,16 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
 
-                $attributes = [syntax_plugin_combo_heading::LEVEL => strlen(trim($match))];
+                $attributes = [HeadingTag::LEVEL => strlen(trim($match))];
                 $callStack = CallStack::createFromHandler($handler);
 
                 // Determine the type
-                $context = syntax_plugin_combo_heading::getContext($callStack);
+                $context = HeadingTag::getContext($callStack);
 
                 /**
                  * The context is needed:
                  *   * to add the bootstrap class if it's a card title for instance
-                 *   * and to delete {@link syntax_plugin_combo_heading::TYPE_OUTLINE} call
+                 *   * and to delete {@link HeadingTag::TYPE_OUTLINE} call
                  * in the {@link action_plugin_combo_headingpostprocess} (The rendering is done via Dokuwiki,
                  * see the exit processing for more info on the handling of outline headings)
                  *
@@ -139,9 +140,9 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $context = $data[PluginUtility::CONTEXT];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, syntax_plugin_combo_heading::TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, HeadingTag::HEADING_TAG);
                     $pos = $data[PluginUtility::POSITION];
-                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer, $pos);
+                    HeadingTag::processRenderEnterXhtml($context, $tagAttributes, $renderer, $pos);
                     return true;
 
 
@@ -149,7 +150,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                    $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
+                    $level = $tagAttributes->getValue(HeadingTag::LEVEL);
                     $renderer->doc .= "</h$level>" . DOKU_LF;
                     return true;
 
@@ -159,14 +160,14 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
             /**
              * @var renderer_plugin_combo_analytics $renderer
              */
-            syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
+            HeadingTag::processMetadataAnalytics($data, $renderer);
 
         } else if ($format == "metadata") {
 
             /**
              * @var Doku_Renderer_metadata $renderer
              */
-            syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
+            HeadingTag::processHeadingMetadata($data, $renderer);
 
         }
 

@@ -11,6 +11,7 @@ use ComboStrap\ContainerTag;
 use ComboStrap\FetcherRailBar;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FloatAttribute;
+use ComboStrap\HeadingTag;
 use ComboStrap\IconDownloader;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
@@ -268,7 +269,7 @@ $lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = Plu
 /**
  * Heading
  */
-$lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_heading::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
+$lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = PluginUtility::getDocumentationHyperLink(HeadingTag::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
 
 /**
  * Colors

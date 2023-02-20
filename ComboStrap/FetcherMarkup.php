@@ -531,7 +531,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $this->rendererName = $this->getMime()->getExtension();
                 }
 
-                $markupRenderer = MarkupRenderer::createFromInstructions(
+                $markupRenderer = MarkupRenderer::createFromMarkupInstructions(
                     $instructions,
                     $this
                 )

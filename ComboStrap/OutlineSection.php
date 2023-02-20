@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 
-use syntax_plugin_combo_heading;
 
 class OutlineSection extends TreeNode
 {
@@ -178,7 +177,7 @@ class OutlineSection extends TreeNode
                 $level = $this->headingEnterCall->getInstructionCall()[1][1];
                 break;
             default:
-                $level = $this->headingEnterCall->getAttribute(syntax_plugin_combo_heading::LEVEL);
+                $level = $this->headingEnterCall->getAttribute(HeadingTag::LEVEL);
                 break;
         }
 
@@ -255,9 +254,9 @@ class OutlineSection extends TreeNode
                 $this->headingEnterCall->getInstructionCall()[1][1] = $level;
                 break;
             default:
-                $this->headingEnterCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $level);
+                $this->headingEnterCall->setAttribute(HeadingTag::LEVEL, $level);
                 $headingExitCall = $this->headingCalls[count($this->headingCalls) - 1];
-                $headingExitCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $level);
+                $headingExitCall->setAttribute(HeadingTag::LEVEL, $level);
                 break;
         }
 

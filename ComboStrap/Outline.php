@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 
 use syntax_plugin_combo_header;
-use syntax_plugin_combo_heading;
 use syntax_plugin_combo_headingatx;
 use syntax_plugin_combo_headingwiki;
 use syntax_plugin_combo_media;
@@ -137,15 +136,15 @@ class Outline
             switch ($tagName) {
                 case syntax_plugin_combo_headingatx::TAG:
                     $actualCall->setState(DOKU_LEXER_ENTER);
-                    if ($actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
+                    if ($actualCall->getContext() === HeadingTag::TYPE_OUTLINE) {
                         $shouldWeCreateASection = true;
                     }
                     $this->enterHeading($actualCall);
                     break;
-                case syntax_plugin_combo_heading::TAG:
+                case HeadingTag::HEADING_TAG:
                 case syntax_plugin_combo_headingwiki::TAG:
                     if ($actualCall->getState() == DOKU_LEXER_ENTER
-                        && $actualCall->getContext() === syntax_plugin_combo_heading::TYPE_OUTLINE) {
+                        && $actualCall->getContext() === HeadingTag::TYPE_OUTLINE) {
                         $shouldWeCreateASection = true;
                         $this->enterHeading($actualCall);
                     }
@@ -172,7 +171,7 @@ class Outline
 
                 if ($actualCall->isPluginCall()) {
                     try {
-                        $newSectionLevel = DataType::toInteger($actualCall->getAttribute(syntax_plugin_combo_heading::LEVEL));
+                        $newSectionLevel = DataType::toInteger($actualCall->getAttribute(HeadingTag::LEVEL));
                     } catch (ExceptionBadArgument $e) {
                         LogUtility::internalError("The level was not present on the heading call", self::CANONICAL);
                         $newSectionLevel = $actualSectionLevel;
@@ -209,7 +208,7 @@ class Outline
                             $message = "The child section heading ($actualSectionLevel) has the level ($newSectionLevel) but is parent ({$this->actualSection->getLabel()}) has the level ($actualSectionLevel). The expected level is ($expectedLevel).";
                         }
                         LogUtility::warning($message, self::CANONICAL);
-                        $actualCall->setAttribute(syntax_plugin_combo_heading::LEVEL, $newSectionLevel);
+                        $actualCall->setAttribute(HeadingTag::LEVEL, $newSectionLevel);
                     }
 
                 } else {
@@ -266,7 +265,7 @@ class Outline
             if ($this->actualHeadingParsingState === DOKU_LEXER_ENTER) {
                 switch ($actualCall->getTagName()) {
 
-                    case syntax_plugin_combo_heading::TAG:
+                    case HeadingTag::HEADING_TAG:
                     case syntax_plugin_combo_headingwiki::TAG:
                         if ($actualCall->getState() == DOKU_LEXER_EXIT) {
                             $this->addCallToSection($actualCall);
@@ -544,7 +543,7 @@ EOF;
                     $sectionSequenceId++;
                     $headingCall = $outlineSection->getEnterHeadingCall();
                     if ($headingCall->isPluginCall()) {
-                        $level = DataType::toIntegerOrDefaultIfNull($headingCall->getAttribute(syntax_plugin_combo_heading::LEVEL), 0);
+                        $level = DataType::toIntegerOrDefaultIfNull($headingCall->getAttribute(HeadingTag::LEVEL), 0);
                         if ($level <= Site::getTocMax()) {
                             $headingCall->addClassName("sectionedit$sectionSequenceId");
                         }
@@ -626,7 +625,7 @@ EOF;
         $totalComboCalls[] = Call::createComboCall(
             syntax_plugin_combo_section::TAG,
             DOKU_LEXER_ENTER,
-            array(syntax_plugin_combo_heading::LEVEL => $outlineSection->getLevel())
+            array(HeadingTag::LEVEL => $outlineSection->getLevel())
         );
         $contentCalls = $outlineSection->getContentCalls();
         if ($outlineSection->hasChildren()) {
@@ -776,7 +775,7 @@ EOF;
             $headingCall = $firstChild->getEnterHeadingCall();
             // not dokuwiki header ?
             if($headingCall->isPluginCall()) {
-                $headingCall->setAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $firstChild->getLabel());
+                $headingCall->setAttribute(HeadingTag::HEADING_TEXT_ATTRIBUTE, $firstChild->getLabel());
             }
         }
 

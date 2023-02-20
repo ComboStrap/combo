@@ -2,7 +2,6 @@
 
 namespace ComboStrap;
 
-use syntax_plugin_combo_heading;
 
 /**
  * Bundle page from the same namespace
@@ -71,7 +70,9 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
         $outline = $this->getBundledOutline();
         $instructionsCalls = $outline->toHtmlSectionOutlineCalls();
-        $mainContent = MarkupRenderer::createFromInstructions($instructionsCalls, $this->getStartPath(),$this->getRequestedContextPath())
+        $mainContent = MarkupRenderer::createFromInstructions($instructionsCalls)
+            ->setRequestedExecutingPath($this->getStartPath())
+            ->setRequestedContextPath($this->getRequestedContextPath())
             ->setRequestedMime($this->getMime())
             ->getOutput();
 
@@ -205,17 +206,17 @@ EOF;
         }
         if ($addFirstSection) {
             $enterHeading = Call::createComboCall(
-                \syntax_plugin_combo_heading::TAG,
+                HeadingTag::HEADING_TAG,
                 DOKU_LEXER_ENTER,
-                array(syntax_plugin_combo_heading::LEVEL => 1),
-                syntax_plugin_combo_heading::TYPE_OUTLINE,
+                array(HeadingTag::LEVEL => 1),
+                HeadingTag::TYPE_OUTLINE,
                 null,
                 null,
                 0
             );
             $title = PageTitle::createForMarkup($outline->getMarkupPath())->getValueOrDefault();
             $unmatchedHeading = Call::createComboCall(
-                \syntax_plugin_combo_heading::TAG,
+                HeadingTag::HEADING_TAG,
                 DOKU_LEXER_UNMATCHED,
                 [],
                 null,
@@ -223,9 +224,9 @@ EOF;
                 $title
             );
             $exitHeading = Call::createComboCall(
-                \syntax_plugin_combo_heading::TAG,
+                HeadingTag::HEADING_TAG,
                 DOKU_LEXER_EXIT,
-                array(syntax_plugin_combo_heading::LEVEL => 1)
+                array(HeadingTag::LEVEL => 1)
             );
             $h1Section = OutlineSection::createFromEnterHeadingCall($enterHeading)
                 ->addHeaderCall($unmatchedHeading)

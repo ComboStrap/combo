@@ -3,6 +3,7 @@
 use ComboStrap\EditButton;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotEnabled;
+use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -19,7 +20,7 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "section";
-    const CANONICAL = syntax_plugin_combo_heading::CANONICAL;
+    const CANONICAL = HeadingTag::CANONICAL;
 
     /**
      * Syntax Type.
@@ -136,7 +137,7 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
         switch ($state) {
             case DOKU_LEXER_ENTER :
                 $tag = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                $level = $tag->getComponentAttributeValueAndRemoveIfPresent(syntax_plugin_combo_heading::LEVEL);
+                $level = $tag->getComponentAttributeValueAndRemoveIfPresent(HeadingTag::LEVEL);
                 if ($level !== null) {
                     $tag->addClassName(StyleUtility::addComboStrapSuffix( "outline-section"));
                     $tag->addClassName(StyleUtility::addComboStrapSuffix("outline-level-$level"));

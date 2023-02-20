@@ -12,6 +12,7 @@ use ComboStrap\CallStack;
 use ComboStrap\CardTag;
 use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
+use ComboStrap\HeadingTag;
 use ComboStrap\PrismTags;
 use ComboStrap\ContainerTag;
 use ComboStrap\DateTag;
@@ -41,7 +42,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
     {
         $logicalTag = $data[PluginUtility::TAG];
         $attributes = $data[PluginUtility::ATTRIBUTES];
+        $context = $data[PluginUtility::CONTEXT];
         $state = $data[PluginUtility::STATE];
+        $pos = $data[PluginUtility::POSITION];
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes)->setLogicalTag($logicalTag);
         switch ($format) {
             case "xhtml":
@@ -85,6 +88,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case DropDownTag::TAG:
                                 $renderer->doc .= DropDownTag::renderEnterXhtml($tagAttributes);
+                                return true;
+                            case HeadingTag::LOGICAL_TAG:
+                                HeadingTag::processRenderEnterXhtml($context, $tagAttributes, $renderer, $pos);
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -132,6 +138,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case DropDownTag::TAG:
                                 $renderer->doc .= DropDownTag::renderExitXhtml();
                                 return true;
+                            case HeadingTag::LOGICAL_TAG:
+                                $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                         }
@@ -140,6 +149,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                 break;
             case 'metadata':
                 /** @var Doku_Renderer_metadata $renderer */
+                switch ($logicalTag){
+                    case HeadingTag::LOGICAL_TAG:
+                        HeadingTag::processHeadingMetadata($data, $renderer);
+                        return true;
+                }
                 break;
             case 'xml':
                 /** @var renderer_plugin_combo_xml $renderer */
@@ -162,6 +176,17 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                         }
                 }
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
+                /**
+                 * @var renderer_plugin_combo_analytics $renderer
+                 */
+                switch ($logicalTag) {
+                    default:
+                    case HeadingTag::LOGICAL_TAG:
+                        HeadingTag::processMetadataAnalytics($data, $renderer);
+                        return true;
+                }
+
         }
 
         // unsupported $mode
@@ -243,6 +268,12 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $logicalTag = GridTag::LOGICAL_TAG;
                         $knownTypes = GridTag::KNOWN_TYPES;
                         break;
+                    case HeadingTag::HEADING_TAG:
+                    case HeadingTag::TITLE_TAG:
+                        $logicalTag = HeadingTag::LOGICAL_TAG;
+                        $defaultAttributes[TagAttributes::TYPE_KEY] = HeadingTag::DEFAULT_LEVEL_TITLE_CONTEXT;
+                        $knownTypes = HeadingTag::ALL_TYPES;
+                        break;
                 }
 
                 /**
@@ -263,33 +294,33 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                  * Calculate extra returned key in the table
                  */
                 $returnedArray = [];
-                switch ($markupTag) {
+                switch ($logicalTag) {
                     case BlockquoteTag::TAG:
                         $returnedArray = BlockquoteTag::handleEnter($handler);
                         break;
                     case BoxTag::TAG:
                         BoxTag::handleEnter($tagAttributes);
                         break;
-                    case ButtonTag::MARKUP_SHORT:
-                    case ButtonTag::MARKUP_LONG:
+                    case ButtonTag::LOGICAL_TAG:
                         $returnedArray = ButtonTag::handleEnter($tagAttributes, $handler);
                         break;
                     case CardTag::CARD_TAG:
                         $returnedArray = CardTag::handleEnter($tagAttributes, $handler);
                         break;
-                    case BarTag::BAR_TAG:
-                    case BarTag::SLIDE_TAG:
+                    case BarTag::LOGICAL_TAG:
                         $returnedArray = BarTag::handleEnter($tagAttributes);
                         break;
                     case CarrouselTag::TAG:
                         $returnedArray = CarrouselTag::handleEnter($handler);
                         break;
-                    case GridTag::GRID_TAG:
-                    case GridTag::ROW_TAG:
+                    case GridTag::LOGICAL_TAG:
                         GridTag::processEnter($tagAttributes, $handler, $match);
                         break;
                     case DateTag::TAG:
                         DateTag::handleEnterAndSpecial();
+                        break;
+                    case HeadingTag::LOGICAL_TAG:
+                        $returnedArray = HeadingTag::handleEnter($handler, $tagAttributes);
                         break;
                 }
 
@@ -298,6 +329,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                  */
                 $defaultReturnedArray[PluginUtility::STATE] = $state;
                 $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
+                $defaultReturnedArray[PluginUtility::POSITION] = $pos;
                 $defaultReturnedArray[PluginUtility::ATTRIBUTES] = $tagAttributes->toCallStackArray();
 
                 return array_merge($defaultReturnedArray, $returnedArray);
@@ -362,6 +394,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case DateTag::TAG:
                         DateTag::handleExit($handler);
                         break;
+                    case HeadingTag::TITLE_TAG:
+                    case HeadingTag::HEADING_TAG:
+                        $logicalTag = HeadingTag::LOGICAL_TAG;
+                        $returnedArray = HeadingTag::handleExit($handler);
+                        break;
                 }
                 /**
                  * Common exit attributes
@@ -390,6 +427,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
          *
          * Icon had 'substition' and can still have other mode inside (ie tooltip)
          * We choose substition then
+         *
+         * For heading, title, it was `baseonly`
+         *
          */
         return 'substition';
     }

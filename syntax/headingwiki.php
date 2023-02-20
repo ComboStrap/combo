@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\CallStack;
+use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -53,7 +54,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
     public function getType(): string
     {
-        return syntax_plugin_combo_heading::SYNTAX_TYPE;
+        return HeadingTag::SYNTAX_TYPE;
     }
 
 
@@ -71,7 +72,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      */
     public function getPType(): string
     {
-        return syntax_plugin_combo_heading::SYNTAX_PTYPE;
+        return HeadingTag::SYNTAX_PTYPE;
     }
 
     /**
@@ -128,11 +129,11 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 $level = $this->getLevelFromMatch($match);
 
                 $attributes = TagAttributes::createEmpty(self::TAG)
-                    ->addComponentAttributeValue(syntax_plugin_combo_heading::LEVEL,$level)
+                    ->addComponentAttributeValue(HeadingTag::LEVEL,$level)
                     ->toCallStackArray();
 
                 $callStack = CallStack::createFromHandler($handler);
-                $context = syntax_plugin_combo_heading::getContext($callStack);
+                $context = HeadingTag::getContext($callStack);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -146,24 +147,22 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $callStack = CallStack::createFromHandler($handler);
-
-                $returnedData = syntax_plugin_combo_heading::handleExit($callStack);
-
+                $returnedData = HeadingTag::handleExit($handler);
 
                 /**
                  * Control of the Number of `=` before and after
                  */
+                $callStack = CallStack::createFromHandler($handler);
                 $callStack->moveToEnd();
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $levelFromMatch = $this->getLevelFromMatch($match);
-                $levelFromStartTag = $openingTag->getAttribute(syntax_plugin_combo_heading::LEVEL);
+                $levelFromStartTag = $openingTag->getAttribute(HeadingTag::LEVEL);
                 if ($levelFromMatch != $levelFromStartTag) {
                     $content = "";
                     while ($actualCall = $callStack->next()) {
                         $content .= $actualCall->getCapturedContent();
                     }
-                    LogUtility::msg("The number of `=` character for a wiki heading is not the same before ($levelFromStartTag) and after ($levelFromMatch) the content ($content).", LogUtility::LVL_MSG_INFO, syntax_plugin_combo_heading::CANONICAL);
+                    LogUtility::msg("The number of `=` character for a wiki heading is not the same before ($levelFromStartTag) and after ($levelFromMatch) the content ($content).", LogUtility::LVL_MSG_INFO, HeadingTag::CANONICAL);
                 }
 
                 return $returnedData;
@@ -185,10 +184,10 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
                     case DOKU_LEXER_ENTER:
                         $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, syntax_plugin_combo_heading::TAG);
+                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, HeadingTag::HEADING_TAG);
                         $context = $data[PluginUtility::CONTEXT];
                         $pos = $data[PluginUtility::POSITION];
-                        syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer, $pos);
+                        HeadingTag::processRenderEnterXhtml($context, $tagAttributes, $renderer, $pos);
                         return true;
                     case DOKU_LEXER_UNMATCHED:
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -196,7 +195,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_EXIT:
                         $callStackArray = $data[PluginUtility::ATTRIBUTES];
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-                        $renderer->doc .= syntax_plugin_combo_heading::renderClosingTag($tagAttributes);
+                        $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes);
                         return true;
 
                 }
@@ -206,7 +205,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 /**
                  * @var renderer_plugin_combo_analytics $renderer
                  */
-                syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
+                HeadingTag::processMetadataAnalytics($data, $renderer);
                 return true;
 
             case "metadata":
@@ -214,21 +213,21 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 /**
                  * @var Doku_Renderer_metadata $renderer
                  */
-                syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
+                HeadingTag::processHeadingMetadata($data, $renderer);
                 return true;
 
             case renderer_plugin_combo_xml::FORMAT:
                 $state = $data[PluginUtility::STATE];
                 switch ($state) {
                     case DOKU_LEXER_ENTER:
-                        $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
+                        $level = $data[PluginUtility::ATTRIBUTES][HeadingTag::LEVEL];
                         $renderer->doc .= "<h$level>";
                         return true;
                     case DOKU_LEXER_UNMATCHED:
                         $renderer->doc .= PluginUtility::renderUnmatchedXml($data);
                         return true;
                     case DOKU_LEXER_EXIT:
-                        $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
+                        $level = $data[PluginUtility::ATTRIBUTES][HeadingTag::LEVEL];
                         $renderer->doc .= "</h$level>";
                         return true;
 

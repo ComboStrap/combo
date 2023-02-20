@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\FsWikiUtility;
+use ComboStrap\HeadingTag;
 use ComboStrap\XhtmlUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TableUtility;
@@ -132,7 +133,7 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
          * Rendering is done by the parent
          * And should be the last one
          * Because we delete the heading
-         * with {@link syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes()}
+         * with {@link HeadingTag::reduceToFirstOpeningTagAndReturnAttributes()}
          * in order to be able to add the toc and section
          *
          */

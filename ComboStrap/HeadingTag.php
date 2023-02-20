@@ -1,0 +1,454 @@
+<?php
+
+namespace ComboStrap;
+
+
+use Doku_Renderer_metadata;
+use Doku_Renderer_xhtml;
+use renderer_plugin_combo_analytics;
+use syntax_plugin_combo_webcode;
+
+class HeadingTag
+{
+    public const DISPLAY_TYPES = ["d1", "d2", "d3", "d4", "d5", "d6"];
+    /**
+     * An heading may be printed
+     * as outline and should be in the toc
+     */
+    public const TYPE_OUTLINE = "outline";
+    public const ALL_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "d1", "d2", "d3", "d4", "d5", "d6", "1", "2", "3", "4", "5", "6"];
+    public const CANONICAL = "heading";
+
+    public const SYNTAX_TYPE = 'baseonly';
+    public const SYNTAX_PTYPE = 'block';
+    /**
+     * The section generation:
+     *   - Dokuwiki section (ie div just after the heading)
+     *   - or Combo section (ie section just before the heading)
+     */
+    public const CONF_SECTION_LAYOUT = 'section_layout';
+    public const CONF_SECTION_LAYOUT_VALUES = [HeadingTag::CONF_SECTION_LAYOUT_COMBO, HeadingTag::CONF_SECTION_LAYOUT_DOKUWIKI];
+    public const CONF_SECTION_LAYOUT_DEFAULT = HeadingTag::CONF_SECTION_LAYOUT_COMBO;
+    public const LEVEL = 'level';
+    public const CONF_SECTION_LAYOUT_DOKUWIKI = "dokuwiki";
+    /**
+     *  old tag
+     */
+    public const TITLE_TAG = "title";
+    /**
+     * New tag
+     */
+    public const HEADING_TAG = "heading";
+    public const LOGICAL_TAG = self::HEADING_TAG;
+
+    public const HEADING_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "1", "2", "3", "4", "5", "6"];
+    /**
+     * The default level if not set
+     * Not level 1 because this is the top level heading
+     * Not level 2 because this is the most used level and we can confound with it
+     */
+    public const DEFAULT_LEVEL_TITLE_CONTEXT = "3";
+    public const DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID = "display-bs-4";
+    /**
+     * The attribute that holds only the text of the heading
+     * (used to create the id and the text in the toc)
+     */
+    public const HEADING_TEXT_ATTRIBUTE = "heading_text";
+    public const CONF_SECTION_LAYOUT_COMBO = "combo";
+
+
+    /**
+     * 1 because in test if used without any, this is
+     * the first expected one in a outline
+     */
+    public const DEFAULT_LEVEL_OUTLINE_CONTEXT = "1";
+    public const TYPE_TITLE = "title";
+    public const TAGS = [HeadingTag::HEADING_TAG, HeadingTag::TITLE_TAG];
+    /**
+     * only available in 5
+     */
+    public const DISPLAY_TYPES_ONLY_BS_5 = ["d5", "d6"];
+
+
+    /**
+     * A common function used to handle exit of headings
+     * @param \Doku_Handler $handler
+     * @return array
+     */
+    public static function handleExit(\Doku_Handler $handler): array
+    {
+
+        $callStack = CallStack::createFromHandler($handler);
+
+        /**
+         * Delete the last space if any
+         */
+        $callStack->moveToEnd();
+        $previous = $callStack->previous();
+        if ($previous->getState() == DOKU_LEXER_UNMATCHED) {
+            $previous->setPayload(rtrim($previous->getCapturedContent()));
+        }
+        $callStack->next();
+
+        /**
+         * Get context data
+         */
+        $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+        $openingAttributes = $openingTag->getAttributes(); // for level
+        $context = $openingTag->getContext(); // for sectioning
+
+        return array(
+            PluginUtility::STATE => DOKU_LEXER_EXIT,
+            PluginUtility::ATTRIBUTES => $openingAttributes,
+            PluginUtility::CONTEXT => $context
+        );
+    }
+
+    /**
+     * @param CallStack $callStack
+     * @return string
+     */
+    public static function getContext(CallStack $callStack): string
+    {
+
+        /**
+         * If the heading is inside a component,
+         * it's a title heading, otherwise it's a outline heading
+         *
+         * (Except for {@link syntax_plugin_combo_webcode} that can wrap several outline heading)
+         *
+         * When the parent is empty, a section_open (ie another outline heading)
+         * this is a outline
+         */
+        $parent = $callStack->moveToParent();
+        if ($parent && $parent->getTagName() === syntax_plugin_combo_webcode::TAG) {
+            $parent = $callStack->moveToParent();
+        }
+        if ($parent && $parent->getComponentName() !== "section_open") {
+            $headingType = self::TYPE_TITLE;
+        } else {
+            $headingType = self::TYPE_OUTLINE;
+        }
+
+        switch ($headingType) {
+            case HeadingTag::TYPE_TITLE:
+
+                $context = $parent->getTagName();
+                break;
+
+            case HeadingTag::TYPE_OUTLINE:
+
+                $context = HeadingTag::TYPE_OUTLINE;
+                break;
+
+            default:
+                LogUtility::msg("The heading type ($headingType) is unknown");
+                $context = "";
+                break;
+        }
+        return $context;
+    }
+
+    /**
+     * @param $data
+     * @param Doku_Renderer_metadata $renderer
+     */
+    public static function processHeadingMetadata($data, Doku_Renderer_metadata $renderer)
+    {
+
+        $state = $data[PluginUtility::STATE];
+        if ($state !== DOKU_LEXER_ENTER) {
+            return;
+        }
+        /**
+         * Only outline heading metadata
+         * Not component heading
+         */
+        $context = $data[PluginUtility::CONTEXT];
+        if ($context === self::TYPE_OUTLINE) {
+            $callStackArray = $data[PluginUtility::ATTRIBUTES];
+            $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+            $text = trim($tagAttributes->getValue(HeadingTag::HEADING_TEXT_ATTRIBUTE));
+            $level = $tagAttributes->getValue(HeadingTag::LEVEL);
+            $pos = 0; // mandatory for header but not for metadata, we set 0 to make the code analyser happy
+            $renderer->header($text, $level, $pos);
+        }
+
+
+    }
+
+    public static function processMetadataAnalytics(array $data, renderer_plugin_combo_analytics $renderer)
+    {
+
+        $state = $data[PluginUtility::STATE];
+        if ($state !== DOKU_LEXER_ENTER) {
+            return;
+        }
+        /**
+         * Only outline heading metadata
+         * Not component heading
+         */
+        $context = $data[PluginUtility::CONTEXT];
+        if ($context === self::TYPE_OUTLINE) {
+            $callStackArray = $data[PluginUtility::ATTRIBUTES];
+            $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+            $text = $tagAttributes->getValue(HeadingTag::HEADING_TEXT_ATTRIBUTE);
+            $level = $tagAttributes->getValue(HeadingTag::LEVEL);
+            $renderer->header($text, $level, 0);
+        }
+
+    }
+
+    /**
+     * @param string $context
+     * @param TagAttributes $tagAttributes
+     * @param Doku_Renderer_xhtml $renderer
+     * @param integer $pos
+     */
+    public
+    static function processRenderEnterXhtml(string $context, TagAttributes $tagAttributes, Doku_Renderer_xhtml &$renderer, int $pos)
+    {
+
+        /**
+         * Variable
+         */
+        $type = $tagAttributes->getType();
+
+
+        /**
+         * Level
+         */
+        $level = $tagAttributes->getValueAndRemove(HeadingTag::LEVEL);
+
+
+        /**
+         * Display Heading
+         * https://getbootstrap.com/docs/5.0/content/typography/#display-headings
+         */
+        if (in_array($type, self::DISPLAY_TYPES)) {
+
+            $displayClass = "display-$level";
+
+            if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFourMajorVersion) {
+                /**
+                 * Make Bootstrap display responsive
+                 */
+                PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(HeadingTag::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
+
+                if (in_array($type, self::DISPLAY_TYPES_ONLY_BS_5)) {
+                    $displayClass = "display-4";
+                    LogUtility::msg("Bootstrap 4 does not support the type ($type). Switch to " . PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "bootstrap 5") . " if you want to use it. The display type was set to `d4`", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                }
+
+            }
+            $tagAttributes->addClassName($displayClass);
+
+        }
+
+        /**
+         * Heading class
+         * https://getbootstrap.com/docs/5.0/content/typography/#headings
+         * Works on 4 and 5
+         */
+        if (in_array($type, self::HEADING_TYPES)) {
+            $tagAttributes->addClassName($type);
+        }
+
+        /**
+         * Card title Context class
+         * TODO: should move to card
+         */
+        if (in_array($context, [BlockquoteTag::TAG, CardTag::CARD_TAG])) {
+            $tagAttributes->addClassName("card-title");
+        }
+
+        /**
+         * Add an outline class to be able to style them at once
+         *
+         * The context is by default the parent name or outline.
+         */
+        $snippetManager = SnippetSystem::getFromContext();
+        if ($context === self::TYPE_OUTLINE) {
+
+            $tagAttributes->addClassName(Outline::getOutlineHeadingClass());
+
+            $snippetManager->attachCssInternalStyleSheet(self::TYPE_OUTLINE);
+
+            // numbering
+            try {
+                $enable = ExecutionContext::getActualOrCreateFromEnv()->getConfValue(Outline::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
+                if ($enable) {
+                    $snippet = $snippetManager->attachCssInternalStyleSheet(Outline::OUTLINE_HEADING_NUMBERING);
+                    if (!$snippet->hasInlineContent()) {
+                        $css = Outline::getCssNumberingRulesFor(Outline::OUTLINE_HEADING_NUMBERING);
+                        $snippet->setInlineContent($css);
+                    }
+                }
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::internalError("An error has occurred while trying to add the outline heading numbering stylesheet.", self::CANONICAL, $e);
+            } catch (ExceptionNotEnabled $e) {
+                // ok
+            }
+
+            /**
+             * Anchor on id
+             */
+            $snippetManager = PluginUtility::getSnippetManager();
+            try {
+                $snippetManager->attachRemoteJavascriptLibrary(
+                    Outline::OUTLINE_ANCHOR,
+                    "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
+                    "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs="
+                );
+            } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+                // The url has a file name. this error should not happen
+                LogUtility::internalError("Unable to add anchor. Error:{$e->getMessage()}", Outline::OUTLINE_ANCHOR);
+            }
+            $snippetManager->attachJavascriptFromComponentId(Outline::OUTLINE_ANCHOR);
+
+        }
+        $snippetManager->attachCssInternalStyleSheet(HeadingTag::HEADING_TAG);
+
+        /**
+         * Not a HTML attribute
+         */
+        $tagAttributes->removeComponentAttributeIfPresent(self::HEADING_TEXT_ATTRIBUTE);
+
+        /**
+         * Printing
+         */
+        $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");
+
+    }
+
+    /**
+     * @param TagAttributes $tagAttributes
+     * @return string
+     */
+    public
+    static function renderClosingTag(TagAttributes $tagAttributes): string
+    {
+        $level = $tagAttributes->getValueAndRemove(HeadingTag::LEVEL);
+        if ($level == null) {
+            LogUtility::msg("The level is mandatory when closing a heading", self::CANONICAL);
+        }
+        return "</h$level>" . DOKU_LF;
+    }
+
+    /**
+     * Reduce the end of the input string
+     * to the first opening tag without the ">"
+     * and returns the closing tag
+     *
+     * @param $input
+     * @return array - the heading attributes as a string
+     */
+    public
+    static function reduceToFirstOpeningTagAndReturnAttributes(&$input)
+    {
+        // the variable that will capture the attribute string
+        $headingStartTagString = "";
+        // Set to true when the heading tag has completed
+        $endHeadingParsed = false;
+        // The closing character `>` indicator of the start and end tag
+        // true when found
+        $endTagClosingCharacterParsed = false;
+        $startTagClosingCharacterParsed = false;
+        // We start from the edn
+        $position = strlen($input) - 1;
+        while ($position > 0) {
+            $character = $input[$position];
+
+            if ($character == "<") {
+                if (!$endHeadingParsed) {
+                    // We are at the beginning of the ending tag
+                    $endHeadingParsed = true;
+                } else {
+                    // We have delete all character until the heading start tag
+                    // add the last one and exit
+                    $headingStartTagString = $character . $headingStartTagString;
+                    break;
+                }
+            }
+
+            if ($character == ">") {
+                if (!$endTagClosingCharacterParsed) {
+                    // We are at the beginning of the ending tag
+                    $endTagClosingCharacterParsed = true;
+                } else {
+                    // We have delete all character until the heading start tag
+                    $startTagClosingCharacterParsed = true;
+                }
+            }
+
+            if ($startTagClosingCharacterParsed) {
+                $headingStartTagString = $character . $headingStartTagString;
+            }
+
+
+            // position --
+            $position--;
+
+        }
+        $input = substr($input, 0, $position);
+
+        if (!empty($headingStartTagString)) {
+            return PluginUtility::getTagAttributes($headingStartTagString);
+        } else {
+            LogUtility::msg("The attributes of the heading are empty and this should not be possible");
+            return [];
+        }
+
+
+    }
+
+    public
+    static function handleEnter(\Doku_Handler $handler, TagAttributes $tagAttributes)
+    {
+        /**
+         * Context determination
+         */
+        $callStack = CallStack::createFromHandler($handler);
+        $context = HeadingTag::getContext($callStack);
+
+        /**
+         * Level is mandatory (for the closing tag)
+         */
+        $level = $tagAttributes->getValue(HeadingTag::LEVEL);
+        if ($level == null) {
+
+            /**
+             * Old title type
+             * from 1 to 4 to set the display heading
+             */
+            $type = $tagAttributes->getType();
+            if (is_numeric($type) && $type != 0) {
+                $level = $type;
+                $tagAttributes->setType("d$level");
+            }
+            /**
+             * Still null, check the type
+             */
+            if ($level == null) {
+                if (in_array($type, HeadingTag::ALL_TYPES)) {
+                    $level = substr($type, 1);
+                }
+            }
+            /**
+             * Still null, default level
+             */
+            if ($level == null) {
+                if ($context === HeadingTag::TYPE_OUTLINE) {
+                    $level = HeadingTag::DEFAULT_LEVEL_OUTLINE_CONTEXT;
+                } else {
+                    $level = HeadingTag::DEFAULT_LEVEL_TITLE_CONTEXT;
+                }
+            }
+            /**
+             * Set the level
+             */
+            $tagAttributes->addComponentAttributeValue(HeadingTag::LEVEL, $level);
+        }
+        return [PluginUtility::CONTEXT => $context];
+    }
+}

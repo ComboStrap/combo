@@ -7,6 +7,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FetcherMarkup;
 use ComboStrap\FetcherPage;
+use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\Outline;
@@ -30,7 +31,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     const EDIT_SECTION_OPEN = 'section_open';
     const EDIT_SECTION_CLOSE = 'section_close';
     const HEADING_TAGS = [
-        syntax_plugin_combo_heading::TAG,
+        HeadingTag::HEADING_TAG,
         syntax_plugin_combo_headingatx::TAG,
         syntax_plugin_combo_headingwiki::TAG
     ];

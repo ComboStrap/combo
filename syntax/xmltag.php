@@ -13,6 +13,7 @@ use ComboStrap\CardTag;
 use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\HeadingTag;
+use ComboStrap\NoteTag;
 use ComboStrap\PrismTags;
 use ComboStrap\ContainerTag;
 use ComboStrap\DateTag;
@@ -92,6 +93,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case HeadingTag::LOGICAL_TAG:
                                 HeadingTag::processRenderEnterXhtml($context, $tagAttributes, $renderer, $pos);
                                 return true;
+                            case NoteTag::TAG_INOTE:
+                                $renderer->doc .= NoteTag::renderEnterInlineNote($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -140,6 +144,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case HeadingTag::LOGICAL_TAG:
                                 $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes);
+                                return true;
+                            case NoteTag::TAG_INOTE:
+                                $renderer->doc .= NoteTag::renderClosingInlineNote();
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -196,13 +203,14 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 
     /**
      * Static because it handle inline and block tag
-     * @param $match
-     * @param $state
-     * @param $pos
+     * @param string $match
+     * @param int $state
+     * @param int $pos
      * @param Doku_Handler $handler
+     * @param DokuWiki_Syntax_Plugin $plugin
      * @return array
      */
-    public static function handleStatic($match, $state, $pos, Doku_Handler $handler): array
+    public static function handleStatic(string $match, int $state, int $pos, Doku_Handler $handler, DokuWiki_Syntax_Plugin $plugin): array
     {
         /**
          * Logical Tag Building
@@ -272,6 +280,14 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case HeadingTag::TITLE_TAG:
                         $logicalTag = HeadingTag::LOGICAL_TAG;
                         $knownTypes = HeadingTag::getAllTypes();
+                        break;
+                    case NoteTag::TAG_INOTE:
+                        $defaultConfValue = $plugin->getConf(NoteTag::INOTE_CONF_DEFAULT_ATTRIBUTES_KEY);
+                        $defaultAttributes = PluginUtility::parseAttributes($defaultConfValue);
+                        if (!isset($defaultAttributes[TagAttributes::TYPE_KEY])) {
+                            $defaultAttributes[TagAttributes::TYPE_KEY] = "info";
+                        }
+                        $knownTypes = NoteTag::KNOWN_TYPES;
                         break;
                 }
 
@@ -534,7 +550,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
 
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
-        return self::handleStatic($match, $state, $pos, $handler);
+        return self::handleStatic($match, $state, $pos, $handler, $this);
     }
 
     /**

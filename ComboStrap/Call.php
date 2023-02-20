@@ -83,7 +83,7 @@ class Call
          */
         \syntax_plugin_combo_link::TAG,
         IconTag::TAG,
-        \syntax_plugin_combo_inote::TAG,
+        NoteTag::TAG_INOTE,
         ButtonTag::MARKUP_LONG,
         \syntax_plugin_combo_tooltip::TAG,
         PipelineTag::TAG,

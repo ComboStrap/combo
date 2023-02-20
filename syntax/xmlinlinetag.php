@@ -7,6 +7,7 @@
 use ComboStrap\ButtonTag;
 use ComboStrap\DateTag;
 use ComboStrap\DropDownTag;
+use ComboStrap\NoteTag;
 use ComboStrap\PluginUtility;
 
 
@@ -36,6 +37,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
     {
         $array = ButtonTag::getTags();
         $array[] = DropDownTag::TAG;
+        $array[] = NoteTag::TAG_INOTE;
         return $array;
     }
 
@@ -140,7 +142,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        return syntax_plugin_combo_xmltag::handleStatic($match, $state, $pos, $handler);
+        return syntax_plugin_combo_xmltag::handleStatic($match, $state, $pos, $handler, $this);
 
     }
 

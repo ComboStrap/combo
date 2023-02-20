@@ -8,24 +8,23 @@ use ComboStrap\Bootstrap;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
 use ComboStrap\ContainerTag;
-use ComboStrap\FetcherPage;
 use ComboStrap\FetcherRailBar;
 use ComboStrap\FetcherSvg;
 use ComboStrap\FloatAttribute;
 use ComboStrap\IconDownloader;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
-use ComboStrap\LowQualityPage;
 use ComboStrap\LinkMarkup;
+use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Outline;
 use ComboStrap\PagePublicationDate;
-use ComboStrap\PageTemplate;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
+use ComboStrap\PrismTags;
 use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
 use ComboStrap\RouterBestEndPage;
@@ -106,7 +105,7 @@ $lang[Prism::CONF_BATCH_PROMPT] = PluginUtility::getDocumentationHyperLink("pris
 $lang[Prism::CONF_BASH_PROMPT] = PluginUtility::getDocumentationHyperLink("prism", "Prism Component") . ' - The default prompt for the bash language';
 $lang[Prism::CONF_POWERSHELL_PROMPT] = PluginUtility::getDocumentationHyperLink("prism", "Prism Component") . ' - The default prompt for the powershell language';
 $lang[syntax_plugin_combo_code::CONF_CODE_ENABLE] = PluginUtility::getDocumentationHyperLink("code", "Code Component") . ' - Enable or disable the code component';
-$lang[syntax_plugin_combo_file::CONF_FILE_ENABLE] = PluginUtility::getDocumentationHyperLink("file", "File Component") . ' - Enable or disable the file component';
+$lang[PrismTags::CONF_FILE_ENABLE] = PluginUtility::getDocumentationHyperLink("file", "File Component") . ' - Enable or disable the file component';
 
 
 /**

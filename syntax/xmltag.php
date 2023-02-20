@@ -12,7 +12,7 @@ use ComboStrap\CallStack;
 use ComboStrap\CardTag;
 use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
-use ComboStrap\ConsoleTag;
+use ComboStrap\PrismTags;
 use ComboStrap\ContainerTag;
 use ComboStrap\DateTag;
 use ComboStrap\DropDownTag;
@@ -67,8 +67,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case CarrouselTag::TAG:
                                 $renderer->doc .= CarrouselTag::renderEnterXhtml($tagAttributes, $data);
                                 return true;
-                            case ConsoleTag::TAG:
-                                ConsoleTag::processEnterXhtml($tagAttributes, $plugin, $renderer);
+                            case PrismTags::CONSOLE_TAG:
+                            case PrismTags::FILE_TAG:
+                                PrismTags::processEnterXhtml($tagAttributes, $plugin, $renderer);
                                 return true;
                             case ContainerTag::TAG:
                                 $renderer->doc .= ContainerTag::renderEnterXhtml($tagAttributes);
@@ -115,8 +116,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case CarrouselTag::TAG:
                                 $renderer->doc .= CarrouselTag::renderExitXhtml();
                                 return true;
-                            case ConsoleTag::TAG:
-                                ConsoleTag::processExitXhtml($tagAttributes, $renderer);
+                            case PrismTags::CONSOLE_TAG:
+                            case PrismTags::FILE_TAG:
+                                PrismTags::processExitXhtml($tagAttributes, $renderer);
                                 return true;
                             case ContainerTag::TAG:
                                 $renderer->doc .= ContainerTag::renderExitXhtml();
@@ -226,7 +228,8 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         $logicalTag = BarTag::LOGICAL_TAG;
                         $defaultAttributes[Hero::ATTRIBUTE] = "sm";
                         break;
-                    case ConsoleTag::TAG:
+                    case PrismTags::CONSOLE_TAG:
+                    case PrismTags::FILE_TAG:
                         $hasTwoBooleanAttribute = true;
                         $secondBooleanAttribute = syntax_plugin_combo_code::FILE_PATH_KEY;
                         $allowAnyFirstBooleanAttributesAsType = true;
@@ -344,8 +347,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case CarrouselTag::TAG:
                         $returnedArray = CarrouselTag::handleExit($handler);
                         break;
-                    case ConsoleTag::TAG:
-                        $returnedArray = ConsoleTag::handleExit($handler);
+                    case PrismTags::CONSOLE_TAG:
+                    case PrismTags::FILE_TAG:
+                        $returnedArray = PrismTags::handleExit($handler);
                         break;
                     case PipelineTag::TAG:
                         PipelineTag::processExit($handler);

@@ -1,20 +1,11 @@
 <?php
 
 
-use ComboStrap\CallStack;
-use ComboStrap\ConsoleTag;
 use ComboStrap\DateTag;
-use ComboStrap\Dimension;
-use ComboStrap\Html;
 use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
-use ComboStrap\Prism;
-use ComboStrap\TagAttributes;
+use ComboStrap\PrismTags;
 
-require_once(__DIR__ . '/../ComboStrap/StringUtility.php');
-require_once(__DIR__ . '/../ComboStrap/Prism.php');
-
-if (!defined('DOKU_INC')) die();
 
 /**
  *
@@ -23,6 +14,15 @@ if (!defined('DOKU_INC')) die();
 class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
 {
 
+
+    private function getTags(): array
+    {
+        $tags = self::TAGS;
+        if ($this->getConf(PrismTags::CONF_FILE_ENABLE)) {
+            $tags[] = PrismTags::FILE_TAG;
+        }
+        return $tags;
+    }
 
     function getType(): string
     {
@@ -70,7 +70,7 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
     }
 
     const TAGS = [
-        ConsoleTag::TAG,
+        PrismTags::CONSOLE_TAG,
         PipelineTag::TAG, // protected inline deprecated
         DateTag::TAG // protected inline deprecated
     ];
@@ -78,7 +78,8 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        foreach (self::TAGS as $tag) {
+
+        foreach ($this->getTags() as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
@@ -89,10 +90,9 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
 
     function postConnect()
     {
-        foreach (self::TAGS as $tag) {
+        foreach ($this->getTags() as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
-
     }
 
     /**

@@ -3,16 +3,26 @@
 namespace ComboStrap;
 
 /**
+ * The tag that wraps code or output
+ *
  * Should output the `samp` tag ?
  * https://getbootstrap.com/docs/5.0/content/reboot/#sample-output
  */
-class ConsoleTag
+class PrismTags
 {
 
     /**
      * The tag of the ui component
      */
-    public const TAG = "console";
+    public const CONSOLE_TAG = "console";
+    /**
+     * Enable or disable the file component
+     */
+    public const CONF_FILE_ENABLE = 'fileEnable';
+    /**
+     * The tag of the ui component
+     */
+    public const FILE_TAG = "file";
 
     public static function handleExit(\Doku_Handler $handler): array
     {

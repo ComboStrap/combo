@@ -215,7 +215,7 @@ abstract class IFetcherAbs implements IFetcher
         throw new ExceptionNotSupported("No cache support by default, overwrite this function to give access to your cache path");
     }
 
-    public function feedCache(): IFetcher
+    public function process(): IFetcher
     {
         throw new ExceptionNotSupported("The fetcher ($this) does not support to feed the cache, overwrite this function to give access to this functionality");
     }

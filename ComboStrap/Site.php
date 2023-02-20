@@ -165,11 +165,13 @@ class Site
 
     /**
      * @param int $int
+     * @deprecated
      */
     public static function setTocMinHeading(int $int)
     {
-        global $conf;
-        $conf['tocminheads'] = $int;
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->setTocMinHeading($int);
     }
 
     public static function getTopTocLevel(): int

@@ -424,7 +424,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @return $this
      */
-    public function feedCache(): FetcherMarkup
+    public function process(): FetcherMarkup
     {
 
         $this->hasExecuted = true;
@@ -905,7 +905,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return $this;
         }
 
-        $this->feedCache();
+        $this->process();
         return $this;
 
     }

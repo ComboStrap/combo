@@ -805,7 +805,7 @@ class FetcherSvg extends IFetcherLocalImage
      * @throws ExceptionBadState
      * @throws ExceptionNotFound|ExceptionCompile
      */
-    public function process()
+    public function process(): FetcherSvg
     {
 
         if ($this->processed) {
@@ -865,18 +865,9 @@ class FetcherSvg extends IFetcherLocalImage
          * can be an icon or an illustrative image
          *
          */
-        try {
-            $mediaWidth = $this->getIntrinsicWidth();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("The media width of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return $this->getXmlDocument()->toXml();
-        }
-        try {
-            $mediaHeight = $this->getIntrinsicHeight();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("The media height of ($this) returns the following error ({$e->getMessage()}). The processing was stopped");
-            return $this->getXmlDocument()->toXml();
-        }
+        $mediaWidth = $this->getIntrinsicWidth();
+        $mediaHeight = $this->getIntrinsicHeight();
+
         if (
             $mediaWidth == $mediaHeight
             && $mediaWidth < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
@@ -1014,7 +1005,7 @@ class FetcherSvg extends IFetcherLocalImage
                         $widthInPixel = ConditionalLength::createFromString($requestedWidth)->toPixelNumber();
                     } catch (ExceptionCompile $e) {
                         LogUtility::msg("The requested width $requestedWidth could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
-                        return $this->getXmlDocument()->toXml();
+                        return $this;
                     }
                     $extraAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
 

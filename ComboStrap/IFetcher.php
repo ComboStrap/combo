@@ -119,7 +119,7 @@ interface IFetcher
      * @return IFetcher - process and feed the cache
      * @throws ExceptionNotSupported - if the cache is not supported
      */
-    public function feedCache(): IFetcher;
+    public function process(): IFetcher;
 
     /**
      * @return string - a label to the resource returned (used in img tag, ...)

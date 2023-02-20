@@ -316,5 +316,10 @@ class SiteConfig
         }
     }
 
+    public function setTocMinHeading(int $int): SiteConfig
+    {
+        return $this->setConf('tocminheads',$int, self::GLOBAL_SCOPE);
+    }
+
 
 }

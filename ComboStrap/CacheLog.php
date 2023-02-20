@@ -58,7 +58,7 @@ class CacheLog
     public static function renderCacheAndLog(IFetcherSource $fetcher, string $event, string $message)
     {
         try {
-            $fetcher->feedCache();
+            $fetcher->process();
         } catch (ExceptionNotSupported $e) {
             return;
         }

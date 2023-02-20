@@ -3,6 +3,7 @@
 
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
+use ComboStrap\FragmentTag;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\CallStack;
@@ -38,15 +39,6 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
  */
 class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
 {
-
-
-    const TAG = "fragment";
-    const TAG_OLD = "template";
-
-
-    const CANONICAL = syntax_plugin_combo_variable::CANONICAL;
-    const CALLSTACK = "callstack";
-    const TAGS = [self::TAG, self::TAG_OLD];
 
 
     /**
@@ -108,7 +100,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        foreach (self::TAGS as $tag) {
+        foreach (FragmentTag::TAGS as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
@@ -119,7 +111,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-        foreach (self::TAGS as $tag) {
+        foreach (FragmentTag::TAGS as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
@@ -148,7 +140,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                if (substr($match, 1, strlen(self::TAG_OLD)) === self::TAG_OLD) {
+                if (substr($match, 1, strlen(FragmentTag::TEMPLATE_TAG)) === FragmentTag::TEMPLATE_TAG) {
                     LogUtility::warning("The template component has been deprecated and replaced by the fragment component. Why ? Because a whole page is now a template. ", syntax_plugin_combo_iterator::CANONICAL);
                 }
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
@@ -160,7 +152,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_UNMATCHED :
 
                 // We should not ever come here but a user does not not known that
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(FragmentTag::FRAGMENT_TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -191,7 +183,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    self::CALLSTACK => $templateStack
+                    FragmentTag::CALLSTACK => $templateStack
                 );
 
 
@@ -206,6 +198,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer $renderer
      * @param array $data - what the function handle() return'ed
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
+     * @throws ExceptionNotFound
      * @see DokuWiki_Syntax_Plugin::render()
      *
      *
@@ -220,7 +213,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     return true;
                 case DOKU_LEXER_EXIT:
-                    $templateStack = $data[self::CALLSTACK];
+                    $templateStack = $data[FragmentTag::CALLSTACK];
                     if ($templateStack === null) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Template instructions should not be null");
                         return false;
@@ -232,7 +225,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
                     } catch (ExceptionCompile $e) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml("Error while rendering the instruction. Error: {$e->getMessage()}");
                     }
-                    LogUtility::warning("There is no need anymore to use a template to render variable", self::CANONICAL);
+                    LogUtility::warning("There is no need anymore to use a template to render variable", FragmentTag::CANONICAL);
                     return true;
             }
         }

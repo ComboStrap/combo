@@ -56,7 +56,7 @@ class BlockquoteTag
         $parent = $callStack->moveToParent();
         if ($parent !== false) {
             $context = $parent->getTagName();
-            if ($context === syntax_plugin_combo_fragment::TAG) {
+            if ($context === FragmentTag::FRAGMENT_TAG) {
                 $parent = $callStack->moveToParent();
                 if ($parent !== false) {
                     $context = $parent->getTagName();

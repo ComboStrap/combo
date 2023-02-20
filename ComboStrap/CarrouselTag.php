@@ -71,15 +71,15 @@ class CarrouselTag
         $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
         $actualCall = $callStack->moveToFirstChildTag();
         if ($actualCall !== false) {
-            if ($actualCall->getTagName() === syntax_plugin_combo_fragment::TAG) {
+            if ($actualCall->getTagName() === FragmentTag::FRAGMENT_TAG) {
                 $templateEndCall = $callStack->moveToNextCorrespondingExitTag();
-                $templateCallStackInstructions = $templateEndCall->getPluginData(syntax_plugin_combo_fragment::CALLSTACK);
+                $templateCallStackInstructions = $templateEndCall->getPluginData(FragmentTag::CALLSTACK);
                 if ($templateCallStackInstructions !== null) {
                     $templateCallStack = CallStack::createFromInstructions($templateCallStackInstructions);
                     // Lazy load
                     $templateCallStack->moveToStart();
                     CarrouselTag::setLazyLoadToHtmlOnImageTagUntilTheEndOfTheStack($templateCallStack);
-                    $templateEndCall->setPluginData(syntax_plugin_combo_fragment::CALLSTACK, $templateCallStack->getStack());
+                    $templateEndCall->setPluginData(FragmentTag::CALLSTACK, $templateCallStack->getStack());
                 }
             } else {
                 // Lazy load

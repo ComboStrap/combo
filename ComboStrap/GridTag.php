@@ -260,13 +260,13 @@ class GridTag
 
         $templateEndTag = null; // the template end tag that has the instructions
         $callStackTemplate = null; // the instructions in callstack form to modify the children
-        if ($firstChildTag->getTagName() === syntax_plugin_combo_fragment::TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
+        if ($firstChildTag->getTagName() === FragmentTag::FRAGMENT_TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
             $templateEndTag = $callStack->next();
-            if ($templateEndTag->getTagName() !== syntax_plugin_combo_fragment::TAG || $templateEndTag->getState() !== DOKU_LEXER_EXIT) {
+            if ($templateEndTag->getTagName() !== FragmentTag::FRAGMENT_TAG || $templateEndTag->getState() !== DOKU_LEXER_EXIT) {
                 LogUtility::error("Error internal: We were unable to find the closing template tag.", GridTag::CANONICAL);
                 return $returnArray;
             }
-            $templateInstructions = $templateEndTag->getPluginData(syntax_plugin_combo_fragment::CALLSTACK);
+            $templateInstructions = $templateEndTag->getPluginData(FragmentTag::CALLSTACK);
             $callStackTemplate = CallStack::createFromInstructions($templateInstructions);
             $callStackTemplate->moveToStart();
             $firstChildTag = $callStackTemplate->moveToFirstChildTag();
@@ -440,7 +440,7 @@ class GridTag
          * Template child callstack ?
          */
         if ($templateEndTag !== null && $callStackTemplate !== null) {
-            $templateEndTag->setPluginData(syntax_plugin_combo_fragment::CALLSTACK, $callStackTemplate->getStack());
+            $templateEndTag->setPluginData(FragmentTag::CALLSTACK, $callStackTemplate->getStack());
         }
 
         return array(

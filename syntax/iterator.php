@@ -3,6 +3,7 @@
 
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
+use ComboStrap\FragmentTag;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
 use ComboStrap\Call;
@@ -223,10 +224,10 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                     break;
                             }
                             continue 2;
-                        case syntax_plugin_combo_fragment::TAG:
+                        case FragmentTag::FRAGMENT_TAG:
                             $parsingState = "after";
                             if ($actualCall->getState() === DOKU_LEXER_EXIT) {
-                                $templateStack = $actualCall->getPluginData(syntax_plugin_combo_fragment::CALLSTACK);
+                                $templateStack = $actualCall->getPluginData(FragmentTag::CALLSTACK);
                                 /**
                                  * Do we have markup where the instructions should be generated at once
                                  * and not line by line

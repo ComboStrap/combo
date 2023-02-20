@@ -176,29 +176,8 @@ class CallStack
     static function createFromMarkup($markup): CallStack
     {
 
-        global $ID;
-        $keep = $ID;
-        global $ACT;
-        $keepAct = $ACT;
-        if ($ID === null && PluginUtility::isTest()) {
-            $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
-        }
-        try {
-            $ACT = "show";
-            $modes = p_get_parsermodes();
-            $handler = new Doku_Handler();
-            $parser = new Parser($handler);
-
-            //add modes to parser
-            foreach ($modes as $mode) {
-                $parser->addMode($mode['mode'], $mode['obj']);
-            }
-            $parser->parse($markup);
-            return self::createFromHandler($handler);
-        } finally {
-            $ID = $keep;
-            $ACT = $keepAct;
-        }
+        $handler = \ComboStrap\Parser::dokuWikiParse($markup);
+        return self::createFromHandler($handler);
 
     }
 

@@ -42,11 +42,12 @@ class PipelineUtility
         $processedExpression = $expression;
         $firstQuoteChar = strpos($processedExpression, '"');
         $firstPipeChar = strpos($processedExpression, '|');
-        if ($firstQuoteChar < $firstPipeChar) {
+        if ($firstQuoteChar < $firstPipeChar || $firstPipeChar === false) {
 
             /**
-             * Example: a literal with a pipe
-             * "World | Do" | replace ("world,"you")
+             * Example:
+             * a literal: "$title"
+             * a literal with a pipe: "World | Do" | replace ("world,"you")
              */
             $processedExpression = substr($processedExpression, $firstQuoteChar + 1);
             $secondQuoteChar = strpos($processedExpression, '"');
@@ -54,7 +55,11 @@ class PipelineUtility
 
             $processedExpression = substr($processedExpression, $secondQuoteChar + 1);
             $secondPipeChar = strpos($processedExpression, '|');
-            $commandChain = substr($processedExpression, $secondPipeChar + 1);
+            if ($secondPipeChar !== false) {
+                $commandChain = substr($processedExpression, $secondPipeChar + 1);
+            } else {
+                $commandChain = $processedExpression;
+            }
 
         } else {
 

@@ -89,6 +89,13 @@ abstract class PathAbs implements Path
                 throw new ExceptionCast($e);
             }
         }
+        if ($this instanceof MarkupPath) {
+            try {
+                return $this->getPathObject()->toWikiPath();
+            } catch (ExceptionCast $e) {
+                throw new ExceptionCast($e);
+            }
+        }
         throw new ExceptionCast("This is not a wiki path or local path");
     }
 

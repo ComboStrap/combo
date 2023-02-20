@@ -24,7 +24,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
     protected Mime $mime;
     protected bool $deleteRootBlockElement = false;
     protected string $rendererName = MarkupRenderer::DEFAULT_RENDERER;
-    protected bool $isDocument;
+    protected bool $isDoc;
 
 
     public function __construct()
@@ -152,8 +152,8 @@ class FetcherMarkupBuilder extends FetcherMarkup
         $newFetcherMarkup->mime = $this->mime;
         $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
         $newFetcherMarkup->rendererName = $this->rendererName;
-        if(isset($this->isDocument)){
-            $newFetcherMarkup->isDocument = $this->isDocument;
+        if (isset($this->isDoc)) {
+            $newFetcherMarkup->isDoc = $this->isDoc;
         }
 
         /**
@@ -248,12 +248,12 @@ class FetcherMarkupBuilder extends FetcherMarkup
     }
 
     /**
-     * @param bool $true
+     * @param bool $isDoc - if the markup is a document (Outline will be added, ...)
      * @return $this
      */
-    public function setIsDocument(bool $true): FetcherMarkupBuilder
+    public function setIsDocument(bool $isDoc): FetcherMarkupBuilder
     {
-        $this->isDocument = $true;
+        $this->isDoc = $isDoc;
         return $this;
     }
 

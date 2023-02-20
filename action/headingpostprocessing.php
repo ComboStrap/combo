@@ -4,6 +4,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\FetcherMarkup;
 use ComboStrap\FetcherPage;
 use ComboStrap\LogUtility;
@@ -12,6 +13,7 @@ use ComboStrap\Outline;
 use ComboStrap\MarkupPath;
 use ComboStrap\PageLayoutName;
 use ComboStrap\Site;
+use ComboStrap\StringUtility;
 use ComboStrap\Toc;
 use ComboStrap\WikiPath;
 use ComboStrap\ExecutionContext;
@@ -86,14 +88,13 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         /**
          * Fragment execution
          */
-        if ($fetcherMarkup->isFragment()) {
-
+        if ($fetcherMarkup->isFragment() === true) {
             $callStack = CallStack::createFromHandler($handler);
             // no outline or edit button for dynamic rendering
             // but closing of atx heading
             $handler->calls = Outline::createFromCallStack($callStack)
-                ->toDynamicInstructionCalls();
-
+                ->toFragmentInstructionCalls();
+            return;
         }
 
         /**
@@ -103,10 +104,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $callStack = CallStack::createFromHandler($handler);
         try {
             $executingPath = $fetcherMarkup->getRequestedExecutingPath();
+            $executingMarkupPath = MarkupPath::createPageFromPathObject($executingPath);
         } catch (ExceptionNotFound $e) {
-            $executingPath = null;
+            $executingMarkupPath = null;
         }
-        $outline = Outline::createFromCallStack($callStack, $executingPath);
+        $outline = Outline::createFromCallStack($callStack, $executingMarkupPath);
         if (!$executionContext->getConfig()->isTemplatingEnabled()) {
             $handler->calls = $outline->toDefaultTemplateInstructionCalls();
         } else {

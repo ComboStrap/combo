@@ -731,13 +731,15 @@ EOF;
     }
 
     /**
-     * Dynamic Rendering does not have any section/edit button
+     * Fragment Rendering
+     * * does not have any section/edit button
+     * * no outline or edit button for dynamic rendering but closing of atx heading
      *
      * The outline processing ({@link Outline::buildOutline()} just close the atx heading
      *
      * @return array
      */
-    public function toDynamicInstructionCalls(): array
+    public function toFragmentInstructionCalls(): array
     {
         $totalInstructionCalls = [];
         $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls) {

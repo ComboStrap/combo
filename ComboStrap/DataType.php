@@ -158,7 +158,24 @@ class DataType
         if (is_object($value)) {
             return $value->__toString();
         }
+        if (is_bool($value)) {
+            return var_export($value, true);
+        }
         return strval($value);
+    }
+
+    public static function getType($value): string
+    {
+        if (is_string($value)) {
+            return "string";
+        }
+        if (is_array($value)) {
+            return "array";
+        }
+        if (is_object($value)) {
+            return "object (" . get_class($value) . ")";
+        }
+        return gettype($value);
     }
 
 

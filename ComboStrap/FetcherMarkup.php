@@ -58,7 +58,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @var bool threat the markup as a document (not as a fragment)
      */
-    protected bool $isDocument;
+    protected bool $isDoc;
 
 
     protected Mime $mime;
@@ -510,6 +510,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     ->setRequestedContextPath($this->getRequestedContextPath())
                     ->setRequestedExecutingPath($this->getExecutingPathOrNull())
                     ->setRequestedMimeToInstructions()
+                    ->setIsDocument($this->isDocument())
                     ->setDeleteRootBlockElement($this->deleteRootBlockElement)
                     ->build();
 
@@ -942,8 +943,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function isDocument(): bool
     {
 
-        if (isset($this->isDocument)) {
-            return $this->isDocument;
+        if (isset($this->isDoc)) {
+            Console::log("IsDocument Value: (".DataType::toString($this->isDoc)."), DataType: (".DataType::getType($this->isDoc).")");
+            return $this->isDoc;
         }
 
         if ($this->isStringExecution()) {
@@ -993,7 +995,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function isFragment(): bool
     {
-        return !$this->isDocument();
+        return $this->isDocument() === false;
     }
 
 

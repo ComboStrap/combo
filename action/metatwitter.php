@@ -2,6 +2,7 @@
 
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
@@ -133,8 +134,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Twitter site
          */
-        $siteTwitterHandle = Site::getConfValue(self::CONF_TWITTER_SITE_HANDLE);
-        $siteTwitterId = Site::getConfValue(self::CONF_TWITTER_SITE_ID);
+        $siteTwitterHandle = SiteConfig::getConfValue(self::CONF_TWITTER_SITE_HANDLE);
+        $siteTwitterId = SiteConfig::getConfValue(self::CONF_TWITTER_SITE_ID);
         if (!empty($siteTwitterHandle)) {
             $twitterMeta[self::META_SITE] = $siteTwitterHandle;
 
@@ -152,7 +153,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
          */
         $twitterImages = $page->getImagesForTheFollowingUsages([PageImageUsage::TWITTER, PageImageUsage::ALL, PageImageUsage::SOCIAL]);
         if (empty($twitterImages)) {
-            $defaultImageIdConf = Site::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
+            $defaultImageIdConf = SiteConfig::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {
                 $dokuPath = WikiPath::createMediaPathFromId($defaultImageIdConf);
                 if (FileSystems::exists($dokuPath)) {
@@ -196,7 +197,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
          * https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
          */
         // don't track
-        $twitterMeta[self::META_DNT] = Site::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK, self::CONF_ON);
+        $twitterMeta[self::META_DNT] = SiteConfig::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK, self::CONF_ON);
         // turn off csp warning
         $twitterMeta[self::META_WIDGET_CSP] = "on";
 
@@ -204,8 +205,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
          * Embedded Tweet Theme
          */
 
-        $twitterMeta[self::META_WIDGETS_THEME] = Site::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_THEME);
-        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = Site::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER);
+        $twitterMeta[self::META_WIDGETS_THEME] = SiteConfig::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_THEME);
+        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = SiteConfig::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER);
 
         /**
          * Add the properties

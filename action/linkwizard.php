@@ -11,6 +11,7 @@ use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
 use ComboStrap\Search;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\Sqlite;
 use ComboStrap\StringUtility;
 
@@ -71,7 +72,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
             return;
         }
 
-        if (Site::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD, 1) === 0) {
+        if (SiteConfig::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD, 1) === 0) {
             return;
         }
 

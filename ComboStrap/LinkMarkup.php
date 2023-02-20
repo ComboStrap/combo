@@ -258,7 +258,7 @@ EOF;
                     /**
                      * Preview tooltip
                      */
-                    $previewConfig = Site::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
+                    $previewConfig = SiteConfig::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
                     $preview = $outputAttributes->hasComponentAttributeAndRemove(self::PREVIEW_ATTRIBUTE);
                     if ($preview || $previewConfig === 1) {
                         Tooltip::addToolTipSnippetIfNeeded();
@@ -541,7 +541,7 @@ EOF;
     public
     static function getHtmlClassInternalLink(): string
     {
-        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = SiteConfig::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "wikilink1";
         } else {
@@ -552,7 +552,7 @@ EOF;
     public
     static function getHtmlClassEmailLink(): string
     {
-        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = SiteConfig::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "mail";
         } else {
@@ -563,7 +563,7 @@ EOF;
     public
     static function getHtmlClassInterWikiLink(): string
     {
-        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = SiteConfig::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "interwiki";
         } else {
@@ -574,7 +574,7 @@ EOF;
     public
     static function getHtmlClassExternalLink(): string
     {
-        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = SiteConfig::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "urlextern";
         } else {
@@ -586,7 +586,7 @@ EOF;
     public
     static function getHtmlClassNotExist(): string
     {
-        $oldClassName = Site::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        $oldClassName = SiteConfig::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "wikilink2";
         } else {

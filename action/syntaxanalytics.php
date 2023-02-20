@@ -5,6 +5,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 
 class action_plugin_combo_syntaxanalytics extends DokuWiki_Action_Plugin
 {
@@ -34,7 +35,7 @@ class action_plugin_combo_syntaxanalytics extends DokuWiki_Action_Plugin
      */
     function _extract_plugin_info(&$event, $param)
     {
-        $enable = Site::getConfValue(self::CONF_SYNTAX_ANALYTICS_ENABLE, true);
+        $enable = SiteConfig::getConfValue(self::CONF_SYNTAX_ANALYTICS_ENABLE, true);
 
         if($enable) {
             /**

@@ -10,6 +10,7 @@ use ComboStrap\LinkMarkup;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\TagAttributes;
 
 
@@ -220,7 +221,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
             $max = $tagAttributes->getValue(self::MAX_LINKS_CONF);
             if ($max === NULL) {
-                $max = Site::getConfValue(self::MAX_LINKS_CONF, self::MAX_LINKS_CONF_DEFAULT);
+                $max = SiteConfig::getConfValue(self::MAX_LINKS_CONF, self::MAX_LINKS_CONF_DEFAULT);
             }
             $renderer->doc .= self::getHtmlRelated($page, $max);
             return true;

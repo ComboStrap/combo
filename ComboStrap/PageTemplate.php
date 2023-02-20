@@ -229,7 +229,7 @@ class PageTemplate
                  */
                 if ($domElement->hasAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
                     $domElement->removeAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
-                    $container = Site::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+                    $container = SiteConfig::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
                     $domElement->addClass(ContainerTag::getClassName($container));
                 }
 

@@ -111,7 +111,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
         $outline = Outline::createFromCallStack($callStack, $executingMarkupPath);
         if (!$executionContext->getConfig()->isTemplatingEnabled()) {
-            $handler->calls = $outline->toDefaultTemplateInstructionCalls();
+            $handler->calls = $outline->toDokuWikiTemplateInstructionCalls();
         } else {
             $handler->calls = $outline->toHtmlSectionOutlineCalls();
         }

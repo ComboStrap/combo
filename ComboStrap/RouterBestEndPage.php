@@ -51,7 +51,7 @@ class RouterBestEndPage
 
         $return = array();
 
-        $minimalScoreForARedirect = Site::getConfValue(self::CONF_MINIMAL_SCORE_FOR_REDIRECT, self::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT);
+        $minimalScoreForARedirect = SiteConfig::getConfValue(self::CONF_MINIMAL_SCORE_FOR_REDIRECT, self::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT);
 
         list($bestPage, $bestScore) = self::getBestEndPageId($missingPage);
         if ($bestPage != null) {

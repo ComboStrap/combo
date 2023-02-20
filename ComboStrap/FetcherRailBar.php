@@ -324,7 +324,7 @@ EOF;
     {
 
         if (
-            Site::getConfValue(self::CONF_PRIVATE_RAIL_BAR, 0) === 1
+            SiteConfig::getConfValue(self::CONF_PRIVATE_RAIL_BAR, 0) === 1
             && !Identity::isLoggedIn()
         ) {
             return false;
@@ -335,7 +335,7 @@ EOF;
 
     private function getBreakPointConfiguration(): Breakpoint
     {
-        $name = Site::getConfValue(self::CONF_BREAKPOINT_RAIL_BAR, Breakpoint::BREAKPOINT_LARGE_NAME);
+        $name = SiteConfig::getConfValue(self::CONF_BREAKPOINT_RAIL_BAR, Breakpoint::BREAKPOINT_LARGE_NAME);
         return Breakpoint::createFromLongName($name);
     }
 

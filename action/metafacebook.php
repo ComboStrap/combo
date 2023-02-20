@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\SiteConfig;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
@@ -138,7 +139,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
-            $defaultFacebookImage = Site::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
+            $defaultFacebookImage = SiteConfig::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
                 $dokuPath = WikiPath::createMediaPathFromId($defaultFacebookImage);
                 if (FileSystems::exists($dokuPath)) {

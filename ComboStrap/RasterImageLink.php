@@ -137,7 +137,7 @@ class RasterImageLink extends ImageLink
          *
          */
         // The image margin applied
-        $imageMargin = Site::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN, "20px");
+        $imageMargin = SiteConfig::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN, "20px");
 
 
         /**
@@ -349,7 +349,7 @@ class RasterImageLink extends ImageLink
         try {
             return $this->mediaMarkup->isLazy();
         } catch (ExceptionNotFound $e) {
-            return Site::getConfValue(RasterImageLink::CONF_LAZY_LOADING_ENABLE, RasterImageLink::CONF_LAZY_LOADING_ENABLE_DEFAULT);
+            return SiteConfig::getConfValue(RasterImageLink::CONF_LAZY_LOADING_ENABLE, RasterImageLink::CONF_LAZY_LOADING_ENABLE_DEFAULT);
         }
     }
 
@@ -389,7 +389,7 @@ class RasterImageLink extends ImageLink
         /**
          * Support for retina means no DPI correction
          */
-        $retinaEnabled = Site::getConfValue(self::CONF_RETINA_SUPPORT_ENABLED, 0);
+        $retinaEnabled = SiteConfig::getConfValue(self::CONF_RETINA_SUPPORT_ENABLED, 0);
         return !$retinaEnabled;
     }
 

@@ -106,7 +106,7 @@ class IdentityFormsHelper
          */
         $logoHtmlImgTag = "";
         if (
-            Site::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
+            SiteConfig::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
             &&
             $includeLogo === true
         ) {

@@ -9,6 +9,7 @@ use ComboStrap\HttpResponseStatus;
 use ComboStrap\IFetcherAbs;
 use ComboStrap\FetcherCache;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadState;
@@ -187,7 +188,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
         if ($drive === null) {
 
-            $confValue = Site::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1);
+            $confValue = SiteConfig::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1);
             if (!$confValue) {
                 return;
             }

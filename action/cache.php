@@ -22,6 +22,7 @@ use ComboStrap\PageTitle;
 use ComboStrap\PluginUtility;
 use ComboStrap\ResourceName;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use dokuwiki\Cache\CacheRenderer;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -161,7 +162,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      */
     public static function deleteVaryHeader(): void
     {
-        if (Site::getConfValue(action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED, 1)) {
+        if (SiteConfig::getConfValue(action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED, 1)) {
             Http::removeHeaderIfPresent("Vary");
         }
     }

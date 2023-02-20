@@ -193,7 +193,7 @@ class FetcherSvg extends IFetcherLocalImage
         try {
             return $this->getRequestedOptimization();
         } catch (ExceptionNotFound $e) {
-            return Site::getConfValue(FetcherSvg::CONF_SVG_OPTIMIZATION_ENABLE, 1);
+            return SiteConfig::getConfValue(FetcherSvg::CONF_SVG_OPTIMIZATION_ENABLE, 1);
         }
 
     }
@@ -240,7 +240,7 @@ class FetcherSvg extends IFetcherLocalImage
              * Delete Editor namespace
              * https://github.com/svg/svgo/blob/master/plugins/removeEditorsNSData.js
              */
-            $confNamespaceToKeeps = Site::getConfValue(FetcherSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP);
+            $confNamespaceToKeeps = SiteConfig::getConfValue(FetcherSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP);
             $namespaceToKeep = StringUtility::explodeAndTrim($confNamespaceToKeeps, ",");
             foreach ($this->getXmlDocument()->getNamespaces() as $namespacePrefix => $namespaceUri) {
                 if (
@@ -293,7 +293,7 @@ class FetcherSvg extends IFetcherLocalImage
             /**
              * Suppress the attributes (by default id, style and class, data-name)
              */
-            $attributeConfToDelete = Site::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class, data-name");
+            $attributeConfToDelete = SiteConfig::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style, class, data-name");
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
 
@@ -374,7 +374,7 @@ class FetcherSvg extends IFetcherLocalImage
              * The illustration uses inline fill to color and styled
              * For instance, all un-draw: https://undraw.co/illustrations
              */
-            $elementsToDeleteConf = Site::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style, title, desc");
+            $elementsToDeleteConf = SiteConfig::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style, title, desc");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
             foreach ($elementsToDelete as $elementToDelete) {
                 if ($elementToDelete === "style" && $this->getRequestedPreserveStyleOrDefault()) {
@@ -386,7 +386,7 @@ class FetcherSvg extends IFetcherLocalImage
             // Delete If Empty
             //   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs
             //   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/metadata
-            $elementsToDeleteIfEmptyConf = Site::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY, "metadata, defs, g");
+            $elementsToDeleteIfEmptyConf = SiteConfig::getConfValue(FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY, "metadata, defs, g");
             $elementsToDeleteIfEmpty = StringUtility::explodeAndTrim($elementsToDeleteIfEmptyConf);
             foreach ($elementsToDeleteIfEmpty as $elementToDeleteIfEmpty) {
                 $elementNodeList = $this->getXmlDocument()->xpath("//*[local-name()='$elementToDeleteIfEmpty']");
@@ -984,7 +984,7 @@ class FetcherSvg extends IFetcherLocalImage
                      * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
                      * Default is xMidYMid meet
                      */
-                    $aspectRatio = Site::getConfValue(FetcherSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
+                    $aspectRatio = SiteConfig::getConfValue(FetcherSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
                 }
                 $documentElement->setAttribute("preserveAspectRatio", $aspectRatio);
 

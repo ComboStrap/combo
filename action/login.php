@@ -12,6 +12,7 @@ use ComboStrap\IdentityFormsHelper;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use dokuwiki\Form\Form;
 use dokuwiki\Form\InputElement;
 use dokuwiki\Menu\Item\Login;
@@ -152,7 +153,7 @@ EOF;
          *
          * The difference is on the type of object that we got in the event
          */
-        if (Site::getConfValue(self::CONF_ENABLE_LOGIN_FORM, 1)) {
+        if (SiteConfig::getConfValue(self::CONF_ENABLE_LOGIN_FORM, 1)) {
 
             /**
              * Old event: Deprecated object passed by the event but still in use

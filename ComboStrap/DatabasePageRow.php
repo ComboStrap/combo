@@ -960,7 +960,7 @@ class DatabasePageRow
                          * Check if the error may come from the auto-canonical
                          * (Never ever save generated data)
                          */
-                        $canonicalLastNamesCount = Site::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
+                        $canonicalLastNamesCount = SiteConfig::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
                         if ($canonicalLastNamesCount > 0) {
                             $this->page->unsetMetadata(Canonical::PROPERTY_NAME);
                             $duplicatePage->unsetMetadata(Canonical::PROPERTY_NAME);

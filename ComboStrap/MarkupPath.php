@@ -1730,7 +1730,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getDefaultQualityMonitoring(): bool
     {
-        if (Site::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
+        if (SiteConfig::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
             return false;
         } else {
             return true;

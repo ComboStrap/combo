@@ -162,19 +162,6 @@ class Site
         }
     }
 
-    /**
-     *
-     */
-    public static function getTocMax(): int
-    {
-        global $conf;
-        try {
-            return DataType::toInteger($conf['maxseclevel']);
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::internalError("Unable to the the maxseclevel as integer. Error: {$e->getMessage()}", Toc::CANONICAL);
-            return 0;
-        }
-    }
 
     /**
      * @param int $int
@@ -290,20 +277,6 @@ class Site
         } else {
             $conf[$key] = $value;
         }
-    }
-
-    public static function getConfValue($confName, $defaultValue = null, ?string $namespace = PluginUtility::PLUGIN_BASE_NAME)
-    {
-        global $conf;
-        if ($namespace !== null) {
-            $value = $conf['plugin'][$namespace][$confName];
-        } else {
-            $value = $conf[$confName];
-        }
-        if ($value === null || trim($value) === "") {
-            return $defaultValue;
-        }
-        return $value;
     }
 
     public static function getLangObject(): Lang
@@ -449,7 +422,7 @@ class Site
      */
     public static function getLanguageRegion(): string
     {
-        $region = self::getConfValue(Region::CONF_SITE_LANGUAGE_REGION);
+        $region = SiteConfig::getConfValue(Region::CONF_SITE_LANGUAGE_REGION);
         if (!empty($region)) {
             return $region;
         } else {
@@ -626,7 +599,7 @@ class Site
 
     public static function isLowQualityProtectionEnable(): bool
     {
-        return self::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
+        return SiteConfig::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
     }
 
     public static function getIndexPageName()
@@ -750,9 +723,8 @@ class Site
 
     public static function isBrandingColorInheritanceEnabled(): bool
     {
-        return self::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
+        return SiteConfig::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
     }
-
 
 
     public static function enableBrandingColorInheritance()
@@ -879,7 +851,7 @@ class Site
 
     public static function getPrimaryColorValue($default = null)
     {
-        $value = self::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
+        $value = SiteConfig::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
         if ($value !== null && trim($value) !== "") {
             return $value;
         }
@@ -895,7 +867,7 @@ class Site
 
     public static function getSecondaryColorValue($default = null)
     {
-        $value = self::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
+        $value = SiteConfig::getConfValue(ColorRgb::SECONDARY_COLOR_CONF, $default);
         if ($value === null || trim($value) === "") {
             return null;
         }
@@ -1013,15 +985,14 @@ class Site
         return $logosImages[0];
     }
 
-    public static function isSectionEditingEnabled(): bool
-    {
-        return self::getTocMax() > 0;
-    }
 
+    /**
+     * @return void
+     * @deprecated
+     */
     public static function enableSectionEditing()
     {
-        global $conf;
-        $conf['maxseclevel'] = 999;
+        ExecutionContext::getActualOrCreateFromEnv()->getConfig()->setEnableSectionEditing();
     }
 
     public static function setDefaultTemplate()
@@ -1098,7 +1069,7 @@ class Site
 
     public static function getDefaultMediaLinking(): string
     {
-        return self::getConfValue(MediaMarkup::CONF_DEFAULT_LINKING, MediaMarkup::LINKING_DIRECT_VALUE);
+        return SiteConfig::getConfValue(MediaMarkup::CONF_DEFAULT_LINKING, MediaMarkup::LINKING_DIRECT_VALUE);
     }
 
     public static function shouldEndpointUrlBeAbsolute(): bool

@@ -48,7 +48,7 @@ class PageUrlType extends MetadataText
 
         $confCanonicalType = $this->getName();
         $confDefaultValue = $this->getDefaultValue();
-        $urlType = Site::getConfValue($confCanonicalType, $confDefaultValue);
+        $urlType = SiteConfig::getConfValue($confCanonicalType, $confDefaultValue);
         if (!in_array($urlType, self::CONF_VALUES)) {
             LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, PageUrlPath::PROPERTY_NAME);
             return $confDefaultValue;

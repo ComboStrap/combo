@@ -42,8 +42,8 @@ class PagePublicationDate extends MetadataDateTime
     public static function getLatePublicationProtectionMode()
     {
 
-        if (Site::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
-            return Site::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE);
+        if (SiteConfig::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
+            return SiteConfig::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE);
         } else {
             return false;
         }
@@ -52,7 +52,7 @@ class PagePublicationDate extends MetadataDateTime
 
     public static function isLatePublicationProtectionEnabled()
     {
-        return Site::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true);
+        return SiteConfig::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true);
     }
 
     public static function createFromPage(MarkupPath $page)

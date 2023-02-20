@@ -35,7 +35,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
      */
     public static function isTemplateSystemEnabled(): bool
     {
-        $confValue = Site::getConfValue(SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM, SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
+        $confValue = SiteConfig::getConfValue(SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM, SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
         return $confValue === 1;
     }
 

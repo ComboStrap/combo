@@ -330,7 +330,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     private function isPublicStaticPage(): bool
     {
-        return Site::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1 && !Identity::isLoggedIn();
+        return SiteConfig::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1 && !Identity::isLoggedIn();
     }
 
     private function getRequestedLayoutOrDefault(): string

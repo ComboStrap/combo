@@ -62,6 +62,20 @@ class SiteConfig
         $this->executionContext = $executionContext;
     }
 
+    public static function getConfValue($confName, $defaultValue = null, ?string $namespace = PluginUtility::PLUGIN_BASE_NAME)
+    {
+        global $conf;
+        if ($namespace !== null) {
+            $value = $conf['plugin'][$namespace][$confName];
+        } else {
+            $value = $conf[$confName];
+        }
+        if ($value === null || trim($value) === "") {
+            return $defaultValue;
+        }
+        return $value;
+    }
+
 
     /**
      * @param string $key
@@ -81,7 +95,7 @@ class SiteConfig
          */
         $globalKey = "$pluginNamespace:$key";
         if (!isset($this->configurationValuesToRestore[$globalKey])) {
-            $oldValue = Site::getConfValue($key, $value, $pluginNamespace);
+            $oldValue = self::getConfValue($key, $value, $pluginNamespace);
             $this->configurationValuesToRestore[$globalKey] = $oldValue;
         }
         Site::setConf($key, $value, $pluginNamespace);
@@ -113,9 +127,9 @@ class SiteConfig
         return $this->getBooleanValue(self::CONF_ENABLE_TEMPLATE_SYSTEM, self::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
     }
 
-    public function getValue(string $key, ?string $default = null)
+    public function getValue(string $key, ?string $default = null, ?string $scope = PluginUtility::PLUGIN_BASE_NAME)
     {
-        return Site::getConfValue($key, $default);
+        return self::getConfValue($key, $default, $scope);
     }
 
     /**
@@ -279,6 +293,27 @@ class SiteConfig
     public function setUseHeadingAsTitle(): SiteConfig
     {
         return $this->setConf('useheading',1,self::GLOBAL_SCOPE);
+    }
+
+    public function setEnableSectionEditing(): SiteConfig
+    {
+        return $this->setConf('maxseclevel', 999, self::GLOBAL_SCOPE);
+    }
+
+    public function isSectionEditingEnabled(): bool
+    {
+        return $this->getTocMaxLevel() > 0;
+    }
+
+    public function getTocMaxLevel(): int
+    {
+        $value = $this->getValue('maxseclevel', null,self::GLOBAL_SCOPE);
+        try {
+            return DataType::toInteger($value);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("Unable to the the maxseclevel as integer. Error: {$e->getMessage()}", Toc::CANONICAL);
+            return 0;
+        }
     }
 
 

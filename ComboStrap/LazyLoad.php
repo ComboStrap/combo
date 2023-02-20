@@ -161,7 +161,7 @@ class LazyLoad
      */
     public static function getPlaceholderColor()
     {
-        return Site::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
+        return SiteConfig::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
     }
 
     /**

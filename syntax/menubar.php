@@ -9,6 +9,7 @@ use ComboStrap\ContainerTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -164,7 +165,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
                 $default[self::BREAKPOINT_ATTRIBUTE] = "lg";
                 $default[self::THEME_ATTRIBUTE] = "light";
                 $default[self::POSITION] = "normal";
-                $default[ContainerTag::CONTAINER_ATTRIBUTE] = Site::getConfValue(
+                $default[ContainerTag::CONTAINER_ATTRIBUTE] = SiteConfig::getConfValue(
                     ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF,
                     ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE
                 );

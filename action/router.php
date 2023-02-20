@@ -10,6 +10,7 @@ use ComboStrap\FetcherPage;
 use ComboStrap\FileSystem;
 use ComboStrap\FileSystems;
 use ComboStrap\HttpResponseStatus;
+use ComboStrap\SiteConfig;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
@@ -222,7 +223,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        if (Site::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
+        if (SiteConfig::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
 
             /**
              * This will call the function {@link action_plugin_combo_router::_router()}

@@ -152,7 +152,7 @@ class Outline
                 case "header":
                     // Should happen only on outline section
                     // we take over inside a component
-                    if(!$actualCall->isPluginCall()) {
+                    if (!$actualCall->isPluginCall()) {
                         /**
                          * ie not {@link syntax_plugin_combo_header}
                          * but the dokuwiki header (ie heading)
@@ -284,7 +284,7 @@ class Outline
                         break;
 
                     case "header":
-                        if (Site::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
+                        if (SiteConfig::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
                             LogUtility::msg("The combo heading wiki is enabled, we should not see `header` calls in the call stack");
                         }
                         break;
@@ -404,19 +404,19 @@ class Outline
     public static function getCssNumberingRulesFor(string $type): string
     {
 
-        $enable = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
+        $enable = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
         if (!$enable) {
             throw new ExceptionNotEnabled();
         }
 
-        $level2CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
-        $level3CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
-        $level4CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
-        $level5CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5, "decimal");
-        $level6CounterStyle = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6, "decimal");
-        $counterSeparator = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR, ".");
-        $prefix = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
-        $suffix = Site::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
+        $level2CounterStyle = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
+        $level3CounterStyle = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
+        $level4CounterStyle = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
+        $level5CounterStyle = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5, "decimal");
+        $level6CounterStyle = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6, "decimal");
+        $counterSeparator = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR, ".");
+        $prefix = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
+        $suffix = SiteConfig::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
 
         switch ($type) {
 
@@ -506,7 +506,7 @@ EOF;
         return $totalInstructionCalls;
     }
 
-    public function toDefaultTemplateInstructionCalls(): array
+    public function toDokuWikiTemplateInstructionCalls(): array
     {
         $totalInstructionCalls = [];
         $sectionSequenceId = 0;
@@ -534,7 +534,7 @@ EOF;
                     [$wikiSectionClose],
                 );
 
-                if (Site::isSectionEditingEnabled()) {
+                if ($this->isSectionEditingEnabled()) {
 
                     /**
                      * Adding sectionedit class to be conform
@@ -544,7 +544,7 @@ EOF;
                     $headingCall = $outlineSection->getEnterHeadingCall();
                     if ($headingCall->isPluginCall()) {
                         $level = DataType::toIntegerOrDefaultIfNull($headingCall->getAttribute(HeadingTag::LEVEL), 0);
-                        if ($level <= Site::getTocMax()) {
+                        if ($level <= $this->getTocMaxLevel()) {
                             $headingCall->addClassName("sectionedit$sectionSequenceId");
                         }
                     }
@@ -712,7 +712,7 @@ EOF;
             // no button for the root (ie the page)
             return;
         }
-        if (Site::isSectionEditingEnabled()) {
+        if ($this->isSectionEditingEnabled()) {
 
             $editButton = EditButton::create("Edit the section `{$outlineSection->getLabel()}`")
                 ->setStartPosition($outlineSection->getStartPosition())
@@ -774,7 +774,7 @@ EOF;
         if ($firstChild->getLevel() === 1) {
             $headingCall = $firstChild->getEnterHeadingCall();
             // not dokuwiki header ?
-            if($headingCall->isPluginCall()) {
+            if ($headingCall->isPluginCall()) {
                 $headingCall->setAttribute(HeadingTag::HEADING_TEXT_ATTRIBUTE, $firstChild->getLabel());
             }
         }
@@ -835,6 +835,18 @@ EOF;
     function getMarkupPath(): MarkupPath
     {
         return $this->markupPath;
+    }
+
+    private function isSectionEditingEnabled(): bool
+    {
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()->isSectionEditingEnabled();
+    }
+
+    private function getTocMaxLevel(): int
+    {
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()->getTocMaxLevel();
     }
 
 

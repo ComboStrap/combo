@@ -5,6 +5,7 @@ use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\TagAttributes;
 
 
@@ -40,7 +41,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      */
     public static function isEnabled(): int
     {
-        return Site::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
+        return SiteConfig::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
     }
 
     public function getSort(): int
@@ -262,7 +263,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
         if (!(in_array($mode, ['base', 'header', 'table']))) {
             return true;
         } else {
-            return Site::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
+            return SiteConfig::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
         }
 
 

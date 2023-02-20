@@ -182,7 +182,7 @@ class CardTag
         /**
          * File Section editing
          */
-        if (Site::getConfValue(CardTag::CONF_ENABLE_SECTION_EDITING, 1)) {
+        if (SiteConfig::getConfValue(CardTag::CONF_ENABLE_SECTION_EDITING, 1)) {
             /**
              * +1 to go at the line ?
              */

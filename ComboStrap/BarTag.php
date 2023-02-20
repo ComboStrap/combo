@@ -80,7 +80,7 @@ class BarTag
             }
         }
 
-        if (Site::getConfValue(BarTag::CONF_ENABLE_BAR_EDITING, 1)) {
+        if (SiteConfig::getConfValue(BarTag::CONF_ENABLE_BAR_EDITING, 1)) {
 
             $position = $openingTag->getFirstMatchedCharacterPosition();
             try {
@@ -118,7 +118,7 @@ class BarTag
         $htmlTag = $data[BarTag::HTML_TAG_ATTRIBUTES];
         $html = $attributes->toHtmlEnterTag($htmlTag);
 
-        $layoutContainer = Site::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+        $layoutContainer = SiteConfig::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
         $containerClass = ContainerTag::getClassName($layoutContainer);
 
         $html .= "<div class=\"$barTag-body position-relative $containerClass\">";

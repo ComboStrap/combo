@@ -765,7 +765,7 @@ class Snippet implements JsonSerializable
     private
     function getMaxInlineSize()
     {
-        return Site::getConfValue(SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT, 2) * 1024;
+        return SiteConfig::getConfValue(SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT, 2) * 1024;
     }
 
     /**

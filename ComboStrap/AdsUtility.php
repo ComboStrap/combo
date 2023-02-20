@@ -81,7 +81,7 @@ class AdsUtility
 
     public static function showPlaceHolder()
     {
-        return Site::getConfValue(self::CONF_IN_ARTICLE_PLACEHOLDER);
+        return SiteConfig::getConfValue(self::CONF_IN_ARTICLE_PLACEHOLDER);
     }
 
     /**

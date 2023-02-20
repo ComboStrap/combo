@@ -2,6 +2,7 @@
 
 use ComboStrap\Canonical;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\MarkupPath;
@@ -62,7 +63,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
             return;
         }
 
-        if (isset($JSINFO["ga"]) && Site::getConfValue(self::CONF_CANONICAL_FOR_GA_PAGE_VIEW, 1)) {
+        if (isset($JSINFO["ga"]) && SiteConfig::getConfValue(self::CONF_CANONICAL_FOR_GA_PAGE_VIEW, 1)) {
             //
             // The path portion of a URL. This value should start with a slash (/) character.
             // As said here

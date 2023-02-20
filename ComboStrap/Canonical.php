@@ -67,7 +67,7 @@ class Canonical extends MetadataWikiPath
          * The last part of the id as canonical
          */
         // How many last parts are taken into account in the canonical processing (2 by default)
-        $canonicalLastNamesCount = Site::getConfValue(self::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
+        $canonicalLastNamesCount = SiteConfig::getConfValue(self::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
         if ($canonicalLastNamesCount <= 0) {
             throw new ExceptionNotFound("Default canonical value is not enabled");
         }

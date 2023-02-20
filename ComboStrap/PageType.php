@@ -76,7 +76,7 @@ class PageType extends MetadataText
         } else if ($resource->isIndexPage()) {
             return PageType::HOME_TYPE;
         } else {
-            $defaultPageTypeConf = Site::getConfValue(PageType::CONF_DEFAULT_PAGE_TYPE, PageType::CONF_DEFAULT_PAGE_TYPE_DEFAULT);
+            $defaultPageTypeConf = SiteConfig::getConfValue(PageType::CONF_DEFAULT_PAGE_TYPE, PageType::CONF_DEFAULT_PAGE_TYPE_DEFAULT);
             if (!empty($defaultPageTypeConf)) {
                 return $defaultPageTypeConf;
             } else {

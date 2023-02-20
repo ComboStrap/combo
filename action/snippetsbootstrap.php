@@ -12,6 +12,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PageTemplate;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 
 if (!defined('DOKU_INC')) die();
 
@@ -75,7 +76,7 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
 
                     // preload all CSS is an heresy as it creates a FOUC (Flash of non-styled element)
                     // but we know it only now and this is fun to experience for the user
-                    $cssPreloadConf = Site::getConfValue(self::CONF_PRELOAD_CSS, self::CONF_PRELOAD_CSS_DEFAULT);
+                    $cssPreloadConf = SiteConfig::getConfValue(self::CONF_PRELOAD_CSS, self::CONF_PRELOAD_CSS_DEFAULT);
                     $newLinkData = array();
                     foreach ($headTagsAsArray as $linkData) {
                         switch ($linkData['rel']) {
@@ -120,7 +121,7 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
                      * Do we delete the dokuwiki javascript ?
                      */
                     $scriptToDeletes = [];
-                    $disableBackend = Site::getConfValue(self::CONF_DISABLE_BACKEND_JAVASCRIPT, 0);
+                    $disableBackend = SiteConfig::getConfValue(self::CONF_DISABLE_BACKEND_JAVASCRIPT, 0);
                     if (!Identity::isLoggedIn() && $disableBackend) {
                         $scriptToDeletes = [
                             //'JSINFO', Don't delete Jsinfo !! It contains metadata information (that is used to get context)
@@ -205,7 +206,7 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
                      * At the top of the queue
                      */
                     if ($bootStrapMajorVersion === "4") {
-                        $useJqueryDoku = Site::getConfValue(self::CONF_JQUERY_DOKU, self::CONF_JQUERY_DOKU_DEFAULT);
+                        $useJqueryDoku = SiteConfig::getConfValue(self::CONF_JQUERY_DOKU, self::CONF_JQUERY_DOKU_DEFAULT);
                         if (
                             !Identity::isLoggedIn()
                             && $useJqueryDoku === 0

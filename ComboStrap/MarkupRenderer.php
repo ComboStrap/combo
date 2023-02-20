@@ -77,9 +77,6 @@ class MarkupRenderer
     }
 
 
-
-
-
     public function setRequestedMimeToInstruction(): MarkupRenderer
     {
         try {
@@ -128,12 +125,12 @@ class MarkupRenderer
                  */
                 if (!isset($this->instructionsSource)) {
                     $executingPath = null;
-                    if (isset($this->executingPath)){
+                    if (isset($this->executingPath)) {
                         $executingPath = $this->executingPath;
                     }
 
                     $contextPath = null;
-                    if (isset($this->requestedContextPath)){
+                    if (isset($this->requestedContextPath)) {
                         $contextPath = $this->requestedContextPath;
                     }
 
@@ -146,7 +143,7 @@ class MarkupRenderer
                  * Render
                  */
                 $result = p_render($this->getRendererNameOrDefault(), $this->instructionsSource, $info);
-                $this->cacheAfterRendering = $info['cache'];
+                $this->cacheAfterRendering = $info['cache'] !== null ? $info['cache'] : false;
                 return $result;
 
         }

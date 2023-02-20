@@ -24,6 +24,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
     protected Mime $mime;
     protected bool $deleteRootBlockElement = false;
     protected string $rendererName = MarkupRenderer::DEFAULT_RENDERER;
+    protected bool $isDocument;
 
 
     public function __construct()
@@ -151,6 +152,9 @@ class FetcherMarkupBuilder extends FetcherMarkup
         $newFetcherMarkup->mime = $this->mime;
         $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
         $newFetcherMarkup->rendererName = $this->rendererName;
+        if(isset($this->isDocument)){
+            $newFetcherMarkup->isDocument = $this->isDocument;
+        }
 
         /**
          * We build the cache dependencies even if there is no source markup path (therefore no cache store)
@@ -240,6 +244,16 @@ class FetcherMarkupBuilder extends FetcherMarkup
         } catch (ExceptionCast|ExceptionNotFound $e) {
             $this->requestedContextPath = $executionContext->getConfig()->getDefaultContextPath();
         }
+        return $this;
+    }
+
+    /**
+     * @param bool $true
+     * @return $this
+     */
+    public function setIsDocument(bool $true): FetcherMarkupBuilder
+    {
+        $this->isDocument = $true;
         return $this;
     }
 

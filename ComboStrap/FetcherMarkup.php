@@ -55,6 +55,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     private CacheParser $snippetCache;
 
+    /**
+     * @var bool threat the markup as a document (not as a fragment)
+     */
+    protected bool $isDocument;
+
 
     protected Mime $mime;
     private bool $cacheAfterRendering = true;
@@ -458,7 +463,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 try {
                     $instructions = $markupRenderer->getOutput();
                     $this->fetchArray = $instructions;
-                    $contentToStore = serialize($instructions);
+                    $this->fetchString = serialize($instructions);
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
@@ -470,7 +475,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                  * We don't manage/take over the storage
                  * for now. We use the dokwuiki standard function
                  */
-                $contentToStore = null;
+                $this->fetchString = null;
                 $executionContext->setExecutingMarkupHandler($this);
                 try {
                     /**
@@ -498,7 +503,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $executionContext->closeExecutingMarkupHandler();
                 }
                 break;
-            case MarkupRenderer::XHTML_RENDERER:
+            default:
+
                 $instructionsFetcher = FetcherMarkup::getBuilder()
                     ->setRequestedMarkupString($markup)
                     ->setRequestedContextPath($this->getRequestedContextPath())
@@ -520,48 +526,41 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     self::deleteRootPElementsIfRequested($instructions);
                 }
 
+                if (!isset($this->rendererName)) {
+                    $this->rendererName = $this->getMime()->getExtension();
+                }
+
                 $markupRenderer = MarkupRenderer::createFromInstructions(
                     $instructions,
                     $this
                 )
-                    ->setRequestedMime($this->getMime());
+                    ->setRequestedMime($this->getMime())
+                    ->setRendererName($this->rendererName);
                 $executionContext->setExecutingMarkupHandler($this);
                 try {
-                    $contentToStore = $markupRenderer->getOutput();
+                    $output = $markupRenderer->getOutput();
+                    if ($output === null && !empty($instructions)) {
+                        LogUtility::error("The renderer ({$this->rendererName}) seems to have been not found");
+                    }
+                    if (is_array($output)) {
+                        $this->fetchArray = $output;
+                    } else {
+                        $this->fetchString = $output;
+                    }
                 } catch (\Exception $e) {
                     throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
                 } finally {
                     $executionContext->closeExecutingMarkupHandler();
                 }
                 $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
-
-
-                break;
-            default:
-                /**
-                 * Other such as Analytics
-                 */
-                $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
-                    ->setRequestedMime($this->getMime())
-                    ->setRendererName($this->rendererName);
-                $executionContext->setExecutingMarkupHandler($this);
-                try {
-                    $output = $markupRenderer->getOutput();
-                    $contentToStore = $output;
-                } catch (\Exception $e) {
-                    throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-                } finally {
-                    $executionContext->closeExecutingMarkupHandler();
-                }
                 break;
         }
 
         /**
-         * Snippets and dependencies if XHTML
-         * (after processing as they can be added at runtime)
+         * Storage of snippets or dependencies
+         * (none if this is not a path execution)
          */
         if ($this->isStringExecution()) {
-            $this->fetchString = $contentToStore;
             return $this;
         }
 
@@ -599,7 +598,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * set during processing
          */
         $this->cacheDependencies->rerouteCacheDestination($this->contentCache);
-        io_saveFile($this->contentCache->cache, $contentToStore);
+        io_saveFile($this->contentCache->cache, $this->fetchString);
 
         return $this;
     }
@@ -933,23 +932,36 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     }
 
-    public function isFragmentExecution(): bool
+
+    /**
+     * @return bool - a document
+     *
+     * A document will get an {@link Outline} processing
+     * while a {@link self::isFragment() fragment} will not.
+     */
+    public function isDocument(): bool
     {
+
+        if (isset($this->isDocument)) {
+            return $this->isDocument;
+        }
+
         if ($this->isStringExecution()) {
             return false;
         }
         try {
             /**
-             * If the context and executing path are not
-             * the same, this is a fragment run
+             * If the context and executing path are:
+             * * the same, this is a document run
+             * * not the same, this is a fragment run
              */
-            if ($this->getRequestedContextPath()->getWikiId() !== $this->getRequestedExecutingPath()->toWikiPath()->getWikiId()) {
+            if ($this->getRequestedContextPath()->getWikiId() === $this->getRequestedExecutingPath()->toWikiPath()->getWikiId()) {
                 return true;
             }
         } catch (ExceptionNotFound|ExceptionCast $e) {
             // no executing path, not a wiki path
         }
-        return false;
+        return true;
     }
 
     public function getSnippetManager(): SnippetSystem
@@ -977,6 +989,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $allSnippets = array_merge($globalSnippets, $this->localSnippets);
         return SnippetSystem::toHtmlFromSnippetArray($allSnippets);
 
+    }
+
+    public function isFragment(): bool
+    {
+        return !$this->isDocument();
     }
 
 

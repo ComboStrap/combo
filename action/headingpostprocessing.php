@@ -77,51 +77,47 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $handler = $event->data;
 
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-        $act = $executionContext->getExecutingAction();
-        switch ($act) {
-            case FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME:
-                $callStack = CallStack::createFromHandler($handler);
-                // no outline or edit button for dynamic rendering
-                // but closing of atx heading
-                $handler->calls = Outline::createFromCallStack($callStack)
-                    ->toDynamicInstructionCalls();
-                return;
-            case ExecutionContext::SHOW_ACTION:
-            case action_plugin_combo_docustom::getDoParameterValue(FetcherPage::NAME):
-                try {
-                    $runningMarkup = WikiPath::createExecutingMarkupWikiPath();
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::error("The executing markup wiki path was not found", self::CANONICAL, $e);
-                    return;
-                }
-                try {
-                    $requestedPath = WikiPath::createRequestedPagePathFromRequest();
-                } catch (ExceptionNotFound $e) {
-                    // admin
-                    return;
-                }
-                if ($requestedPath->toQualifiedId() !== $runningMarkup->toQualifiedId()) {
-                    return;
-                }
-                $callStack = CallStack::createFromHandler($handler);
-                $requestedMarkup = MarkupPath::createPageFromPathObject($requestedPath);
-                $outline = Outline::createFromCallStack($callStack, $requestedMarkup);
-                if (!$executionContext->getConfig()->isTemplatingEnabled()) {
-                    $handler->calls = $outline->toDefaultTemplateInstructionCalls();
-                } else {
-                    $handler->calls = $outline->toHtmlSectionOutlineCalls();
-                }
-                /**
-                 * Not needed for combo,
-                 * but we still update the global TOC Dokuwiki variables
-                 */
-                global $TOC;
-                $TOC = $outline->toTocDokuwikiFormat();
-                return;
-            default:
-                // No outline if not show (ie admin, edit, ...)
+        try {
+            $fetcherMarkup = $executionContext->getExecutingMarkupHandler();
+        } catch (ExceptionNotFound $e) {
+            return;
         }
 
+        /**
+         * Fragment execution
+         */
+        if ($fetcherMarkup->isFragment()) {
+
+            $callStack = CallStack::createFromHandler($handler);
+            // no outline or edit button for dynamic rendering
+            // but closing of atx heading
+            $handler->calls = Outline::createFromCallStack($callStack)
+                ->toDynamicInstructionCalls();
+
+        }
+
+        /**
+         * Document execution
+         * (add outline section, ...)
+         */
+        $callStack = CallStack::createFromHandler($handler);
+        try {
+            $executingPath = $fetcherMarkup->getRequestedExecutingPath();
+        } catch (ExceptionNotFound $e) {
+            $executingPath = null;
+        }
+        $outline = Outline::createFromCallStack($callStack, $executingPath);
+        if (!$executionContext->getConfig()->isTemplatingEnabled()) {
+            $handler->calls = $outline->toDefaultTemplateInstructionCalls();
+        } else {
+            $handler->calls = $outline->toHtmlSectionOutlineCalls();
+        }
+        /**
+         * Not needed for combo,
+         * but we still update the global TOC Dokuwiki variables
+         */
+        global $TOC;
+        $TOC = $outline->toTocDokuwikiFormat();
 
     }
 

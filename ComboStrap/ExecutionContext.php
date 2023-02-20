@@ -764,7 +764,7 @@ class ExecutionContext
          */
         global $INFO;
         $oldContextId = $INFO['id'];
-        if ($markupHandler->isFragmentExecution()) {
+        if ($markupHandler->isFragment()) {
             $contextPath = $markupHandler->getRequestedContextPath();
             $INFO['id'] = $contextPath->getWikiId();
         }

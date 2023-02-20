@@ -91,7 +91,7 @@ class Outline
 
     /**
      * @param CallStack $callStack
-     * @param MarkupPath|null $markupPath - null if the markup is dynamic
+     * @param MarkupPath|null $markupPath - needed to store the parsed toc, h1, ... (null if the markup is dynamic)
      * @return Outline
      */
     public static function createFromCallStack(CallStack $callStack, MarkupPath $markupPath = null): Outline

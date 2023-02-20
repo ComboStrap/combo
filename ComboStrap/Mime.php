@@ -32,10 +32,12 @@ class Mime
         MIME::PNG
     ];
 
+    const XML = "text/xml";
+
     /**
      * @var array|null
      */
-    private static $knownTypes;
+    private static ?array $knownTypes;
 
     /**
      * @var string
@@ -150,6 +152,11 @@ class Mime
     public static function getBinary(): Mime
     {
         return new Mime(self::BINARY_MIME);
+    }
+
+    public static function getXml()
+    {
+        return new Mime(self::XML);
     }
 
     public function __toString()

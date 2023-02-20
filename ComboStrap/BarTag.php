@@ -29,7 +29,7 @@ class BarTag
         try {
             $isFragmentExecution = ExecutionContext::getActualOrCreateFromEnv()
                 ->getExecutingMarkupHandler()
-                ->isFragmentExecution();
+                ->isFragment();
             if (!$isFragmentExecution) {
                 $tag = self::HTML_SECTION_TAG;
             }

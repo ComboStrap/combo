@@ -427,7 +427,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
          * Icon had 'substition' and can still have other mode inside (ie tooltip)
          * We choose substition then
          *
-         * For heading, title, it was `baseonly`
+         * For heading, title, it was `baseonly` because
+         * Heading disappear when a table is just before because the {@link HeadingTag::SYNTAX_TYPE}  was `formatting`
+         * The table was then accepting it and was deleting it at completion because there was no end of cell character (ie `|`)
          *
          */
         return 'substition';

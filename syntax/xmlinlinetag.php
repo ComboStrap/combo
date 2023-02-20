@@ -6,6 +6,7 @@
 
 use ComboStrap\ButtonTag;
 use ComboStrap\DateTag;
+use ComboStrap\DropDownTag;
 use ComboStrap\PluginUtility;
 
 
@@ -33,7 +34,9 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
      */
     private static function getInlineTags(): array
     {
-        return ButtonTag::getTags();
+        $array = ButtonTag::getTags();
+        $array[] = DropDownTag::TAG;
+        return $array;
     }
 
 

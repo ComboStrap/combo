@@ -15,6 +15,7 @@ use ComboStrap\ColorRgb;
 use ComboStrap\ConsoleTag;
 use ComboStrap\ContainerTag;
 use ComboStrap\DateTag;
+use ComboStrap\DropDownTag;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\ExecutionContext;
 use ComboStrap\GridTag;
@@ -81,6 +82,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case DateTag::TAG:
                                 $renderer->doc .= DateTag::renderHtml($tagAttributes);
                                 return true;
+                            case DropDownTag::TAG:
+                                $renderer->doc .= DropDownTag::renderEnterXhtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -122,6 +126,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case PipelineTag::TAG:
                             case DateTag::TAG:
+                                return true;
+                            case DropDownTag::TAG:
+                                $renderer->doc .= DropDownTag::renderExitXhtml();
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");

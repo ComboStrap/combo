@@ -7,6 +7,7 @@ use ComboStrap\ArrayUtility;
 use ComboStrap\ButtonTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\DropDownTag;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -471,7 +472,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $tagAttributes->addOutputAttributeValue("role", "button");
                                 ButtonTag::processButtonAttributesToHtmlAttributes($tagAttributes);
                                 break;
-                            case syntax_plugin_combo_dropdown::TAG:
+                            case DropDownTag::TAG:
                                 $tagAttributes->addClassName("dropdown-item");
                                 break;
                             case syntax_plugin_combo_navbarcollapse::COMPONENT:

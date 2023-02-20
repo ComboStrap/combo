@@ -3,6 +3,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\ConsoleTag;
+use ComboStrap\DateTag;
 use ComboStrap\Dimension;
 use ComboStrap\Html;
 use ComboStrap\PipelineTag;
@@ -23,7 +24,7 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
 {
 
 
-    function getType()
+    function getType(): string
     {
         /**
          * You can't write in a code block
@@ -68,7 +69,11 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
         return 199;
     }
 
-    const TAGS = [ConsoleTag::TAG, PipelineTag::TAG];
+    const TAGS = [
+        ConsoleTag::TAG,
+        PipelineTag::TAG, // protected inline deprecated
+        DateTag::TAG // protected inline deprecated
+    ];
 
     function connectTo($mode)
     {

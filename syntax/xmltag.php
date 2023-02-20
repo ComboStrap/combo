@@ -14,6 +14,7 @@ use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\ConsoleTag;
 use ComboStrap\ContainerTag;
+use ComboStrap\DateTag;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\ExecutionContext;
 use ComboStrap\GridTag;
@@ -77,6 +78,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case PipelineTag::TAG:
                                 $renderer->doc .= PipelineTag::renderEnterXhtml($tagAttributes);
                                 return true;
+                            case DateTag::TAG:
+                                $renderer->doc .= DateTag::renderHtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -117,6 +121,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 $renderer->doc .= GridTag::renderExitXhtml($tagAttributes);
                                 return true;
                             case PipelineTag::TAG:
+                            case DateTag::TAG:
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -273,6 +278,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case GridTag::ROW_TAG:
                         GridTag::processEnter($tagAttributes, $handler, $match);
                         break;
+                    case DateTag::TAG:
+                        DateTag::handleEnterAndSpecial();
+                        break;
                 }
 
                 /**
@@ -339,6 +347,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case GridTag::ROW_TAG:
                         $logicalTag = GridTag::LOGICAL_TAG;
                         $returnedArray = GridTag::handleExit($handler);
+                        break;
+                    case DateTag::TAG:
+                        DateTag::handleExit($handler);
                         break;
                 }
                 /**

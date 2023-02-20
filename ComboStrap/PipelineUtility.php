@@ -281,7 +281,7 @@ class PipelineUtility
         if ($locale === null) {
             // should never happen but yeah
             $locale = 'en_US';
-            LogUtility::error("Internal Error: No default locale could be determined. The locale was set to $locale", \syntax_plugin_combo_date::CANONICAL);
+            LogUtility::error("Internal Error: No default locale could be determined. The locale was set to $locale", DateTag::CANONICAL);
         }
 
         /**

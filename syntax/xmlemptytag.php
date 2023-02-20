@@ -11,6 +11,7 @@ use ComboStrap\BrandTag;
 use ComboStrap\Breadcrumb;
 use ComboStrap\CacheTag;
 use ComboStrap\CallStack;
+use ComboStrap\DateTag;
 use ComboStrap\HrTag;
 use ComboStrap\IconTag;
 use ComboStrap\LogUtility;
@@ -134,6 +135,9 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $returnedArray = BackgroundTag::setAttributesToParentAndReturnData($callStack, $tagAttributes, $state);
                 break;
+            case DateTag::TAG:
+                DateTag::handleEnterAndSpecial();
+                break;
         }
 
         /**
@@ -197,6 +201,9 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
                     case BackgroundTag::MARKUP_SHORT:
                         $renderer->doc .= BackgroundTag::renderHtml($data);
                         break;
+                    case DateTag::TAG:
+                        $renderer->doc .= DateTag::renderHtml($tagAttributes);
+                        return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
                 }

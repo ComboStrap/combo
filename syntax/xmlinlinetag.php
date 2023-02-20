@@ -5,8 +5,8 @@
  */
 
 use ComboStrap\ButtonTag;
+use ComboStrap\DateTag;
 use ComboStrap\PluginUtility;
-
 
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -27,6 +27,14 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  */
 class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
 {
+
+    /**
+     * @return array inline non-protected
+     */
+    private static function getInlineTags(): array
+    {
+        return ButtonTag::getTags();
+    }
 
 
     /**
@@ -94,7 +102,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        foreach (ButtonTag::getTags() as $tag) {
+        foreach (self::getInlineTags() as $tag) {
 
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
@@ -106,7 +114,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
 
-        foreach (ButtonTag::getTags() as $tag) {
+        foreach (self::getInlineTags() as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
         }
 

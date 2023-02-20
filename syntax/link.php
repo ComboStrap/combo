@@ -446,7 +446,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $renderer->doc .= $markupAttributes->toHtmlEnterTag("a") . $e->getMessage();
                             } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
                                 $message = "A local link could not be parsed as reference. It should work everytime as markup ref. Error: {$e->getMessage()}";
-                                LogUtility::internalError($message);
+                                LogUtility::internalError($message, self::TAG, $e);
                                 $url = UrlEndpoint::createSupportUrl();
                                 $renderer->doc .= "<a href=\"{$url->toString()}\" >$message";
                             }

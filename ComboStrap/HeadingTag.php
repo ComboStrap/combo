@@ -10,13 +10,26 @@ use syntax_plugin_combo_webcode;
 
 class HeadingTag
 {
+
+    /**
+     * The type of the heading tag
+     */
     public const DISPLAY_TYPES = ["d1", "d2", "d3", "d4", "d5", "d6"];
+    public const HEADING_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6"];
+    public const SHORT_TYPES = ["1", "2", "3", "4", "5", "6"];
+
+    /**
+     * The type of the title tag
+     * @deprecated
+     */
+    public const TITLE_DISPLAY_TYPES = ["0", "1", "2", "3", "4", "5", "6"];
+
+
     /**
      * An heading may be printed
      * as outline and should be in the toc
      */
     public const TYPE_OUTLINE = "outline";
-    public const ALL_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "d1", "d2", "d3", "d4", "d5", "d6", "1", "2", "3", "4", "5", "6"];
     public const CANONICAL = "heading";
 
     public const SYNTAX_TYPE = 'baseonly';
@@ -41,7 +54,7 @@ class HeadingTag
     public const HEADING_TAG = "heading";
     public const LOGICAL_TAG = self::HEADING_TAG;
 
-    public const HEADING_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "1", "2", "3", "4", "5", "6"];
+
     /**
      * The default level if not set
      * Not level 1 because this is the top level heading
@@ -210,6 +223,12 @@ class HeadingTag
     {
 
         /**
+         * All correction that are dependent
+         * on the markup (ie title or heading)
+         * are done in the {@link self::processRenderEnterXhtml()}
+         */
+
+        /**
          * Variable
          */
         $type = $tagAttributes->getType();
@@ -242,7 +261,6 @@ class HeadingTag
 
             }
             $tagAttributes->addClassName($displayClass);
-
         }
 
         /**
@@ -403,7 +421,7 @@ class HeadingTag
     }
 
     public
-    static function handleEnter(\Doku_Handler $handler, TagAttributes $tagAttributes)
+    static function handleEnter(\Doku_Handler $handler, TagAttributes $tagAttributes, string $markupTag): array
     {
         /**
          * Context determination
@@ -415,7 +433,7 @@ class HeadingTag
          * Level is mandatory (for the closing tag)
          */
         $level = $tagAttributes->getValue(HeadingTag::LEVEL);
-        if ($level == null) {
+        if ($level === null) {
 
             /**
              * Old title type
@@ -424,13 +442,18 @@ class HeadingTag
             $type = $tagAttributes->getType();
             if (is_numeric($type) && $type != 0) {
                 $level = $type;
-                $tagAttributes->setType("d$level");
+                if ($markupTag === self::TITLE_TAG) {
+                    $type = "d$level";
+                } else {
+                    $type = "h$level";
+                }
+                $tagAttributes->setType($type);
             }
             /**
              * Still null, check the type
              */
             if ($level == null) {
-                if (in_array($type, HeadingTag::ALL_TYPES)) {
+                if (in_array($type, HeadingTag::getAllTypes())) {
                     $level = substr($type, 1);
                 }
             }
@@ -450,5 +473,16 @@ class HeadingTag
             $tagAttributes->addComponentAttributeValue(HeadingTag::LEVEL, $level);
         }
         return [PluginUtility::CONTEXT => $context];
+    }
+
+    public
+    static function getAllTypes(): array
+    {
+        return array_merge(
+            self::DISPLAY_TYPES,
+            self::HEADING_TYPES,
+            self::SHORT_TYPES,
+            self::TITLE_DISPLAY_TYPES
+        );
     }
 }

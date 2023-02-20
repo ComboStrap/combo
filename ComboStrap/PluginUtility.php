@@ -44,6 +44,7 @@ class PluginUtility
 
     const DISPLAY = "display";
 
+
     /**
      * The URL base of the documentation
      */

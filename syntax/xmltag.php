@@ -271,8 +271,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case HeadingTag::HEADING_TAG:
                     case HeadingTag::TITLE_TAG:
                         $logicalTag = HeadingTag::LOGICAL_TAG;
-                        $defaultAttributes[TagAttributes::TYPE_KEY] = HeadingTag::DEFAULT_LEVEL_TITLE_CONTEXT;
-                        $knownTypes = HeadingTag::ALL_TYPES;
+                        $knownTypes = HeadingTag::getAllTypes();
                         break;
                 }
 
@@ -320,7 +319,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         DateTag::handleEnterAndSpecial();
                         break;
                     case HeadingTag::LOGICAL_TAG:
-                        $returnedArray = HeadingTag::handleEnter($handler, $tagAttributes);
+                        $returnedArray = HeadingTag::handleEnter($handler, $tagAttributes, $markupTag);
                         break;
                 }
 

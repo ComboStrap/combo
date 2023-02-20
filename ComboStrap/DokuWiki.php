@@ -11,4 +11,9 @@ class DokuWiki
      * with the dokuwiki.css stylesheet
      */
     public const DOKUWIKI_STYLESHEET_ID = "dokuwiki";
+
+    /**
+     * Just to list the unsupported feature back
+     */
+    public const UNSUPPORTED_DOKUWIKI_FEATURE = true;
 }

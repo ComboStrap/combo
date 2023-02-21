@@ -23,6 +23,7 @@ class MarkupRenderUtility
      * @param $content
      * @param bool $strip
      * @return string
+     * @throws ExceptionCompile
      */
     public static function renderText2XhtmlAndStripPEventually($content, bool $strip = true): string
     {
@@ -60,19 +61,16 @@ class MarkupRenderUtility
     /**
      * @param $pageId
      * @return string
+     * @throws ExceptionCompile
      */
     public
     static function renderId2Xhtml($pageId): string
     {
+
         $wikiPath = WikiPath::createMarkupPathFromId($pageId);
-        $fetcher = FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPath, $wikiPath)
-            ->setDeleteRootBlockElement(true)
-            ->setRequestedMimeToXhtml();
-        try {
-            return $fetcher->getFetchString();
-        } finally {
-            $fetcher->close();
-        }
+        $fetcher = FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPath, $wikiPath);
+        return $fetcher->getFetchString();
+
 
     }
 

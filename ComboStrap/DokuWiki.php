@@ -15,5 +15,5 @@ class DokuWiki
     /**
      * Just to list the unsupported feature back
      */
-    public const UNSUPPORTED_DOKUWIKI_FEATURE = true;
+    public const RUN_UNSUPPORTED_DOKUWIKI_FEATURE = false;
 }

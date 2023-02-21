@@ -1014,11 +1014,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function getContextData(): array
     {
-        if (isset($this->builderContextData)) {
-            return $this->builderContextData;
+        if (isset($this->contextData)) {
+            return $this->contextData;
         }
-        $this->builderContextData = MarkupPath::createPageFromPathObject($this->getRequestedContextPath())->getMetadataForRendering();
-        return $this->builderContextData;
+        $this->contextData = MarkupPath::createPageFromPathObject($this->getRequestedContextPath())->getMetadataForRendering();
+        return $this->contextData;
     }
 
 

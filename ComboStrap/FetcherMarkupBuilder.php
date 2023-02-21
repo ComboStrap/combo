@@ -32,7 +32,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
 
 
     protected bool $isDoc;
-    protected array $contextData;
+    protected array $builderContextData;
 
 
     public function __construct()
@@ -166,6 +166,9 @@ class FetcherMarkupBuilder extends FetcherMarkup
         $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
         $newFetcherMarkup->rendererName = $this->rendererName;
         $newFetcherMarkup->isDoc = $this->getIsDoc();
+        if(isset($this->builderContextData)){
+            $newFetcherMarkup->contextData = $this->builderContextData;
+        }
 
         /**
          * We build the cache dependencies even if there is no source markup path (therefore no cache store)
@@ -285,7 +288,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
     public function setContextData(array $contextData): FetcherMarkupBuilder
     {
 
-        $this->contextData = $contextData;
+        $this->builderContextData = $contextData;
         return $this;
     }
 

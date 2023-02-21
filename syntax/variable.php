@@ -1,9 +1,7 @@
 <?php
 
-use ComboStrap\ContextManager;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExecutionContext;
-use ComboStrap\MarkupPath;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Template;
@@ -11,10 +9,7 @@ use ComboStrap\Template;
 
 /**
  *
- *
- *
- *
- *
+ * Variable
  */
 class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
 {

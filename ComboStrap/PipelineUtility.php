@@ -82,8 +82,8 @@ class PipelineUtility
              * Example: a variable with an expression
              * $title | replace ("world,"you")
              */
-            $message = substr($processedExpression, 0, $firstPipeChar);
-            $commandChain = substr($processedExpression, $firstPipeChar + 1);
+            $message = trim(substr($processedExpression, 0, $firstPipeChar));
+            $commandChain = trim(substr($processedExpression, $firstPipeChar + 1));
 
         }
 

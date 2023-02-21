@@ -939,27 +939,13 @@ class ExecutionContext
 
     public function getContextData(): array
     {
-        $executionContextPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
-        return MarkupPath::createPageFromPathObject($executionContextPath)->getMetadataForRendering();
-    }
-
-    /**
-     * @param string $key
-     * @param $value
-     * @return ExecutionContext
-     */
-    public function setContextData(string $key, $value): ExecutionContext
-    {
-        return $this;
-    }
-
-    public function getContextManager(): ContextManager
-    {
-        if(!isset($this->contextManager)){
-            $this->contextManager = new ContextManager($this);
+        try {
+            return $this->getExecutingMarkupHandler()
+                ->getContextData();
+        } catch (ExceptionNotFound $e) {
+            return [];
         }
 
-        return $this->contextManager;
     }
 
 

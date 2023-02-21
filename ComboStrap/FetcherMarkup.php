@@ -51,6 +51,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     protected string $rendererName;
 
     protected array $requestedInstructions;
+    protected array $contextData;
 
     /**
      * @var CacheParser
@@ -1009,6 +1010,15 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 return "";
             }
         }
+    }
+
+    public function getContextData(): array
+    {
+        if (isset($this->builderContextData)) {
+            return $this->builderContextData;
+        }
+        $this->builderContextData = MarkupPath::createPageFromPathObject($this->getRequestedContextPath())->getMetadataForRendering();
+        return $this->builderContextData;
     }
 
 

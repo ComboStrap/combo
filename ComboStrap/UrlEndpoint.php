@@ -55,12 +55,16 @@ class UrlEndpoint
 
     /**
      *
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionBadArgument
      */
     public static function createBaseUrl(): Url
     {
-        return Url::createFromString(Site::getBaseUrl());
+        $url = Site::getBaseUrl();
+        try {
+            return Url::createFromString($url);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+            LogUtility::error("The base Url ($url) is not a valid url. Empty URL returned. Error: {$e->getMessage()}", "urlendpoint",$e);
+            return Url::createEmpty();
+        }
     }
 
     public static function createTaskRunnerUrl(): Url
@@ -72,6 +76,8 @@ class UrlEndpoint
     {
         return Url::createEmpty()->setPath(self::LIB_EXE_AJAX_PHP);
     }
+
+
 
 
 }

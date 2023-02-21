@@ -396,21 +396,29 @@ EOF;
                 $outputAttributes->addOutputAttributeValue("href", 'mailto:' . $uri);
                 break;
             case MarkupRef::WEB_URI:
-                if ($conf['relnofollow']) {
-                    $outputAttributes->addOutputAttributeValue("rel", 'nofollow ugc');
-                }
-                // https://www.dokuwiki.org/config:target
-                $externTarget = $conf['target']['extern'];
-                if (!empty($externTarget)) {
-                    $outputAttributes->addOutputAttributeValue('target', $externTarget);
-                    $outputAttributes->addOutputAttributeValue("rel", 'noopener');
-                }
                 /**
-                 * Default class for default external link
-                 * To not interfere with other external link style
-                 * For instance, {@link \syntax_plugin_combo_share}
+                 * It may be a absolute url
+                 * that points to the local website
+                 * (case of the {@link \syntax_plugin_combo_permalink}
                  */
-                $outputAttributes->addClassName(self::getHtmlClassExternalLink());
+                if($url->isExternal()) {
+
+                    if ($conf['relnofollow']) {
+                        $outputAttributes->addOutputAttributeValue("rel", 'nofollow ugc');
+                    }
+                    // https://www.dokuwiki.org/config:target
+                    $externTarget = $conf['target']['extern'];
+                    if (!empty($externTarget)) {
+                        $outputAttributes->addOutputAttributeValue('target', $externTarget);
+                        $outputAttributes->addOutputAttributeValue("rel", 'noopener');
+                    }
+                    /**
+                     * Default class for default external link
+                     * To not interfere with other external link style
+                     * For instance, {@link \syntax_plugin_combo_share}
+                     */
+                    $outputAttributes->addClassName(self::getHtmlClassExternalLink());
+                }
                 break;
             default:
                 /**

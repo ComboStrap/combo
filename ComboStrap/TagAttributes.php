@@ -160,7 +160,8 @@ class TagAttributes
         StyleUtility::STYLE_ATTRIBUTE,
         TagAttributes::ID_KEY,
         TagAttributes::TITLE_KEY,
-        "href"
+        "href",
+        "rel" // anchor
     ];
 
     /**

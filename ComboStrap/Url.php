@@ -868,5 +868,19 @@ class Url extends PathAbs
         return $this->toString();
     }
 
+    /**
+     * @return bool - if the url points to the same website than the host
+     */
+    public function isExternal(): bool
+    {
+        try {
+            $localHost = Url::createEmpty()->toAbsoluteUrl()->getHost();
+            return $localHost !== $this->getHost();
+        } catch (ExceptionNotFound $e) {
+            // no host meaning that the url is relative and then local
+            return false;
+        }
+    }
+
 
 }

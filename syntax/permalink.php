@@ -118,7 +118,8 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
 
                 $callStack = CallStack::createFromHandler($handler);
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $knownTypes = [self::NAMED_TYPE, self::GENERATED_TYPE];
+                $attributes = TagAttributes::createFromTagMatch($match, [], $knownTypes);
 
                 $type = $attributes->getValueAndRemoveIfPresent(TagAttributes::TYPE_KEY);
                 if ($type == null) {
@@ -148,7 +149,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                     case self::GENERATED_TYPE:
                         try {
                             $pageId = $requestedPage->getPageId();
-                        } catch (ExceptionNotExists $e) {
+                        } catch (ExceptionNotFound $e) {
                             return self::handleError(
                                 "The page id has not yet been set",
                                 $strict,
@@ -158,18 +159,11 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                         }
 
                         $permanentValue = PageUrlPath::encodePageId($pageId);
-                        try {
-                            $url = UrlEndpoint::createBaseUrl()
-                                ->setPath("/$permanentValue")
-                                ->toAbsoluteUrl();
-                        } catch (ExceptionBadSyntax $e) {
-                            return self::handleError(
-                                "The base url is not a valid url. Error: {$e->getMessage()}",
-                                $strict,
-                                $returnArray,
-                                $callStack
-                            );
-                        }
+
+                        $url = UrlEndpoint::createBaseUrl()
+                            ->setPath("/$permanentValue")
+                            ->toAbsoluteUrl();
+
                         /** @noinspection DuplicatedCode */
                         if ($fragment !== null) {
                             $fragment = OutlineSection::textToHtmlSectionId($fragment);
@@ -194,7 +188,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
 
                         $urlPath = PageUrlPath::createForPage($requestedPage)
                             ->getUrlPathFromType(PageUrlType::CONF_VALUE_CANONICAL_PATH);
-                        $urlId = WikiPath::toDokuWikiIdDriveContextual($urlPath);
+                        $urlId = WikiPath::toDokuWikiId($urlPath); // delete the root sep (ie :)
                         $canonicalUrl = UrlEndpoint::createDokuUrl()
                             ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $urlId)
                             ->toAbsoluteUrl();

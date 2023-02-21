@@ -380,7 +380,7 @@ class WikiPath extends PathAbs
         return WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT . $id;
     }
 
-    protected function toDokuWikiIdDriveContextual($path): string
+    function toDokuWikiIdDriveContextual($path): string
     {
         /**
          * Delete the first separator

@@ -4,6 +4,7 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 // must be run within Dokuwiki
+use ComboStrap\BackgroundAttribute;
 use ComboStrap\BarTag;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\BoxTag;
@@ -13,6 +14,7 @@ use ComboStrap\CardTag;
 use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\HeadingTag;
+use ComboStrap\JumbotronTag;
 use ComboStrap\NoteTag;
 use ComboStrap\PrismTags;
 use ComboStrap\ContainerTag;
@@ -26,6 +28,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\Skin;
+use ComboStrap\Spacing;
 use ComboStrap\TagAttributes;
 
 
@@ -96,6 +99,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case NoteTag::TAG_INOTE:
                                 $renderer->doc .= NoteTag::renderEnterInlineNote($tagAttributes);
                                 return true;
+                            case JumbotronTag::TAG:
+                                $renderer->doc .= JumbotronTag::renderEnterXhtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -148,6 +154,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case NoteTag::TAG_INOTE:
                                 $renderer->doc .= NoteTag::renderClosingInlineNote();
                                 return true;
+                            case JumbotronTag::TAG:
+                                $renderer->doc .= JumbotronTag::renderExitHtml();
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                         }
@@ -156,7 +165,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                 break;
             case 'metadata':
                 /** @var Doku_Renderer_metadata $renderer */
-                switch ($logicalTag){
+                switch ($logicalTag) {
                     case HeadingTag::LOGICAL_TAG:
                         HeadingTag::processHeadingMetadata($data, $renderer);
                         return true;
@@ -288,6 +297,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             $defaultAttributes[TagAttributes::TYPE_KEY] = "info";
                         }
                         $knownTypes = NoteTag::KNOWN_TYPES;
+                        break;
+                    case JumbotronTag::TAG:
+                        $defaultAttributes = JumbotronTag::getDefault();
                         break;
                 }
 
@@ -516,7 +528,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
         /**
          * Tweak: `paragraphs` is not in the allowed type
          */
-        return array('container', 'formatting', 'substition', 'protected', 'disabled');
+        return array( 'container', 'formatting', 'substition', 'protected', 'disabled');
     }
 
 

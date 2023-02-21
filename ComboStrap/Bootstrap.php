@@ -19,7 +19,8 @@ class Bootstrap
 {
     const DEFAULT_STYLESHEET_NAME = "bootstrap";
     const TAG = self::CANONICAL;
-    public const VERSION_501 = "5.0.1";
+    public const DEFAULT_MAJOR = 5;
+    public const VERSION_501 = self::DEFAULT_MAJOR . ".0.1";
     public const DEFAULT_BOOTSTRAP_4_VERSION = "4.5.0";
     public const DEFAULT_BOOTSTRAP_5_VERSION = self::VERSION_501;
     public const DEFAULT_BOOTSTRAP_STYLESHEET_4_VERSION = self::DEFAULT_BOOTSTRAP_4_VERSION . " - " . self::DEFAULT_STYLESHEET_NAME;
@@ -64,7 +65,6 @@ class Bootstrap
 
 
     const BootStrapFiveMajorVersion = 5;
-
     const BootStrapFourMajorVersion = 4;
     const CANONICAL = "bootstrap";
     /**
@@ -98,19 +98,24 @@ class Bootstrap
         return $dataToggleNamespace;
     }
 
-    public function getMajorVersion(): string
+    public function getMajorVersion(): int
     {
-        $bootstrapVersion = $this->getVersion();
-        return $bootstrapVersion[0];
+        $bootstrapMajorVersion = $this->getVersion()[0];
+        try {
+            return DataType::toInteger($bootstrapMajorVersion);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("The bootstrap major version ($bootstrapMajorVersion) is not an integer, default taken");
+            return self::DEFAULT_MAJOR;
+        }
 
     }
 
     /**
      * Utility function that returns the major version
      * because this is really common in code
-     * @return string - the major version
+     * @return int - the major version
      */
-    public static function getBootStrapMajorVersion(): string
+    public static function getBootStrapMajorVersion(): int
     {
         return Bootstrap::getFromContext()->getMajorVersion();
     }
@@ -423,7 +428,7 @@ class Bootstrap
             return $styleSheetForVersionAndName[$direction];
         }
         if (!isset($styleSheetForVersionAndName['file'])) {
-            LogUtility::internalError('The file stylesheet attribute is unknown ('.DataType::toString($styleSheetForVersionAndName). ')');
+            LogUtility::internalError('The file stylesheet attribute is unknown (' . DataType::toString($styleSheetForVersionAndName) . ')');
         }
         return $styleSheetForVersionAndName;
     }

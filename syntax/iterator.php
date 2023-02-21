@@ -3,6 +3,7 @@
 
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherMarkup;
 use ComboStrap\FragmentTag;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
@@ -468,11 +469,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         $templateFooter = $actualStack;
                     }
 
+                    $contextPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
 
                     /**
                      * Rendering
                      */
-                    $render = MarkupDynamicRender::createXhtml();
+                    $renderDoc = "";
 
                     /**
                      * Header
@@ -497,7 +499,13 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             }
                         }
                         try {
-                            $render->processInstructions($iteratorHeaderInstructions);
+                            $renderDoc .= FetcherMarkup::getBuilder()
+                                ->setBuilderRequestedInstructions($iteratorHeaderInstructions)
+                                ->setRequestedContextPath($contextPath)
+                                ->setRequestedMimeToXhtml()
+                                ->setIsDocument(false)
+                                ->build()
+                                ->getFetchString();
                         } catch (ExceptionCompile $e) {
                             LogUtility::error("Error while rendering the iterator header. Error: {$e->getMessage()}", self::CANONICAL);
                             return false;
@@ -508,21 +516,40 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      * Template
                      */
                     try {
-                        $render->processInstructions($templateHeader);
+                        $renderDoc .= FetcherMarkup::getBuilder()
+                            ->setBuilderRequestedInstructions($templateHeader)
+                            ->setRequestedContextPath($contextPath)
+                            ->setRequestedMimeToXhtml()
+                            ->setIsDocument(false)
+                            ->build()
+                            ->getFetchString();
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("Error while rendering the template header. Error: {$e->getMessage()}", self::CANONICAL);
                         return false;
                     }
                     foreach ($rows as $row) {
                         try {
-                            $render->processInstructions($templateMain, $row);
+                            $renderDoc .= FetcherMarkup::getBuilder()
+                                ->setBuilderRequestedInstructions($templateMain)
+                                ->setContextData($row)
+                                ->setRequestedContextPath($contextPath)
+                                ->setRequestedMimeToXhtml()
+                                ->setIsDocument(false)
+                                ->build()
+                                ->getFetchString();
                         } catch (ExceptionCompile $e) {
                             LogUtility::error("Error while rendering a data row. Error: {$e->getMessage()}", self::CANONICAL);
                             continue;
                         }
                     }
                     try {
-                        $render->processInstructions($templateFooter);
+                        $renderDoc .= FetcherMarkup::getBuilder()
+                            ->setBuilderRequestedInstructions($templateFooter)
+                            ->setRequestedContextPath($contextPath)
+                            ->setRequestedMimeToXhtml()
+                            ->setIsDocument(false)
+                            ->build()
+                            ->getFetchString();
                     } catch (ExceptionCompile $e) {
                         LogUtility::error("Error while rendering the template footer. Error: {$e->getMessage()}", self::CANONICAL);
                         return false;
@@ -535,7 +562,13 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $callStackFooterInstructions = $data[self::AFTER_TEMPLATE_CALLSTACK];
                     if (!empty($callStackFooterInstructions)) {
                         try {
-                            $render->processInstructions($callStackFooterInstructions);
+                            $renderDoc .= FetcherMarkup::getBuilder()
+                                ->setBuilderRequestedInstructions($callStackFooterInstructions)
+                                ->setRequestedContextPath($contextPath)
+                                ->setRequestedMimeToXhtml()
+                                ->setIsDocument(false)
+                                ->build()
+                                ->getFetchString();
                         } catch (ExceptionCompile $e) {
                             LogUtility::error("Error while rendering the iterator footer. Error: {$e->getMessage()}", self::CANONICAL);
                             return false;
@@ -545,7 +578,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Renderer
                      */
-                    $renderer->doc .= $render->getOutput();
+                    $renderer->doc .= $renderDoc;
                     return true;
 
             }

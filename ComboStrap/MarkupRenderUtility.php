@@ -84,38 +84,14 @@ class MarkupRenderUtility
      */
     public static function renderInstructionsToXhtml($callStackHeaderInstructions, array $contextData = null): string
     {
-        global $ID;
-        $keepID = $ID;
-        global $ACT;
-        $keepACT = $ACT;
-        global $ID;
-        $contextManager = ContextManager::getOrCreate();
-        if ($contextData !== null) {
-            $contextManager->setContextArrayData($contextData);
-        }
-        try {
-
-            if ($ID === null && PluginUtility::isTest()) {
-                $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
-            }
-            $ACT = FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME;
-            $output = p_render("xhtml", $callStackHeaderInstructions, $info);
-            if ($output === null) {
-                throw new ExceptionBadState("The rendering output was null");
-            }
-            return $output;
-        } catch (Exception $e) {
-            /**
-             * Example of errors;
-             * method_exists() expects parameter 2 to be string, array given
-             * inc\parserutils.php:672
-             */
-            throw new ExceptionCompile("Error while rendering instructions. Error was: {$e->getMessage()}");
-        } finally {
-            $ACT = $keepACT;
-            $ID = $keepID;
-            $contextManager->reset();
-        }
+        return FetcherMarkup::getBuilder()
+            ->setBuilderRequestedInstructions($callStackHeaderInstructions)
+            ->setContextData($contextData)
+            ->setIsDocument(false)
+            ->setRequestedMimeToXhtml()
+            ->setRequestedContextPathWithDefault()
+            ->build()
+            ->getFetchString();
     }
 
     /**

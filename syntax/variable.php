@@ -2,6 +2,8 @@
 
 use ComboStrap\ContextManager;
 use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExecutionContext;
+use ComboStrap\MarkupPath;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Template;
@@ -42,7 +44,7 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
      */
     public static function replaceVariablesWithValuesFromContext(string $string): string
     {
-        $metadata = ContextManager::getOrCreate()->getContextData();
+        $metadata = ExecutionContext::getActualOrCreateFromEnv()->getContextData();
         return Template::create($string)->setProperties($metadata)->render();
     }
 
@@ -121,7 +123,7 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
              */
             if (substr($match, 0, $lengthLongPrefix) === self::PREFIX_LONG) {
                 $expression = trim(substr($match, $lengthLongPrefix, -1));
-                if(!in_array($expression[0],PipelineUtility::QUOTES_CHARACTERS)){
+                if (!in_array($expression[0], PipelineUtility::QUOTES_CHARACTERS)) {
                     $expression = "\${$expression}";
                 }
             } else {

@@ -88,22 +88,11 @@ class PageImageTag
     {
 
 
-        $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
-        if ($path === null) {
-            $contextManager = ContextManager::getOrCreate();
-            $path = $contextManager->getAttribute(PagePath::PROPERTY_NAME);
-            if ($path === null) {
-                // It should never happen, dev error
-                LogUtility::error("Internal Error: Bad state: page image cannot retrieve the page path from the context", PageImageTag::CANONICAL);
-                return false;
-            }
-        }
-
         /**
          * Image selection
          */
-        WikiPath::addRootSeparatorIfNotPresent($path);
-        $page = MarkupPath::createPageFromQualifiedId($path);
+        $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+        $page = MarkupPath::createPageFromPathObject($path);
 
         /**
          * Image Order of precedence
@@ -153,7 +142,7 @@ class PageImageTag
                     try {
                         $imageFetcher = FetcherVignette::createForPage($page);
                     } catch (ExceptionNotFound|ExceptionBadArgument $e) {
-                        LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}");
+                        LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}", self::CANONICAL, $e);
                     }
                     break;
                 case PageImageTag::LOGO_TYPE:

@@ -272,15 +272,9 @@ class PipelineUtility
         }
         $localeSeparator = '_';
         if ($locale === null) {
-            $path = ContextManager::getOrCreate()->getAttribute(PagePath::PROPERTY_NAME);
-            if ($path === null) {
-                // should never happen but yeah
-                LogUtility::warning("Internal Error: The page content was not set. We were unable to get the page locale. Defaulting to the site locale");
-                $locale = Site::getLocale();
-            } else {
-                $page = MarkupPath::createPageFromQualifiedId($path);
-                $locale = Locale::createForPage($page)->getValueOrDefault();
-            }
+            $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+            $page = MarkupPath::createPageFromQualifiedId($path);
+            $locale = Locale::createForPage($page)->getValueOrDefault();
         }
 
         if ($locale === null) {

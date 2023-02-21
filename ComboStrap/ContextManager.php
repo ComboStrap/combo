@@ -17,31 +17,21 @@ namespace ComboStrap;
  * @package ComboStrap
  *
  * Context Class
+ * @deprecated by {@link ExecutionContext::getContextData()}
  */
 class ContextManager
 {
 
 
-    /**
-     * @var ContextManager array that contains one element (one {@link ContextManager} scoped to the requested id
-     */
-    private static $globalContext;
 
-    /**
-     * @var array
-     */
-    private $contextData;
-    /**
-     * @var array
-     */
-    private $defaultContextData;
+    private ExecutionContext $executionContext;
 
     /**
      * @param array $defaultContextData
      */
-    public function __construct(array $defaultContextData = [])
+    public function __construct(ExecutionContext $executionContext)
     {
-        $this->defaultContextData = $defaultContextData;
+        $this->executionContext = $executionContext;
     }
 
 
@@ -52,34 +42,19 @@ class ContextManager
     public static function getOrCreate(): ContextManager
     {
 
-        try {
-            $wikiRequestedPath = WikiPath::createRequestedPagePathFromRequest();
-        } catch (ExceptionNotFound $e) {
-            if (!PluginUtility::isTest()) {
-                LogUtility::error("The requested Id could not be found, the context may not be scoped properly");
-            }
-            $wikiRequestedPath = WikiPath::createMarkupPathFromId("test_dynamic_context_execution");
-        }
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getContextManager();
 
-        $wikiId = $wikiRequestedPath->getWikiId();
-        $context = self::$globalContext[$wikiId];
-        if ($context === null) {
-            self::$globalContext = null; // delete old snippet manager for other request
 
-            $defaultContextData = MarkupPath::createPageFromPathObject($wikiRequestedPath)
-                ->getMetadataForRendering();
-            $context = new ContextManager($defaultContextData);
-            self::$globalContext[$wikiId] = $context;
-        }
-        return $context;
     }
 
+    /**
+     * @return array
+     * @deprecated uses {@link ExecutionContext::getContextData instead}
+     */
     public function getContextData(): array
     {
-        if ($this->contextData === null) {
-            return $this->defaultContextData;
-        }
-        return $this->contextData;
+        return $this->executionContext->getContextData();
     }
 
 
@@ -93,11 +68,22 @@ class ContextManager
         $this->contextData = $contextData;
     }
 
+    /**
+     * @param string $name
+     * @return mixed
+     * @deprecated
+     */
     public function getAttribute(string $name)
     {
         return $this->getContextData()[$name];
     }
 
+    /**
+     * @param $name
+     * @param $value
+     * @return void
+     * @deprecated use {@link ExecutionContext::setContextData()} instead
+     */
     public function setContextData($name, $value)
     {
         $this->contextData[$name] = $value;

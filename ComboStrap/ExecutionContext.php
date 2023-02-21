@@ -725,7 +725,7 @@ class ExecutionContext
     public function setExecutingMarkupHandler(FetcherMarkup $markupHandler): ExecutionContext
     {
 
-        if (count($this->executingMarkupHandlerStack) >= 1 && !$markupHandler->isStringExecution()) {
+        if (count($this->executingMarkupHandlerStack) >= 1 && $markupHandler->isPathExecution()) {
             /**
              * A markup handler for a file can call a handler with a string
              * (example: {@link webcode can launch a sub-one
@@ -737,7 +737,12 @@ class ExecutionContext
          * Act
          */
         $oldAct = $this->getExecutingAction();
-        if ($markupHandler->isStringExecution()) {
+        if ($markupHandler->isPathExecution()) {
+            /**
+             * Not sure that is is still needed
+             * as we have now the notion of document/fragment
+             * {@link FetcherMarkup::isDocument()}
+             */
             $runningAct = FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME;
             $this->setExecutingAction($runningAct);
         }
@@ -849,7 +854,7 @@ class ExecutionContext
                 /**
                  * Nope ? This is a dokuwiki run (admin page, ...)
                  */
-                return $this->getDefaultContextPath();
+                return $this->getConfig()->getDefaultContextPath();
 
             }
 
@@ -930,6 +935,31 @@ class ExecutionContext
             return WikiPath::createMarkupPathFromId($this->getExecutingWikiId());
         }
 
+    }
+
+    public function getContextData(): array
+    {
+        $executionContextPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+        return MarkupPath::createPageFromPathObject($executionContextPath)->getMetadataForRendering();
+    }
+
+    /**
+     * @param string $key
+     * @param $value
+     * @return ExecutionContext
+     */
+    public function setContextData(string $key, $value): ExecutionContext
+    {
+        return $this;
+    }
+
+    public function getContextManager(): ContextManager
+    {
+        if(!isset($this->contextManager)){
+            $this->contextManager = new ContextManager($this);
+        }
+
+        return $this->contextManager;
     }
 
 

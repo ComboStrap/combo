@@ -8,7 +8,7 @@ use PHPUnit\Exception;
 /**
  *
  * Adaptation of the function {@link p_render()}
- * for dynamic rendering because the Renderer has also state
+ * for dynamic rendering because the {@link \Doku_Renderer_xhtml Renderer} has also state
  * such as the `counter_row` for the function {@link \Doku_Renderer_xhtml::table_open()}
  *
  * If {@link p_render()} is used multiple time, the renderer is recreated and the counter is reset to zero and the
@@ -17,22 +17,22 @@ use PHPUnit\Exception;
  */
 class MarkupDynamicRender
 {
+    /**
+     * @var MarkupDynamicRender[]
+     */
+    static array $DYNAMIC_RENDERERS_CACHE = array();
 
 
     /**
      * @var string the format (xhtml, ...)
      */
-    private $format;
+    private string $format;
 
-    /**
-     * @var string the output
-     */
-    private $output;
 
     /**
      * @var Doku_Renderer the renderer that calls the render function
      */
-    private $renderer;
+    private Doku_Renderer $renderer;
 
     /**
      * @throws ExceptionNotFound
@@ -40,13 +40,13 @@ class MarkupDynamicRender
     public function __construct($format)
     {
         $this->format = $format;
-        $this->renderer = p_get_renderer($format);
-        if (is_null($this->renderer)) {
+        $renderer = p_get_renderer($format);
+        if (is_null($renderer)) {
             throw new ExceptionNotFound("No renderer was found for the format $format");
         }
 
+        $this->renderer = $renderer;
         $this->renderer->reset();
-
         $this->renderer->smileys = getSmileys();
         $this->renderer->entities = getEntities();
         $this->renderer->acronyms = getAcronyms();
@@ -58,12 +58,21 @@ class MarkupDynamicRender
      */
     public static function create($format): MarkupDynamicRender
     {
-        return new MarkupDynamicRender($format);
+        if (isset(self::$DYNAMIC_RENDERERS_CACHE[$format])) {
+            return self::$DYNAMIC_RENDERERS_CACHE[$format];
+        }
+        $markupDynamicRender = new MarkupDynamicRender($format);
+        self::$DYNAMIC_RENDERERS_CACHE[$format] = $markupDynamicRender;
+        return $markupDynamicRender;
     }
 
     public static function createXhtml(): MarkupDynamicRender
     {
-        return new MarkupDynamicRender("xhtml");
+        try {
+            return self::create("xhtml");
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("xhtml should be available");
+        }
     }
 
     public function setDateAt($date_at)
@@ -78,38 +87,27 @@ class MarkupDynamicRender
      * @throws ExceptionCompile
      * @throws ExceptionBadState
      */
-    public function processInstructions($callStackHeaderInstructions, $contextData = null)
+    public function processInstructions($callStackHeaderInstructions): string
     {
-        global $ID;
-        $keepID = $ID;
-        global $ACT;
-        $keepACT = $ACT;
-        global $ID;
-        $contextManager = ContextManager::getOrCreate();
-        if ($contextData !== null) {
-            $contextManager->setContextArrayData($contextData);
-        }
-        try {
 
-            if ($ID === null && PluginUtility::isTest()) {
-                $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
-            }
-            $ACT = FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME;
+        try {
 
             // Loop through the instructions
             foreach ($callStackHeaderInstructions as $instruction) {
                 // Execute the callback against the Renderer
                 if (method_exists($this->renderer, $instruction[0])) {
-                    call_user_func_array(array(&$this->renderer, $instruction[0]), $instruction[1] ? $instruction[1] : array());
+                    call_user_func_array(array(&$this->renderer, $instruction[0]), $instruction[1] ?: array());
                 }
             }
 
             // Post process
-            $data = array($this->format, & $this->renderer->doc);
-            \dokuwiki\Extension\Event::createAndTrigger('RENDERER_CONTENT_POSTPROCESS', $data);
+            // $data = array($this->format, & $this->renderer->doc);
+            // \dokuwiki\Extension\Event::createAndTrigger('RENDERER_CONTENT_POSTPROCESS', $data);
+
+            return $this->renderer->doc;
 
 
-        } catch (Exception $e) {
+        } /** @noinspection PhpRedundantCatchClauseInspection */ catch (Exception $e) {
             /**
              * Example of errors;
              * method_exists() expects parameter 2 to be string, array given
@@ -117,15 +115,13 @@ class MarkupDynamicRender
              */
             throw new ExceptionCompile("Error while rendering instructions. Error was: {$e->getMessage()}");
         } finally {
-            $ACT = $keepACT;
-            $ID = $keepID;
-            $contextManager->reset();
+            $this->renderer->reset();
         }
     }
 
-    public function getOutput(): string
+    public function __toString()
     {
-        return $this->renderer->doc;
+        return "Dynamic $this->format renderer";
     }
 
 

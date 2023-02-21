@@ -18,13 +18,21 @@ use dokuwiki\Cache\CacheRenderer;
 class FetcherMarkupBuilder extends FetcherMarkup
 {
 
-    protected ?string $markupString;
-    protected ?Path $markupSourcePath = null;
+    /**
+     * Private are they may be null
+     */
+    private ?string $builderMarkupString = null;
+    private ?Path $builderMarkupSourcePath = null;
+    private ?array $builderRequestedInstructions = null;
+
     protected WikiPath $requestedContextPath;
     protected Mime $mime;
     protected bool $deleteRootBlockElement = false;
     protected string $rendererName = MarkupRenderer::DEFAULT_RENDERER;
+
+
     protected bool $isDoc;
+    protected array $contextData;
 
 
     public function __construct()
@@ -37,7 +45,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
      */
     public function setRequestedMarkupString(string $markupString): FetcherMarkupBuilder
     {
-        $this->markupString = $markupString;
+        $this->builderMarkupString = $markupString;
         return $this;
     }
 
@@ -76,9 +84,9 @@ class FetcherMarkupBuilder extends FetcherMarkup
              * * With {@link WikiPath Wiki Path}: `ns_without_scope`
              * It will then make the cache file path different (ie the md5 output key is the file name)
              */
-            $this->markupSourcePath = $executingPath->toWikiPath();
+            $this->builderMarkupSourcePath = $executingPath->toWikiPath();
         } catch (ExceptionCast $e) {
-            $this->markupSourcePath = $executingPath;
+            $this->builderMarkupSourcePath = $executingPath;
         }
         return $this;
 
@@ -133,8 +141,8 @@ class FetcherMarkupBuilder extends FetcherMarkup
     public function build(): FetcherMarkup
     {
 
-        if ($this->markupSourcePath === null && $this->markupString === null) {
-            throw new ExceptionRuntimeInternal("A markup source path or a markup string should be given");
+        if ($this->builderMarkupSourcePath === null && $this->builderMarkupString === null && $this->builderRequestedInstructions === null) {
+            throw new ExceptionRuntimeInternal("A markup source path, a markup string or instructions should be given");
         }
         if (!isset($this->mime)) {
             throw new ExceptionRuntimeInternal("A mime is mandatory");
@@ -145,16 +153,19 @@ class FetcherMarkupBuilder extends FetcherMarkup
 
         $newFetcherMarkup = new FetcherMarkup();
         $newFetcherMarkup->requestedContextPath = $this->requestedContextPath;
-        if (isset($this->markupString)) {
-            $newFetcherMarkup->markupString = $this->markupString;
+        if ($this->builderMarkupString !== null) {
+            $newFetcherMarkup->markupString = $this->builderMarkupString;
         }
-        $newFetcherMarkup->markupSourcePath = $this->markupSourcePath;
+        if ($this->builderMarkupSourcePath !== null) {
+            $newFetcherMarkup->markupSourcePath = $this->builderMarkupSourcePath;
+        }
+        if ($this->builderRequestedInstructions !== null) {
+            $newFetcherMarkup->requestedInstructions = $this->builderRequestedInstructions;
+        }
         $newFetcherMarkup->mime = $this->mime;
         $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
         $newFetcherMarkup->rendererName = $this->rendererName;
-        if (isset($this->isDoc)) {
-            $newFetcherMarkup->isDoc = $this->isDoc;
-        }
+        $newFetcherMarkup->isDoc = $this->getIsDoc();
 
         /**
          * We build the cache dependencies even if there is no source markup path (therefore no cache store)
@@ -170,7 +181,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
          * A request is also send by dokuwiki to check the cache validity
          *
          */
-        if ($this->markupSourcePath != null) {
+        if ($this->builderMarkupSourcePath !== null) {
 
 
             /**
@@ -187,14 +198,14 @@ class FetcherMarkupBuilder extends FetcherMarkup
              * path is on windows format without the short path format
              */
             try {
-                $wikiId = $this->markupSourcePath->toWikiPath()->getWikiId();
+                $wikiId = $this->builderMarkupSourcePath->toWikiPath()->getWikiId();
                 $localFile = wikiFN($wikiId);
             } catch (ExceptionCast $e) {
-                $wikiId = $this->markupSourcePath->toQualifiedId();
+                $wikiId = $this->builderMarkupSourcePath->toQualifiedId();
                 try {
-                    $localFile = $this->markupSourcePath->toLocalPath();
+                    $localFile = $this->builderMarkupSourcePath->toLocalPath();
                 } catch (ExceptionCast $e) {
-                    throw new ExceptionRuntimeInternal("The source path ({$this->markupSourcePath}) is not supported as markup source path.", $e);
+                    throw new ExceptionRuntimeInternal("The source path ({$this->builderMarkupSourcePath}) is not supported as markup source path.", $e);
                 }
             }
 
@@ -255,6 +266,67 @@ class FetcherMarkupBuilder extends FetcherMarkup
     {
         $this->isDoc = $isDoc;
         return $this;
+    }
+
+    /**
+     * @param array $instructions
+     * @return FetcherMarkupBuilder
+     */
+    public function setBuilderRequestedInstructions(array $instructions): FetcherMarkupBuilder
+    {
+        $this->builderRequestedInstructions = $instructions;
+        return $this;
+    }
+
+    /**
+     * @param array $contextData
+     * @return $this
+     */
+    public function setContextData(array $contextData): FetcherMarkupBuilder
+    {
+
+        $this->contextData = $contextData;
+        return $this;
+    }
+
+    private function getIsDoc(): bool
+    {
+
+        if (isset($this->isDoc)) {
+            return $this->isDoc;
+        }
+
+        /**
+         * By default, a string is not a whole doc
+         * (in test, this is almost always the case)
+         */
+        if ($this->builderMarkupString !== null) {
+            return false;
+        }
+
+        /**
+         * By default, a instructions array is not a whole doc
+         * (in test and rendering, this is almost always the case)
+         */
+        if ($this->builderRequestedInstructions !== null) {
+            return false;
+        }
+
+        try {
+            /**
+             * If the context and executing path are:
+             * * the same, this is a document run
+             * * not the same, this is a fragment run
+             */
+            if ($this->requestedContextPath->getWikiId() === $this->builderMarkupSourcePath->toWikiPath()->getWikiId()) {
+                return true;
+            }
+        } catch (ExceptionCast $e) {
+            // no executing path, not a wiki path
+        }
+
+        return true;
+
     }
 
 

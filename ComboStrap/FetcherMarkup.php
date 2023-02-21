@@ -44,11 +44,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public const MARKUP_DYNAMIC_EXECUTION_NAME = "markup-dynamic-execution";
 
     /**
-     * @var CacheParser cache file (may be not set if this is a {@link self::isStringExecution() string execution}
+     * @var CacheParser cache file (may be not set if this is not a {@link self::isPathExecution() execution}
      */
     protected CacheParser $contentCache;
 
     protected string $rendererName;
+
+    protected array $requestedInstructions;
 
     /**
      * @var CacheParser
@@ -79,12 +81,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     protected WikiPath $requestedContextPath;
 
     /**
-     * @var ?Path the source path of the markup (may be not set if we render a markup string for instance)
+     * @var Path the source path of the markup (may be not set if we render a markup string for instance)
      */
-    protected ?Path $markupSourcePath = null;
+    protected Path $markupSourcePath;
 
 
-    protected ?string $markupString = null;
+    protected string $markupString;
 
     /**
      * @var array the data fetch as array
@@ -101,10 +103,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     private bool $hasExecuted = false;
 
     /**
-     * The result when this is a {@link self::isStringExecution() execution}
+     * The result
      * @var string
      */
-    private $fetchString;
+    private string $fetchString;
 
 
     /**
@@ -252,7 +254,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function shouldProcess(): bool
     {
 
-        if ($this->isStringExecution()) {
+        if (!$this->isPathExecution()) {
             return true;
         }
 
@@ -370,8 +372,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         try {
             $path = $this->getSourcePath();
         } catch (ExceptionNotFound $e) {
-            if (!$this->isStringExecution()) {
-                throw new ExceptionRuntimeInternal("A source path should be available as this is not a markup string execution");
+            if ($this->isPathExecution()) {
+                throw new ExceptionRuntimeInternal("A source path should be available as this is a path execution");
             }
         }
         $id = $path->toQualifiedId();
@@ -423,40 +425,23 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     /**
      * @return $this
+     * @throws ExceptionCompile
      */
     public function process(): FetcherMarkup
     {
 
         $this->hasExecuted = true;
 
-        /**
-         * Process
-         */
-        if (isset($this->markupString)) {
-            $markup = $this->markupString;
-        } else {
-            try {
-                $sourcePath = $this->getSourcePath();
-            } catch (ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("A markup or a source markup path should be specified.");
-            }
-            try {
-                $markup = FileSystems::getContent($sourcePath);
-            } catch (ExceptionNotFound $e) {
-                $markup = "";
-                LogUtility::error("The path ($sourcePath) does not exist, we have set the markup to the empty string during rendering. If you want to delete the cache path, ask it via the cache path function", self::CANONICAL, $e);
-            }
-        }
 
         /**
          * Rendering
          */
         $executionContext = (ExecutionContext::getActualOrCreateFromEnv());
 
-
         $extension = $this->getMime()->getExtension();
         switch ($extension) {
             case MarkupRenderer::INSTRUCTION_EXTENSION:
+                $markup = $this->getMarkupStringToExecute();
                 $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
                     ->setRequestedMimeToInstruction();
                 $executionContext->setExecutingMarkupHandler($this);
@@ -475,7 +460,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                  * We don't manage/take over the storage
                  * for now. We use the dokwuiki standard function
                  */
-                $this->fetchString = null;
+                unset($this->fetchString);
                 $executionContext->setExecutingMarkupHandler($this);
                 try {
                     /**
@@ -505,18 +490,26 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 break;
             default:
 
-                $instructionsFetcher = FetcherMarkup::getBuilder()
-                    ->setRequestedMarkupString($markup)
-                    ->setRequestedContextPath($this->getRequestedContextPath())
-                    ->setRequestedExecutingPath($this->getExecutingPathOrNull())
-                    ->setRequestedMimeToInstructions()
-                    ->setIsDocument($this->isDocument())
-                    ->setDeleteRootBlockElement($this->deleteRootBlockElement)
-                    ->build();
+                if (isset($this->requestedInstructions)) {
 
-                $instructions = $instructionsFetcher
-                    ->processIfNeeded()
-                    ->getInstructionsArray();
+                    $instructions = $this->requestedInstructions;
+
+                } else {
+
+                    $instructionsFetcher = FetcherMarkup::getBuilder()
+                        ->setRequestedMarkupString($this->getMarkupStringToExecute())
+                        ->setRequestedContextPath($this->getRequestedContextPath())
+                        ->setRequestedExecutingPath($this->getExecutingPathOrNull())
+                        ->setRequestedMimeToInstructions()
+                        ->setIsDocument($this->isDocument())
+                        ->setDeleteRootBlockElement($this->deleteRootBlockElement)
+                        ->build();
+                    $instructions = $instructionsFetcher
+                        ->processIfNeeded()
+                        ->getInstructionsArray();
+
+                }
+
 
                 /**
                  * Edge case: We delete here
@@ -531,37 +524,47 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $this->rendererName = $this->getMime()->getExtension();
                 }
 
-                $markupRenderer = MarkupRenderer::createFromMarkupInstructions(
-                    $instructions,
-                    $this
-                )
-                    ->setRequestedMime($this->getMime())
-                    ->setRendererName($this->rendererName);
                 $executionContext->setExecutingMarkupHandler($this);
                 try {
-                    $output = $markupRenderer->getOutput();
-                    if ($output === null && !empty($instructions)) {
-                        LogUtility::error("The renderer ({$this->rendererName}) seems to have been not found");
-                    }
-                    if (is_array($output)) {
-                        $this->fetchArray = $output;
+                    if ($this->isDocument()) {
+                        $markupRenderer = MarkupRenderer::createFromMarkupInstructions($instructions, $this)
+                            ->setRequestedMime($this->getMime())
+                            ->setRendererName($this->rendererName);
+
+                        $output = $markupRenderer->getOutput();
+                        if ($output === null && !empty($instructions)) {
+                            LogUtility::error("The renderer ({$this->rendererName}) seems to have been not found");
+                        }
+                        $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
                     } else {
-                        $this->fetchString = $output;
+                        $output = MarkupDynamicRender::create($this->rendererName)->processInstructions($instructions);
                     }
                 } catch (\Exception $e) {
-                    throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+                    /**
+                     * Example of errors;
+                     * method_exists() expects parameter 2 to be string, array given
+                     * inc\parserutils.php:672
+                     */
+                    throw new ExceptionCompile("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+
                 } finally {
                     $executionContext->closeExecutingMarkupHandler();
                 }
-                $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
+                if (is_array($output)) {
+                    $this->fetchArray = $output;
+                } else {
+                    $this->fetchString = $output;
+                }
+
                 break;
         }
 
         /**
          * Storage of snippets or dependencies
-         * (none if this is not a path execution)
+         * none if this is not a path execution
+         * and for now, metadata storage is done by dokuwiki
          */
-        if ($this->isStringExecution()) {
+        if (!$this->isPathExecution() || $this->mime->getExtension() === MarkupRenderer::METADATA_EXTENSION) {
             return $this;
         }
 
@@ -644,8 +647,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function __toString()
     {
-        if ($this->isStringExecution()) {
-            $name = "Markup String Execution";
+        if (!$this->isPathExecution()) {
+            if (isset($this->markupString)) {
+                $name = "Markup String Execution";
+            } else {
+                $name = "Markup Instructions Execution";
+            }
         } else {
             try {
                 $name = $this->getSourcePath();
@@ -706,12 +713,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @return string - with replacement if any
      * TODO: edit button replacement could be a script tag with a json, permits to do DOM manipulation
+     * @throws ExceptionCompile - if any processing error occurs
      */
     public function getFetchString(): string
     {
         $this->processIfNeeded();
 
-        if ($this->isStringExecution()) {
+        if (!$this->isPathExecution()) {
             return $this->fetchString;
         }
 
@@ -887,17 +895,21 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     }
 
-    public function isStringExecution(): bool
+    /**
+     * @return bool true if the markup string comes from a path
+     * This is motsly important for cache as we use the path as the cache key
+     */
+    public function isPathExecution(): bool
     {
-        if ($this->markupSourcePath === null) {
-            if ($this->markupString !== null) {
-                return true;
-            }
-            throw new ExceptionRuntimeInternal("A markup source path or a markup string should be set");
+        if (isset($this->markupSourcePath)) {
+            return true;
         }
         return false;
     }
 
+    /**
+     * @throws ExceptionCompile - if any processing errors occurs
+     */
     public function processIfNeeded(): FetcherMarkup
     {
 
@@ -919,7 +931,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
         if (isset($this->fetchArray)) {
             /**
-             * In a {@link self::isStringExecution()}, there is only an array
+             * In a {@link self::isPathExecution()}, there is only an array
              * (no storage)
              */
             return $this->fetchArray;
@@ -943,27 +955,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function isDocument(): bool
     {
 
-        if (isset($this->isDoc)) {
-            Console::log("IsDocument Value: (".DataType::toString($this->isDoc)."), DataType: (".DataType::getType($this->isDoc).")");
-            return $this->isDoc;
-        }
+        return $this->isDoc;
 
-        if ($this->isStringExecution()) {
-            return false;
-        }
-        try {
-            /**
-             * If the context and executing path are:
-             * * the same, this is a document run
-             * * not the same, this is a fragment run
-             */
-            if ($this->getRequestedContextPath()->getWikiId() === $this->getRequestedExecutingPath()->toWikiPath()->getWikiId()) {
-                return true;
-            }
-        } catch (ExceptionNotFound|ExceptionCast $e) {
-            // no executing path, not a wiki path
-        }
-        return true;
+
     }
 
     public function getSnippetManager(): SnippetSystem
@@ -996,6 +990,25 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function isFragment(): bool
     {
         return $this->isDocument() === false;
+    }
+
+    private function getMarkupStringToExecute(): string
+    {
+        if (isset($this->markupString)) {
+            return $this->markupString;
+        } else {
+            try {
+                $sourcePath = $this->getSourcePath();
+            } catch (ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("A markup or a source markup path should be specified.");
+            }
+            try {
+                return FileSystems::getContent($sourcePath);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::error("The path ($sourcePath) does not exist, we have set the markup to the empty string during rendering. If you want to delete the cache path, ask it via the cache path function", self::CANONICAL, $e);
+                return "";
+            }
+        }
     }
 
 

@@ -30,10 +30,11 @@ class PipelineUtility
 
     /**
      * @param $expression
+     * @param array $contextData
      * @return string
      * @throws ExceptionBadSyntax - if there is any syntax error
      */
-    static public function execute($expression): string
+    static public function execute($expression, array $contextData = null): string
     {
 
         /**
@@ -49,16 +50,30 @@ class PipelineUtility
              * a literal: "$title"
              * a literal with a pipe: "World | Do" | replace ("world,"you")
              */
-            $processedExpression = substr($processedExpression, $firstQuoteChar + 1);
-            $secondQuoteChar = strpos($processedExpression, '"');
-            $message = substr($processedExpression, 0, $secondQuoteChar);
+            $message = null;
+            if ($firstQuoteChar !== false) {
+                $processedExpression = substr($processedExpression, $firstQuoteChar + 1);
+                $secondQuoteChar = strpos($processedExpression, '"');
+                if ($secondQuoteChar !== false) {
+                    $message = substr($processedExpression, 0, $secondQuoteChar);
+                }
+            }
 
-            $processedExpression = substr($processedExpression, $secondQuoteChar + 1);
-            $secondPipeChar = strpos($processedExpression, '|');
-            if ($secondPipeChar !== false) {
-                $commandChain = substr($processedExpression, $secondPipeChar + 1);
+            $pipeCharPosition = strpos($processedExpression, '|');
+            if ($pipeCharPosition !== false) {
+                $commandChain = substr($processedExpression, $pipeCharPosition + 1);
+                if ($message == null) {
+                    // not quoted expression
+                    // do we support that ?
+                    $message = substr($processedExpression, 0, $pipeCharPosition);
+                }
             } else {
-                $commandChain = $processedExpression;
+                if ($message == null) {
+                    // not quoted expression
+                    // do we support that ?
+                    $message = $processedExpression;
+                }
+                $commandChain = "";
             }
 
         } else {
@@ -83,7 +98,7 @@ class PipelineUtility
          * We replace after the split to be sure that there is not a | separator in the variable value
          * that would fuck up the process
          */
-        $message = \syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($message);
+        $message = \syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($message, $contextData);
 
         $charactersToTrimFromCommand = implode("", self::QUOTES_CHARACTERS);
         foreach ($commands as $command) {
@@ -273,7 +288,7 @@ class PipelineUtility
         $localeSeparator = '_';
         if ($locale === null) {
             $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
-            $page = MarkupPath::createPageFromQualifiedId($path);
+            $page = MarkupPath::createPageFromPathObject($path);
             $locale = Locale::createForPage($page)->getValueOrDefault();
         }
 

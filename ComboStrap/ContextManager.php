@@ -35,10 +35,7 @@ class ContextManager
     }
 
 
-    /**
-     * @return ContextManager - the global context manager
-     * that is set for every run at the end of this file
-     */
+
     public static function getOrCreate(): ContextManager
     {
 

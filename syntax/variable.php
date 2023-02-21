@@ -40,12 +40,15 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
      * Template rendering will be context based
      * (first step to delete the template tag)
      * @param string $string
+     * @param array|null $contextData
      * @return string
      */
-    public static function replaceVariablesWithValuesFromContext(string $string): string
+    public static function replaceVariablesWithValuesFromContext(string $string, array $contextData = null): string
     {
-        $metadata = ExecutionContext::getActualOrCreateFromEnv()->getContextData();
-        return Template::create($string)->setProperties($metadata)->render();
+        if($contextData===null) {
+            $contextData = ExecutionContext::getActualOrCreateFromEnv()->getContextData();
+        }
+        return Template::create($string)->setProperties($contextData)->render();
     }
 
 

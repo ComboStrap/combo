@@ -26,13 +26,13 @@ require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
  *
  * Fragment
  *
- * A fragment is a part of a markup file.
+ * A fragment is a part of a markup file
+ * that captures the instructions
+ * and then render them with {@link \ComboStrap\FetcherMarkup}
+ * with different {@link \ComboStrap\FetcherMarkupBuilder::setContextData() context data}
+ * for each page.
  *
- * It can be then rendered with different {@link \ComboStrap\ContextManager} (page)
- *
- * Used inside an iterator.
- *
- * The content is the
+ * It should be used inside an iterator.
  *
  *
  *

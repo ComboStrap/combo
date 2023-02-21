@@ -113,7 +113,7 @@ class MarkupDynamicRender
              * method_exists() expects parameter 2 to be string, array given
              * inc\parserutils.php:672
              */
-            throw new ExceptionCompile("Error while rendering instructions. Error was: {$e->getMessage()}");
+            throw new ExceptionCompile("Error while rendering instructions. Error was: {$e->getMessage()}", "dynamic renderer", 1, $e);
         } finally {
             $this->renderer->reset();
         }

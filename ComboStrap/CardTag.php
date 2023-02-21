@@ -24,6 +24,7 @@ class CardTag
     const LOGICAL_TAG = self::CARD_TAG;
 
 
+
     public static function handleEnter(TagAttributes $tagAttributes, \Doku_Handler $handler): array
     {
 
@@ -125,20 +126,7 @@ class CardTag
         /**
          * Insert card-body
          */
-        $bodyCall = Call::createComboCall(
-            BoxTag::TAG,
-            DOKU_LEXER_ENTER,
-            [
-                BoxTag::HTML_TAG_ATTRIBUTE => "div",
-                BoxTag::LOGICAL_TAG_ATTRIBUTE => 'card-body',
-                TagAttributes::CLASS_KEY => 'card-body',
-            ],
-            null,
-            null,
-            null,
-            null,
-            \syntax_plugin_combo_xmltag::TAG
-        );
+        $bodyCall = self::createCardBodyEnterCall();
         $insertBodyAfterThisCalls = PluginUtility::mergeAttributes(Call::IMAGE_TAGS, [syntax_plugin_combo_header::TAG]);
         if (in_array($actualCall->getTagName(), $insertBodyAfterThisCalls)) {
 
@@ -236,5 +224,37 @@ class CardTag
         if ($context === syntax_plugin_combo_masonry::TAG) {
             syntax_plugin_combo_masonry::endColIfBootstrap5AnCardColumns($renderer, $context);
         }
+    }
+
+    public static function createCardBodyExitCall(): Call
+    {
+        return Call::createComboCall(
+            BoxTag::TAG,
+            DOKU_LEXER_EXIT,
+            [],
+            null,
+            null,
+            null,
+            null,
+            \syntax_plugin_combo_xmltag::TAG
+        );
+    }
+
+    public static function createCardBodyEnterCall($context = null): Call
+    {
+        return Call::createComboCall(
+            BoxTag::TAG,
+            DOKU_LEXER_ENTER,
+            [
+                BoxTag::HTML_TAG_ATTRIBUTE => "div",
+                BoxTag::LOGICAL_TAG_ATTRIBUTE => 'card-body',
+                TagAttributes::CLASS_KEY => 'card-body',
+            ],
+            $context,
+            null,
+            null,
+            null,
+            \syntax_plugin_combo_xmltag::TAG
+        );
     }
 }

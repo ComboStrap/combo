@@ -192,10 +192,7 @@ class BlockquoteTag
                 null,
                 \syntax_plugin_combo_xmltag::TAG
             );
-            $cardBodyEnterCall = Call::createComboCall(
-                CardBodyTag::TAG,
-                DOKU_LEXER_ENTER
-            );
+            $cardBodyEnterCall = CardTag::createCardBodyEnterCall($context);
             $firstChild = $callStack->moveToFirstChildTag();
 
             if ($firstChild !== false) {
@@ -236,12 +233,7 @@ class BlockquoteTag
                     \syntax_plugin_combo_xmltag::TAG
                 )
             );
-            $callStack->insertBefore(
-                Call::createComboCall(
-                    CardBodyTag::TAG,
-                    DOKU_LEXER_EXIT
-                )
-            );
+            $callStack->insertBefore(CardTag::createCardBodyExitCall());
         }
 
         return array(
@@ -250,7 +242,7 @@ class BlockquoteTag
         );
     }
 
-    public static function renderEnterXhtml(TagAttributes $tagAttributes, $data): string
+    public static function renderEnterXhtml(TagAttributes $tagAttributes, $data, $renderer): string
     {
         /**
          * Add the CSS
@@ -313,17 +305,18 @@ class BlockquoteTag
                  */
                 $tagAttributes->addClassName(self::CARD_TYPE);
                 return $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
-                /**
-                 * The card body and blockquote body
-                 * of the example (https://getbootstrap.com/docs/4.0/components/card/#header-and-footer)
-                 * are added via call at
-                 * the {@link DOKU_LEXER_EXIT} state of {@link BlockquoteTag::handle()}
-                 */
+            /**
+             * The card body and blockquote body
+             * of the example (https://getbootstrap.com/docs/4.0/components/card/#header-and-footer)
+             * are added via call at
+             * the {@link DOKU_LEXER_EXIT} state of {@link BlockquoteTag::handle()}
+             */
         }
     }
 
 
-    static function renderExitXhtml(TagAttributes $tagAttributes, Doku_Renderer_xhtml $renderer, array $data){
+    static function renderExitXhtml(TagAttributes $tagAttributes, Doku_Renderer_xhtml $renderer, array $data)
+    {
         // Because we can have several unmatched on a line we don't know if
         // there is a eol
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);
@@ -335,7 +328,7 @@ class BlockquoteTag
             case self::TWEET:
             case self::TYPO_TYPE:
             default:
-            $renderer->doc .= "</blockquote>";
+                $renderer->doc .= "</blockquote>";
                 break;
         }
 

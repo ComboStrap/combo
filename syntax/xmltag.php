@@ -57,7 +57,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_ENTER:
                         switch ($logicalTag) {
                             case BlockquoteTag::TAG:
-                                $renderer->doc .= BlockquoteTag::renderEnterXhtml($tagAttributes, $data);
+                                $renderer->doc .= BlockquoteTag::renderEnterXhtml($tagAttributes, $data, $renderer);
                                 return true;
                             case BoxTag::TAG:
                                 $renderer->doc .= BoxTag::renderEnterXhtml($tagAttributes);

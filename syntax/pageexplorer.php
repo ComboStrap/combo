@@ -413,8 +413,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     /**
                      * Context
                      */
-                    $executingMarkupFetcher = $executionContext->getExecutingMarkupHandler();
-                    $requestedContextPath = $executingMarkupFetcher->getRequestedContextPath();
+                    $requestedContextPath = $executionContext->getContextPath();
 
                     /**
                      * NameSpacePath determination
@@ -430,9 +429,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         } catch (ExceptionNotFound $e) {
                             $namespacePath = WikiPath::createRootNamespacePathOnMarkupDrive();
                         }
-                        $executingMarkupFetcher
-                            ->getCacheDependencies()
-                            ->addDependency(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
+                        try {
+                            $executionContext
+                                ->getExecutingMarkupHandler()
+                                ->getCacheDependencies()
+                                ->addDependency(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
+                        } catch (ExceptionNotFound $e) {
+                            // ok
+                        }
                     }
 
 
@@ -458,8 +462,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Css
                              */
-                            $executingMarkupFetcher
-                                ->getSnippetManager()
+                            $executionContext
+                                ->getSnippetSystem()
                                 ->attachCssInternalStyleSheet($componentClassPrefix);
 
                             /**

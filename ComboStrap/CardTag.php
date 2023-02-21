@@ -3,9 +3,7 @@
 namespace ComboStrap;
 
 use Doku_Renderer_xhtml;
-use syntax_plugin_combo_fragment;
 use syntax_plugin_combo_header;
-use syntax_plugin_combo_masonry;
 
 /**
  * * Horizontal Card
@@ -199,8 +197,8 @@ class CardTag
 
 
         $context = $data[PluginUtility::CONTEXT];
-        if ($context === syntax_plugin_combo_masonry::TAG) {
-            syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns($renderer, $context);
+        if ($context === MasonryTag::MASONRY_TAG) {
+            MasonryTag::addColIfBootstrap5AndCardColumns($renderer, $context);
         }
 
         /**
@@ -218,11 +216,11 @@ class CardTag
 
         /**
          * End Masonry column if any
-         * {@link syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns()}
+         * {@link MasonryTag::addColIfBootstrap5AndCardColumns()}
          */
         $context = $data[PluginUtility::CONTEXT];
-        if ($context === syntax_plugin_combo_masonry::TAG) {
-            syntax_plugin_combo_masonry::endColIfBootstrap5AnCardColumns($renderer, $context);
+        if ($context === MasonryTag::MASONRY_TAG) {
+            MasonryTag::endColIfBootstrap5AnCardColumns($renderer, $context);
         }
     }
 

@@ -15,6 +15,7 @@ use ComboStrap\CarrouselTag;
 use ComboStrap\ColorRgb;
 use ComboStrap\HeadingTag;
 use ComboStrap\JumbotronTag;
+use ComboStrap\MasonryTag;
 use ComboStrap\NoteTag;
 use ComboStrap\PrismTags;
 use ComboStrap\ContainerTag;
@@ -102,6 +103,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case JumbotronTag::TAG:
                                 $renderer->doc .= JumbotronTag::renderEnterXhtml($tagAttributes);
                                 return true;
+                            case MasonryTag::LOGICAL_TAG:
+                                $renderer->doc .= MasonryTag::renderEnterTag();
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -156,6 +160,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case JumbotronTag::TAG:
                                 $renderer->doc .= JumbotronTag::renderExitHtml();
+                                return true;
+                            case MasonryTag::LOGICAL_TAG:
+                                $renderer->doc .= MasonryTag::renderExitHtml();
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -301,6 +308,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case JumbotronTag::TAG:
                         $defaultAttributes = JumbotronTag::getDefault();
                         break;
+                    case MasonryTag::CARD_COLUMNS_TAG:
+                    case MasonryTag::TEASER_COLUMNS_TAG:
+                    case MasonryTag::MASONRY_TAG:
+                        $logicalTag = MasonryTag::LOGICAL_TAG;
+                        break;
                 }
 
                 /**
@@ -348,6 +360,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         break;
                     case HeadingTag::LOGICAL_TAG:
                         $returnedArray = HeadingTag::handleEnter($handler, $tagAttributes, $markupTag);
+                        break;
+                    case MasonryTag::LOGICAL_TAG:
+                        MasonryTag::handleExit($handler);
                         break;
                 }
 
@@ -425,6 +440,11 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case HeadingTag::HEADING_TAG:
                         $logicalTag = HeadingTag::LOGICAL_TAG;
                         $returnedArray = HeadingTag::handleExit($handler);
+                        break;
+                    case MasonryTag::CARD_COLUMNS_TAG:
+                    case MasonryTag::TEASER_COLUMNS_TAG:
+                    case MasonryTag::MASONRY_TAG:
+                        $logicalTag = MasonryTag::LOGICAL_TAG;
                         break;
                 }
                 /**
@@ -528,7 +548,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
         /**
          * Tweak: `paragraphs` is not in the allowed type
          */
-        return array( 'container', 'formatting', 'substition', 'protected', 'disabled');
+        return array('container', 'formatting', 'substition', 'protected', 'disabled');
     }
 
 

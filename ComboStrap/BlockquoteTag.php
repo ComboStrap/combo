@@ -11,10 +11,9 @@ namespace ComboStrap;
 use Doku_Handler;
 use Doku_Renderer_xhtml;
 use syntax_plugin_combo_cite;
-use syntax_plugin_combo_fragment;
 use syntax_plugin_combo_header;
 use syntax_plugin_combo_link;
-use syntax_plugin_combo_masonry;
+
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
@@ -258,7 +257,7 @@ class BlockquoteTag
             case self::TYPO_TYPE:
 
                 $tagAttributes->addClassName("blockquote");
-                $cardTags = [CardTag::CARD_TAG, syntax_plugin_combo_masonry::TAG];
+                $cardTags = [CardTag::CARD_TAG, MasonryTag::MASONRY_TAG];
                 if (in_array($data[PluginUtility::CONTEXT], $cardTags)) {
                     // As seen here: https://getbootstrap.com/docs/5.0/components/card/#header-and-footer
                     // A blockquote in a card
@@ -296,8 +295,8 @@ class BlockquoteTag
                  * Wrap with column
                  */
                 $context = $data[PluginUtility::CONTEXT];
-                if ($context === syntax_plugin_combo_masonry::TAG) {
-                    syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns($renderer, $context);
+                if ($context === MasonryTag::MASONRY_TAG) {
+                    MasonryTag::addColIfBootstrap5AndCardColumns($renderer, $context);
                 }
 
                 /**
@@ -338,8 +337,8 @@ class BlockquoteTag
          */
         if ($type == CardTag::CARD_TAG) {
             $context = $data[PluginUtility::CONTEXT];
-            if ($context === syntax_plugin_combo_masonry::TAG) {
-                syntax_plugin_combo_masonry::endColIfBootstrap5AnCardColumns($renderer, $context);
+            if ($context === MasonryTag::MASONRY_TAG) {
+                MasonryTag::endColIfBootstrap5AnCardColumns($renderer, $context);
             }
         }
 

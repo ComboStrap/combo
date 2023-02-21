@@ -321,5 +321,10 @@ class SiteConfig
         return $this->setConf('tocminheads',$int, self::GLOBAL_SCOPE);
     }
 
+    public function getIndexPageName()
+    {
+        return $this->getValue("start","start",self::GLOBAL_SCOPE);
+    }
+
 
 }

@@ -118,7 +118,8 @@ class Icon
     {
 
 
-        $mediaMarkup = MediaMarkup::createFromFetcher($this->fetchSvg);
+        $mediaMarkup = MediaMarkup::createFromFetcher($this->fetchSvg)
+            ->setLinking(MediaMarkup::LINKING_NOLINK_VALUE); // no lightbox on icon
         if (isset($this->tagAttributes)) {
             $mediaMarkup->buildFromTagAttributes($this->tagAttributes);
         }

@@ -359,6 +359,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer $renderer
      * @param array $data - what the function handle() return'ed
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
+     * @throws \ComboStrap\ExceptionBadArgument
      * @see DokuWiki_Syntax_Plugin::render()
      */
     function render($format, Doku_Renderer $renderer, $data): bool

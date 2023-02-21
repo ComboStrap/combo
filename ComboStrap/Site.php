@@ -606,8 +606,7 @@ class Site
 
     public static function getIndexPageName()
     {
-        global $conf;
-        return $conf["start"];
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getIndexPageName();
     }
 
     /**

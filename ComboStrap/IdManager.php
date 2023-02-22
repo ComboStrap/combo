@@ -3,8 +3,11 @@
 namespace ComboStrap;
 
 /**
- * A manager to return an unique id
- * for a component
+ * A manager to return an unique id for a node
+ *
+ * Example: if you create multiple {@link PageExplorerTag}
+ * you may have several tag for the same page/namespace
+ * but the node id should be unique as it's used for the collapsing
  */
 class IdManager
 {

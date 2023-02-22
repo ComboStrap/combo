@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\PageExplorerTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -84,7 +85,7 @@ class syntax_plugin_combo_pageexplorerparent extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_pageexplorer::TAG)) {
+        if ($mode == PluginUtility::getModeFromTag(PageExplorerTag::LOGICAL_TAG)) {
 
             $pattern = PluginUtility::getContainerTagPattern(self::MARKI_TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));

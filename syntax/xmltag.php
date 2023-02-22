@@ -17,6 +17,7 @@ use ComboStrap\HeadingTag;
 use ComboStrap\JumbotronTag;
 use ComboStrap\MasonryTag;
 use ComboStrap\NoteTag;
+use ComboStrap\PageExplorerTag;
 use ComboStrap\PrismTags;
 use ComboStrap\ContainerTag;
 use ComboStrap\DateTag;
@@ -106,6 +107,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case MasonryTag::LOGICAL_TAG:
                                 $renderer->doc .= MasonryTag::renderEnterTag();
                                 return true;
+                            case PageExplorerTag::LOGICAL_TAG:
+                                $renderer->doc .= PageExplorerTag::renderEnterTag($tagAttributes, $data);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -148,6 +152,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case PipelineTag::TAG:
                             case DateTag::TAG:
+                            case PageExplorerTag::LOGICAL_TAG:
                                 return true;
                             case DropDownTag::TAG:
                                 $renderer->doc .= DropDownTag::renderExitXhtml();
@@ -164,6 +169,7 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case MasonryTag::LOGICAL_TAG:
                                 $renderer->doc .= MasonryTag::renderExitHtml();
                                 return true;
+
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                         }
@@ -313,6 +319,12 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case MasonryTag::MASONRY_TAG:
                         $logicalTag = MasonryTag::LOGICAL_TAG;
                         break;
+                    case PageExplorerTag::NTOC_MARKUP:
+                    case PageExplorerTag::PAGE_EXPLORER_MARKUP:
+                        $logicalTag = PageExplorerTag::LOGICAL_TAG;
+                        $defaultAttributes = [TagAttributes::TYPE_KEY => PageExplorerTag::LIST_TYPE];
+                        $knownTypes = [PageExplorerTag::TYPE_TREE, PageExplorerTag::LIST_TYPE];
+                        break;
                 }
 
                 /**
@@ -360,9 +372,6 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         break;
                     case HeadingTag::LOGICAL_TAG:
                         $returnedArray = HeadingTag::handleEnter($handler, $tagAttributes, $markupTag);
-                        break;
-                    case MasonryTag::LOGICAL_TAG:
-                        MasonryTag::handleExit($handler);
                         break;
                 }
 
@@ -445,6 +454,12 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case MasonryTag::TEASER_COLUMNS_TAG:
                     case MasonryTag::MASONRY_TAG:
                         $logicalTag = MasonryTag::LOGICAL_TAG;
+                        MasonryTag::handleExit($handler);
+                        break;
+                    case PageExplorerTag::NTOC_MARKUP:
+                    case PageExplorerTag::PAGE_EXPLORER_MARKUP:
+                        $logicalTag = PageExplorerTag::LOGICAL_TAG;
+                        PageExplorerTag::handleExit($handler);
                         break;
                 }
                 /**

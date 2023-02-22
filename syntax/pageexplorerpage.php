@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\PageExplorerTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -89,7 +90,7 @@ class syntax_plugin_combo_pageexplorerpage extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_pageexplorer::TAG)) {
+        if ($mode == PluginUtility::getModeFromTag(PageExplorerTag::LOGICAL_TAG)) {
             foreach (self::MARKI_PAGE_TAGS as $page) {
                 $pattern = PluginUtility::getContainerTagPattern($page);
                 $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
@@ -171,7 +172,7 @@ class syntax_plugin_combo_pageexplorerpage extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $logicalTagForTree = syntax_plugin_combo_pageexplorer::CANONICAL . "-tree-" . self::MARKI_PAGE_TAG;
+                    $logicalTagForTree = PageExplorerTag::CANONICAL . "-tree-" . self::MARKI_PAGE_TAG;
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], $logicalTagForTree);
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li")  . DOKU_LF;
                     break;

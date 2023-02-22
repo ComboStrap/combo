@@ -7,7 +7,6 @@ use syntax_plugin_combo_header;
 use syntax_plugin_combo_headingatx;
 use syntax_plugin_combo_headingwiki;
 use syntax_plugin_combo_media;
-use syntax_plugin_combo_section;
 
 class Outline
 {
@@ -121,7 +120,7 @@ class Outline
             switch ($tagName) {
                 case "document_start":
                 case "document_end":
-                case syntax_plugin_combo_section::TAG:
+                case SectionTag::TAG:
                     continue 2;
                 case syntax_plugin_combo_header::TAG:
                     if ($actualCall->isPluginCall() && $actualCall->getContext() === self::CONTEXT) {
@@ -623,9 +622,14 @@ EOF;
     {
 
         $totalComboCalls[] = Call::createComboCall(
-            syntax_plugin_combo_section::TAG,
+            SectionTag::TAG,
             DOKU_LEXER_ENTER,
-            array(HeadingTag::LEVEL => $outlineSection->getLevel())
+            array(HeadingTag::LEVEL => $outlineSection->getLevel()),
+            null,
+            null,
+            null,
+            null,
+            \syntax_plugin_combo_xmltag::TAG
         );
         $contentCalls = $outlineSection->getContentCalls();
         if ($outlineSection->hasChildren()) {
@@ -676,8 +680,14 @@ EOF;
             $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
         }
         $totalComboCalls[] = Call::createComboCall(
-            syntax_plugin_combo_section::TAG,
-            DOKU_LEXER_EXIT
+            SectionTag::TAG,
+            DOKU_LEXER_EXIT,
+            [],
+            null,
+            null,
+            null,
+            null,
+            \syntax_plugin_combo_xmltag::TAG
         );
 
 

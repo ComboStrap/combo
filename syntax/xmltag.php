@@ -29,6 +29,7 @@ use ComboStrap\Hero;
 use ComboStrap\LogUtility;
 use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
+use ComboStrap\SectionTag;
 use ComboStrap\Skin;
 use ComboStrap\Spacing;
 use ComboStrap\TagAttributes;
@@ -110,6 +111,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case PageExplorerTag::LOGICAL_TAG:
                                 $renderer->doc .= PageExplorerTag::renderEnterTag($tagAttributes, $data);
                                 return true;
+                            case SectionTag::TAG:
+                                $renderer->doc .= SectionTag::renderEnterXhtml($tagAttributes);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -169,7 +173,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case MasonryTag::LOGICAL_TAG:
                                 $renderer->doc .= MasonryTag::renderExitHtml();
                                 return true;
-
+                            case SectionTag::TAG:
+                                $renderer->doc .= SectionTag::renderExitXhtml();
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                         }

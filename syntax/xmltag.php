@@ -487,6 +487,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case PageExplorerTag::PAGE_TAG:
                         $logicalTag = PageExplorerTag::PAGE_LOGICAL_TAG;
                         break;
+                    case PageExplorerTag::PARENT_TAG:
+                        // nothing as the content is captured and deleted by page-explorer
+                        break;
                 }
                 /**
                  * Common exit attributes

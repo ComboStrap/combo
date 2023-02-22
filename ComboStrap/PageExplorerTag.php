@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 
 use Doku_Handler;
-use syntax_plugin_combo_pageexplorerparent;
 
 
 class PageExplorerTag
@@ -83,6 +82,8 @@ class PageExplorerTag
      */
     public const PAGE_TAG = "page";
     public const PAGE_ITEM_TAG = "page-item";
+    const PARENT_TAG = "parent";
+
 
     /**
      * @param string $html
@@ -218,7 +219,7 @@ class PageExplorerTag
                         case self::LOGICAL_INDEX_TAG:
                             $homeAttributes = $actualCall->getAttributes();
                             continue 3;
-                        case syntax_plugin_combo_pageexplorerparent::TAG:
+                        case self::PARENT_TAG:
                             $parentAttributes = $actualCall->getAttributes();
                             continue 3;
                         default:
@@ -239,7 +240,7 @@ class PageExplorerTag
                             $templateHomeInstructions = $actualInstructionsStack;
                             $actualInstructionsStack = [];
                             continue 3;
-                        case syntax_plugin_combo_pageexplorerparent::TAG:
+                        case PageExplorerTag::PARENT_TAG:
                             $parentInstructions = $actualInstructionsStack;
                             $actualInstructionsStack = [];
                             continue 3;

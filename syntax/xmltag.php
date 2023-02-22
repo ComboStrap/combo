@@ -334,6 +334,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case PageExplorerTag::NAMESPACE_SHORT_TAG:
                         $logicalTag = PageExplorerTag::NAMESPACE_LOGICAL_TAG;
                         break;
+                    case PageExplorerTag::PAGE_ITEM_TAG:
+                    case PageExplorerTag::PAGE_TAG:
+                        $logicalTag = PageExplorerTag::PAGE_LOGICAL_TAG;
+                        break;
                 }
 
                 /**
@@ -478,6 +482,10 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case PageExplorerTag::NAMESPACE_LONG_TAG:
                     case PageExplorerTag::NAMESPACE_SHORT_TAG:
                         $logicalTag = PageExplorerTag::NAMESPACE_LOGICAL_TAG;
+                        break;
+                    case PageExplorerTag::PAGE_ITEM_TAG:
+                    case PageExplorerTag::PAGE_TAG:
+                        $logicalTag = PageExplorerTag::PAGE_LOGICAL_TAG;
                         break;
                 }
                 /**

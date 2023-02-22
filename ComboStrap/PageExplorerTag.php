@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 
 use Doku_Handler;
-use syntax_plugin_combo_pageexplorerpage;
 use syntax_plugin_combo_pageexplorerparent;
 
 
@@ -74,6 +73,16 @@ class PageExplorerTag
     public const NAMESPACE_SHORT_TAG = "ns";
     public const NAMESPACE_ITEM_TAG = "ns-item";
     public const NAMESPACE_LONG_TAG = "namespace";
+    /**
+     * Tag in Dokuwiki cannot have a `-`
+     * This is the last part of the class
+     */
+    public const PAGE_LOGICAL_TAG = self::PAGE_TAG;
+    /**
+     * The pattern
+     */
+    public const PAGE_TAG = "page";
+    public const PAGE_ITEM_TAG = "page-item";
 
     /**
      * @param string $html
@@ -200,7 +209,7 @@ class PageExplorerTag
             switch ($actualCall->getState()) {
                 case DOKU_LEXER_ENTER:
                     switch ($tagName) {
-                        case syntax_plugin_combo_pageexplorerpage::TAG:
+                        case self::PAGE_LOGICAL_TAG:
                             $pageAttributes = $actualCall->getAttributes();
                             continue 3;
                         case self::NAMESPACE_LOGICAL_TAG:
@@ -218,7 +227,7 @@ class PageExplorerTag
                     }
                 case DOKU_LEXER_EXIT:
                     switch ($tagName) {
-                        case syntax_plugin_combo_pageexplorerpage::TAG:
+                        case self::PAGE_LOGICAL_TAG:
                             $templatePageInstructions = $actualInstructionsStack;
                             $actualInstructionsStack = [];
                             continue 3;

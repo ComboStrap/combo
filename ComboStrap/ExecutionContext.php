@@ -394,7 +394,7 @@ class ExecutionContext
                 // not a template engine running
                 // `id` may be asked by acl to determine the right
                 global $ACT;
-                if (!in_array($ACT, [ExecutionContext::SHOW_ACTION, FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME])) {
+                if (!in_array($ACT, [ExecutionContext::SHOW_ACTION, ExecutionContext::PREVIEW_ACTION, FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME])) {
                     throw new ExceptionNotFound("No page is rendering. Act is ($ACT)");
                 }
 

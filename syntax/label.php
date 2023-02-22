@@ -8,6 +8,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\TabsTag;
 
 
 class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
@@ -100,8 +101,8 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                                 }
                                 $context = syntax_plugin_combo_accordion::TAG;
                                 break;
-                            case  syntax_plugin_combo_tabs::TAG:
-                                $context = syntax_plugin_combo_tabs::TAG;
+                            case  TabsTag::TAG:
+                                $context = TabsTag::TAG;
                                 $tagAttributes = $parentTag->getAttributes();
                                 break;
                             default:
@@ -191,14 +192,14 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             /** @noinspection HtmlUnknownAttribute */
                             $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
                             break;
-                        case syntax_plugin_combo_tabs::TAG:
+                        case TabsTag::TAG:
                             $attributes = $data[PluginUtility::ATTRIBUTES];
-                            $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
+                            $renderer->doc .= TabsTag::openNavigationalTabElement($attributes);
                             break;
                         case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
                             $attributes = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
                             $renderer->doc .= "<ul style=\"list-style-type: none;padding-inline-start: 0;\">";
-                            $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
+                            $renderer->doc .= TabsTag::openNavigationalTabElement($attributes);
                             break;
                         default:
                             LogUtility::log2FrontEnd("The context ($context) of the label is unknown in enter", LogUtility::LVL_MSG_WARNING, self::TAG);
@@ -228,11 +229,11 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-{$dataNamespace}parent=\"#$headingId\">";
                             $renderer->doc .= "<div class=\"card-body\">" . DOKU_LF;
                             break;
-                        case syntax_plugin_combo_tabs::TAG:
-                            $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                        case TabsTag::TAG:
+                            $renderer->doc .= TabsTag::closeNavigationalTabElement();
                             break;
                         case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
-                            $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                            $renderer->doc .= TabsTag::closeNavigationalTabElement();
                             $renderer->doc .= "</ul>";
                             break;
                         default:

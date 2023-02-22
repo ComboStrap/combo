@@ -13,6 +13,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\SiteConfig;
+use ComboStrap\TabsTag;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -42,7 +43,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     const CONTEXT_PREVIEW_ALONE_ATTRIBUTES = array(
         self::SELECTED => true,
         TagAttributes::ID_KEY => "alone",
-        TagAttributes::TYPE_KEY => syntax_plugin_combo_tabs::ENCLOSED_TABS_TYPE
+        TagAttributes::TYPE_KEY => TabsTag::ENCLOSED_TABS_TYPE
     );
 
     const CONF_ENABLE_SECTION_EDITING = "panelEnableSectionEditing";
@@ -157,7 +158,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
          */
         $show = in_array($mode,
             [
-                PluginUtility::getModeFromTag(syntax_plugin_combo_tabs::TAG),
+                PluginUtility::getModeFromTag(TabsTag::TAG),
                 PluginUtility::getModeFromTag(syntax_plugin_combo_accordion::TAG),
                 PluginUtility::getModeFromTag(syntax_plugin_combo_tabpanels::TAG)
             ]);
@@ -245,7 +246,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $id = $context . $this->accordionCounter;
                             $tagAttributes["id"] = $id;
                             break;
-                        case syntax_plugin_combo_tabs::TAG:
+                        case TabsTag::TAG:
                             $this->tabCounter++;
                             $id = $context . $this->tabCounter;
                             $tagAttributes["id"] = $id;
@@ -272,7 +273,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                     $siblingTag = $callStack->moveToPreviousSiblingTag();
                     if ($siblingTag != null) {
-                        if ($siblingTag->getTagName() === syntax_plugin_combo_tabs::TAG) {
+                        if ($siblingTag->getTagName() === TabsTag::TAG) {
                             $tagAttributes[self::SELECTED] = false;
                             while ($descendant = $callStack->next()) {
                                 $descendantName = $descendant->getTagName();
@@ -398,7 +399,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<div class=\"card\">";
                             break;
                         case self::OLD_TAB_PANEL_TAG: // Old deprecated syntax
-                        case syntax_plugin_combo_tabs::TAG: // new syntax
+                        case TabsTag::TAG: // new syntax
 
                             $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
@@ -415,7 +416,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             break;
                         case self::CONTEXT_PREVIEW_ALONE:
                             $aloneAttributes = TagAttributes::createFromCallStackArray(syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES);
-                            $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement($aloneAttributes);
+                            $renderer->doc .= TabsTag::openTabPanelsElement($aloneAttributes);
                             break;
                         default:
                             LogUtility::log2FrontEnd("The context ($context) is unknown in enter rendering", LogUtility::LVL_MSG_ERROR, self::TAG);
@@ -431,7 +432,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             break;
                         case self::CONTEXT_PREVIEW_ALONE:
                             $aloneVariable = TagAttributes::createFromCallStackArray(syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES);
-                            $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($aloneVariable);
+                            $renderer->doc .= TabsTag::closeTabPanelsElement($aloneVariable);
                             break;
                     }
 

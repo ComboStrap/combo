@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TabsTag;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -166,10 +167,10 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement($attributes);
+                    $renderer->doc .= TabsTag::openTabPanelsElement($attributes);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($attributes);
+                    $renderer->doc .= TabsTag::closeTabPanelsElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

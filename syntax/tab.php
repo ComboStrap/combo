@@ -5,7 +5,7 @@
  */
 
 use ComboStrap\PluginUtility;
-
+use ComboStrap\TabsTag;
 
 
 /**
@@ -83,7 +83,7 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if ($mode = PluginUtility::getModeFromTag(syntax_plugin_combo_tabs::TAG)) {
+        if ($mode = PluginUtility::getModeFromTag(TabsTag::TAG)) {
             $pattern = PluginUtility::getContainerTagPattern(self::TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
@@ -165,13 +165,13 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
+                    $renderer->doc .= TabsTag::openNavigationalTabElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                    $renderer->doc .= TabsTag::closeNavigationalTabElement();
                     break;
             }
             return true;

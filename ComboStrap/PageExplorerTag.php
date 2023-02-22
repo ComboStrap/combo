@@ -4,9 +4,6 @@ namespace ComboStrap;
 
 
 use Doku_Handler;
-use syntax_plugin_combo_pageexplorer;
-use syntax_plugin_combo_pageexplorerhome;
-use syntax_plugin_combo_pageexplorernamespace;
 use syntax_plugin_combo_pageexplorerpage;
 use syntax_plugin_combo_pageexplorerparent;
 
@@ -51,6 +48,32 @@ class PageExplorerTag
      * Attributes on the home node
      */
     public const LIST_TYPE = "list";
+    public const INDEX_TAG = "index";
+    /**
+     * The pattern
+     */
+    public const INDEX_HOME_TAG = "home";
+    /**
+     * Tag in Dokuwiki cannot have a `-`
+     * This is the last part of the class
+     */
+    public const LOGICAL_INDEX_TAG = "pageexplorerhome";
+    public const INDEXES_TAG = [PageExplorerTag::INDEX_HOME_TAG, PageExplorerTag::INDEX_TAG];
+    /**
+     * Implementation of the namespace
+     *   * ie the button (in a collapsible menu) http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
+     *   * or the directory in a list menu
+     *
+     * This syntax is not a classic syntax plugin
+     * The instructions are captured at the {@link DOKU_LEXER_END}
+     * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+     * to create/generate the namespaces
+     *
+     */
+    public const NAMESPACE_LOGICAL_TAG = "pageexplorernamespace";
+    public const NAMESPACE_SHORT_TAG = "ns";
+    public const NAMESPACE_ITEM_TAG = "ns-item";
+    public const NAMESPACE_LONG_TAG = "namespace";
 
     /**
      * @param string $html
@@ -180,10 +203,10 @@ class PageExplorerTag
                         case syntax_plugin_combo_pageexplorerpage::TAG:
                             $pageAttributes = $actualCall->getAttributes();
                             continue 3;
-                        case syntax_plugin_combo_pageexplorernamespace::TAG:
+                        case self::NAMESPACE_LOGICAL_TAG:
                             $namespaceAttributes = $actualCall->getAttributes();
                             continue 3;
-                        case syntax_plugin_combo_pageexplorerhome::TAG:
+                        case self::LOGICAL_INDEX_TAG:
                             $homeAttributes = $actualCall->getAttributes();
                             continue 3;
                         case syntax_plugin_combo_pageexplorerparent::TAG:
@@ -199,11 +222,11 @@ class PageExplorerTag
                             $templatePageInstructions = $actualInstructionsStack;
                             $actualInstructionsStack = [];
                             continue 3;
-                        case syntax_plugin_combo_pageexplorernamespace::TAG:
+                        case self::NAMESPACE_LOGICAL_TAG:
                             $namespaceInstructions = $actualInstructionsStack;
                             $actualInstructionsStack = [];
                             continue 3;
-                        case syntax_plugin_combo_pageexplorerhome::TAG:
+                        case self::LOGICAL_INDEX_TAG:
                             $templateHomeInstructions = $actualInstructionsStack;
                             $actualInstructionsStack = [];
                             continue 3;

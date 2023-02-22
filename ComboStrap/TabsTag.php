@@ -3,9 +3,9 @@
 namespace ComboStrap;
 
 
-use Doku_Handler;
+use syntax_plugin_combo_label;
 use syntax_plugin_combo_panel;
-use syntax_plugin_combo_tabs;
+use syntax_plugin_combo_tab;
 
 /**
  * The tabs component is a little bit a nasty one
@@ -248,6 +248,166 @@ class TabsTag
                 break;
         }
         return $html;
+    }
+
+    public static function handleExit($handler): array
+    {
+        $callStack = CallStack::createFromHandler($handler);
+        $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+        $previousOpeningTag = $callStack->previous();
+        $callStack->next();
+        $firstChild = $callStack->moveToFirstChildTag();
+        $context = null;
+        if ($firstChild !== false) {
+            /**
+             * Add the context to the opening and ending tag
+             */
+            $context = $firstChild->getTagName();
+            $openingTag->setContext($context);
+            /**
+             * Does tabs enclosed Panel (new syntax)
+             */
+            if ($context == syntax_plugin_combo_panel::TAG) {
+
+                /**
+                 * We scan the tabs and derived:
+                 * * the navigation tabs element (ie ul/li nav-tab)
+                 * * the tab pane element
+                 */
+
+                /**
+                 * This call will create the ul
+                 * <ul class="nav nav-tabs mb-3" role="tablist">
+                 * thanks to the {@link TabsTag::NAVIGATION_CONTEXT}
+                 */
+                $navigationalCalls[] = Call::createComboCall(
+                    TabsTag::TAG,
+                    DOKU_LEXER_ENTER,
+                    $openingTag->getAttributes(),
+                    TabsTag::NAVIGATION_CONTEXT,
+                    null,
+                    null,
+                    null,
+                    \syntax_plugin_combo_xmltag::TAG
+                );
+
+                /**
+                 * The tab pane elements
+                 */
+                $tabPaneCalls = [$openingTag, $firstChild];
+
+                /**
+                 * Copy the stack
+                 */
+                $labelState = "label";
+                $nonLabelState = "non-label";
+                $scanningState = $nonLabelState;
+                while ($actual = $callStack->next()) {
+
+                    if (
+                        $actual->getTagName() == syntax_plugin_combo_label::TAG
+                        &&
+                        $actual->getState() == DOKU_LEXER_ENTER
+                    ) {
+                        $scanningState = $labelState;
+                    }
+
+                    if ($labelState === $scanningState) {
+                        $navigationalCalls[] = $actual;
+                    } else {
+                        $tabPaneCalls[] = $actual;
+                    }
+
+                    if (
+                        $actual->getTagName() == syntax_plugin_combo_label::TAG
+                        &&
+                        $actual->getState() == DOKU_LEXER_EXIT
+                    ) {
+                        $scanningState = $nonLabelState;
+                    }
+
+
+                }
+
+                /**
+                 * End navigational tabs
+                 */
+                $navigationalCalls[] = Call::createComboCall(
+                    TabsTag::TAG,
+                    DOKU_LEXER_EXIT,
+                    $openingTag->getAttributes(),
+                    TabsTag::NAVIGATION_CONTEXT,
+                    null,
+                    null,
+                    null,
+                    \syntax_plugin_combo_xmltag::TAG
+                );
+
+                /**
+                 * Rebuild
+                 */
+                $callStack->deleteAllCallsAfter($previousOpeningTag);
+                $callStack->appendCallsAtTheEnd($navigationalCalls);
+                $callStack->appendCallsAtTheEnd($tabPaneCalls);
+
+            }
+        }
+
+        return array(
+            PluginUtility::CONTEXT => $context,
+            PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
+        );
+    }
+
+    public static function renderEnterXhtml(TagAttributes $tagAttributes, array $data): string
+    {
+        $context = $data[PluginUtility::CONTEXT];
+        switch ($context) {
+            /**
+             * When the tag tabs enclosed the panels
+             */
+            case syntax_plugin_combo_panel::TAG:
+                return TabsTag::openTabPanelsElement($tagAttributes);
+            /**
+             * When the tag tabs are derived (new syntax)
+             */
+            case TabsTag::NAVIGATION_CONTEXT:
+                /**
+                 * Old syntax, when the tag had to be added specifically
+                 */
+            case syntax_plugin_combo_tab::TAG:
+                return TabsTag::openNavigationalTabsElement($tagAttributes);
+            default:
+                LogUtility::internalError("The context ($context) is unknown in enter", TabsTag::TAG);
+                return "";
+
+        }
+    }
+
+    public static function renderExitXhtml(TagAttributes $tagAttributes, array $data): string
+    {
+        $context = $data[PluginUtility::CONTEXT];
+        switch ($context) {
+            /**
+             * New syntax (tabpanel enclosing)
+             */
+            case syntax_plugin_combo_panel::TAG:
+                return TabsTag::closeTabPanelsElement($tagAttributes);
+            /**
+             * Old syntax
+             */
+            case syntax_plugin_combo_tab::TAG:
+                /**
+                 * New syntax (Derived)
+                 */
+            case TabsTag::NAVIGATION_CONTEXT:
+                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                $type = TabsTag::getComponentType($tagAttributes);
+                return TabsTag::closeNavigationalHeaderComponent($type);
+            default:
+                LogUtility::log2FrontEnd("The context $context is unknown in exit", LogUtility::LVL_MSG_ERROR, TabsTag::TAG);
+                return "";
+        }
     }
 }
 

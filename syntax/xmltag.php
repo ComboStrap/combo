@@ -32,6 +32,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\SectionTag;
 use ComboStrap\Skin;
 use ComboStrap\Spacing;
+use ComboStrap\TabsTag;
 use ComboStrap\TagAttributes;
 
 
@@ -114,6 +115,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                             case SectionTag::TAG:
                                 $renderer->doc .= SectionTag::renderEnterXhtml($tagAttributes);
                                 return true;
+                            case TabsTag::TAG:
+                                $renderer->doc .= TabsTag::renderEnterXhtml($tagAttributes,$data);
+                                return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                                 return false;
@@ -175,6 +179,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                                 return true;
                             case SectionTag::TAG:
                                 $renderer->doc .= SectionTag::renderExitXhtml();
+                                return true;
+                            case TabsTag::TAG:
+                                $renderer->doc .= TabsTag::renderExitXhtml($tagAttributes,$data);
                                 return true;
                             default:
                                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -344,6 +351,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                     case PageExplorerTag::PAGE_TAG:
                         $logicalTag = PageExplorerTag::PAGE_LOGICAL_TAG;
                         break;
+                    case TabsTag::TAG:
+                        $knownTypes = [TabsTag::ENCLOSED_PILLS_TYPE, TabsTag::ENCLOSED_TABS_TYPE, TabsTag::PILLS_TYPE, TabsTag::TABS_TYPE];
+                        break;
                 }
 
                 /**
@@ -495,6 +505,9 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
                         break;
                     case PageExplorerTag::PARENT_TAG:
                         // nothing as the content is captured and deleted by page-explorer
+                        break;
+                    case TabsTag::TAG:
+                        $returnedArray = TabsTag::handleExit($handler);
                         break;
                 }
                 /**

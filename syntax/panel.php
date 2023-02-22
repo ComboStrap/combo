@@ -177,12 +177,12 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
         /**
          * Let's connect
          */
-        if ($show) {
+//        if ($show) {
             foreach (self::getTags() as $tag) {
                 $pattern = PluginUtility::getContainerTagPattern($tag);
                 $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
             }
-        }
+//        }
 
     }
 

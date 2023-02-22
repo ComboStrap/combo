@@ -83,10 +83,10 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if ($mode = PluginUtility::getModeFromTag(TabsTag::TAG)) {
-            $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-        }
+
+        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
 
     }
 
@@ -126,9 +126,7 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED:
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match, $handler);
-
-
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :

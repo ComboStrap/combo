@@ -737,7 +737,7 @@ class ExecutionContext
          * Act
          */
         $oldAct = $this->getExecutingAction();
-        if ($markupHandler->isPathExecution()) {
+        if (!$markupHandler->isPathExecution() && $oldAct!==ExecutionContext::PREVIEW_ACTION) {
             /**
              * Not sure that is is still needed
              * as we have now the notion of document/fragment

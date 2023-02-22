@@ -259,7 +259,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 default:
                     $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
                     if (!empty($errorMessage)) {
-                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        LogUtility::warning($errorMessage,  self::CANONICAL);
                         $renderer->doc .= "<span class=\"text-warning\">{$errorMessage}</span>";
                     }
             }

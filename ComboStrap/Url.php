@@ -668,6 +668,7 @@ class Url extends PathAbs
             $scheme = null;
         }
 
+
         switch ($scheme) {
             case LocalPath::SCHEME:
                 /**
@@ -680,13 +681,9 @@ class Url extends PathAbs
                     // no host
                 }
                 try {
-                    $path = $this->getPath();
-                    if ($path[0] !== "/") {
-                        $base = "$base/{$path}";
-                    } else {
-                        // linux, network share (file://host/path)
-                        $base = "$base{$path}";
-                    }
+                    $path = $this->getAbsolutePath();
+                    // linux, network share (file://host/path)
+                    $base = "$base{$path}";
                 } catch (ExceptionNotFound $e) {
                     // no path
                 }
@@ -761,7 +758,7 @@ class Url extends PathAbs
                 }
 
                 try {
-                    $base = "$base{$this->getPath()}";
+                    $base = "$base{$this->getAbsolutePath()}";
                 } catch (ExceptionNotFound $e) {
                     // ok
                 }
@@ -880,6 +877,21 @@ class Url extends PathAbs
             // no host meaning that the url is relative and then local
             return false;
         }
+    }
+
+    /**
+     * In a url, in a case, the path should be absolute
+     * This function makes it absolute if not.
+     * In case of messaging scheme (mailto, whatsapp, ...), this is not the case
+     * @throws ExceptionNotFound
+     */
+    private function getAbsolutePath(): string
+    {
+        $pathString = $this->getPath();
+        if ($pathString[0] !== "/") {
+            return "/{$pathString}";
+        }
+        return $pathString;
     }
 
 

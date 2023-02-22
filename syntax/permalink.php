@@ -143,8 +143,17 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 }
 
 
+            try {
                 $requestedPage = MarkupPath::createFromRequestedPage();
-                $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
+            } catch (ExceptionNotFound $e) {
+                return self::handleError(
+                    "No requested page was found",
+                    $strict,
+                    $returnArray,
+                    $callStack
+                );
+            }
+            $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:
                         try {

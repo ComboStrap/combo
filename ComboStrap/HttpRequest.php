@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\ActionRouter;
+
 /**
  * A request to the application
  * It's now a wrapper around {@link \TestRequest}
@@ -106,6 +108,18 @@ class HttpRequest
         if ($this->asAdmin) {
             Identity::becomeSuperUser($testRequest);
         }
+
+        /**
+         * Hack to reset the global
+         * Action router variable
+         */
+//        try {
+//            global $ACT;
+//            $ACT = $this->url->getQueryPropertyValue("do");
+//            ActionRouter::getInstance(true);
+//        } catch (ExceptionNotFound $e) {
+//            // no do action
+//        }
 
         switch ($this->method) {
             case self::GET:

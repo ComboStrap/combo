@@ -260,7 +260,7 @@ class GridTag
 
         $templateEndTag = null; // the template end tag that has the instructions
         $callStackTemplate = null; // the instructions in callstack form to modify the children
-        if ($firstChildTag->getTagName() === FragmentTag::FRAGMENT_TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
+        if ($firstChildTag !== false && $firstChildTag->getTagName() === FragmentTag::FRAGMENT_TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
             $templateEndTag = $callStack->next();
             if ($templateEndTag->getTagName() !== FragmentTag::FRAGMENT_TAG || $templateEndTag->getState() !== DOKU_LEXER_EXIT) {
                 LogUtility::error("Error internal: We were unable to find the closing template tag.", GridTag::CANONICAL);

@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\ActionRouter;
 use TestRequest;
 
 
@@ -315,6 +316,7 @@ class ExecutionContext
         /** global dokuwiki messages variable */
         global $MSG;
         unset($MSG);
+
 
 
         /**

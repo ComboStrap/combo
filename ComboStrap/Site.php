@@ -850,7 +850,11 @@ class Site
         return self::SLOT_MAIN_FOOTER_NAME;
     }
 
-    public static function getPrimaryColorValue($default = null)
+    /**
+     * @param $default
+     * @return string|null
+     */
+    public static function getPrimaryColorValue($default = null): ?string
     {
         $value = SiteConfig::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
         if ($value !== null && trim($value) !== "") {

@@ -73,7 +73,6 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
         }
 
 
-
         /**
          * Run the secondary slots
          */
@@ -84,13 +83,11 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
             }
             try {
                 $fetcherPageFragment = $pageElement->getMarkupFetcher();
-                try {
-                    $fetcherPageFragment->processIfNeededAndGetFetchPath();
-                } finally {
-                    $fetcherPageFragment->close();
-                }
+                $fetcherPageFragment->processIfNeededAndGetFetchPath();
             } catch (ExceptionNotFound $e) {
                 // no markup for this slot
+            } catch (ExceptionCompile $e) {
+                LogUtility::error($e->getMessage(), self::CANONICAL, $e);
             }
         }
 
@@ -161,8 +158,6 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
     }
 
 
-
-
     private function getRequestedLayoutOrDefault(): string
     {
         try {
@@ -177,7 +172,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
     {
         global $ACT;
         $label = "Identity forms";
-        switch ($ACT){
+        switch ($ACT) {
             case ExecutionContext::RESEND_PWD_ACTION:
                 $label = "Resend Password";
                 break;

@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 use DOMAttr;
 use DOMElement;
+use splitbrain\phpcli\Colors;
 
 /**
  * Class ImageSvg
@@ -1123,7 +1124,7 @@ class FetcherSvg extends IFetcherLocalImage
                     if ($requestedType === FetcherSvg::ILLUSTRATION_TYPE) {
                         $primaryColor = Site::getPrimaryColorValue();
                         if ($primaryColor !== null) {
-                            $color = $primaryColor;
+                            $color = ColorRgb::createFromString($primaryColor);
                         }
                     }
                 }
@@ -1146,7 +1147,7 @@ class FetcherSvg extends IFetcherLocalImage
                      * svg is used as a background image
                      * fill or stroke should have at minimum "currentColor"
                      */
-                    $colorValue = ColorRgb::createFromString($color)->toCssValue();
+                    $colorValue = $color->toCssValue();
 
 
                     switch ($svgColorType) {

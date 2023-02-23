@@ -56,7 +56,7 @@ trait FetcherTraitWikiPath
                 $defaultDrive = WikiPath::MARKUP_DRIVE;
             }
             if ($id === null) {
-                throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . ", " . self::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");
+                throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . ", " . FetcherRawLocalPath::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");
             }
             $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, $defaultDrive);
             $rev = $tagAttributes->getValueAndRemove(WikiPath::REV_ATTRIBUTE);

@@ -535,6 +535,10 @@ class CallStack
             return false;
         }
 
+        if($this->endWasReached){
+            return false;
+        }
+
         $actualCall = $this->getActualCall();
         $enterState = $actualCall->getState();
         if (!in_array($enterState, CallStack::TAG_STATE)) {

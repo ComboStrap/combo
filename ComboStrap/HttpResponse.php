@@ -161,8 +161,7 @@ class HttpResponse
          * Exit
          * (Test run ?)
          */
-        $isTestRun = ExecutionContext::getActualOrCreateFromEnv()
-            ->isTestRun();
+        $isTestRun = ExecutionContext::getActualOrCreateFromEnv()->isTestRun();
         if (!$isTestRun) {
             if ($this->status !== HttpResponseStatus::ALL_GOOD && isset($this->body)) {
                 // if this is a 304, there is no body, no message

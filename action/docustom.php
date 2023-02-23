@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Console;
 use ComboStrap\ExceptionReporter;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherIdentityForms;
@@ -57,7 +58,9 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
          *
          * Not via the [TPL_ACT_UNKNOWN](https://www.dokuwiki.org/devel:event:tpl_act_unknown)
          * because it would otherwise put the content in the middle of the page
-         * as an admin page. Not really useful if you want your own layout or do an export
+         * as an admin page.
+         *
+         * Not really useful if you want your own layout or do an export
          */
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'executeComboDoAction');
 
@@ -121,13 +124,6 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
          */
         $this->doCustomActuallyExecuting = true;
 
-        /**
-         * Otherwise the act_clean function sanitize the action
-         * and the handler for TPL_ACT_UNKNOWN is never be called.
-         * More https://www.dokuwiki.org/devel:event:tpl_act_unknown#note_for_implementors
-         */
-        $event->preventDefault();
-
 
         try {
             $fetcherName = $this->getFetcherNameFromAction($action);
@@ -149,6 +145,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 ->setException($e)
                 ->setBody($html, Mime::getHtml())
                 ->end();
+
         }
 
     }

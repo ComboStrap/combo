@@ -11,7 +11,7 @@ class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherS
 
     use FetcherTraitWikiPath;
 
-    const SRC_QUERY_PARAMETER = "src";
+    public const SRC_QUERY_PARAMETER = "src";
     const NAME = "raw";
 
 

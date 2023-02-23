@@ -7,6 +7,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
+use ComboStrap\PanelTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\TabsTag;
 
@@ -112,8 +113,8 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                         /**
                          * An panel may render alone in preview
                          */
-                        if ($parentTag->getContext() == syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE) {
-                            $context = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE;
+                        if ($parentTag->getContext() == PanelTag::CONTEXT_PREVIEW_ALONE) {
+                            $context = PanelTag::CONTEXT_PREVIEW_ALONE;
                         }
                     }
                 }
@@ -196,8 +197,8 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $attributes = $data[PluginUtility::ATTRIBUTES];
                             $renderer->doc .= TabsTag::openNavigationalTabElement($attributes);
                             break;
-                        case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
-                            $attributes = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
+                        case PanelTag::CONTEXT_PREVIEW_ALONE:
+                            $attributes = PanelTag::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
                             $renderer->doc .= "<ul style=\"list-style-type: none;padding-inline-start: 0;\">";
                             $renderer->doc .= TabsTag::openNavigationalTabElement($attributes);
                             break;
@@ -232,7 +233,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                         case TabsTag::TAG:
                             $renderer->doc .= TabsTag::closeNavigationalTabElement();
                             break;
-                        case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
+                        case PanelTag::CONTEXT_PREVIEW_ALONE:
                             $renderer->doc .= TabsTag::closeNavigationalTabElement();
                             $renderer->doc .= "</ul>";
                             break;

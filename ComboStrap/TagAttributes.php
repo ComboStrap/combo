@@ -451,13 +451,14 @@ class TagAttributes
 
     }
 
-    public function setComponentAttributeValue($attributeName, $attributeValue)
+    public function setComponentAttributeValue($attributeName, $attributeValue): TagAttributes
     {
         $attLower = strtolower($attributeName);
         $actualValue = $this->getValue($attributeName);
         if ($actualValue === null || $actualValue !== TagAttributes::UN_SET) {
             $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
         }
+        return $this;
     }
 
     public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
@@ -1361,11 +1362,11 @@ class TagAttributes
 
     public function getIdOrDefault()
     {
-        $id = $this->getValue(TagAttributes::ID_KEY);
-        if ($id !== null) {
-            return $id;
+        try {
+            return $this->getId();
+        } catch (ExceptionNotFound $e) {
+            return $this->getValue(TagAttributes::GENERATED_ID_KEY);
         }
-        return $this->getValue(TagAttributes::GENERATED_ID_KEY);
     }
 
     public function setKnownTypes(?array $knownTypes): TagAttributes
@@ -1447,6 +1448,24 @@ class TagAttributes
             throw new ExceptionNotFound("No inner text set");
         }
         return $this->innerText;
+    }
+
+    public function setId(string $id): TagAttributes
+    {
+        return $this->setComponentAttributeValue("id",$id);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getId()
+    {
+        $id = $this->getValue(TagAttributes::ID_KEY);
+        if($id===null){
+            throw new ExceptionNotFound("no id");
+        }
+        return $id;
+
     }
 
 

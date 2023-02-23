@@ -43,6 +43,7 @@ class PluginUtility
     const EXIT_CODE = "exit_code";
 
     const DISPLAY = "display";
+    const MARKUP_TAG = "markup-tag";
 
 
     /**

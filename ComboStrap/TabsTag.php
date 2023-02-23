@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 
 use syntax_plugin_combo_label;
-use syntax_plugin_combo_panel;
 use syntax_plugin_combo_tab;
 
 /**
@@ -146,7 +145,7 @@ class TabsTag
          * Check all attributes for the link (not the li)
          * and delete them
          */
-        $active = syntax_plugin_combo_panel::getSelectedValue($liTagAttributes);
+        $active = PanelTag::getSelectedValue($liTagAttributes);
         $panel = "";
 
 
@@ -267,7 +266,7 @@ class TabsTag
             /**
              * Does tabs enclosed Panel (new syntax)
              */
-            if ($context == syntax_plugin_combo_panel::TAG) {
+            if ($context == PanelTag::PANEL_LOGICAL_MARKUP) {
 
                 /**
                  * We scan the tabs and derived:
@@ -366,7 +365,7 @@ class TabsTag
             /**
              * When the tag tabs enclosed the panels
              */
-            case syntax_plugin_combo_panel::TAG:
+            case PanelTag::PANEL_LOGICAL_MARKUP:
                 return TabsTag::openTabPanelsElement($tagAttributes);
             /**
              * When the tag tabs are derived (new syntax)
@@ -391,7 +390,7 @@ class TabsTag
             /**
              * New syntax (tabpanel enclosing)
              */
-            case syntax_plugin_combo_panel::TAG:
+            case PanelTag::PANEL_LOGICAL_MARKUP:
                 return TabsTag::closeTabPanelsElement($tagAttributes);
             /**
              * Old syntax

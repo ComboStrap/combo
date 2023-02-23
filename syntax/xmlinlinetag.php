@@ -8,7 +8,9 @@ use ComboStrap\ButtonTag;
 use ComboStrap\DateTag;
 use ComboStrap\DropDownTag;
 use ComboStrap\NoteTag;
+use ComboStrap\PermalinkTag;
 use ComboStrap\PluginUtility;
+use ComboStrap\XmlTagProcessing;
 
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -38,6 +40,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
         $array = ButtonTag::getTags();
         $array[] = DropDownTag::TAG;
         $array[] = NoteTag::TAG_INOTE;
+        $array[] = PermalinkTag::TAG;
         return $array;
     }
 
@@ -142,7 +145,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        return syntax_plugin_combo_xmltag::handleStatic($match, $state, $pos, $handler, $this);
+        return XmlTagProcessing::handleStatic($match, $state, $pos, $handler, $this);
 
     }
 
@@ -159,7 +162,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        return syntax_plugin_combo_xmltag::renderStatic($format, $renderer, $data, $this);
+        return XmlTagProcessing::renderStatic($format, $renderer, $data, $this);
 
     }
 

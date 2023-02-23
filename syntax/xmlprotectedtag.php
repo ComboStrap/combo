@@ -5,6 +5,7 @@ use ComboStrap\DateTag;
 use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\PrismTags;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -111,7 +112,7 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        return syntax_plugin_combo_xmltag::handleStatic($match, $state, $pos, $handler, $this);
+        return XmlTagProcessing::handleStatic($match, $state, $pos, $handler, $this);
 
     }
 
@@ -126,7 +127,7 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
-        return syntax_plugin_combo_xmltag::renderStatic($format, $renderer, $data, $this);
+        return XmlTagProcessing::renderStatic($format, $renderer, $data, $this);
     }
 
 

@@ -16,6 +16,7 @@ use ComboStrap\HrTag;
 use ComboStrap\IconTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PageImageTag;
+use ComboStrap\PermalinkTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\SearchTag;
 use ComboStrap\ShareTag;
@@ -60,7 +61,8 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
 
     function getSort(): int
     {
-        return 201;
+        // should be before all container tag
+        return 998;
     }
 
 
@@ -108,6 +110,10 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = [TagAttributes::TYPE_KEY => Brand::CURRENT_BRAND];
                 $allowAnyFirstBooleanAttributesAsType = true;
                 break;
+            case PermalinkTag::TAG:
+                $knownTypes = PermalinkTag::getKnownTypes();
+                $defaultAttributes = [TagAttributes::TYPE_KEY => PermalinkTag::GENERATED_TYPE];
+                break;
         }
         $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
             ->setLogicalTag($logicalTag);
@@ -137,6 +143,9 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
                 break;
             case DateTag::TAG:
                 DateTag::handleEnterAndSpecial();
+                break;
+            case PermalinkTag::TAG:
+                $returnedArray = PermalinkTag::handleEnterSpecial($tagAttributes, $state, $handler);
                 break;
         }
 
@@ -203,6 +212,9 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
                         break;
                     case DateTag::TAG:
                         $renderer->doc .= DateTag::renderHtml($tagAttributes);
+                        return true;
+                    case PermalinkTag::TAG:
+                        $renderer->doc .= PermalinkTag::renderEnterSpecialXhtml($data);
                         return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

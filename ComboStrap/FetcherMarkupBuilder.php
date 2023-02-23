@@ -166,7 +166,7 @@ class FetcherMarkupBuilder extends FetcherMarkup
         $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
         $newFetcherMarkup->rendererName = $this->rendererName;
         $newFetcherMarkup->isDoc = $this->getIsDoc();
-        if(isset($this->builderContextData)){
+        if (isset($this->builderContextData)) {
             $newFetcherMarkup->contextData = $this->builderContextData;
         }
 
@@ -282,12 +282,14 @@ class FetcherMarkupBuilder extends FetcherMarkup
     }
 
     /**
-     * @param array $contextData
+     * @param array|null $contextData
      * @return $this
      */
-    public function setContextData(array $contextData): FetcherMarkupBuilder
+    public function setContextData(?array $contextData): FetcherMarkupBuilder
     {
-
+        if ($contextData == null) {
+            return $this;
+        }
         $this->builderContextData = $contextData;
         return $this;
     }

@@ -851,7 +851,8 @@ class Snippet implements JsonSerializable
      */
     public function toDokuWikiArray(): array
     {
-        $array = $this->toTagAttributes()->toCallStackArray();
+        $tagAttributes = $this->toTagAttributes();
+        $array = $tagAttributes->toCallStackArray();
         unset($array[TagAttributes::GENERATED_ID_KEY]);
         return $array;
     }

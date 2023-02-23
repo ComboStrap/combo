@@ -25,6 +25,8 @@ class HttpRequest
     public function __construct(Url $url)
     {
         $this->url = $url;
+
+
     }
 
 
@@ -63,23 +65,6 @@ class HttpRequest
 
 
     /**
-     * Set the environment for the {@link PluginUtility::getRequestedWikiId()}
-     * @param string $wikiId
-     */
-    private function setRequestIdEnv(string $wikiId)
-    {
-
-        global $INPUT;
-        $INPUT->set("id", $wikiId);
-        global $INFO;
-        if ($INFO !== null) {
-            $INFO['id'] = $wikiId;
-        }
-
-    }
-
-
-    /**
      * @param array $data - data post body as if it was from a form
      * @return $this
      */
@@ -94,7 +79,16 @@ class HttpRequest
     public function fetch(): HttpResponse
     {
         if (!$this->withTestRequest) {
+
             throw new ExceptionRuntime("Real HTTP fetch not yet implemented, only test fetch");
+
+        } else {
+
+            /**
+             * Close the previous executing environment if any
+             */
+            ExecutionContext::getActualOrCreateFromEnv()->close();
+
         }
 
 

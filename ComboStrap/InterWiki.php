@@ -46,24 +46,13 @@ class InterWiki
 
     public static function addInterWiki(string $name, string $value)
     {
-        // init
-        $scopeId = self::initInterWikis();
-        self::$INTERWIKI_URL_TEMPLATES[$scopeId][$name] = $value;
+            ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->addInterWiki($name, $value);
+
     }
 
-    private static function initInterWikis(): string
-    {
-        $requestedPage = PluginUtility::getRequestedWikiId();
-        if (
-            self::$INTERWIKI_URL_TEMPLATES === null
-            || self::$INTERWIKI_URL_TEMPLATES[$requestedPage] === null
-        ) {
-            self::$INTERWIKI_URL_TEMPLATES = null;
-            // scoped by request id to be able to work on test because it's a global variable
-            self::$INTERWIKI_URL_TEMPLATES[$requestedPage] = getInterwiki();
-        }
-        return $requestedPage;
-    }
+
 
     public static function createMediaInterWikiFromString(string $ref): InterWiki
     {
@@ -188,10 +177,11 @@ class InterWiki
 
     }
 
-    private static function getInterWikis()
+    private static function getInterWikis(): array
     {
-        $scopeId = self::initInterWikis();
-        return self::$INTERWIKI_URL_TEMPLATES[$scopeId];
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getInterWikis();
     }
 
     /**

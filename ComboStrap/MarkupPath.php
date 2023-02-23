@@ -1021,24 +1021,34 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $metadataNames = [
             PageH1::PROPERTY_NAME,
             PageTitle::TITLE,
-            PageId::PROPERTY_NAME,
             Canonical::PROPERTY_NAME,
             PagePath::PROPERTY_NAME,
             PageDescription::PROPERTY_NAME,
             ResourceName::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
             Slug::PROPERTY_NAME,
-            PageCreationDate::PROPERTY_NAME,
-            ModificationDate::PROPERTY_NAME,
-            PagePublicationDate::PROPERTY_NAME,
-            StartDate::PROPERTY_NAME,
-            EndDate::PROPERTY_NAME,
             PageLayoutName::PROPERTY_NAME,
-            // Dokuwiki id is deprecated for path, no more advertised
-            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
+            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, // Dokuwiki id is deprecated for path
             PageLevel::PROPERTY_NAME,
             PageKeywords::PROPERTY_NAME
         ];
+
+        /**
+         * The metadata that works only
+         * if the file exists
+         */
+        if (FileSystems::exists($this)) {
+            $metadataThatNeedsExistingFile = [
+                PageId::PROPERTY_NAME,
+                PageCreationDate::PROPERTY_NAME,
+                ModificationDate::PROPERTY_NAME,
+                PagePublicationDate::PROPERTY_NAME,
+                StartDate::PROPERTY_NAME,
+                EndDate::PROPERTY_NAME,
+            ];
+            $metadataNames = array_merge($metadataNames, $metadataThatNeedsExistingFile);
+        }
+
 
         foreach ($metadataNames as $metadataName) {
             $metadata = Metadata::getForName($metadataName);

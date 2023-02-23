@@ -437,22 +437,20 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 //                            if (PluginUtility::isDevOrTest()) {
 //                                throw new ExceptionRuntime("Error on markup ref", self::TAG, 0, $e);
 //                            }
-                            try {
-                                /**
-                                 * Error. Example: unknown inter-wiki ...
-                                 */
-                                $markupLink = LinkMarkup::createFromRef("#");
-                                $markupAttributes = $markupLink->toAttributes();
-                                $markupAttributes->addClassName(LinkMarkup::getHtmlClassNotExist());
-                                $renderer->doc .= $markupAttributes->toHtmlEnterTag("a") . $e->getMessage();
-                            } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
-                                $message = "A local link could not be parsed as reference. It should work everytime as markup ref. Error: {$e->getMessage()}";
-                                LogUtility::internalError($message, self::TAG, $e);
-                                $url = UrlEndpoint::createSupportUrl();
-                                $renderer->doc .= "<a href=\"{$url->toString()}\" >$message";
-                            }
 
+                            /**
+                             * Error. Example: unknown inter-wiki ...
+                             * We still create the a to be xhtml compliante
+                             */
+                            $url = UrlEndpoint::createSupportUrl();
+                            $markupAttributes = TagAttributes::createEmpty()
+                                ->addOutputAttributeValue("href", $url->toString())
+                                ->addClassName(LinkMarkup::getHtmlClassNotExist());
+                            $renderer->doc .= $markupAttributes->toHtmlEnterTag("a") . $e->getMessage();
+
+                            LogUtility::error($e->getMessage(), "link", $e);
                             return false;
+
                         }
                         // markup attributes is leading because it has already output attribute such as href
                         $markupAttributes->mergeWithCallStackArray($tagAttributes->toCallStackArray());

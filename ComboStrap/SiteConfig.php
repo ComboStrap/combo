@@ -53,6 +53,7 @@ class SiteConfig
      */
     private array $configurationValuesToRestore = [];
     private ExecutionContext $executionContext;
+    private array $interWikis;
 
     /**
      * @param $executionContext
@@ -324,6 +325,38 @@ class SiteConfig
     public function getIndexPageName()
     {
         return $this->getValue("start","start",self::GLOBAL_SCOPE);
+    }
+
+    public function getAuthorizedUrlSchemes(): ?array
+    {
+        if(isset($this->authorizedUrlSchemes)){
+            return $this->authorizedUrlSchemes;
+        }
+        $this->authorizedUrlSchemes = getSchemes();
+        $this->authorizedUrlSchemes[] = "whatsapp";
+        $this->authorizedUrlSchemes[] = "mailto";
+        return $this->authorizedUrlSchemes;
+    }
+
+    public function getInterWikis(): array
+    {
+        $this->loadInterWikiIfNeeded();
+        return $this->interWikis;
+    }
+
+    public function addInterWiki(string $name, string $value): SiteConfig
+    {
+        $this->loadInterWikiIfNeeded();
+        $this->interWikis[$name]=$value;
+        return $this;
+    }
+
+    private function loadInterWikiIfNeeded(): void
+    {
+        if(isset($this->interWikis)){
+            return;
+        }
+        $this->interWikis = getInterwiki();
     }
 
 

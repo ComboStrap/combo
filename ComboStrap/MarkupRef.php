@@ -45,7 +45,7 @@ class MarkupRef
     public const WIKI_URI = 'internal';
     public const VARIABLE_URI = 'internal_template';
     public const REF_ATTRIBUTE = "ref";
-    private static ?array $authorizedSchemes = null;
+
 
     /**
      * The type of markup ref (ie media or link)
@@ -334,18 +334,12 @@ class MarkupRef
     // https://www.dokuwiki.org/urlschemes
     private static function loadAndGetAuthorizedSchemes(): array
     {
-        $requestedPage = PluginUtility::getRequestedWikiId();
-        if (
-            self::$authorizedSchemes === null
-            || self::$authorizedSchemes[$requestedPage] === null
-        ) {
-            self::$authorizedSchemes = null;
-            // scoped by request id to be able to work on test because it's a global variable
-            self::$authorizedSchemes[$requestedPage] = getSchemes();
-            self::$authorizedSchemes[$requestedPage][] = "whatsapp";
-            self::$authorizedSchemes[$requestedPage][] = "mailto";
-        }
-        return self::$authorizedSchemes[$requestedPage];
+
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getAuthorizedUrlSchemes();
+
+
     }
 
     /**

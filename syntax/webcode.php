@@ -20,7 +20,9 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Display;
 use ComboStrap\ExceptionBadState;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherMarkup;
 use ComboStrap\FetcherMarkupWebcode;
 use ComboStrap\FetcherRawLocalPath;
@@ -399,7 +401,21 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                              * such as don't show editbutton on webcode
                              */
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
-                            $renderer->doc .= FetcherMarkup::createFromStringMarkupToXhtml($markupCode)->getFetchString();
+                            try {
+                                $contextPath = ExecutionContext::getActualOrCreateFromEnv()
+                                    ->getContextPath();
+                                $renderer->doc .= FetcherMarkup::getBuilder()
+                                    ->setRequestedMarkupString($markupCode)
+                                    ->setDeleteRootBlockElement(false)
+                                    ->setIsDocument(false)
+                                    ->setRequestedContextPath($contextPath)
+                                    ->setRequestedMimeToXhtml()
+                                    ->build()
+                                    ->getFetchString();
+                            } catch (ExceptionCompile $e) {
+                                $renderer->doc .= $e->getMessage();
+                                LogUtility::log2file("Error while rendering webcode", LogUtility::LVL_MSG_ERROR, self::CANONICAL, $e);
+                            }
                             $renderer->doc .= "</div>";
                             return true;
                         }

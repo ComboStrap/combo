@@ -6,7 +6,12 @@ namespace ComboStrap;
 class MarkupRenderer
 {
 
+    /**
+     * Setting the mime to instructions will just not do any render processing.
+     * Just parse tree/instructions processing if needed
+     */
     public const INSTRUCTION_EXTENSION = "i";
+
     const CANONICAL = "markup:renderer";
     const XHTML_RENDERER = "xhtml";
     const DEFAULT_RENDERER = self::XHTML_RENDERER;

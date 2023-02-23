@@ -53,7 +53,7 @@ class MarkupRenderUtility
             ->setRequestedContextPathWithDefault()
             ->build();
 
-        return $markupRenderer->getInstructionsArray();
+        return $markupRenderer->getInstructions();
 
 
     }

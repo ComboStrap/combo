@@ -115,12 +115,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         } else {
             $handler->calls = $outline->toHtmlSectionOutlineCalls();
         }
-        /**
-         * Not needed for combo,
-         * but we still update the global TOC Dokuwiki variables
-         */
-        global $TOC;
-        $TOC = $outline->toTocDokuwikiFormat();
+
+
 
     }
 

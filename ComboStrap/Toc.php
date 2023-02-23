@@ -305,6 +305,10 @@ EOF;
 
     }
 
+    /**
+     * @return array|null
+     * @throws ExceptionNotFound
+     */
     public function getValue()
     {
         $this->buildCheck();

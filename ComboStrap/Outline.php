@@ -828,10 +828,27 @@ EOF;
     private
     function storeTocForMarkupIfAny()
     {
+
+        $toc = $this->toTocDokuwikiFormat();
+
+        try {
+            $fetcherMarkup = ExecutionContext::getActualOrCreateFromEnv()->getExecutingMarkupHandler();
+            $fetcherMarkup->toc = $toc;
+            if ($fetcherMarkup->isDocument()) {
+                /**
+                 * We still update the global TOC Dokuwiki variables
+                 */
+                global $TOC;
+                $TOC = $toc;
+            }
+        } catch (ExceptionNotFound $e) {
+            // outline is not runnned from a markup handler
+        }
+
         if (!isset($this->markupPath)) {
             return;
         }
-        $toc = $this->toTocDokuwikiFormat();
+
         try {
             Toc::createForPage($this->markupPath)
                 ->setValue($toc)

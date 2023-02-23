@@ -126,6 +126,12 @@ class FetcherMarkupBuilder extends FetcherMarkup
     }
 
 
+    /**
+     * Technically, you could set the mime to whatever you want
+     * and still get the instructions via {@link FetcherMarkup::getInstructions()}
+     * Setting the mime to instructions will just not do any render processing.
+     * @return $this
+     */
     public function setRequestedMimeToInstructions(): FetcherMarkupBuilder
     {
         try {
@@ -216,15 +222,10 @@ class FetcherMarkupBuilder extends FetcherMarkup
              * Cache by extension (ie type)
              */
             $extension = $this->mime->getExtension();
-            switch ($extension) {
-                case MarkupRenderer::INSTRUCTION_EXTENSION:
-                    $newFetcherMarkup->contentCache = new CacheInstructions($wikiId, $localFile);
-                    break;
-                default:
-                    $newFetcherMarkup->contentCache = new CacheRenderer($wikiId, $localFile, $extension);
-                    $newFetcherMarkup->cacheDependencies->rerouteCacheDestination($newFetcherMarkup->contentCache);
-                    break;
-            }
+            $newFetcherMarkup->contentCache = new CacheRenderer($wikiId, $localFile, $extension);
+            $newFetcherMarkup->cacheDependencies->rerouteCacheDestination($newFetcherMarkup->contentCache);
+
+            $newFetcherMarkup->instructionsCache = new CacheInstructions($wikiId, $localFile);
         }
 
         return $newFetcherMarkup;

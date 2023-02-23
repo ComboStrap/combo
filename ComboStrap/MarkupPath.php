@@ -2047,12 +2047,14 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return HttpRequest::fetchXhtmlPageResponse($this->getWikiId());
     }
 
+    /**
+     * @return Outline
+     * @deprecated uses {@link FetcherMarkup::getOutline()} instead
+     */
     public function getOutline(): Outline
     {
-        $fetcherMarkup = $this->getInstructionsDocument();
-        $instructions = $fetcherMarkup->getFetchPathAsInstructionsArray();
-        $callStack = CallStack::createFromInstructions($instructions);
-        return Outline::createFromCallStack($callStack, $this);
+
+        return $this->getInstructionsDocument()->getOutline();
 
     }
 
@@ -2067,7 +2069,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
 
         $instructionsDocument = $this->getInstructionsDocument();
-        return $instructionsDocument->processIfNeededAndGetFetchPath();
+        return $instructionsDocument->getInstructionsPath();
 
     }
 

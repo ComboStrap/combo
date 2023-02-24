@@ -144,6 +144,9 @@ class FetcherMarkupBuilder
     }
 
 
+    /**
+     * @throws ExceptionNotExists
+     */
     public function build(): FetcherMarkup
     {
 
@@ -164,6 +167,14 @@ class FetcherMarkupBuilder
         }
         if ($this->builderMarkupSourcePath !== null) {
             $newFetcherMarkup->markupSourcePath = $this->builderMarkupSourcePath;
+            if (!FileSystems::exists($this->builderMarkupSourcePath)) {
+                /**
+                 * Too much edge case for now with dokuwiki
+                 * The {@link \Doku_Renderer_metadata} for instance throws an error if the file does not exist
+                 * ... etc ....
+                 */
+                throw new ExceptionNotExists("The executing source file ({$this->builderMarkupSourcePath}) does not exist");
+            }
         }
         if ($this->builderRequestedInstructions !== null) {
             $newFetcherMarkup->requestedInstructions = $this->builderRequestedInstructions;
@@ -175,6 +186,7 @@ class FetcherMarkupBuilder
         if (isset($this->builderContextData)) {
             $newFetcherMarkup->contextData = $this->builderContextData;
         }
+
 
         /**
          * We build the cache dependencies even if there is no source markup path (therefore no cache store)

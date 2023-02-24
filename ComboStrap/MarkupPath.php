@@ -737,8 +737,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
                 ->setRequestedExecutingPath($wikiPath)
                 ->setRequestedMimeToMetadata()
                 ->build()
-                ->process()
-                ->getFetchArray();
+                ->getMetadata();
         } catch (ExceptionCast $e) {
             // not a wiki path, no meta
         }

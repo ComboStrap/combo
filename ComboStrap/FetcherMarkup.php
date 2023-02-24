@@ -106,11 +106,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public string $markupString;
 
     /**
-     * @var array the data fetch as array
-     * (ie instructions or metadata) for now
-     */
-    private array $fetchArray;
-    /**
      * @var bool true if this fetcher has already run
      * (
      * Fighting file modified time, even if we cache has been stored,
@@ -124,8 +119,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * @var string
      */
     private string $fetchString;
-    private $instructionsHasExecuted = false;
-    private bool $metaProcessed = false;
+    private bool $instructionsHasExecuted = false;
+
     /**
      * @var array
      */
@@ -547,7 +542,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $executionContext->closeExecutingMarkupHandler();
                 }
                 if (is_array($output)) {
-                    $this->fetchArray = $output;
+                    LogUtility::internalError("The output was an array", self::CANONICAL);
+                    $this->fetchString = serialize($output);
                 } else {
                     $this->fetchString = $output;
                 }
@@ -800,14 +796,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         } catch (ExceptionNotFound $e) {
             return null;
         }
-    }
-
-    /**
-     * @return array - the data fetched in a array format
-     */
-    public function getFetchArray(): array
-    {
-        return $this->fetchArray;
     }
 
 
@@ -1072,20 +1060,66 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     private function processMetadata()
     {
 
-        if ($this->metaProcessed) {
-            return $this->meta;
+
+    }
+
+    public function getMetadata(): array
+    {
+
+        $this->processMetaEventually();
+        return $this->meta;
+
+    }
+
+
+    /**
+     * Adaptation of {@link p_render_metadata()} and {@link p_get_metadata()}
+     * to take into account {@link self::getInstructions()}
+     * @return void
+     */
+    private function processMetaEventually(): void
+    {
+
+        /**
+         * Already set
+         */
+        if (isset($this->meta)) {
+            return;
         }
 
-        $this->metaProcessed = true;
+        /**
+         * Can we read from the meta file
+         */
 
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv()->setExecutingMarkupHandler($this);
         try {
             $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
             $actualMeta = p_read_metadata($wikiId);
+
+            if ($this->isPathExecution()) {
+                /**
+                 * The metadata useCache function has side effect
+                 * and triggers a render that fails if the wiki file does not exists
+                 */
+                $depends['files'][] = $this->instructionsCache->cache;
+                $useCache = $this->derivedMetaCache->useCache($depends);
+                if ($useCache) {
+                    $this->meta = $actualMeta;
+                    return;
+                }
+            }
         } catch (ExceptionCast|ExceptionNotFound $e) {
+            // no wiki id
             $actualMeta = [];
             $wikiId = null;
+        } finally {
+            $executionContext->closeExecutingMarkupHandler();
         }
 
+
+        /**
+         * Process and derived meta
+         */
         // add an extra key for the event - to tell event handlers the page whose metadata this is
         $actualMeta['page'] = $wikiId;
         $evt = new \dokuwiki\Extension\Event('PARSER_METADATA_RENDER', $actualMeta);
@@ -1100,6 +1134,16 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
              * Runtime/ Derived metadata
              */
             $renderer->meta =& $actualMeta['current'];
+
+            try {
+                $path = $this->getRequestedExecutingPath();
+                if (!FileSystems::exists($path)) {
+                    $renderer->meta['date']['modified'] = null;
+                }
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+
             /**
              * Persistent data set by the user
              * (Strange as this is a run to derive metadata, this should not exists
@@ -1118,32 +1162,18 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $evt->advise_after();
 
         $this->meta = $evt->result;
+
+        /**
+         * Storage
+         */
         if ($wikiId !== null) {
             p_save_metadata($wikiId, $this->meta);
+            /**
+             * In {@link p_get_metadata()}, they store a timestamp in order to make sure that the cachefile is touched
+             */
+            $this->derivedMetaCache->storeCache(time());
         }
-        /**
-         * In {@link p_get_metadata()}, they store a timestamp in order to make sure that the cachefile is touched
-         */
-        $this->derivedMetaCache->storeCache(time());
-        return $evt->result;
 
-    }
-
-    public function getMetadata()
-    {
-        /**
-         * We don't manage/take over the storage
-         * for now. We use the dokwuiki standard function
-         */
-        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->setExecutingMarkupHandler($this);
-        try {
-            return $this->processMetadata();
-        } catch (\Exception $e) {
-            throw new ExceptionRuntimeInternal("An error has occurred while processing the metadata. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-        } finally {
-            $executionContext->closeExecutingMarkupHandler();
-        }
     }
 
 }

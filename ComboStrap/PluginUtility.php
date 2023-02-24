@@ -130,23 +130,6 @@ class PluginUtility
         return "plugin_" . self::getComponentName($tag);
     }
 
-    /**
-     * @param $tag
-     * @return string
-     *
-     * Create a lookahead pattern for a container tag used to enter in a mode
-     */
-    public static function getContainerTagPattern($tag): string
-    {
-        // this pattern ensure that the tag
-        // `accordion` will not intercept also the tag `accordionitem`
-        // where:
-        // ?: means non capturing group (to not capture the last >)
-        // (\s.*?): is a capturing group that starts with a space
-        $pattern = "(?:\s.*?>|>)";
-        return '<' . $tag . $pattern . '(?=.*?<\/' . $tag . '>)';
-    }
-
 
     /**
      * This pattern allows space after the tag name

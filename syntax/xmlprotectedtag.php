@@ -81,7 +81,7 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
 
 
         foreach ($this->getTags() as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

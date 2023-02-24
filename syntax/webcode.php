@@ -31,6 +31,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\WikiPath;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) die();
 
@@ -152,7 +153,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     public function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }

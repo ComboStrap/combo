@@ -18,6 +18,12 @@ class XmlTagProcessing
 {
 
 
+    /**
+     * This pattern does not allow > or /
+     * in the data to not compete with the empty tag pattern (ie <empty/>
+     */
+    public const START_TAG_PATTERN = '<[\w-]+[^/>]*>';
+
     public static function renderStaticExitXhtml(TagAttributes $tagAttributes, Doku_Renderer_xhtml $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
     {
         $logicalTag = $tagAttributes->getLogicalTag();
@@ -553,6 +559,23 @@ class XmlTagProcessing
         $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
         $defaultReturnedArray[PluginUtility::MARKUP_TAG] = $markupTag;
         return array_merge($defaultReturnedArray, $returnedArray);
+    }
+
+    /**
+     * @param $tag
+     * @return string
+     *
+     * Create a lookahead pattern for a container tag used to enter in a mode
+     */
+    public static function getContainerTagPattern($tag): string
+    {
+        // this pattern ensure that the tag
+        // `accordion` will not intercept also the tag `accordionitem`
+        // where:
+        // ?: means non capturing group (to not capture the last >)
+        // (\s.*?): is a capturing group that starts with a space
+        $pattern = "(?:\s.*?>|>)";
+        return '<' . $tag . $pattern . '(?=.*?<\/' . $tag . '>)';
     }
 }
 

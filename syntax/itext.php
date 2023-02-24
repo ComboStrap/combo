@@ -4,6 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) die();
 
@@ -67,7 +68,7 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }

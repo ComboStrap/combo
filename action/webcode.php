@@ -4,6 +4,7 @@
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) die();
 
@@ -36,7 +37,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $text = $data["newContent"];
-        $pattern = PluginUtility::getContainerTagPattern(syntax_plugin_combo_webcode::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(syntax_plugin_combo_webcode::TAG);
         $result = preg_match("/" . $pattern . "/ms", $text);
         if ($result === 0) {
             return;

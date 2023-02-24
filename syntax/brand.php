@@ -21,6 +21,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 use ComboStrap\Template;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) die();
 
@@ -99,7 +100,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::getTag());
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::getTag());
         $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
         /**

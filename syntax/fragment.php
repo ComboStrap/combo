@@ -18,6 +18,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\MarkupRenderUtility;
 use ComboStrap\ResourceName;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
@@ -101,7 +102,7 @@ class syntax_plugin_combo_fragment extends DokuWiki_Syntax_Plugin
     {
 
         foreach (FragmentTag::TAGS as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

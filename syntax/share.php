@@ -14,6 +14,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\ShareTag;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -74,7 +75,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
         /**
          * Container
          */
-        $entryPattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $entryPattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
@@ -99,7 +100,7 @@ class syntax_plugin_combo_share extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
 
                 $defaultAttributes = [];
-                $types = null;
+                $types = [];
                 $shareAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $types)
                     ->setLogicalTag(self::TAG);
 

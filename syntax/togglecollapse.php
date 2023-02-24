@@ -4,6 +4,7 @@
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\Toggle;
+use ComboStrap\XmlTagProcessing;
 
 class syntax_plugin_combo_togglecollapse extends DokuWiki_Syntax_Plugin
 {
@@ -76,7 +77,7 @@ class syntax_plugin_combo_togglecollapse extends DokuWiki_Syntax_Plugin
          * Tag only valid in a toggle tag
          */
         if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_toggle::TAG)) {
-            $pattern = PluginUtility::getContainerTagPattern(self::getTag());
+            $pattern = XmlTagProcessing::getContainerTagPattern(self::getTag());
             $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
         }
 
@@ -102,7 +103,7 @@ class syntax_plugin_combo_togglecollapse extends DokuWiki_Syntax_Plugin
                  * Default parameters, type definition and parsing
                  */
                 $defaultParameters = [];
-                $knownTypes = null;
+                $knownTypes = [];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultParameters, $knownTypes)
                     ->setLogicalTag(self::TAG);
 

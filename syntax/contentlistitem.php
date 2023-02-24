@@ -3,6 +3,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -91,7 +92,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
          * This is the old tags
          */
         foreach (self::ALL_TAGS as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

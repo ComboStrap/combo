@@ -15,7 +15,7 @@ use dokuwiki\Cache\CacheRenderer;
  *
  * @internal
  */
-class FetcherMarkupBuilder extends FetcherMarkup
+class FetcherMarkupBuilder
 {
 
     /**

@@ -18,6 +18,7 @@ use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -94,7 +95,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     {
 
         foreach ($this->getTags() as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Mermaid;
 use ComboStrap\PluginUtility;
-
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -74,7 +74,7 @@ class syntax_plugin_combo_erd extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 

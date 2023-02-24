@@ -3,6 +3,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -92,7 +93,7 @@ class syntax_plugin_combo_iteratordata extends DokuWiki_Syntax_Plugin
          */
         if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_iterator::TAG)) {
 
-            $pattern = PluginUtility::getContainerTagPattern(self::MARKI_PAGE_TAG);
+            $pattern = XmlTagProcessing::getContainerTagPattern(self::MARKI_PAGE_TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
         }

@@ -150,13 +150,12 @@ class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+        // One pattern to not compete between pattern
         // this pattern ensure that the tag
-        // `accordion` will not intercept also the tag `accordionitem`
-        // where:
-        // ?: means non capturing group (to not capture the last >)
-        // (\s.*?): is a capturing group that starts with a space
-        $pattern = "(?:\s.*?>|>)";
-        $pattern = '<[\w-]+.*?>';
+        // (ie that `accordion` will not intercept also the tag `accordionitem`)
+
+
+        $pattern = XmlTagProcessing::START_TAG_PATTERN;
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }

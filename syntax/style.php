@@ -3,6 +3,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
+use ComboStrap\XmlTagProcessing;
 
 
 class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
@@ -53,7 +54,7 @@ class syntax_plugin_combo_style extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern(XmlTagProcessing::getContainerTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
     }
 
     public function postConnect()

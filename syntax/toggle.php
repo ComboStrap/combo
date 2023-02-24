@@ -9,6 +9,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\Toggle;
+use ComboStrap\XmlTagProcessing;
 
 
 class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
@@ -79,7 +80,7 @@ class syntax_plugin_combo_toggle extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::getTag());
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::getTag());
         $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
 

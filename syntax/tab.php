@@ -6,6 +6,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\TabsTag;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -84,7 +85,7 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 

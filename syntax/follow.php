@@ -11,6 +11,7 @@ use ComboStrap\Icon;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -72,7 +73,7 @@ class syntax_plugin_combo_follow extends DokuWiki_Syntax_Plugin
         /**
          * Container
          */
-        $entryPattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $entryPattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 

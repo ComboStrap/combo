@@ -11,6 +11,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -164,7 +165,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
     {
 
         foreach (self::COMBO_TAGS as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

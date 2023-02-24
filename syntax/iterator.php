@@ -19,6 +19,7 @@ use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -140,7 +141,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 

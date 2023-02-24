@@ -18,6 +18,7 @@ use ComboStrap\GridTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -116,7 +117,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 
         // A cell can be anywhere
         foreach (self::getTags() as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

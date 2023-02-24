@@ -15,6 +15,7 @@ use ComboStrap\XhtmlUtility;
 use ComboStrap\LinkMarkup;
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\XmlTagProcessing;
 
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -104,7 +105,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
     {
         // Only inside a navbar
         if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_menubar::TAG)) {
-            $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+            $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
         }
 

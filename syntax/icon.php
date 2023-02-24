@@ -22,6 +22,7 @@ use ComboStrap\Site;
 use ComboStrap\SvgImageLink;
 use ComboStrap\TagAttributes;
 use ComboStrap\Tooltip;
+use ComboStrap\XmlTagProcessing;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -111,7 +112,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         /**
          * The content is used to add a {@link syntax_plugin_combo_tooltip}
          */
-        $entryPattern = PluginUtility::getContainerTagPattern(IconTag::TAG);
+        $entryPattern = XmlTagProcessing::getContainerTagPattern(IconTag::TAG);
         $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 

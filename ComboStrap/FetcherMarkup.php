@@ -26,6 +26,11 @@ use Exception;
  *
  *
  * TODO: {@link MarkupRenderer} could be one with {@link FetcherMarkup} ?
+ *
+ * Not all properties are public to support
+ * the {@link FetcherMarkupBuilder} pattern.
+ * Php does not support internal class and protected does not
+ * work for class on the same namespace.
  */
 class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
@@ -52,14 +57,14 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @var CacheParser cache file (may be not set if this is not a {@link self::isPathExecution() execution}
      */
-    protected CacheParser $contentCache;
+    public CacheParser $contentCache;
 
-    protected string $rendererName;
+    public string $rendererName;
 
-    protected array $requestedInstructions;
-    protected array $contextData;
+    public array $requestedInstructions;
+    public array $contextData;
 
-    protected CacheInstructions $instructionsCache;
+    public CacheInstructions $instructionsCache;
 
     /**
      * @var CacheParser
@@ -69,12 +74,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @var bool threat the markup as a document (not as a fragment)
      */
-    protected bool $isDoc;
+    public bool $isDoc;
 
 
-    protected Mime $mime;
+    public Mime $mime;
     private bool $cacheAfterRendering = true;
-    protected MarkupCacheDependencies $cacheDependencies;
+    public MarkupCacheDependencies $cacheDependencies;
 
 
     /**
@@ -82,20 +87,20 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     private array $localSnippets = [];
 
-    protected bool $deleteRootBlockElement = false;
+    public bool $deleteRootBlockElement = false;
 
     /**
      * @var WikiPath the context path, it's important to resolve relative link and to create cache for each context namespace for instance
      */
-    protected WikiPath $requestedContextPath;
+    public WikiPath $requestedContextPath;
 
     /**
      * @var Path the source path of the markup (may be not set if we render a markup string for instance)
      */
-    protected Path $markupSourcePath;
+    public Path $markupSourcePath;
 
 
-    protected string $markupString;
+    public string $markupString;
 
     /**
      * @var array the data fetch as array

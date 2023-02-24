@@ -11,6 +11,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -126,7 +127,7 @@ class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
     {
 
         foreach (self::TAGS as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 

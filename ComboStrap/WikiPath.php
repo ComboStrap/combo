@@ -385,7 +385,7 @@ class WikiPath extends PathAbs
         /**
          * Delete the first separator
          */
-        $id = self::toDokuWikiId($path);
+        $id = self::removeRootSepIfPresent($path);
 
         /**
          * If this is a markup, we delete the txt extension if any
@@ -681,7 +681,7 @@ class WikiPath extends PathAbs
      * @param $path
      * @return string with the root path
      */
-    public static function toDokuWikiId($path): string
+    public static function removeRootSepIfPresent($path): string
     {
         $id = $path;
         if ($id[0] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
@@ -1009,7 +1009,8 @@ class WikiPath extends PathAbs
     function toUriString(): string
     {
         $driveSep = self::DRIVE_SEPARATOR;
-        $uri = "{$this->getScheme()}://$this->drive$driveSep$this->id";
+        $absolutePath = self::removeRootSepIfPresent($this->absolutePath);
+        $uri = "{$this->getScheme()}://$this->drive$driveSep$absolutePath";
         if (!empty($this->rev)) {
             $uri = "$uri?rev={$this->rev}";
         }

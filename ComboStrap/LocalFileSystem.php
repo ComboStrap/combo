@@ -206,7 +206,17 @@ class LocalFileSystem implements FileSystem
 
     public function setContent(Path $path, string $content)
     {
-        io_saveFile($path->toQualifiedId(), $content, false);
+
+        $file = $path->toQualifiedId();
+        /**
+         * the {@link io_saveFile()} dokuwiki function
+         * expects the path to be with unix separator
+         * It fails to calculate the parent because it just don't use
+         * {@link dirname()} but search for the last /
+         * in {@link io_mkdir_p()}
+         */
+        $file = str_replace('\\','/',$file);
+        io_saveFile($file, $content, false);
     }
 
 }

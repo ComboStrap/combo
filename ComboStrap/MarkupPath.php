@@ -892,7 +892,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         if ($type === null) {
             return $this->getCanonicalUrl();
         }
-        $pageUrlId = WikiPath::toDokuWikiId(PageUrlPath::createForPage($this)
+        $pageUrlId = WikiPath::removeRootSepIfPresent(PageUrlPath::createForPage($this)
             ->getUrlPathFromType($type));
         return UrlEndpoint::createDokuUrl()
             ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $pageUrlId);
@@ -1687,7 +1687,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getUrlId()
     {
-        return WikiPath::toDokuWikiId($this->getUrlPath());
+        return WikiPath::removeRootSepIfPresent($this->getUrlPath());
     }
 
 

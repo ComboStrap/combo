@@ -94,7 +94,7 @@ class PermalinkTag
 
                 $urlPath = PageUrlPath::createForPage($requestedPage)
                     ->getUrlPathFromType(PageUrlType::CONF_VALUE_CANONICAL_PATH);
-                $urlId = WikiPath::toDokuWikiId($urlPath); // delete the root sep (ie :)
+                $urlId = WikiPath::removeRootSepIfPresent($urlPath); // delete the root sep (ie :)
                 $canonicalUrl = UrlEndpoint::createDokuUrl()
                     ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $urlId)
                     ->toAbsoluteUrl();

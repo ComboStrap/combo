@@ -648,7 +648,7 @@ class ExecutionContext
             // to be able to check the ACL
             return;
         }
-        $executingId = WikiPath::toDokuWikiId($executingId);
+        $executingId = WikiPath::removeRootSepIfPresent($executingId);
         $ID = $executingId;
     }
 

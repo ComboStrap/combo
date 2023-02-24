@@ -252,12 +252,6 @@ $conf["svgInjectionEnable"] = 1;
  */
 $conf["svgOptimizationEnable"] = 1;
 
-/**
- * Svg Inline Max size {@link \ComboStrap\SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_ELEMENT}
- * 2kb is too small for icon.
- * For instance, the et:twitter is 2,600b
- */
-$conf["svgMaxInlineSizeKb"] = 3;
 
 /**
  * The name of the group of user that can upload svg
@@ -470,3 +464,8 @@ $conf["disableBackendJavascript"] = 0;
  * {@link \ComboStrap\SiteConfig::REM_CONF}
  */
 $conf['combo-conf-002'] = 16;
+
+/**
+ * {@link SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT}
+ */
+$conf['combo-conf-003'] = 4;

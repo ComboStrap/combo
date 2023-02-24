@@ -23,6 +23,9 @@ class SiteConfig
     /**
      * The maximum size to be embedded
      * Above this size limit they are fetched
+     *
+     * 2kb is too small for icon.
+     * For instance, the et:twitter is 2,600b
      */
     public const HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT = "combo-conf-003";
     public const HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT_DEFAULT = 4;

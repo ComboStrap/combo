@@ -121,7 +121,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             throw new ExceptionBadSyntax("The main element was not found in the html template ({$this->getLayout()}");
         }
         try {
-
             /**
              * The {@link FetcherMarkup::processIfNeededAndGetFetchPath() Get fetch path}
              * will start the rendering if there is no HTML path
@@ -133,7 +132,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         } catch (ExceptionNotFound $e) {
             // it should be found
             throw new ExceptionNotFound("The main page markup document was not found. Error: {$e->getMessage()}", self::NAME);
-        } catch (ExceptionBadArgument $e) {
+        } catch (\Exception $e) {
             throw new ExceptionBadArgument("The main page markup document could be served as wiki path. Error: {$e->getMessage()}", self::NAME);
         }
 
@@ -149,7 +148,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             try {
                 $fetcherPageFragment = $pageElement->getMarkupFetcher();
                 $cache->addFileDependency($fetcherPageFragment->processIfNeededAndGetFetchPath());
-            } catch (ExceptionNotFound $e) {
+            } catch (ExceptionNotFound|ExceptionCompile $e) {
                 // no markup for this slot
             }
         }

@@ -357,8 +357,8 @@ class FetcherMarkupBuilder
              * * the same, this is a document run
              * * not the same, this is a fragment run
              */
-            if ($this->requestedContextPath->getWikiId() === $this->builderMarkupSourcePath->toWikiPath()->getWikiId()) {
-                return true;
+            if ($this->requestedContextPath->toUriString() !== $this->builderMarkupSourcePath->toWikiPath()->toUriString()) {
+                return false;
             }
         } catch (ExceptionCast $e) {
             // no executing path, not a wiki path

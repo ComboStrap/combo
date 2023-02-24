@@ -130,7 +130,7 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
                 $returnedArray = PageImageTag::handle($tagAttributes, $handler);
                 break;
             case BrandTag::MARKUP:
-                $returnedArray = BrandTag::handle($tagAttributes, $handler);
+                $returnedArray = BrandTag::handleSpecialEnter($tagAttributes, $handler);
                 break;
             case CacheTag::MARKUP:
                 $returnedArray = CacheTag::handle($tagAttributes);

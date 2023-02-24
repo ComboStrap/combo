@@ -44,10 +44,14 @@ class CacheExpirationDate extends MetadataDateTime
          * and not {@link FetcherMarkup::processIfNeededAndGetFetchPath()}
          * to not create the HTML
          */
-        $fetcherMarkup = $resourceCombo->createHtmlFetcherWithContextPath();
+        try {
+            $fetcherMarkup = $resourceCombo->createHtmlFetcherWithContextPath();
+        } catch (ExceptionNotExists $e) {
+            throw new ExceptionNotFound("The executing path does not exist.");
+        }
         $path = $fetcherMarkup->getContentCachePath();
         if (!FileSystems::exists($path)) {
-            throw new ExceptionNotFound("There is no HTML document created to expire");
+            throw new ExceptionNotFound("There is no HTML document created to expire.");
         }
 
 

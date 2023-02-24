@@ -17,6 +17,7 @@ use ComboStrap\Icon;
 use ComboStrap\IconDownloader;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
+use ComboStrap\MediaMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
@@ -136,7 +137,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                 /**
                  * Extra properties
                  */
-                $returnedArray = BrandTag::handle($tagAttributes, $handler);
+                $returnedArray = BrandTag::handleSpecialEnter($tagAttributes, $handler);
 
                 /**
                  * Common properties
@@ -196,7 +197,11 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
                             }
                         }
 
+
+                        // no linking inside a brand
+                        $actualCall->addAttribute(MediaMarkup::LINKING_KEY, MediaMarkup::LINKING_NOLINK_VALUE);
                         $markupIconImageFound = true;
+
                     }
                     if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
                         $textFound = true;

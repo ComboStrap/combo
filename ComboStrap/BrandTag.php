@@ -24,8 +24,9 @@ BrandTag
     public const WIDGET_ATTRIBUTE = "widget";
     public const ICON_ATTRIBUTE = "icon";
 
-    public static function handle(TagAttributes $tagAttributes, \Doku_Handler $handler): array
+    public static function handleSpecialEnter(TagAttributes $tagAttributes, \Doku_Handler $handler): array
     {
+
 
         /**
          * Brand text found is updated on exit if there is one

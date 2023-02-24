@@ -747,10 +747,15 @@ class DatabasePageRow
 
         if ($this->page != null) {
             $this->page->rebuild();
-            $row = $this->getDatabaseRowFromPage($this->page);
-            if ($row !== null) {
+            try {
+                $row = $this->getDatabaseRowFromPage($this->page);
                 $this->setRow($row);
+            } catch (ExceptionNotExists $e) {
+                // ok
+            } catch (ExceptionSqliteNotAvailable $e) {
+                throw new ExceptionRuntimeInternal($e);
             }
+
         }
         return $this;
 

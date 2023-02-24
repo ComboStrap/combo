@@ -1364,9 +1364,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      * @return Alias[]
+     * @throws ExceptionNotFound
      */
     public
-    function getAliases(): ?array
+    function getAliases(): array
     {
         return $this->aliases->getValueAsAlias();
     }
@@ -1717,7 +1718,13 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     function getBuildAlias(): ?Alias
     {
         if ($this->buildAliasPath === null) return null;
-        foreach ($this->getAliases() as $alias) {
+        try {
+            $aliases = $this->getAliases();
+        } catch (ExceptionNotFound $e) {
+            // should not
+            return null;
+        }
+        foreach ($aliases as $alias) {
             if ($alias->getPath() === $this->buildAliasPath) {
                 return $alias;
             }

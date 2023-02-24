@@ -30,13 +30,11 @@ class Aliases extends MetadataTabular
 
     /**
      * @return Alias[]|null
+     * @throws ExceptionNotFound
      */
-    public function getValueAsAlias(): ?array
+    public function getValueAsAlias(): array
     {
         $rows = $this->getValue();
-        if ($rows === null) {
-            return null;
-        }
         $aliases = [];
         foreach ($rows as $row) {
             /**

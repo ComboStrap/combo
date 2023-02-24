@@ -154,11 +154,12 @@ class ExecutionContext
             $urlAct = $this->url->getQueryPropertyValue(self::DO_ATTRIBUTE);
         } catch (ExceptionNotFound $e) {
             /**
-             * The default value is unknown
-             * (if it was `show`, we don't allow to have it without running ID)
-             * but we may execute code that don't need it
+             * The value is unknown
+             * (in doku.php, the default is `show`,
+             * we take the dokuwiki value because the execution context may be
+             * created after the dokuwiki init)
              */
-            $urlAct = null;
+            $urlAct = $ACT;
         }
         $ACT = $urlAct;
 

@@ -1087,6 +1087,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return;
         }
 
+
+
         /**
          * Can we read from the meta file
          */
@@ -1094,6 +1096,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $executionContext = ExecutionContext::getActualOrCreateFromEnv()->setExecutingMarkupHandler($this);
         try {
             $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
+
+            /**
+             * Dokuwiki load them at `global $INFO, $info['meta']`
+             * with {@link pageinfo()}
+             */
             $actualMeta = p_read_metadata($wikiId);
 
             if ($this->isPathExecution()) {

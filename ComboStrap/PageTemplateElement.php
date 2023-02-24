@@ -224,7 +224,11 @@ class PageTemplateElement
          */
         $fragmentPath = $this->getFragmentPath();
         $contextPath = $this->pageLayout->getRequestedContextPath();
-        $this->fetcherFragment = FetcherMarkup::createXhtmlMarkupFetcherFromPath($fragmentPath, $contextPath);
+        try {
+            $this->fetcherFragment = FetcherMarkup::createXhtmlMarkupFetcherFromPath($fragmentPath, $contextPath);
+        } catch (ExceptionNotExists $e) {
+            throw new ExceptionNotFound("The fragment path ($fragmentPath) was no found");
+        }
         return $this->fetcherFragment;
     }
 

@@ -141,6 +141,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * @param Path $executingPath - the path where we can find the markup
      * @param ?WikiPath $contextPath - the context path, the requested path in the browser url (from where relative component are resolved (ie links, ...))
      * @return FetcherMarkup
+     * @throws ExceptionNotExists
      */
     public static function createXhtmlMarkupFetcherFromPath(Path $executingPath, WikiPath $contextPath = null): FetcherMarkup
     {
@@ -1049,7 +1050,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         $instructions = $this->getInstructions();
         $callStack = CallStack::createFromInstructions($instructions);
-        return Outline::createFromCallStack($callStack, $this->getExecutingPathOrNull());
+        try {
+            $markupPath = MarkupPath::createPageFromPathObject($this->getRequestedExecutingPath());
+        } catch (ExceptionNotFound $e) {
+            $markupPath = null;
+        }
+        return Outline::createFromCallStack($callStack, $markupPath);
     }
 
 

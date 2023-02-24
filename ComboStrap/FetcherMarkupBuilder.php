@@ -219,8 +219,19 @@ class FetcherMarkupBuilder
              * path is on windows format without the short path format
              */
             try {
-                $wikiId = $this->builderMarkupSourcePath->toWikiPath()->getWikiId();
-                $localFile = wikiFN($wikiId);
+                $markuSourceWikiPath = $this->builderMarkupSourcePath->toWikiPath();
+
+                if($markuSourceWikiPath->getDrive()===WikiPath::MARKUP_DRIVE){
+                    /**
+                     * Dokuwiki special function
+                     * that should be the same to conform to the cache key
+                     */
+                    $wikiId = $markuSourceWikiPath->getWikiId();
+                    $localFile = wikiFN($wikiId);
+                } else {
+                    $localFile = $markuSourceWikiPath->toLocalPath();
+                    $wikiId = $markuSourceWikiPath->toUriString();
+                }
             } catch (ExceptionCast $e) {
                 $wikiId = $this->builderMarkupSourcePath->toQualifiedId();
                 try {

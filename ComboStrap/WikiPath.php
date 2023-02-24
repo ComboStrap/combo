@@ -388,12 +388,10 @@ class WikiPath extends PathAbs
         $id = self::toDokuWikiId($path);
 
         /**
-         * If this is a markup, we delete the textual extension if any
+         * If this is a markup, we delete the txt extension if any
          */
         if ($this->getDrive() === self::MARKUP_DRIVE) {
-            foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
-                StringUtility::rtrim($id, '.' . $markupExtension);
-            }
+            StringUtility::rtrim($id, '.' . self::MARKUP_DEFAULT_TXT_EXTENSION);
         }
         return $id;
 
@@ -405,11 +403,56 @@ class WikiPath extends PathAbs
         return self::createMediaPathFromPath($id, $rev);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createFromUri(string $uri)
+    {
+
+        $schemeQualified = WikiFileSystem::SCHEME . "://";
+        $lengthSchemeQualified = strlen($schemeQualified);
+        $uriScheme = substr($uri, 0, $lengthSchemeQualified);
+        if ($uriScheme !== $schemeQualified) {
+            throw new ExceptionBadArgument("The uri ($uri) is not a wiki uri");
+        }
+        $uriWithoutScheme = substr($uri, $lengthSchemeQualified);
+        $locationQuestionMark = strpos($uriWithoutScheme, "?");
+        if ($locationQuestionMark === false) {
+            $pathAndDrive = $uriWithoutScheme;
+            $rev = '';
+        } else {
+            $pathAndDrive = substr($uriWithoutScheme, 0, $locationQuestionMark);
+            $query = substr($uriWithoutScheme, $locationQuestionMark + 1);
+            parse_str($query, $queryKeys);
+            $queryKeys = new ArrayCaseInsensitive($queryKeys);
+            $rev = $queryKeys['rev'];
+        }
+        $locationGreaterThan = strpos($pathAndDrive, ">");
+        if ($locationGreaterThan === false) {
+            $path = $pathAndDrive;
+            $locationLastPoint = strrpos($pathAndDrive, ".");
+            if ($locationLastPoint === false) {
+                $drive = WikiPath::MARKUP_DRIVE;
+            } else {
+                $extension = substr($pathAndDrive, $locationLastPoint + 1);
+                if (in_array($extension, WikiPath::ALL_MARKUP_EXTENSIONS)) {
+                    $drive = WikiPath::MARKUP_DRIVE;
+                } else {
+                    $drive = WikiPath::MEDIA_DRIVE;
+                }
+            }
+        } else {
+            $drive = substr($pathAndDrive, 0, $locationGreaterThan);
+            $path = substr($pathAndDrive, $locationGreaterThan + 1);
+        }
+        return new WikiPath(":$path", $drive, $rev);
+    }
+
 
     public static function createMarkupPathFromId($id, $rev = null): WikiPath
     {
         if (strpos($id, WikiFileSystem::SCHEME . "://") !== false) {
-            throw new ExceptionRuntimeInternal("The value ($id) is not an id but a wiki uri");
+            return WikiPath::createFromUri($id);
         }
         WikiPath::addRootSeparatorIfNotPresent($id);
         return self::createMarkupPathFromPath($id);

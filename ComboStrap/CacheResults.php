@@ -46,7 +46,12 @@ class CacheResults
              */
             if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
                 $page = $cacheParser->page;
-                $markupFetcher = MarkupPath::createMarkupFromId($page)->createHtmlFetcherWithContextPath();
+                try {
+                    $markupFetcher = MarkupPath::createMarkupFromId($page)->createHtmlFetcherWithContextPath();
+                } catch (ExceptionNotExists $e) {
+                    // should not happen
+                    LogUtility::internalError("The executing ");
+                }
 
                 /**
                  * @var CacheParser[] $cacheStores

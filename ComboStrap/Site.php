@@ -187,11 +187,16 @@ class Site
         }
     }
 
+    /**
+     * @param int $int
+     * @return void
+     * @deprecated
+     */
     public static function setTocTopLevel(int $int)
     {
-        global $conf;
-        $confKey = 'toptoclevel';
-        $conf[$confKey] = $int;
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->setTocTopLevel($int);
 
     }
 

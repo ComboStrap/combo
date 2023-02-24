@@ -362,5 +362,10 @@ class SiteConfig
         $this->interWikis = getInterwiki();
     }
 
+    public function setTocTopLevel(int $int): SiteConfig
+    {
+        return $this->setConf('toptoclevel',$int, self::GLOBAL_SCOPE);
+    }
+
 
 }

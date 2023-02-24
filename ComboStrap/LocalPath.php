@@ -31,6 +31,7 @@ class LocalPath extends PathAbs
 
     /**
      * @throws ExceptionBadArgument
+     * @throws ExceptionCast
      */
     public static function createFromPathObject(Path $path): LocalPath
     {
@@ -68,7 +69,7 @@ class LocalPath extends PathAbs
 
     /**
      * LocalPath constructor.
-     * @param string $path - relative or absolute
+     * @param string $path - relative or absolute, or a locale file uri
      * @param string|null $sep - the directory separator - it permits to test linux path on windows, and vice-versa
      */
     public function __construct(string $path, string $sep = null)

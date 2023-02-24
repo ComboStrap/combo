@@ -287,7 +287,7 @@ class TabsTag
                     null,
                     null,
                     null,
-                    \syntax_plugin_combo_xmltag::TAG
+                    \syntax_plugin_combo_xmlblocktag::TAG
                 );
 
                 /**
@@ -339,7 +339,7 @@ class TabsTag
                     null,
                     null,
                     null,
-                    \syntax_plugin_combo_xmltag::TAG
+                    \syntax_plugin_combo_xmlblocktag::TAG
                 );
 
                 /**

@@ -629,7 +629,7 @@ EOF;
             null,
             null,
             null,
-            \syntax_plugin_combo_xmltag::TAG
+            \syntax_plugin_combo_xmlblocktag::TAG
         );
         $contentCalls = $outlineSection->getContentCalls();
         if ($outlineSection->hasChildren()) {
@@ -687,7 +687,7 @@ EOF;
             null,
             null,
             null,
-            \syntax_plugin_combo_xmltag::TAG
+            \syntax_plugin_combo_xmlblocktag::TAG
         );
 
 

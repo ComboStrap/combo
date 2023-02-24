@@ -160,7 +160,7 @@ class CardTag
                 null,
                 null,
                 null,
-                \syntax_plugin_combo_xmltag::TAG
+                \syntax_plugin_combo_xmlblocktag::TAG
             )
         );
 
@@ -234,7 +234,7 @@ class CardTag
             null,
             null,
             null,
-            \syntax_plugin_combo_xmltag::TAG
+            \syntax_plugin_combo_xmlblocktag::TAG
         );
     }
 
@@ -252,7 +252,7 @@ class CardTag
             null,
             null,
             null,
-            \syntax_plugin_combo_xmltag::TAG
+            \syntax_plugin_combo_xmlblocktag::TAG
         );
     }
 }

@@ -74,7 +74,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             null,
             null,
             null,
-            \syntax_plugin_combo_xmltag::TAG
+            \syntax_plugin_combo_xmlblocktag::TAG
         ));
 
     }
@@ -101,7 +101,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             null,
             null,
             null,
-            \syntax_plugin_combo_xmltag::TAG
+            \syntax_plugin_combo_xmlblocktag::TAG
         ));
     }
 

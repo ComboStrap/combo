@@ -79,7 +79,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
     function getType(): string
     {
         /**
-         * Not `paragraphs' because we don't allow them in {@link syntax_plugin_combo_xmltag}
+         * Not `paragraphs' because we don't allow them in {@link syntax_plugin_combo_xmlblocktag}
          */
         return 'formatting';
     }

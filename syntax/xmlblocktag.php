@@ -4,49 +4,21 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 // must be run within Dokuwiki
-use ComboStrap\BackgroundAttribute;
-use ComboStrap\BarTag;
 use ComboStrap\BlockquoteTag;
-use ComboStrap\BoxTag;
-use ComboStrap\ButtonTag;
-use ComboStrap\CallStack;
-use ComboStrap\CardTag;
-use ComboStrap\CarrouselTag;
-use ComboStrap\ColorRgb;
 use ComboStrap\HeadingTag;
-use ComboStrap\JumbotronTag;
-use ComboStrap\MasonryTag;
-use ComboStrap\NoteTag;
-use ComboStrap\PageExplorerTag;
-use ComboStrap\PanelTag;
-use ComboStrap\PrismTags;
-use ComboStrap\ContainerTag;
-use ComboStrap\DateTag;
-use ComboStrap\DropDownTag;
-use ComboStrap\ExceptionRuntimeInternal;
-use ComboStrap\ExecutionContext;
-use ComboStrap\GridTag;
-use ComboStrap\Hero;
-use ComboStrap\LogUtility;
-use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
-use ComboStrap\SectionTag;
-use ComboStrap\Skin;
-use ComboStrap\Spacing;
-use ComboStrap\TabsTag;
-use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 
 
 /**
- * The xml tag (non-empty) pattern
+ * The xml block tag (non-empty) pattern
  */
-class syntax_plugin_combo_xmltag extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_xmlblocktag extends DokuWiki_Syntax_Plugin
 {
     /**
      * Should be the same than the last name of the class
      */
-    const TAG = "xmltag";
+    const TAG = "xmlblocktag";
 
 
     /**

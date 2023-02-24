@@ -105,7 +105,7 @@ class BlockquoteTag
                             null,
                             null,
                             null,
-                            \syntax_plugin_combo_xmltag::TAG
+                            \syntax_plugin_combo_xmlblocktag::TAG
                         ));
                         break;
                     case DOKU_LEXER_EXIT:
@@ -120,7 +120,7 @@ class BlockquoteTag
                             null,
                             null,
                             null,
-                            \syntax_plugin_combo_xmltag::TAG
+                            \syntax_plugin_combo_xmlblocktag::TAG
                         ));
                         break;
                 }
@@ -189,7 +189,7 @@ class BlockquoteTag
                 null,
                 null,
                 null,
-                \syntax_plugin_combo_xmltag::TAG
+                \syntax_plugin_combo_xmlblocktag::TAG
             );
             $cardBodyEnterCall = CardTag::createCardBodyEnterCall($context);
             $firstChild = $callStack->moveToFirstChildTag();
@@ -229,7 +229,7 @@ class BlockquoteTag
                     null,
                     null,
                     null,
-                    \syntax_plugin_combo_xmltag::TAG
+                    \syntax_plugin_combo_xmlblocktag::TAG
                 )
             );
             $callStack->insertBefore(CardTag::createCardBodyExitCall());

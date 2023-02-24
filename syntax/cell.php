@@ -197,7 +197,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                             null,
                             null,
                             null,
-                            \syntax_plugin_combo_xmltag::TAG
+                            \syntax_plugin_combo_xmlblocktag::TAG
                         ));
                     $callStack->moveToEnd();
                     $callStack->insertBefore(
@@ -209,7 +209,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                             null,
                             null,
                             null,
-                            \syntax_plugin_combo_xmltag::TAG
+                            \syntax_plugin_combo_xmlblocktag::TAG
                         ));
                 }
 

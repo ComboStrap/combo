@@ -7,11 +7,12 @@ use Doku_Handler;
 use Doku_Renderer;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
+use dokuwiki\Extension\SyntaxPlugin;
 use DokuWiki_Syntax_Plugin;
 use renderer_plugin_combo_analytics;
 use renderer_plugin_combo_xml;
 use syntax_plugin_combo_code;
-use syntax_plugin_combo_xmltag;
+use syntax_plugin_combo_xmlblocktag;
 
 
 class XmlTagProcessing
@@ -23,6 +24,7 @@ class XmlTagProcessing
      * in the data to not compete with the empty tag pattern (ie <empty/>
      */
     public const START_TAG_PATTERN = '<[\w-]+[^/>]*>';
+    const BLOCK = "block";
 
     public static function renderStaticExitXhtml(TagAttributes $tagAttributes, Doku_Renderer_xhtml $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
     {

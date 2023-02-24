@@ -284,8 +284,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * (as dokuwiki starts the rendering process here
          * we need to set the execution id)
          */
-        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->setExecutingMarkupHandler($this);
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv()->setExecutingMarkupHandler($this);
         try {
             $useCache = $this->instructionsCache->useCache();
         } finally {
@@ -1053,15 +1052,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return Outline::createFromCallStack($callStack, $this->getExecutingPathOrNull());
     }
 
-    /**
-     * Adaptation of {@link p_render_metadata()} and {@link p_get_metadata()}
-     * to take into account {@link self::getInstructions()}
-     */
-    private function processMetadata()
-    {
-
-
-    }
 
     public function getMetadata(): array
     {
@@ -1087,98 +1077,103 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return;
         }
 
-
-
         /**
-         * Can we read from the meta file
+         * We wrap the whole block
+         * because {@link CacheRenderer::useCache()}
+         * and the renderer needs it
          */
-
         $executionContext = ExecutionContext::getActualOrCreateFromEnv()->setExecutingMarkupHandler($this);
         try {
-            $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
 
             /**
-             * Dokuwiki load them at `global $INFO, $info['meta']`
-             * with {@link pageinfo()}
+             * Can we read from the meta file
              */
-            $actualMeta = p_read_metadata($wikiId);
+            try {
+                $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
 
-            if ($this->isPathExecution()) {
                 /**
-                 * The metadata useCache function has side effect
-                 * and triggers a render that fails if the wiki file does not exists
+                 * Dokuwiki load them at `global $INFO, $info['meta']`
+                 * with {@link pageinfo()}
                  */
-                $depends['files'][] = $this->instructionsCache->cache;
-                $useCache = $this->derivedMetaCache->useCache($depends);
-                if ($useCache) {
-                    $this->meta = $actualMeta;
-                    return;
+                $actualMeta = p_read_metadata($wikiId);
+
+                if ($this->isPathExecution()) {
+                    /**
+                     * The metadata useCache function has side effect
+                     * and triggers a render that fails if the wiki file does not exists
+                     */
+                    $depends['files'][] = $this->instructionsCache->cache;
+                    $useCache = $this->derivedMetaCache->useCache($depends);
+                    if ($useCache) {
+                        $this->meta = $actualMeta;
+                        return;
+                    }
                 }
+            } catch (ExceptionCast|ExceptionNotFound $e) {
+                // no wiki id
+                $actualMeta = [];
+                $wikiId = null;
             }
-        } catch (ExceptionCast|ExceptionNotFound $e) {
-            // no wiki id
-            $actualMeta = [];
-            $wikiId = null;
+
+            /**
+             * Process and derived meta
+             */
+            // add an extra key for the event - to tell event handlers the page whose metadata this is
+            $actualMeta['page'] = $wikiId;
+            $evt = new \dokuwiki\Extension\Event('PARSER_METADATA_RENDER', $actualMeta);
+            if ($evt->advise_before()) {
+
+                // get instructions
+                $instructions = $this->getInstructions();
+
+                // set up the renderer
+                $renderer = new Doku_Renderer_metadata();
+                /**
+                 * Runtime/ Derived metadata
+                 */
+                $renderer->meta =& $actualMeta['current'];
+
+                try {
+                    $path = $this->getRequestedExecutingPath();
+                    if (!FileSystems::exists($path)) {
+                        $renderer->meta['date']['modified'] = null;
+                    }
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+
+                /**
+                 * Persistent data set by the user
+                 * (Strange as this is a run to derive metadata, this should not exists
+                 * but they mixed it to have an easy access, it seems)
+                 */
+                $renderer->persistent =& $actualMeta['persistent'];
+
+                // Loop through the instructions
+                foreach ($instructions as $instruction) {
+                    // execute the callback against the renderer
+                    call_user_func_array(array(&$renderer, $instruction[0]), (array)$instruction[1]);
+                }
+
+                $evt->result = array('current' => &$renderer->meta, 'persistent' => &$renderer->persistent);
+            }
+            $evt->advise_after();
+
+            $this->meta = $evt->result;
+
+            /**
+             * Storage
+             */
+            if ($wikiId !== null) {
+                p_save_metadata($wikiId, $this->meta);
+                /**
+                 * In {@link p_get_metadata()}, they store a timestamp in order to make sure that the cachefile is touched
+                 */
+                $this->derivedMetaCache->storeCache(time());
+            }
+
         } finally {
             $executionContext->closeExecutingMarkupHandler();
-        }
-
-
-        /**
-         * Process and derived meta
-         */
-        // add an extra key for the event - to tell event handlers the page whose metadata this is
-        $actualMeta['page'] = $wikiId;
-        $evt = new \dokuwiki\Extension\Event('PARSER_METADATA_RENDER', $actualMeta);
-        if ($evt->advise_before()) {
-
-            // get instructions
-            $instructions = $this->getInstructions();
-
-            // set up the renderer
-            $renderer = new Doku_Renderer_metadata();
-            /**
-             * Runtime/ Derived metadata
-             */
-            $renderer->meta =& $actualMeta['current'];
-
-            try {
-                $path = $this->getRequestedExecutingPath();
-                if (!FileSystems::exists($path)) {
-                    $renderer->meta['date']['modified'] = null;
-                }
-            } catch (ExceptionNotFound $e) {
-                // ok
-            }
-
-            /**
-             * Persistent data set by the user
-             * (Strange as this is a run to derive metadata, this should not exists
-             * but they mixed it to have an easy access, it seems)
-             */
-            $renderer->persistent =& $actualMeta['persistent'];
-
-            // Loop through the instructions
-            foreach ($instructions as $instruction) {
-                // execute the callback against the renderer
-                call_user_func_array(array(&$renderer, $instruction[0]), (array)$instruction[1]);
-            }
-
-            $evt->result = array('current' => &$renderer->meta, 'persistent' => &$renderer->persistent);
-        }
-        $evt->advise_after();
-
-        $this->meta = $evt->result;
-
-        /**
-         * Storage
-         */
-        if ($wikiId !== null) {
-            p_save_metadata($wikiId, $this->meta);
-            /**
-             * In {@link p_get_metadata()}, they store a timestamp in order to make sure that the cachefile is touched
-             */
-            $this->derivedMetaCache->storeCache(time());
         }
 
     }

@@ -319,7 +319,6 @@ class ExecutionContext
         unset($MSG);
 
 
-
         /**
          * Environment restoration
          * Execution context, change for now only this
@@ -728,19 +727,34 @@ class ExecutionContext
     public function setExecutingMarkupHandler(FetcherMarkup $markupHandler): ExecutionContext
     {
 
-        if (count($this->executingMarkupHandlerStack) >= 1 && $markupHandler->isPathExecution()) {
-            /**
-             * A markup handler for a file can call a handler with a string
-             * (example: {@link webcode can launch a sub-one
-             */
-            throw new ExceptionRuntimeInternal("Only one path markup handler can run at the same time");
+        if (count($this->executingMarkupHandlerStack) >= 1) {
+
+            try {
+                /**
+                 * If this is the same than the last one, we let it go
+                 * the {@link FetcherMarkup::processMetaEventually()}
+                 * metadata may call the {@link FetcherMarkup::getInstructions() instructions},
+                 * ....
+                 */
+                if ($this->getExecutingMarkupHandler() !== $markupHandler && $markupHandler->isPathExecution()) {
+                    /**
+                     * A markup handler for a file can call a handler with a string
+                     * (example: {@link webcode can launch a sub-one
+                     */
+                    throw new ExceptionRuntimeInternal("Only one path markup handler can run at the same time");
+                }
+            } catch (ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("Due to the condition > 1, it should not happen");
+            }
+
+
         }
 
         /**
          * Act
          */
         $oldAct = $this->getExecutingAction();
-        if (!$markupHandler->isPathExecution() && $oldAct!==ExecutionContext::PREVIEW_ACTION) {
+        if (!$markupHandler->isPathExecution() && $oldAct !== ExecutionContext::PREVIEW_ACTION) {
             /**
              * Not sure that is is still needed
              * as we have now the notion of document/fragment

@@ -219,13 +219,23 @@ class FetcherMarkupBuilder
             }
 
             /**
-             * Cache by extension (ie type)
+             * Content cache
              */
             $extension = $this->mime->getExtension();
             $newFetcherMarkup->contentCache = new CacheRenderer($wikiId, $localFile, $extension);
             $newFetcherMarkup->cacheDependencies->rerouteCacheDestination($newFetcherMarkup->contentCache);
 
+            /**
+             * Instructions cache
+             */
             $newFetcherMarkup->instructionsCache = new CacheInstructions($wikiId, $localFile);
+
+            /**
+             * Runtime Meta cache
+             * (Technically, it's derived from the instructions)
+             */
+            $newFetcherMarkup->derivedMetaCache = new CacheRenderer($wikiId, $localFile, 'metadata');
+
         }
 
         return $newFetcherMarkup;

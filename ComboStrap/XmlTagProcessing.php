@@ -20,11 +20,11 @@ class XmlTagProcessing
 
 
     /**
-     * This pattern does not allow > or /
+     * The start tag pattern does not allow > or /
      * in the data to not compete with the empty tag pattern (ie <empty/>
      */
     public const START_TAG_PATTERN = '<[\w-]+[^/>]*>';
-    const BLOCK = "block";
+
 
     public static function renderStaticExitXhtml(TagAttributes $tagAttributes, Doku_Renderer_xhtml $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
     {

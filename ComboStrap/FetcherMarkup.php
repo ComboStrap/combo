@@ -4,8 +4,10 @@
 namespace ComboStrap;
 
 
+use Doku_Renderer_metadata;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheParser;
+use dokuwiki\Cache\CacheRenderer;
 use Exception;
 
 
@@ -65,6 +67,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public array $contextData;
 
     public CacheInstructions $instructionsCache;
+    public CacheRenderer $derivedMetaCache;
 
     /**
      * @var CacheParser
@@ -122,6 +125,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     private string $fetchString;
     private $instructionsHasExecuted = false;
+    private bool $metaProcessed = false;
+    /**
+     * @var array
+     */
+    private array $meta;
 
 
     /**
@@ -483,36 +491,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
             case MarkupRenderer::METADATA_EXTENSION:
                 /**
-                 * We don't manage/take over the storage
-                 * for now. We use the dokwuiki standard function
+                 * The user may ask just for the metadata
+                 * and should then use the {@link self::getMetadata()}
+                 * function instead
                  */
-                unset($this->fetchString);
-                $executionContext->setExecutingMarkupHandler($this);
-                try {
-                    /**
-                     * Trigger a:
-                     *  a {@link p_render_metadata() metadata render}
-                     *  a {@link p_save_metadata() metadata save}
-                     *
-                     * Note that {@link p_get_metadata()} uses a strange recursion
-                     * There is a metadata recursion logic to avoid rendering
-                     * that is not easy to grasp
-                     * and therefore you may get no metadata and no backlinks
-                     */
-                    $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
-                    $actualMeta = p_read_metadata($wikiId);
-                    $newMetadata = p_render_metadata($wikiId, $actualMeta);
-                    p_save_metadata($wikiId, $newMetadata);
-                    $this->fetchArray = $newMetadata;
-                } catch (ExceptionNotFound $e) {
-                    // no source path for this markup, no meta then
-                } catch (ExceptionCast $e) {
-                    // a source path that is not a wiki path (ie layout fragement, ...)
-                } catch (\Exception $e) {
-                    throw new ExceptionRuntimeInternal("An error has occurred while processing the metadata. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-                } finally {
-                    $executionContext->closeExecutingMarkupHandler();
-                }
                 break;
             case MarkupRenderer::INSTRUCTION_EXTENSION:
                 /**
@@ -690,8 +672,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         parent::buildFromTagAttributes($tagAttributes);
         return $this;
     }
-
-
 
 
     /**
@@ -953,7 +933,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
                 ->setRequestedMimeToInstruction();
             $instructions = $markupRenderer->getOutput();
-            if(isset($this->instructionsCache)) {
+            if (isset($this->instructionsCache)) {
                 /**
                  * Not a string execution, ie {@link self::isPathExecution()}
                  * a path execution
@@ -1085,5 +1065,85 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return Outline::createFromCallStack($callStack, $this->getExecutingPathOrNull());
     }
 
+    /**
+     * Adaptation of {@link p_render_metadata()} and {@link p_get_metadata()}
+     * to take into account {@link self::getInstructions()}
+     */
+    private function processMetadata()
+    {
+
+        if ($this->metaProcessed) {
+            return $this->meta;
+        }
+
+        $this->metaProcessed = true;
+
+        try {
+            $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
+            $actualMeta = p_read_metadata($wikiId);
+        } catch (ExceptionCast|ExceptionNotFound $e) {
+            $actualMeta = [];
+            $wikiId = null;
+        }
+
+        // add an extra key for the event - to tell event handlers the page whose metadata this is
+        $actualMeta['page'] = $wikiId;
+        $evt = new \dokuwiki\Extension\Event('PARSER_METADATA_RENDER', $actualMeta);
+        if ($evt->advise_before()) {
+
+            // get instructions
+            $instructions = $this->getInstructions();
+
+            // set up the renderer
+            $renderer = new Doku_Renderer_metadata();
+            /**
+             * Runtime/ Derived metadata
+             */
+            $renderer->meta =& $actualMeta['current'];
+            /**
+             * Persistent data set by the user
+             * (Strange as this is a run to derive metadata, this should not exists
+             * but they mixed it to have an easy access, it seems)
+             */
+            $renderer->persistent =& $actualMeta['persistent'];
+
+            // Loop through the instructions
+            foreach ($instructions as $instruction) {
+                // execute the callback against the renderer
+                call_user_func_array(array(&$renderer, $instruction[0]), (array)$instruction[1]);
+            }
+
+            $evt->result = array('current' => &$renderer->meta, 'persistent' => &$renderer->persistent);
+        }
+        $evt->advise_after();
+
+        $this->meta = $evt->result;
+        if ($wikiId !== null) {
+            p_save_metadata($wikiId, $this->meta);
+        }
+        /**
+         * In {@link p_get_metadata()}, they store a timestamp in order to make sure that the cachefile is touched
+         */
+        $this->derivedMetaCache->storeCache(time());
+        return $evt->result;
+
+    }
+
+    public function getMetadata()
+    {
+        /**
+         * We don't manage/take over the storage
+         * for now. We use the dokwuiki standard function
+         */
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
+            ->setExecutingMarkupHandler($this);
+        try {
+            return $this->processMetadata();
+        } catch (\Exception $e) {
+            throw new ExceptionRuntimeInternal("An error has occurred while processing the metadata. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+        } finally {
+            $executionContext->closeExecutingMarkupHandler();
+        }
+    }
 
 }

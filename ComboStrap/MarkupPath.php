@@ -36,10 +36,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     const TYPE = "page";
 
     /**
-     * @var DatabasePageRow
-     */
-    private $databasePage;
-    /**
      * @var Canonical
      */
     private $canonical;
@@ -341,7 +337,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
-        $this->databasePage = null;
         return $this;
     }
 
@@ -385,6 +380,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $contextPath);
     }
 
+    /**
+     * @throws ExceptionCompile
+     */
     public function getHtmlPath(): LocalPath
     {
 
@@ -1147,10 +1145,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getDatabasePage(): DatabasePageRow
     {
-        if ($this->databasePage == null) {
-            $this->databasePage = DatabasePageRow::createFromPageObject($this);
-        }
-        return $this->databasePage;
+
+        return DatabasePageRow::createFromPageObject($this);
+
     }
 
     public

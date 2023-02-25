@@ -48,6 +48,7 @@ use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\MarkupPath;
+use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
 use ComboStrap\PageImagePath;
@@ -210,18 +211,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         }
 
         foreach ($messages as $message) {
-            $messageString = $message->getPlainTextContent();
-            switch ($message->getType()) {
-                case Message::TYPE_ERROR:
-                    LogUtility::error($messageString, self::CANONICAL);
-                    break;
-                case Message::TYPE_INFO:
-                    LogUtility::info($messageString, self::CANONICAL);
-                    break;
-                case Message::TYPE_WARNING:
-                    LogUtility::warning($messageString, self::CANONICAL);
-                    break;
-            }
+            $message->sendToLogUtility();
         }
 
         /**
@@ -300,8 +290,17 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $frontmatterData = $data[PluginUtility::ATTRIBUTES];
                 if (sizeof($frontmatterData) === 0) {
                     foreach (Metadata::MUTABLE_METADATA as $metaKey) {
-                        if ($renderer->meta['persistent'][$metaKey]) {
-                            unset($renderer->meta['persistent'][$metaKey]);
+                        if ($metaKey === PageDescription::PROPERTY_NAME) {
+                            // array
+                            continue;
+                        }
+                        // runtime
+                        if ($renderer->meta[$metaKey]) {
+                            unset($renderer->meta[$metaKey]);
+                        }
+                        // persistent
+                        if ($renderer->persistent[$metaKey]) {
+                            unset($renderer->persistent[$metaKey]);
                         }
                     }
                     return true;
@@ -313,7 +312,19 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  * and stores them if there is any diff
                  */
                 foreach ($frontmatterData as $metaKey => $metaValue) {
+
+                    $renderer->meta[$metaKey] = $metaValue;
+
+                    /**
+                     * Persistence is just a duplicate of the meta (ie current)
+                     *
+                     * Why from https://www.dokuwiki.org/devel:metadata#metadata_persistence
+                     * The persistent array holds ****duplicates****
+                     * as the {@link p_get_metadata()} returns only `current` data
+                     * which should not be cleared during the rendering process.
+                     */
                     $renderer->persistent[$metaKey] = $metaValue;
+
                 }
 
                 /**

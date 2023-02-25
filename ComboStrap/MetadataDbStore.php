@@ -256,7 +256,7 @@ EOF;
         return $default;
     }
 
-    public function setFromPersistentName(string $name, $value)
+    public function setFromPersistentName(string $name, $value, $default = null)
     {
         throw new ExceptionRuntime("Not implemented");
     }

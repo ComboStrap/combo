@@ -45,9 +45,10 @@ interface MetadataStore
     /**
      * This function permits to set a metadata value without creating a {@link Metadata} class
      * @param string $name - the {@link Metadata::getName()} of the metadata
-     * @param null|string|array|boolean - $value
+     * @param null|string|array|boolean $value - the value
+     * @param null $default - if the value is equals to the default, the data will not be stored
      */
-    public function setFromPersistentName(string $name, $value);
+    public function setFromPersistentName(string $name, $value, $default = null);
 
     /**
      *

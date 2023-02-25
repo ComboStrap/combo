@@ -9,27 +9,10 @@ use dokuwiki\Extension\Event;
  * Class MetadataFileSystemStore
  * @package ComboStrap
  *
- * The meta file system store.
- *
- * It mimics an in-memory store where data are
- *      * read at the store creation
- *      * refreshed when the metadata render runs (See {@link  \action_plugin_combo_metasync}) (Ie dokuwiki modifies the metadata files this way) {@link MetadataDokuWikiStore::renderAndPersist()}
- *      * written immediately on the disk (few write) with the {@link p_set_metadata()}
- *
- * Why ?
- * Php is a CGI script meaning that it starts and end for each request
- * on the server.
- * But in test, this is not the case, as the script starts for the first test
- * and end with the last test.
- *
- * If the data store is local scoped, we get then a lot of inconsistency
- *   - the data for one page is not the same than another
- *   - the metadata object {@link PageId} (from {@link ResourceCombo::getUidObject()} may be null while it was created with another {@link Metadata} creating it twice
- *
- * This implementation has a cache object
+ * A wrapper around the dokuwiki meta file system store.
  *
  */
-class MetadataDokuWikiStore extends MetadataSingleArrayStore
+class MetadataDokuWikiStore extends MetadataStoreAbs
 {
 
     /**
@@ -139,6 +122,26 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     }
 
 
+
+    /**
+     * Delete the globals
+     */
+    public static function unsetGlobalVariables()
+    {
+        /**
+         * {@link p_read_metadata() global cache}
+         */
+        global $cache_metadata;
+        unset($cache_metadata);
+
+        /**
+         * {@link p_render_metadata()} temporary render cache
+         */
+        global $METADATA_RENDERERS;
+        unset($METADATA_RENDERERS);
+    }
+
+
     /**
      * @throws ExceptionBadState - if for any reason, it's not possible to store the data
      * @throws ExceptionNoValueToStore - if there
@@ -162,7 +165,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             throw new ExceptionBadState("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         $dokuwikiId = $resource->getWikiId();
-        $this->setFromWikiId($dokuwikiId, $name, $persistentValue, $defaultValue);
+        $this->setFromPersistentName($dokuwikiId, $name, $persistentValue, $defaultValue);
     }
 
     /**
@@ -187,7 +190,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             LogUtility::error("Error", self::CANONICAL, $e);
             return null;
         }
-        return $this->getFromWikiId($dokuwikiId, $metadata->getName(), $default);
+        return $this->getFromPersistentName($metadata->getName(), $default);
 
 
     }
@@ -204,8 +207,16 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      */
     public function getFromPersistentName(string $name, $default = null)
     {
-        $wikiId = $this->getResource()->getWikiId();
-        return $this->getFromWikiId($wikiId, $name, $default);
+        $value = p_get_metadata($this->getWikiId(), $name);
+        /**
+         * Empty string return null
+         * because Dokuwiki does not allow to delete keys
+         * {@link p_set_metadata()}
+         */
+        if ($value !== null && $value !== "") {
+            return $value;
+        }
+        return $default;
     }
 
 
@@ -221,64 +232,86 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     /**
      * @param string $name
      * @param string|array $value
+     * @param null $default
      * @return MetadataDokuWikiStore
      */
-    public function setFromPersistentName(string $name, $value): MetadataDokuWikiStore
+    public function setFromPersistentName(string $name, $value, $default = null): MetadataDokuWikiStore
     {
-        $this->setFromWikiId($this->getResource()->getWikiId(), $name, $value);
+        $oldValue = $this->getFromPersistentName($name);
+        if (is_bool($value)) {
+            if ($oldValue === null) {
+                $oldValue = $default;
+            } else {
+                $oldValue = DataType::toBoolean($oldValue);
+            }
+        }
+        if ($oldValue !== $value) {
+
+            /**
+             * Metadata in Dokuwiki is fucked up.
+             *
+             * You can't remove a metadata,
+             * You need to know if this is a rendering or not
+             *
+             * See just how fucked {@link p_set_metadata()} is
+             *
+             * Also don't change the type of the value to a string
+             * otherwise dokuwiki will not see a change
+             * between true and a string and will not persist the value
+             *
+             * By default, the value is copied in the current and persistent array
+             * and there is no render
+             */
+            $wikiId = $this->getWikiId();
+            p_set_metadata($wikiId,
+                [
+                    $name => $value
+                ]
+            );
+            /**
+             * Event
+             */
+            $data = [
+                "name" => $name,
+                self::NEW_VALUE_ATTRIBUTE => $value,
+                "old_value" => $oldValue,
+                PagePath::getPersistentName() => ":$wikiId"
+            ];
+            Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $data);
+        }
         return $this;
     }
 
     public function getData(): array
     {
-        if (
-            $this->data === null
-            || sizeof($this->data[self::PERSISTENT_METADATA]) === 0 // move
-        ) {
-            $this->data = p_read_metadata($this->getResource()->getWikiId());
-        }
-        return parent::getData();
-    }
-
-
-    /**
-     * @param $name
-     * @return mixed|null
-     */
-    private function getPersistentMetadata($name)
-    {
-        $value = $this->getData()[self::PERSISTENT_METADATA][$name];
         /**
-         * Empty string return null
-         * because Dokuwiki does not allow to delete keys
-         * {@link p_set_metadata()}
+         * persistent array should have duplicate values
+         * (the only diff is that the persistent value are always
+         * available during a {@link p_render_metadata() metadata render})
          */
-        if ($value === "") {
-            return null;
-        }
-        return $value;
+        return p_read_metadata($this->getWikiId(), true)['current'];
+    }
 
+    private function getWikiId(): string
+    {
+        try {
+            return $this->getResource()->getPathObject()->toWikiPath()->getWikiId();
+        } catch (ExceptionCast $e) {
+            throw new ExceptionRuntimeInternal("Should not happen", $e);
+        }
     }
 
 
     /**
-     * @param $dokuWikiId
+     *
      * @param $name
      * @return mixed|null
+     * @deprecated use {@link self::getFromPersistentName()}
      */
     public
     function getCurrentFromName($name)
     {
-        $value = $this->getData()[self::CURRENT_METADATA][$name];
-        /**
-         * Empty string return null
-         * because Dokuwiki does not allow to delete keys
-         * {@link p_set_metadata()}
-         */
-        if ($value === "") {
-            return null;
-        }
-        return $value;
+        return $this->getFromPersistentName($name);
     }
 
     /**
@@ -297,85 +330,19 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             return $this;
         }
         try {
-            $this->data = FetcherMarkup::getBuilder()
+            FetcherMarkup::getBuilder()
                 ->setRequestedExecutingPath($wikiPage)
                 ->setRequestedContextPath($wikiPage)
                 ->setRequestedMimeToMetadata()
                 ->build()
-                ->processMetadataIfNotYetDone()
-                ->getMetadata();
+                ->processMetadataIfNotYetDone();
         } catch (ExceptionNotExists $e) {
             LogUtility::error("Metadata Build Error", self::CANONICAL, $e);
-            $this->data = [];
         }
 
         return $this;
     }
 
-
-    /**
-     * Change a meta on file
-     * and triggers the {@link self::PAGE_METADATA_MUTATION_EVENT} event
-     *
-     * @param $wikiId
-     * @param $key
-     * @param $value
-     * @param null $default - use in case of boolean
-     * TODO: because the metadataWikiStore is now on the wikiId level, the wikiId is not needed
-     *   in the signature
-     */
-    private function setFromWikiId($wikiId, $key, $value, $default = null)
-    {
-
-        $oldValue = $this->getFromWikiId($wikiId, $key);
-        if (is_bool($value)) {
-            if ($oldValue === null) {
-                $oldValue = $default;
-            } else {
-                $oldValue = DataType::toBoolean($oldValue);
-            }
-        }
-        if ($oldValue !== $value) {
-
-
-            $this->data[self::PERSISTENT_METADATA][$key] = $value;
-            /**
-             * Metadata in Dokuwiki is fucked up.
-             *
-             * You can't remove a metadata,
-             * You need to know if this is a rendering or not
-             *
-             * See just how fucked {@link p_set_metadata()} is
-             *
-             * Also don't change the type of the value to a string
-             * otherwise dokuwiki will not see a change
-             * between true and a string and will not persist the value
-             *
-             *
-             * A current metadata is never stored if not set in the rendering process
-             * We persist therefore always
-             */
-            $persistent = true;
-            p_set_metadata($wikiId,
-                [
-                    $key => $value
-                ],
-                false,
-                $persistent
-            );
-            /**
-             * Event
-             */
-            $data = [
-                "name" => $key,
-                self::NEW_VALUE_ATTRIBUTE => $value,
-                "old_value" => $oldValue,
-                PagePath::getPersistentName() => ":$wikiId"
-            ];
-            Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $data);
-        }
-
-    }
 
 
     public function isHierarchicalTextBased(): bool
@@ -384,84 +351,33 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     }
 
     /**
-     *
      * @return Path - the full path to the meta file
      */
     public
     function getMetaFilePath(): ?Path
     {
-        $resource = $this->getResource();
-        if (!($resource instanceof MarkupPath)) {
-            LogUtility::msg("The resource type ({$resource->getType()}) meta file is unknown and can't be retrieved.");
-            return null;
-        }
-        $dokuwikiId = $resource->getPathObject()->getWikiId();
-        return LocalPath::create(metaFN($dokuwikiId, '.meta'));
+        $dokuwikiId = $this->getWikiId();
+        return LocalPath::createFromPathString(metaFN($dokuwikiId, '.meta'));
     }
 
     public function __toString()
     {
-        return "DokuMeta";
+        return "DokuMeta ({$this->getWikiId()}";
     }
 
 
-    /**
-     * @param $dokuwikiId
-     * @param string $name
-     * @param $default
-     * @return mixed|null
-     * TODO: because the MetadataWikiStore is now on Id level, this function is no more relevant, replace
-     */
-    private function getFromWikiId($dokuwikiId, string $name, $default = null)
-    {
 
-        if ($dokuwikiId === null) {
-            /**
-             * On edit page, we got null
-             * We don't send the error on this quick fix to the page
-             * This error will fail a test
-             */
-            LogUtility::log2file("MetadataDokuwWikiStore: dokuwikiId should not be null");
-            return null;
-        }
-
-        /**
-         * {@link p_get_metadata} flat out the metadata array and we loose the
-         * persistent and current information
-         * Because there may be already a metadata in current for instance title
-         * It will be returned, but we want only the persistent
-         */
-        $value = $this->getPersistentMetadata($name);
-
-        /**
-         * Empty string return the default (null)
-         * because Dokuwiki does not allow to delete keys
-         * {@link p_set_metadata()}
-         */
-        if ($value !== null && $value !== "") {
-            return $value;
-        }
-        return $default;
-    }
-
-
-    /**
-     * @param $dokuwikiId
-     * @return null|array
-     */
-    private function getFlatMetadatas($dokuwikiId): ?array
-    {
-        return p_get_metadata($dokuwikiId, '', METADATA_DONT_RENDER);
-    }
 
     public function deleteAndFlush()
     {
         $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], MetadataDokuWikiStore::PERSISTENT_METADATA => []];
-        $dokuwikiId = $this->getResource()->getWikiId();
+        $dokuwikiId = $this->getWikiId();
         p_save_metadata($dokuwikiId, $emptyMeta);
-        $this->data = $emptyMeta;
-
     }
 
 
+    public function reset()
+    {
+        self::unsetGlobalVariables();
+    }
 }

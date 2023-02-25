@@ -368,7 +368,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         if ($shortPageId !== null) {
             $pageId = PageUrlPath::decodePageId($shortPageId);
             if ($requestedMarkupPath->getParent() === null && $pageId !== null) {
-                $page = DatabasePageRow::createFromPageId($pageId)->getPage();
+                $page = DatabasePageRow::createFromPageId($pageId)->getMarkupPath();
                 if ($page !== null && $page->exists()) {
                     $this->executePermanentRedirect(
                         $page->getCanonicalUrl()->toAbsoluteUrlString(),
@@ -384,14 +384,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             if (
                 $pageId !== null
             ) {
-                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getPage();
+                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getMarkupPath();
                 if ($page === null) {
                     // or the length of the abbr has changed
                     $canonicalDatabasePage = new DatabasePageRow();
                     $row = $canonicalDatabasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
                     if ($row !== null) {
                         $canonicalDatabasePage->setRow($row);
-                        $page = $canonicalDatabasePage->getPage();
+                        $page = $canonicalDatabasePage->getMarkupPath();
                     }
                 }
                 if ($page !== null && $page->exists()) {
@@ -433,7 +433,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
          * Identifier is a Canonical ?
          */
         $canonicalDatabasePage = DatabasePageRow::createFromCanonical($identifier);
-        $canonicalPage = $canonicalDatabasePage->getPage();
+        $canonicalPage = $canonicalDatabasePage->getMarkupPath();
         if ($canonicalPage !== null && $canonicalPage->exists()) {
             /**
              * Does the canonical url is canonical name based
@@ -458,7 +458,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Identifier is an alias
          */
-        $aliasRequestedPage = DatabasePageRow::createFromAlias($identifier)->getPage();
+        $aliasRequestedPage = DatabasePageRow::createFromAlias($identifier)->getMarkupPath();
         if (
             $aliasRequestedPage !== null
             && $aliasRequestedPage->exists()

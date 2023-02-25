@@ -63,7 +63,7 @@ class DatabasePageRow
     /**
      * @var MarkupPath
      */
-    private $page;
+    private $markupPath;
     /**
      * @var Sqlite|null
      */
@@ -107,8 +107,8 @@ class DatabasePageRow
             throw new ExceptionCompile("Sqlite is mandatory for database replication");
         }
 
-        if (!FileSystems::exists($this->page)) {
-            throw new ExceptionCompile("You can't replicate the non-existing page ($this->page) on the file system");
+        if (!FileSystems::exists($this->markupPath)) {
+            throw new ExceptionCompile("You can't replicate the non-existing page ($this->markupPath) on the file system");
         }
 
 
@@ -124,11 +124,11 @@ class DatabasePageRow
             (new References()),
             (new Aliases())
         ];
-        $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
-        $dbStore = MetadataDbStore::getOrCreateFromResource($this->page);
+        $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->markupPath);
+        $dbStore = MetadataDbStore::getOrCreateFromResource($this->markupPath);
         foreach ($tabularMetadataToSync as $tabular) {
             $tabular
-                ->setResource($this->page)
+                ->setResource($this->markupPath)
                 ->setReadStore($fsStore)
                 ->buildFromReadStore()
                 ->setWriteStore($dbStore)
@@ -162,8 +162,8 @@ class DatabasePageRow
      */
     private function addPageIdMeta(array &$metaRecord)
     {
-        $metaRecord[PageId::PROPERTY_NAME] = $this->page->getPageId();
-        $metaRecord[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
+        $metaRecord[PageId::PROPERTY_NAME] = $this->markupPath->getPageId();
+        $metaRecord[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->markupPath->getPageIdAbbr();
     }
 
     public static function createFromPageId(string $pageId): DatabasePageRow
@@ -236,7 +236,7 @@ class DatabasePageRow
         $row = $databasePage->getDatabaseRowFromAlias($alias);
         if ($row != null) {
             $databasePage->setRow($row);
-            $page = $databasePage->getPage();
+            $page = $databasePage->getMarkupPath();
             if ($page !== null) {
                 // page may be null in production
                 // PHP Fatal error:  Uncaught Error: Call to a member function setBuildAliasPath() on null in
@@ -278,7 +278,7 @@ class DatabasePageRow
          * When the replication date is older than the actual document
          */
         try {
-            $modifiedTime = FileSystems::getModifiedTime($this->page->getPathObject());
+            $modifiedTime = FileSystems::getModifiedTime($this->markupPath->getPathObject());
             if ($modifiedTime > $dateReplication) {
                 return true;
             }
@@ -287,7 +287,7 @@ class DatabasePageRow
         }
 
 
-        $path = $this->page->fetchAnalyticsPath();
+        $path = $this->markupPath->fetchAnalyticsPath();
 
         /**
          * When the file does not exist
@@ -347,11 +347,11 @@ class DatabasePageRow
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQueryParametrized('delete from pages where id = ?', [$this->page->getWikiId()]);
+            ->setQueryParametrized('delete from pages where id = ?', [$this->markupPath->getWikiId()]);
         try {
             $request->execute();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Something went wrong when deleting the page ({$this->page}) from the database");
+            LogUtility::msg("Something went wrong when deleting the page ({$this->markupPath}) from the database");
         } finally {
             $request->close();
         }
@@ -387,10 +387,10 @@ class DatabasePageRow
      * @throws ExceptionNotExists - if the row does not exists
      */
     private
-    function getDatabaseRowFromPage(MarkupPath $page): array
+    function getDatabaseRowFromPage(MarkupPath $markupPath): array
     {
 
-        $this->setPage($page);
+        $this->setMarkupPath($markupPath);
 
         if ($this->sqlite === null) {
             throw new ExceptionSqliteNotAvailable();
@@ -398,16 +398,15 @@ class DatabasePageRow
 
         // Do we have a page attached to this page id
         try {
-            $pageId = $page->getPageId();
+            $pageId = $markupPath->getPageId();
             return $this->getDatabaseRowFromPageId($pageId);
         } catch (ExceptionNotFound $e) {
             // no page id
         }
 
-
         // Do we have a page attached to the canonical
         try {
-            $canonical = $page->getCanonical();
+            $canonical = $markupPath->getCanonical();
             return $this->getDatabaseRowFromCanonical($canonical);
         } catch (ExceptionNotFound $e) {
             // no canonical
@@ -416,7 +415,7 @@ class DatabasePageRow
         // Do we have a page attached to the path
 
         try {
-            $path = $page->getPathObject();
+            $path = $markupPath->getPathObject();
             return $this->getDatabaseRowFromPath($path);
         } catch (ExceptionNotFound $e) {
             // not found
@@ -425,7 +424,7 @@ class DatabasePageRow
         /**
          * Do we have a page attached to this ID
          */
-        $id = $page->getPathObject()->getWikiId();
+        $id = $markupPath->getPathObject()->getWikiId();
         try {
             return $this->getDatabaseRowFromDokuWikiId($id);
         } catch (ExceptionNotFound $e) {
@@ -463,14 +462,14 @@ class DatabasePageRow
     public function replicatePage(): void
     {
 
-        if (!FileSystems::exists($this->page)) {
-            throw new ExceptionBadState("You can't replicate the page ($this->page) because it does not exists.");
+        if (!FileSystems::exists($this->markupPath)) {
+            throw new ExceptionBadState("You can't replicate the page ($this->markupPath) because it does not exists.");
         }
 
         /**
          * Replication Date
          */
-        $replicationDate = ReplicationDate::createFromPage($this->page)
+        $replicationDate = ReplicationDate::createFromPage($this->markupPath)
             ->setWriteStore(MetadataDbStore::class)
             ->setValue(new DateTime());
 
@@ -568,7 +567,7 @@ class DatabasePageRow
             /**
              * Creation
              */
-            if ($this->page === null) {
+            if ($this->markupPath === null) {
                 throw new ExceptionBadState("The page should be defined to create a page database row");
             }
 
@@ -586,17 +585,17 @@ class DatabasePageRow
             }
             $databasePage = DatabasePageRow::createFromPageIdAbbr($pageIdAbbr);
             if ($databasePage->exists()) {
-                $duplicatePage = $databasePage->getPage();
-                throw new ExceptionBadState("The page ($this->page) cannot be replicated to the database because it has the same page id abbreviation ($pageIdAbbr) than the page ($duplicatePage)");
+                $duplicatePage = $databasePage->getMarkupPath();
+                throw new ExceptionBadState("The page ($this->markupPath) cannot be replicated to the database because it has the same page id abbreviation ($pageIdAbbr) than the page ($duplicatePage)");
             }
 
-            $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPathObject()->getWikiId();
-            $values[PagePath::PROPERTY_NAME] = $this->page->getPathObject()->toAbsolutePath()->toQualifiedId();
+            $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->markupPath->getPathObject()->getWikiId();
+            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toQualifiedId();
             /**
              * Default implements the auto-canonical feature
              */
             try {
-                $values[Canonical::PROPERTY_NAME] = $this->page->getCanonicalOrDefault();
+                $values[Canonical::PROPERTY_NAME] = $this->markupPath->getCanonicalOrDefault();
             } catch (ExceptionNotFound $e) {
                 $values[Canonical::PROPERTY_NAME] = null;
             }
@@ -682,7 +681,7 @@ class DatabasePageRow
     public
     function __toString()
     {
-        return $this->page->__toString();
+        return $this->markupPath->__toString();
     }
 
 
@@ -697,7 +696,7 @@ class DatabasePageRow
     function deleteIfExistsAndAddRedirectAlias(MarkupPath $page): void
     {
 
-        if ($this->page != null) {
+        if ($this->markupPath != null) {
             $page->getDatabasePage()->deleteIfExist();
             $this->addRedirectAliasWhileBuildingRow($page);
         }
@@ -745,10 +744,10 @@ class DatabasePageRow
     function rebuild(): DatabasePageRow
     {
 
-        if ($this->page != null) {
-            $this->page->rebuild();
+        if ($this->markupPath != null) {
+            $this->markupPath->rebuild();
             try {
-                $row = $this->getDatabaseRowFromPage($this->page);
+                $row = $this->getDatabaseRowFromPage($this->markupPath);
                 $this->setRow($row);
             } catch (ExceptionNotExists $e) {
                 // ok
@@ -769,8 +768,8 @@ class DatabasePageRow
     private
     function getMetaRecord(): array
     {
-        $sourceStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
-        $targetStore = MetadataDbStore::getOrCreateFromResource($this->page);
+        $sourceStore = MetadataDokuWikiStore::getOrCreateFromResource($this->markupPath);
+        $targetStore = MetadataDbStore::getOrCreateFromResource($this->markupPath);
 
         $record = array(
             Canonical::PROPERTY_NAME,
@@ -798,7 +797,7 @@ class DatabasePageRow
             }
             try {
                 $metaRecord[$name] = $metadata
-                    ->setResource($this->page)
+                    ->setResource($this->markupPath)
                     ->setReadStore($sourceStore)
                     ->buildFromReadStore()
                     ->setWriteStore($targetStore)
@@ -815,7 +814,7 @@ class DatabasePageRow
         }
 
         // Is index
-        $metaRecord[self::IS_INDEX_COLUMN] = ($this->page->isIndexPage() === true ? 1 : 0);
+        $metaRecord[self::IS_INDEX_COLUMN] = ($this->markupPath->isIndexPage() === true ? 1 : 0);
 
         return $metaRecord;
     }
@@ -836,94 +835,70 @@ class DatabasePageRow
     }
 
     /**
-     * @throws ExceptionSqliteNotAvailable
      * @throws ExceptionNotFound
      */
-    private
-    function getDatabaseRowFromPageId(string $pageId)
+    private function getDatabaseRowFromPageId(string $pageIdValue)
     {
-
-        if ($this->sqlite === null) {
-            throw new ExceptionSqliteNotAvailable();
-        }
 
         $pageIdAttribute = PageId::PROPERTY_NAME;
         $query = $this->getParametrizedLookupQuery($pageIdAttribute);
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQueryParametrized($query, [$pageId]);
+            ->setQueryParametrized($query, [$pageIdValue]);
         $rows = [];
         try {
             $rows = $request
                 ->execute()
                 ->getRows();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-            return null;
+            throw new ExceptionRuntimeInternal("Error while retrieving the object by id", self::CANONICAL, 1, $e);
         } finally {
             $request->close();
         }
 
         switch (sizeof($rows)) {
             case 0:
-                throw new ExceptionNotFound("No database row by page id");
+                throw new ExceptionNotFound("No object by page id");
             case 1:
-                $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 /**
                  * Page Id Collision detection
                  */
-                if ($this->page != null && $id !== $this->page->getWikiId()) {
-                    $duplicatePage = MarkupPath::createMarkupFromId($id);
-                    if (!$duplicatePage->exists()) {
-                        // Move
-                        LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($this->page)", LogUtility::LVL_MSG_INFO);
-                        $this->addRedirectAliasWhileBuildingRow($duplicatePage);
-                    } else {
-                        // This can happens if two page were created not on the same website
-                        // of if the sqlite database was deleted and rebuilt.
-                        // The chance is really, really low
-                        $errorMessage = "The page ($this->page) and the page ($id) have the same page id ($pageId)";
-                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        // What to do ?
-                        // The database does not allow two page id with the same value
-                        // If it happens, ugh, ugh, ..., a replication process between website may be.
-                        return null;
-                    }
-                }
+                $rowId = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
+                $this->checkCollision($rowId, $pageIdAttribute, $pageIdValue);
                 return $rows[0];
             default:
                 $existingPages = implode(", ", $rows);
-                $message = "The pages ($existingPages) have all the same page id ($pageId)";
-                LogUtility::internalError($message);
-                throw new ExceptionRuntime($message);
+                $message = "The pages ($existingPages) have all the same page id ($pageIdValue)";
+                throw new ExceptionRuntimeInternal($message, self::CANONICAL);
         }
 
     }
 
 
     private
-    function getParametrizedLookupQuery(string $pageIdAttribute): string
+    function getParametrizedLookupQuery(string $attributeName): string
     {
         $select = Sqlite::createSelectFromTableAndColumns("pages", self::PAGE_BUILD_ATTRIBUTES);
-        return "$select where $pageIdAttribute = ?";
+        return "$select where $attributeName = ?";
     }
 
 
-    public function setPage(MarkupPath $page)
+    public function setMarkupPath(MarkupPath $page)
     {
-        $this->page = $page;
+        $this->markupPath = $page;
         return $this;
     }
 
     /**
      * @throws ExceptionNotFound
      */
-    private function getDatabaseRowFromCanonical($canonical)
+    private function getDatabaseRowFromCanonical($canonicalValue)
     {
-        $query = $this->getParametrizedLookupQuery(Canonical::PROPERTY_NAME);
+        $canoncialName = Canonical::PROPERTY_NAME;
+        $query = $this->getParametrizedLookupQuery($canoncialName);
         $request = $this->sqlite
             ->createRequest()
-            ->setQueryParametrized($query, [$canonical]);
+            ->setQueryParametrized($query, [$canonicalValue]);
         $rows = [];
         try {
             $rows = $request
@@ -940,15 +915,7 @@ class DatabasePageRow
                 throw new ExceptionNotFound("No canonical row was found");
             case 1:
                 $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                if ($this->page !== null && $id !== $this->page->getWikiId()) {
-                    $duplicatePage = MarkupPath::createMarkupFromId($id);
-                    if (!$duplicatePage->exists()) {
-                        $this->addRedirectAliasWhileBuildingRow($duplicatePage);
-                        LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($this->page)", LogUtility::LVL_MSG_INFO);
-                    } else {
-                        LogUtility::msg("The page ($this->page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
-                    }
-                }
+                $this->checkCollision($id, $canoncialName, $canonicalValue);
                 return $rows[0];
             default:
                 $existingPages = [];
@@ -967,8 +934,8 @@ class DatabasePageRow
                          */
                         $canonicalLastNamesCount = SiteConfig::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
                         if ($canonicalLastNamesCount > 0) {
-                            $this->page->unsetMetadata(Canonical::PROPERTY_NAME);
-                            $duplicatePage->unsetMetadata(Canonical::PROPERTY_NAME);
+                            $this->markupPath->unsetMetadata($canoncialName);
+                            $duplicatePage->unsetMetadata($canoncialName);
                         }
 
                         $existingPages[] = $row;
@@ -976,7 +943,7 @@ class DatabasePageRow
                 }
                 if (sizeof($existingPages) > 1) {
                     $existingPages = implode(", ", $existingPages);
-                    $message = "The existing pages ($existingPages) have all the same canonical ($canonical), return the first one";
+                    $message = "The existing pages ($existingPages) have all the same canonical ($canonicalValue), return the first one";
                     LogUtility::error($message, self::CANONICAL);
                 }
                 return $existingPages[0];
@@ -1029,12 +996,12 @@ class DatabasePageRow
                 throw new ExceptionNotFound("No database row found for the page");
             case 1:
                 $value = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                if ($this->page != null && $value !== $this->page->getWikiId()) {
+                if ($this->markupPath != null && $value !== $this->markupPath->getWikiId()) {
                     $duplicatePage = MarkupPath::createMarkupFromId($value);
                     if (!$duplicatePage->exists()) {
                         $this->addRedirectAliasWhileBuildingRow($duplicatePage);
                     } else {
-                        LogUtility::msg("The page ($this->page) and the page ($value) have the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
+                        LogUtility::msg("The page ($this->markupPath) and the page ($value) have the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
                     }
                 }
                 return $rows[0];
@@ -1066,15 +1033,15 @@ class DatabasePageRow
     }
 
     public
-    function getPage(): ?MarkupPath
+    function getMarkupPath(): ?MarkupPath
     {
         if (
-            $this->page === null
+            $this->markupPath === null
             && $this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] !== null
         ) {
-            $this->page = MarkupPath::createMarkupFromId($this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]);
+            $this->markupPath = MarkupPath::createMarkupFromId($this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]);
         }
-        return $this->page;
+        return $this->markupPath;
     }
 
     private
@@ -1137,12 +1104,12 @@ class DatabasePageRow
 
         $aliasPath = $pageAlias->getPathObject()->toQualifiedId();
         try {
-            Aliases::createForPage($this->page)
+            Aliases::createForPage($this->markupPath)
                 ->addAlias($aliasPath)
                 ->sendToWriteStore();
         } catch (ExceptionCompile $e) {
             // we don't throw while getting
-            LogUtility::msg("Unable to add the alias ($aliasPath) for the page ($this->page)");
+            LogUtility::msg("Unable to add the alias ($aliasPath) for the page ($this->markupPath)");
         }
 
     }
@@ -1151,10 +1118,10 @@ class DatabasePageRow
     function addPageIdAttributeIfNeeded(array &$values)
     {
         if (!isset($values[PageId::getPersistentName()])) {
-            $values[PageId::getPersistentName()] = $this->page->getPageId();
+            $values[PageId::getPersistentName()] = $this->markupPath->getPageId();
         }
         if (!isset($values[PageId::PAGE_ID_ABBR_ATTRIBUTE])) {
-            $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
+            $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->markupPath->getPageIdAbbr();
         }
     }
 
@@ -1194,7 +1161,7 @@ class DatabasePageRow
     {
 
         try {
-            $fetchPath = $this->page->fetchAnalyticsPath();
+            $fetchPath = $this->markupPath->fetchAnalyticsPath();
             $analyticsJson = Json::createFromPath($fetchPath);
         } catch (ExceptionCompile $e) {
             if (PluginUtility::isDevOrTest()) {
@@ -1206,7 +1173,7 @@ class DatabasePageRow
         /**
          * Replication Date
          */
-        $replicationDateMeta = ReplicationDate::createFromPage($this->page)
+        $replicationDateMeta = ReplicationDate::createFromPage($this->markupPath)
             ->setWriteStore(MetadataDbStore::class)
             ->setValue(new DateTime());
 
@@ -1220,11 +1187,40 @@ class DatabasePageRow
          * Record
          */
         $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
-        $record['IS_LOW_QUALITY'] = ($this->page->isLowQualityPage() === true ? 1 : 0);
+        $record['IS_LOW_QUALITY'] = ($this->markupPath->isLowQualityPage() === true ? 1 : 0);
         $record['WORD_COUNT'] = $analyticsJsonAsArray[renderer_plugin_combo_analytics::STATISTICS][renderer_plugin_combo_analytics::WORD_COUNT];
         $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[renderer_plugin_combo_analytics::STATISTICS][BacklinkCount::getPersistentName()];
         $record[$replicationDateMeta::getPersistentName()] = $replicationDateMeta->toStoreValue();
         $this->upsertAttributes($record);
+    }
+
+    private function checkCollision($wikiIdInDatabase, $attribute, $value)
+    {
+        if($this->markupPath === null){
+            return;
+        }
+        try {
+            $markupWikiId = $this->markupPath->toWikiPath()->getWikiId();
+        } catch (ExceptionCast $e) {
+            return;
+        }
+        if ($wikiIdInDatabase !== $markupWikiId) {
+            $duplicatePage = MarkupPath::createMarkupFromId($wikiIdInDatabase);
+            if (!FileSystems::exists($duplicatePage)) {
+                // Move
+                LogUtility::info("The non-existing duplicate page ($wikiIdInDatabase) has been added as redirect alias for the page ($this->markupPath)", self::CANONICAL);
+                $this->addRedirectAliasWhileBuildingRow($duplicatePage);
+            } else {
+                // This can happens if two page were created not on the same website
+                // of if the sqlite database was deleted and rebuilt.
+                // The chance is really, really low
+                $errorMessage = "The page ($this->markupPath) and the page ($wikiIdInDatabase) have the same $attribute value ($value)";
+                throw new ExceptionRuntimeInternal($errorMessage, self::CANONICAL);
+                // What to do ?
+                // The database does not allow two page id with the same value
+                // If it happens, ugh, ugh, ..., a replication process between website may be.
+            }
+        }
     }
 
 

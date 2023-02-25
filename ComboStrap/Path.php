@@ -70,6 +70,7 @@ interface Path
      *
      * It's used mostly as common identifier that can be used with any path
      * (such as {@link LocalPath} or {@link WikiPath} path
+     *
      */
     function toQualifiedId(): string;
 

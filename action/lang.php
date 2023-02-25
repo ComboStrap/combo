@@ -87,7 +87,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
             if ($encodedPageId !== null) {
                 $pageId = PageUrlPath::decodePageId($encodedPageId);
                 if ($pageId !== null) {
-                    $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getPage();
+                    $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getMarkupPath();
                     if ($page === null) {
                         return;
                     }

@@ -90,12 +90,6 @@ class PageId extends MetadataText
 
         // null for non-existing page
         if (!FileSystems::exists($resource->getPathObject())) {
-            if (PluginUtility::isDevOrTest()) {
-                global $ACT;
-                if ($ACT !== "edit") {
-                    LogUtility::error("Dev/Test message only: You can't ask a `page id` with the action $ACT, the page ({$this->getResource()}) does not exist",  $this->getCanonical());
-                }
-            }
             return parent::buildFromStoreValue($value);
         }
 

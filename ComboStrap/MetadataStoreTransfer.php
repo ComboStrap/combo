@@ -20,17 +20,19 @@ class MetadataStoreTransfer
      * @var MarkupPath
      */
     private $page;
-    /**
-     * @var array - the normalized data after processing
-     * Name of metadata may be deprecated
-     * After processing, this array will have the new keys
-     * Use in a frontmatter to send correct data to the rendering metadata phase
-     */
-    private $normalizedData = [];
+
+
     /**
      * @var array - the processing messages
      */
-    private $messages;
+    private array $messages = [];
+
+    /**
+     * @var array - the validated metadata (that may be stored)
+     */
+    private array $metadatasThatMayBeStored;
+
+    private array $originalMetadatas = [];
 
     /**
      * MetadataStoreTransfer constructor.
@@ -45,6 +47,68 @@ class MetadataStoreTransfer
     public static function createForPage($page): MetadataStoreTransfer
     {
         return new MetadataStoreTransfer($page);
+    }
+
+    /**
+     * @return $this - validate the transfer (ie the metadatas). The metadata that can be retrieved via {@link self::getValidatedMetadatas()}
+     * and the bad validation messages if any via {@link self::getMessages()}
+     */
+    public function validate(): MetadataStoreTransfer
+    {
+
+        if (isset($this->metadatasThatMayBeStored)) {
+            return $this;
+        }
+        if (!isset($this->originalMetadatas)) {
+            throw new ExceptionRuntimeInternal("The original metadata should be defined");
+        }
+
+        $this->metadatasThatMayBeStored = [];
+        foreach ($this->originalMetadatas as $originalMetaKey => $originalMetaValue) {
+
+
+            $metadataObject = Metadata::getForName($originalMetaKey);
+
+            /**
+             * Take old name or renaming into account
+             *
+             * ie The old key should be replace by the new one
+             * (ie {@link \ComboStrap\PagePublicationDate::OLD_META_KEY}
+             * by {@link \ComboStrap\PagePublicationDate::PROPERTY_NAME}
+             */
+            $name = $originalMetaKey;
+            if ($metadataObject !== null) {
+                $name = $metadataObject::getName();
+                $originalMetaKey = $metadataObject::getPersistentName();
+            }
+
+            /**
+             * Not modifiable meta check
+             */
+            if (in_array($name, Metadata::NOT_MODIFIABLE_METAS)) {
+                $this->messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
+                    ->setCanonical(Metadata::CANONICAL);
+                continue;
+            }
+
+            /**
+             * Unknown meta
+             */
+            if ($metadataObject === null) {
+                $this->messages[] = Message::createWarningMessage("The metadata ($originalMetaKey) is unknown and was not persisted")->setCanonical(Metadata::CANONICAL);
+                continue;
+            }
+
+            /**
+             * Valid metadata to proceed in the next phase
+             */
+            $metadataObject
+                ->setResource($this->page)
+                ->setValue($originalMetaValue);
+            $this->metadatasThatMayBeStored[$name] = $metadataObject;
+
+        }
+        return $this;
     }
 
     public function fromStore(MetadataStore $sourceStore): MetadataStoreTransfer
@@ -63,60 +127,21 @@ class MetadataStoreTransfer
      * @param array $data
      * @return $this
      */
-    public function process(array $data): MetadataStoreTransfer
+    public function process(array $data = null): MetadataStoreTransfer
     {
+
+        if (isset($this->originalMetadatas) && $data !== null) {
+            throw new ExceptionRuntimeInternal("The metadata to process were already set");
+        }
         $messages = [];
 
         /**
          * Pre-processing
          * Check/ validity and list of metadata building
          */
-        $metadatas = [];
-        foreach ($data as $persistentName => $value) {
+        $validatedMetadata = $this->validate()->getValidatedMetadatas();
 
-
-            $metadata = Metadata::getForName($persistentName);
-
-            /**
-             * Take old name or renaming into account
-             *
-             * ie The old key should be replace by the new one
-             * (ie {@link \ComboStrap\PagePublicationDate::OLD_META_KEY}
-             * by {@link \ComboStrap\PagePublicationDate::PROPERTY_NAME}
-             */
-            $name = $persistentName;
-            if ($metadata !== null) {
-                $name = $metadata::getName();
-                $persistentName = $metadata::getPersistentName();
-            }
-            $this->normalizedData[$persistentName] = $value;
-
-            /**
-             * Not modifiable meta check
-             */
-            if (in_array($name, Metadata::NOT_MODIFIABLE_METAS)) {
-                $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
-                    ->setCanonical(Metadata::CANONICAL);
-                continue;
-            }
-
-            /**
-             * Unknown meta
-             */
-            if ($metadata === null) {
-                $this->targetStore->setFromPersistentName($persistentName, $value);
-                continue;
-            }
-
-            /**
-             * Valid meta to proceed in the next phase
-             */
-            $metadatas[$name] = $metadata;
-
-        }
-
-
-        foreach ($metadatas as $metadata) {
+        foreach ($validatedMetadata as $metadata) {
 
 
             /**
@@ -157,9 +182,22 @@ class MetadataStoreTransfer
         return $this->messages;
     }
 
-    public function getNormalizedDataArray(): array
+
+    /**
+     * @return Metadata[] - an array where the key is the name and the value a {@link Metadata} object
+     */
+    public function getValidatedMetadatas(): array
     {
-        return $this->normalizedData;
+        if (!isset($this->metadatasThatMayBeStored)) {
+            $this->validate();
+        }
+        return $this->metadatasThatMayBeStored;
+    }
+
+    public function setMetadatas($originalMetadatas): MetadataStoreTransfer
+    {
+        $this->originalMetadatas = $originalMetadatas;
+        return $this;
     }
 
 

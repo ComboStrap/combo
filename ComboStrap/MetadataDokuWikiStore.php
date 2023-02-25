@@ -83,7 +83,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             $executionCachedStores = $context->getRuntimeObject(MetadataDokuWikiStore::class);
         } catch (ExceptionNotFound $e) {
             $executionCachedStores = [];
-            $context->setRuntimeObject(self::CANONICAL, $stores);
+            $context->setRuntimeObject(MetadataDokuWikiStore::class, $stores);
         }
         $path = $resourceCombo->getPathObject()->toQualifiedId();
         if (isset($executionCachedStores[$path])) {
@@ -94,13 +94,48 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
             LogUtility::msg("The resource is not a page. File System store supports only page resources");
             $data = null;
         } else {
-            $data = p_read_metadata($resourceCombo->getWikiId());
+            /**
+             * Note that {@link p_get_metadata()} can trigger a rendering of the meta again
+             * and it has a fucking cache
+             *
+             * Due to the cache in {@link p_get_metadata()} we can't use {@link p_read_metadata}
+             * when testing a {@link \action_plugin_combo_imgmove move} otherwise
+             * the move meta is not seen and the tests are failing.
+             *
+             *
+             */
+            $wikiId = $resourceCombo->toQualifiedId();
+            self::noRenderingCheck($wikiId);
+            $data = p_read_metadata($wikiId);
         }
 
         $metadataStore = new MetadataDokuWikiStore($resourceCombo, $data);
         $executionCachedStores[$path] = $metadataStore;
         return $metadataStore;
 
+    }
+
+    /**
+     *
+     * $METADATA_RENDERERS: A global cache variable where the persistent data is set/exist
+     * only during metadata rendering with the function {@link p_render_metadata()}
+     *
+     * Setting a metadata does not immediately flushed the value on disk when there is a
+     * rendering. They are going into the global $METADATA_RENDERERS
+     *
+     * The function {@link p_set_metadata()} and {@link p_get_metadata()} use it.
+     *
+     * The data are rendererd and stored in {@link p_get_metadata()} via {@link p_save_metadata()}
+     *
+     */
+    private static function noRenderingCheck(string $wikiId)
+    {
+        global $METADATA_RENDERERS;
+        if (isset($METADATA_RENDERERS[$wikiId])) {
+            $message = "There is a rendering going on, the setting will not flush";
+            //Console::log($message);
+            throw new ExceptionRuntime($message);
+        }
     }
 
 
@@ -117,11 +152,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         } catch (ExceptionNotFound $e) {
             $persistentValue = null;
         }
-        try {
-            $defaultValue = $metadata->toStoreDefaultValue();
-        } catch (ExceptionNotFound $e) {
-            $defaultValue = null;
-        }
+        $defaultValue = $metadata->toStoreDefaultValue();
         $resource = $metadata->getResource();
         $this->checkResource($resource);
         if ($resource === null) {
@@ -261,14 +292,22 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          * with parsing
          */
         $wikiPage = $this->getResource();
-        if(!$wikiPage instanceof WikiPath){
+        if (!$wikiPage instanceof WikiPath) {
             LogUtility::errorIfDevOrTest("The resource is not a wiki path");
             return $this;
         }
-        $this->data = FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPage, $wikiPage)
-            ->setRequestedMimeToMetadata()
-            ->feedCache()
-            ->getFetchArray();
+        try {
+            $this->data = FetcherMarkup::getBuilder()
+                ->setRequestedExecutingPath($wikiPage)
+                ->setRequestedContextPath($wikiPage)
+                ->setRequestedMimeToMetadata()
+                ->build()
+                ->processMetadataIfNotYetDone()
+                ->getMetadata();
+        } catch (ExceptionNotExists $e) {
+            LogUtility::error("Metadata Build Error", self::CANONICAL, $e);
+            $this->data = [];
+        }
 
         return $this;
     }
@@ -282,6 +321,8 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * @param $key
      * @param $value
      * @param null $default - use in case of boolean
+     * TODO: because the metadataWikiStore is now on the wikiId level, the wikiId is not needed
+     *   in the signature
      */
     private function setFromWikiId($wikiId, $key, $value, $default = null)
     {
@@ -310,9 +351,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
              * otherwise dokuwiki will not see a change
              * between true and a string and will not persist the value
              *
-             * A metadata is also not immediately flushed on disk
-             * in a test when rendering
-             * They are going into the global $METADATA_RENDERERS
              *
              * A current metadata is never stored if not set in the rendering process
              * We persist therefore always
@@ -367,22 +405,16 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     }
 
 
+    /**
+     * @param $dokuwikiId
+     * @param string $name
+     * @param $default
+     * @return mixed|null
+     * TODO: because the MetadataWikiStore is now on Id level, this function is no more relevant, replace
+     */
     private function getFromWikiId($dokuwikiId, string $name, $default = null)
     {
 
-        /**
-         * Note that {@link p_get_metadata()} can trigger a rendering of the meta again
-         * and it has a fucking cache
-         *
-         * Due to the cache in {@link p_get_metadata()} we can't use {@link p_read_metadata}
-         * when testing a {@link \action_plugin_combo_imgmove move} otherwise
-         * the move meta is not seen and the tests are failing.
-         *
-         * $METADATA_RENDERERS: A global cache variable where the persistent data is set
-         * with {@link p_set_metadata()} and that you can't retrieve with {@link p_get_metadata()}
-         *
-         * This variable is unset at the end function of {@link p_render_metadata()}
-         */
         if ($dokuwikiId === null) {
             /**
              * On edit page, we got null
@@ -391,14 +423,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
              */
             LogUtility::log2file("MetadataDokuwWikiStore: dokuwikiId should not be null");
             return null;
-        }
-        global $METADATA_RENDERERS;
-        $metadataRendererForWikiId = $METADATA_RENDERERS[$dokuwikiId];
-        if ($metadataRendererForWikiId !== null) {
-            $value = $metadataRendererForWikiId[MetadataDokuWikiStore::PERSISTENT_METADATA][$name];
-            if ($value !== null) {
-                return $value;
-            }
         }
 
         /**

@@ -11,8 +11,8 @@ class Message
     const SIGNATURE_CLASS = "signature";
     const TAG = "message";
     const TYPE_ERROR = "error";
-    private $content = [];
-    private $type;
+    private array $content = [];
+    private string $type;
 
     const TYPE_INFO = 'Info';
     const TYPE_WARNING = 'Warning';
@@ -216,7 +216,7 @@ EOF;
         return $this->addContent($text, Mime::PLAIN_TEXT);
     }
 
-    public function sendLogMsg()
+    public function sendToLogUtility()
     {
         $content = $this->getContent(Mime::PLAIN_TEXT);
         switch ($this->type) {

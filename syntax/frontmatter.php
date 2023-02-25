@@ -26,6 +26,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
 use ComboStrap\EditButton;
@@ -75,10 +76,10 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 {
-    const PARSING_STATE_EMPTY = "empty";
-    const PARSING_STATE_ERROR = "error";
-    const PARSING_STATE_SUCCESSFUL = "successful";
-    const STATUS = "status";
+
+    const PARSING_STATE_ERROR = 1;
+    const PARSING_STATE_SUCCESSFUL = 0;
+
     const CANONICAL = "frontmatter";
     const TAG = "frontmatter";
     const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT = "enableFrontMatterOnSubmit";
@@ -171,89 +172,66 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
-        if ($state !== DOKU_LEXER_SPECIAL) {
-            LogUtility::error("Frontmatter was not called with a special state", self::CANONICAL);
-            return [];
-        }
         $result = [];
 
         try {
-            $parsedPage = MarkupPath::createPageFromExecutingId();
+            $wikiPath = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiPath();
+            $parsedPage = MarkupPath::createPageFromPathObject($wikiPath);
         } catch (ExceptionCompile $e) {
             LogUtility::error("The global ID is unknown, we couldn't get the requested page", self::CANONICAL);
             return [];
         }
         try {
+
             $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatterString($parsedPage, $match);
-            $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+            $result[PluginUtility::EXIT_CODE] = self::PARSING_STATE_SUCCESSFUL;
         } catch (ExceptionCompile $e) {
             // Decode problem
-            $result[self::STATUS] = self::PARSING_STATE_ERROR;
-            $result[PluginUtility::PAYLOAD] = $match;
+            $result[PluginUtility::EXIT_CODE] = self::PARSING_STATE_ERROR;
+            $result[PluginUtility::EXIT_MESSAGE] = $match;
             return $result;
         }
 
-        /**
-         * Empty string
-         * Rare case, we delete all mutable meta if present
-         */
-        $frontmatterData = $frontMatterStore->getData();
-        if (sizeof($frontmatterData) === 0) {
-            global $ID;
-            $meta = p_read_metadata($ID);
-            foreach (Metadata::MUTABLE_METADATA as $metaKey) {
-                if (isset($meta['persistent'][$metaKey])) {
-                    unset($meta['persistent'][$metaKey]);
-                }
-            }
-            p_save_metadata($ID, $meta);
-            return array(self::STATUS => self::PARSING_STATE_EMPTY);
-        }
 
-
-        /**
-         * Sync to file
-         */
         $targetStore = MetadataDokuWikiStore::getOrCreateFromResource($parsedPage);
+        $frontMatterData = $frontMatterStore->getData();
+
         $transfer = MetadataStoreTransfer::createForPage($parsedPage)
             ->fromStore($frontMatterStore)
             ->toStore($targetStore)
-            ->process($frontmatterData);
+            ->setMetadatas($frontMatterData)
+            ->validate();
 
         $messages = $transfer->getMessages();
-        $dataForRenderer = $transfer->getNormalizedDataArray();
-
-
-        /**
-         * Database update
-         * TODO: Database update here ?
-         *
-         */
-        if ($parsedPage->exists()) {
+        $validatedMetadatas = $transfer->getValidatedMetadatas();
+        $renderMetadata = [];
+        foreach ($validatedMetadatas as $metadataObject) {
             try {
-                $databasePage = $parsedPage->getDatabasePage();
-                $databasePage->replicateMetaAttributes();
-            } catch (Exception $e) {
-                if (PluginUtility::isDevOrTest()) {
-                    /** @noinspection PhpUnhandledExceptionInspection */
-                    throw $e;
-                }
-                $message = Message::createErrorMessage($e->getMessage());
-                if ($e instanceof ExceptionCompile) {
-                    $message->setCanonical($e->getCanonical());
-                }
-                $messages[] = $message;
+                $renderMetadata[$metadataObject::getPersistentName()] = $metadataObject->getValue();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::errorIfDevOrTest("The value of the metadata ($metadataObject) was not found. Should not happened as the metadata are validated.");
             }
-            foreach ($messages as $message) {
-                $message->sendLogMsg();
+        }
+
+        foreach ($messages as $message) {
+            $messageString = $message->getPlainTextContent();
+            switch ($message->getType()) {
+                case Message::TYPE_ERROR:
+                    LogUtility::error($messageString, self::CANONICAL);
+                    break;
+                case Message::TYPE_INFO:
+                    LogUtility::info($messageString, self::CANONICAL);
+                    break;
+                case Message::TYPE_WARNING:
+                    LogUtility::warning($messageString, self::CANONICAL);
+                    break;
             }
         }
 
         /**
          * Return them for metadata rendering
          */
-        $result[PluginUtility::ATTRIBUTES] = $dataForRenderer;
-
+        $result[PluginUtility::ATTRIBUTES] = $renderMetadata;
         return $result;
 
     }
@@ -271,25 +249,29 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
+        try {
+            $executingPath = ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingWikiPath();
+        } catch (ExceptionNotFound $e) {
+            // markup string rendering
+            return false;
+        }
         switch ($format) {
             case 'xhtml':
-                global $ID;
+
                 /** @var Doku_Renderer_xhtml $renderer */
-
-                $state = $data[self::STATUS];
-                if ($state == self::PARSING_STATE_ERROR) {
-                    $json = MetadataFrontmatterStore::stripFrontmatterTag($data[PluginUtility::PAYLOAD]);
-                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. " . \ComboStrap\Json::getValidationLink($json), LogUtility::LVL_MSG_ERROR);
+                $exitCode = $data[PluginUtility::EXIT_CODE];
+                if ($exitCode == self::PARSING_STATE_ERROR) {
+                    $json = MetadataFrontmatterStore::stripFrontmatterTag($data[PluginUtility::EXIT_MESSAGE]);
+                    LogUtility::error("Front Matter: The json object for the page ($executingPath) is not valid. " . \ComboStrap\Json::getValidationLink($json), self::CANONICAL);
                 }
-
-                break;
+                return true;
 
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
-                if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
-                    return false;
+                if ($data[PluginUtility::EXIT_CODE] !== self::PARSING_STATE_SUCCESSFUL) {
+                    return true;
                 }
-
 
                 /** @var renderer_plugin_combo_analytics $renderer */
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
@@ -301,24 +283,68 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     }
 
                 }
-                break;
+                return true;
 
             case "metadata":
 
-                global $ID;
+
                 /** @var Doku_Renderer_metadata $renderer */
-                if ($data[self::STATUS] === self::PARSING_STATE_ERROR) {
+                if ($data[PluginUtility::EXIT_CODE] === self::PARSING_STATE_ERROR) {
                     if (PluginUtility::isTest()) {
                         // fail if test
-                        throw new ExceptionRuntime("Front Matter: The json object for the page ($ID) is not valid.", LogUtility::LVL_MSG_ERROR);
+                        throw new ExceptionRuntime("Front Matter: The json object for the page () is not valid.", LogUtility::LVL_MSG_ERROR);
                     }
                     return false;
                 }
 
                 /**
+                 * Empty string
+                 * Rare case, we delete all mutable meta if present
+                 */
+                $frontmatterData = $data[PluginUtility::ATTRIBUTES];
+                if (sizeof($frontmatterData) === 0) {
+                    foreach (Metadata::MUTABLE_METADATA as $metaKey) {
+                        if ($renderer->meta['persistent'][$metaKey]) {
+                            unset($renderer->meta['persistent'][$metaKey]);
+                        }
+                    }
+                    return true;
+                }
+
+                /**
+                 * Meta update
+                 * (The {@link p_get_metadata()} starts {@link p_render_metadata()}
+                 * and stores them if there is any diff
+                 */
+                foreach ($frontmatterData as $metaKey => $metaValue) {
+                    $renderer->meta['persistent'][$metaKey] = $metaValue;
+                }
+
+                /**
+                 * Database update
+                 */
+                $page = MarkupPath::createPageFromPathObject($executingPath);
+                if ($page->exists()) {
+                    try {
+                        $databasePage = $page->getDatabasePage();
+                        $databasePage->replicateMetaAttributes();
+                    } catch (Exception $e) {
+                        if (PluginUtility::isDevOrTest()) {
+                            /** @noinspection PhpUnhandledExceptionInspection */
+                            throw $e;
+                        }
+                        $message = Message::createErrorMessage($e->getMessage());
+                        if ($e instanceof ExceptionCompile) {
+                            $message->setCanonical($e->getCanonical());
+                        }
+                        $message->sendToLogUtility();
+                    }
+
+                }
+
+                /**
                  * Register media in index
                  */
-                $page = MarkupPath::createMarkupFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
                 if (isset($frontMatterJsonArray[PageImages::getPersistentName()])) {
                     $value = $frontMatterJsonArray[PageImages::getPersistentName()];
@@ -334,13 +360,11 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                         $attributes = [MarkupRef::REF_ATTRIBUTE => ":$dokuwikiId"];
                         try {
                             syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
-                        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                        } catch (\Exception $e) {
                             LogUtility::internalError("The image registration did not work. Error: {$e->getMessage()}");
                         }
                     }
-
                 }
-
                 break;
 
         }

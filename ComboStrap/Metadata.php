@@ -403,10 +403,12 @@ abstract class Metadata
     }
 
     /**
-     * @return string - the name use in the store
+     * @return string - the storage name use in the store
+     *
      * For instance, a {@link PageImagePath} has a unique name of `page-image-path`
      * but when we store it hierarchically, the prefix `page-image` is not needed
      * and becomes simple `path`
+     * The metadata is stored in a table `page-image` with the column `path`.
      */
     public static function getPersistentName(): string
     {
@@ -414,9 +416,11 @@ abstract class Metadata
     }
 
     /**
-     * @return string the name of the metadata (property)
-     * Used in all store such as database (therefore no minus please)
-     * Alphanumeric
+     * @return string the unique name of the metadata (property)
+     *
+     *
+     * It's the hierachical representation of the {@link self::getPersistentName()}
+     *
      */
     public static abstract function getName(): string;
 

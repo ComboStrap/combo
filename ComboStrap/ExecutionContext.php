@@ -193,7 +193,7 @@ class ExecutionContext
     /**
      * @throws ExceptionNotFound
      */
-    public static function getExecutionContext(): ?ExecutionContext
+    public static function getExecutionContext(): ExecutionContext
     {
         if (!isset(self::$executionContext)) {
             throw new ExceptionNotFound("No root context");
@@ -317,6 +317,18 @@ class ExecutionContext
         /** global dokuwiki messages variable */
         global $MSG;
         unset($MSG);
+
+        /**
+         * {@link p_read_metadata() global cache}
+         */
+        global $cache_metadata;
+        unset($cache_metadata);
+
+        /**
+         * {@link p_render_metadata()} temporary render cache
+         */
+        global $METADATA_RENDERERS;
+        unset($METADATA_RENDERERS);
 
 
         /**
@@ -939,7 +951,7 @@ class ExecutionContext
     }
 
     /**
-     * @throws ExceptionNotFound - when there is no executing id
+     * @throws ExceptionNotFound - when there is no executing id (markup execution)
      */
     public function getExecutingWikiPath(): WikiPath
     {

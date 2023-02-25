@@ -1062,7 +1062,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public function getMetadata(): array
     {
 
-        $this->processMetaEventually();
+        $this->processMetadataIfNotYetDone();
         return $this->meta;
 
     }
@@ -1073,14 +1073,14 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * to take into account {@link self::getInstructions()}
      * @return void
      */
-    private function processMetaEventually(): void
+    public function processMetadataIfNotYetDone(): FetcherMarkup
     {
 
         /**
          * Already set
          */
         if (isset($this->meta)) {
-            return;
+            return $this;
         }
 
         /**
@@ -1174,6 +1174,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 p_save_metadata($wikiId, $this->meta);
                 /**
                  * In {@link p_get_metadata()}, they store a timestamp in order to make sure that the cachefile is touched
+                 * If the metadata has changed, the (Xhtml, ... ) rendering should occur again
                  */
                 $this->derivedMetaCache->storeCache(time());
             }
@@ -1181,6 +1182,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         } finally {
             $executionContext->closeExecutingMarkupHandler();
         }
+        return $this;
 
     }
 

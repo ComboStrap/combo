@@ -392,11 +392,9 @@ class DatabasePageRow
 
         $this->setMarkupPath($markupPath);
 
-        if ($this->sqlite === null) {
-            throw new ExceptionSqliteNotAvailable();
-        }
-
-        // Do we have a page attached to this page id
+        /**
+         * Generated identifier
+         */
         try {
             $pageId = $markupPath->getPageId();
             return $this->getDatabaseRowFromPageId($pageId);
@@ -404,16 +402,9 @@ class DatabasePageRow
             // no page id
         }
 
-        // Do we have a page attached to the canonical
-        try {
-            $canonical = $markupPath->getCanonical();
-            return $this->getDatabaseRowFromCanonical($canonical);
-        } catch (ExceptionNotFound $e) {
-            // no canonical
-        }
-
-        // Do we have a page attached to the path
-
+        /**
+         * Named identifier: path
+         */
         try {
             $path = $markupPath->getPathObject();
             return $this->getDatabaseRowFromPath($path);
@@ -422,15 +413,27 @@ class DatabasePageRow
         }
 
         /**
-         * Do we have a page attached to this ID
+         * Named identifier: id (ie path)
          */
-        $id = $markupPath->getPathObject()->getWikiId();
         try {
+            $id = $markupPath->getPathObject()->toWikiPath()->getWikiId();
             return $this->getDatabaseRowFromDokuWikiId($id);
-        } catch (ExceptionNotFound $e) {
-            // we send a not exist to not
-            throw new ExceptionNotExists("No row could be found");
+        } catch (ExceptionCast|ExceptionNotFound $e) {
         }
+
+        /**
+         * Named identifier: canonical
+         * (Note that canonical should become a soft link and therefore a path)
+         */
+        try {
+            $canonical = $markupPath->getCanonical();
+            return $this->getDatabaseRowFromCanonical($canonical);
+        } catch (ExceptionNotFound $e) {
+            // no canonical
+        }
+
+        // we send a not exist
+        throw new ExceptionNotExists("No row could be found");
 
 
     }

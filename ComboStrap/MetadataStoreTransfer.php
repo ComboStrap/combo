@@ -104,7 +104,7 @@ class MetadataStoreTransfer
              */
             $metadataObject
                 ->setResource($this->page)
-                ->setValue($originalMetaValue);
+                ->setFromStoreValue($originalMetaValue);
             $this->metadatasThatMayBeStored[$name] = $metadataObject;
 
         }

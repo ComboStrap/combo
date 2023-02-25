@@ -175,21 +175,26 @@ class PageDescription extends MetadataText
     }
 
     /**
-     * @return string|array
+     * @return ?string|array
      */
     public function toStoreValue()
     {
         $metaDataStore = $this->getWriteStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
+            // A string
             return parent::toStoreValue();
         }
         /**
          * For dokuwiki, this is an array
          */
-        return array(
-            self::ABSTRACT_KEY => $this->getValue(),
-            self::DESCRIPTION_ORIGIN => PageDescription::DESCRIPTION_COMBO_ORIGIN
-        );
+        try {
+            return array(
+                self::ABSTRACT_KEY => $this->getValue(),
+                self::DESCRIPTION_ORIGIN => PageDescription::DESCRIPTION_COMBO_ORIGIN
+            );
+        } catch (ExceptionNotFound $e) {
+            return null;
+        }
     }
 
     public function getCanonical(): string

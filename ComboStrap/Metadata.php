@@ -682,8 +682,11 @@ abstract class Metadata
     public abstract function buildFromStoreValue($value): Metadata;
 
     /**
+     * Set a value from the {@link self::getReadStore()}
+     *
      * If you have quality problem to throw, you can use this function
      * instead of {@link Metadata::buildFromStoreValue()}
+     *
      * @param $value
      * @return Metadata
      */

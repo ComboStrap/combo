@@ -206,11 +206,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $validatedMetadatas = $transfer->getValidatedMetadatas();
         $renderMetadata = [];
         foreach ($validatedMetadatas as $metadataObject) {
-            try {
-                $renderMetadata[$metadataObject::getPersistentName()] = $metadataObject->toStoreValue();
-            } catch (ExceptionNotFound $e) {
-                LogUtility::errorIfDevOrTest("The value of the metadata ($metadataObject) was not found. Should not happened as the metadata are validated.");
-            }
+            $renderMetadata[$metadataObject::getPersistentName()] = $metadataObject->toStoreValue();
         }
 
         foreach ($messages as $message) {

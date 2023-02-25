@@ -207,7 +207,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $renderMetadata = [];
         foreach ($validatedMetadatas as $metadataObject) {
             try {
-                $renderMetadata[$metadataObject::getPersistentName()] = $metadataObject->getValue();
+                $renderMetadata[$metadataObject::getPersistentName()] = $metadataObject->toStoreValue();
             } catch (ExceptionNotFound $e) {
                 LogUtility::errorIfDevOrTest("The value of the metadata ($metadataObject) was not found. Should not happened as the metadata are validated.");
             }
@@ -317,7 +317,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  * and stores them if there is any diff
                  */
                 foreach ($frontmatterData as $metaKey => $metaValue) {
-                    $renderer->meta['persistent'][$metaKey] = $metaValue;
+                    $renderer->persistent[$metaKey] = $metaValue;
                 }
 
                 /**

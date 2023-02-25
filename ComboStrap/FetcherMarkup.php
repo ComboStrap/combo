@@ -1112,7 +1112,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     $useCache = $this->derivedMetaCache->useCache($depends);
                     if ($useCache) {
                         $this->meta = $actualMeta;
-                        return;
+                        return $this;
                     }
                 }
             } catch (ExceptionCast|ExceptionNotFound $e) {

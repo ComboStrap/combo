@@ -183,12 +183,6 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
         if (!($resource instanceof MarkupPath)) {
             throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        try {
-            $dokuwikiId = $resource->getWikiId();
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::error("Error", self::CANONICAL, $e);
-            return null;
-        }
         return $this->getFromPersistentName($metadata->getName(), $default);
 
 

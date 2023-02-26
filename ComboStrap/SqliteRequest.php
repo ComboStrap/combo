@@ -99,13 +99,11 @@ class SqliteRequest
     {
         $adapter = $this->sqlitePlugin->getAdapter();
         if ($adapter === null) {
-            LogUtility::msg("The database adapter is null, no error info can be retrieved");
-            return "";
+            throw new ExceptionRuntimeInternal("The database adapter is null, no error info can be retrieved");
         }
         $do = $adapter->getDb();
         if ($do === null) {
-            LogUtility::msg("The database object is null, it seems that the database connection has been closed");
-            return "";
+            throw new ExceptionRuntimeInternal("The database object is null, it seems that the database connection has been closed");
         }
         $errorInfo = $do->errorInfo();
         $message = "";

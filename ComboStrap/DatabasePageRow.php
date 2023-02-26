@@ -159,8 +159,13 @@ class DatabasePageRow
      */
     private function addPageIdMeta(array &$metaRecord)
     {
-        $metaRecord[PageId::PROPERTY_NAME] = $this->markupPath->getPageId();
-        $metaRecord[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->markupPath->getPageIdAbbr();
+        try {
+            $pageId  = $this->markupPath->getPageId();
+        } catch (ExceptionNotFound $e) {
+            $pageId = PageId::generateAndStorePageId($this->markupPath);
+        }
+        $metaRecord[PageId::PROPERTY_NAME] = $pageId;
+        $metaRecord[PageId::PAGE_ID_ABBR_ATTRIBUTE] = PageId::getAbbreviated($pageId);
     }
 
     public static function createFromPageId(string $pageId): DatabasePageRow
@@ -477,11 +482,7 @@ class DatabasePageRow
          * Same data as {@link MarkupPath::getMetadataForRendering()}
          */
         $record = $this->getMetaRecord();
-        try {
-            $record[$replicationDate::getPersistentName()] = $replicationDate->toStoreValue();
-        } catch (ExceptionNotFound $e) {
-            $record[$replicationDate::getPersistentName()] = null;
-        }
+        $record[$replicationDate::getPersistentName()] = $replicationDate->toStoreValue();
         $this->upsertAttributes($record);
 
     }
@@ -795,16 +796,13 @@ class DatabasePageRow
             if ($metadata === null) {
                 throw new ExceptionRuntime("The metadata ($name) is unknown");
             }
-            try {
-                $metaRecord[$name] = $metadata
-                    ->setResource($this->markupPath)
-                    ->setReadStore($sourceStore)
-                    ->buildFromReadStore()
-                    ->setWriteStore($targetStore)
-                    ->toStoreValueOrDefault(); // used by the template, the value is or default
-            } catch (ExceptionNotFound $e) {
-                $metaRecord[$name] = null;
-            }
+            $metaRecord[$name] = $metadata
+                ->setResource($this->markupPath)
+                ->setReadStore($sourceStore)
+                ->buildFromReadStore()
+                ->setWriteStore($targetStore)
+                ->toStoreValueOrDefault(); // used by the template, the value is or default
+
         }
 
         try {
@@ -1196,7 +1194,7 @@ class DatabasePageRow
 
     private function checkCollision($wikiIdInDatabase, $attribute, $value)
     {
-        if($this->markupPath === null){
+        if ($this->markupPath === null) {
             return;
         }
         try {

@@ -52,6 +52,18 @@ class PageId extends MetadataText
         return substr($pageId, 0, PageId::PAGE_ID_ABBREV_LENGTH);
     }
 
+    /**
+     * Generate and store
+     * Store the page id on the file system
+     */
+    public static function generateAndStorePageId(MarkupPath $markupPath): string
+    {
+        $pageId = self::generateUniquePageId();
+        MetadataDokuWikiStore::getOrCreateFromResource($markupPath)
+            ->setFromPersistentName(PageId::getPersistentName(), $pageId);
+        return $pageId;
+    }
+
 
     /**
      *
@@ -152,29 +164,8 @@ class PageId extends MetadataText
             }
         }
 
-        // Value is still null, not in the the frontmatter, not in the database
-        // generate and store
-        $actualValue = self::generateUniquePageId();
-        parent::buildFromStoreValue($actualValue);
-        try {
-            /**
-             * Store the page id on the file system
-             */
-            MetadataDokuWikiStore::getOrCreateFromResource($resource)->set($this);
-
-            /**
-             * Create the row in the database (to allow permanent url redirection {@link PageUrlType})
-             *
-             * Problem: Conflict with the fact that the file is not yet replicated and
-             * should then not be in the database
-             */
-            DatabasePageRow::createFromPageObject($resource)
-                ->upsertAttributes([PageId::getPersistentName() => $actualValue]);
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Unable to store the page id generated. Message:" . $e->getMessage());
-        }
-
-        return $this;
+        // null ?
+        return parent::buildFromStoreValue($value);
 
     }
 

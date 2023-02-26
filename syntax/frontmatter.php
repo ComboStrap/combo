@@ -327,27 +327,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
                 }
 
-                /**
-                 * Database update
-                 */
-                $page = MarkupPath::createPageFromPathObject($executingPath);
-                if ($page->exists()) {
-                    try {
-                        $databasePage = $page->getDatabasePage();
-                        $databasePage->replicateMetaAttributes();
-                    } catch (Exception $e) {
-                        if (PluginUtility::isDevOrTest()) {
-                            /** @noinspection PhpUnhandledExceptionInspection */
-                            throw $e;
-                        }
-                        $message = Message::createErrorMessage($e->getMessage());
-                        if ($e instanceof ExceptionCompile) {
-                            $message->setCanonical($e->getCanonical());
-                        }
-                        $message->sendToLogUtility();
-                    }
-
-                }
 
                 /**
                  * Register media in index
@@ -359,6 +338,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     /**
                      * @var PageImages $pageImages
                      */
+                    $page = MarkupPath::createPageFromPathObject($executingPath);
                     $pageImages = PageImages::createForPage($page)
                         ->buildFromStoreValue($value);
                     $pageImagesObject = $pageImages->getValueAsPageImages();

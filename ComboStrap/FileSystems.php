@@ -97,6 +97,9 @@ class FileSystems
             case WikiFileSystem::SCHEME:
                 WikiFileSystem::getOrCreate()->delete($path);
                 return;
+            case MarkupFileSystem::SCHEME:
+                MarkupFileSystem::getOrCreate()->delete($path);
+                return;
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }

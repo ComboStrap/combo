@@ -84,4 +84,15 @@ class MarkupFileSystem implements FileSystem
             throw new ExceptionRuntimeInternal("The path could not be cast to a local path", self::CANONICAL, 1, $e);
         }
     }
+
+    public function delete(Path $path)
+    {
+
+        try {
+            FileSystems::delete($path->toLocalPath());
+        } catch (ExceptionCast|ExceptionFileSystem $e) {
+            throw new ExceptionRuntimeInternal("The path could not be deleted", self::CANONICAL, 1, $e);
+        }
+
+    }
 }

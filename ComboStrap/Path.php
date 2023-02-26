@@ -11,7 +11,7 @@ namespace ComboStrap;
  *
  * For the path operations, see {@link FileSystems}
  *
- * The {@link Path::toQualifiedId()} function is just the path part (no other URI query parameters)
+ * The {@link Path::toQualifiedPath()} function is just the path part (no other URI query parameters)
  *
  * A lot of overlap with {@link Url}
  */
@@ -19,7 +19,11 @@ interface Path
 {
 
 
-    function getExtension();
+    /**
+     * @return string
+     * @throws ExceptionNotFound - if the path does not have any extension
+     */
+    function getExtension(): string;
 
     /**
      * @return string
@@ -72,7 +76,7 @@ interface Path
      * (such as {@link LocalPath} or {@link WikiPath} path
      *
      */
-    function toQualifiedId(): string;
+    function toQualifiedPath(): string;
 
     /**
      * @return string the uri string representation of this path (with all information, scheme, drive, attributes)

@@ -8,6 +8,7 @@ class MarkupFileSystem implements FileSystem
 {
 
     const SCHEME = "markup";
+    const CANONICAL = "markup-file-system";
 
     private static MarkupFileSystem $pageFileSystem;
 
@@ -73,5 +74,14 @@ class MarkupFileSystem implements FileSystem
             $childrenPage[] = MarkupPath::createPageFromPathObject($child);
         }
         return $childrenPage;
+    }
+
+    public function setContent(Path $path, string $content)
+    {
+        try {
+            FileSystems::setContent($path->toLocalPath(), $content);
+        } catch (ExceptionCast $e) {
+            throw new ExceptionRuntimeInternal("The path could not be cast to a local path", self::CANONICAL, 1, $e);
+        }
     }
 }

@@ -84,6 +84,9 @@ class FileSystems
         }
     }
 
+    /**
+     * @throws ExceptionFileSystem
+     */
     public static function delete(Path $path)
     {
         $scheme = $path->getScheme();
@@ -259,6 +262,9 @@ class FileSystems
             case WikiFileSystem::SCHEME:
                 WikiFileSystem::getOrCreate()->setContent($path, $content);
                 break;
+            case MarkupFileSystem::SCHEME:
+                MarkupFileSystem::getOrCreate()->setContent($path, $content);
+                break;
             default:
                 throw new ExceptionRuntime("File system ($scheme) unknown");
         }
@@ -293,7 +299,7 @@ class FileSystems
     {
         $sourceLocal = LocalPath::createFromPathObject($source);
         $destinationLocal = LocalPath::createFromPathObject($destination);
-        copy($sourceLocal->toQualifiedId(), $destinationLocal->toQualifiedId());
+        copy($sourceLocal->toQualifiedPath(), $destinationLocal->toQualifiedPath());
 
         // D:\dokuwiki\lib\plugins\combo\_test\resources\bootstrapLocal.json
     }
@@ -312,8 +318,8 @@ class FileSystems
      */
     public static function printModificationTimeToConsole(Path $mediaFile, string $log)
     {
-        fputs(STDOUT, "ModificationTime of {$mediaFile->toQualifiedId()}".PHP_EOL);
-        $filename = $mediaFile->toAbsolutePath()->toQualifiedId();
+        fputs(STDOUT, "ModificationTime of {$mediaFile->toQualifiedPath()}".PHP_EOL);
+        $filename = $mediaFile->toAbsolutePath()->toQualifiedPath();
         fputs(STDOUT, "ModificationTime of $filename at $log ");
         $timestamp = filemtime($filename);
         fputs(STDOUT, " $timestamp" . PHP_EOL);
@@ -322,7 +328,7 @@ class FileSystems
     public static function clearStatCache(Path $path)
     {
         try {
-            $pathString = $path->toLocalPath()->toCanonicalPath()->toQualifiedId();
+            $pathString = $path->toLocalPath()->toCanonicalPath()->toQualifiedPath();
             clearstatcache(true,$pathString);
         } catch (ExceptionCast $e) {
             throw new ExceptionRuntimeInternal("The cache can be clear only for local path");

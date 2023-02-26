@@ -68,7 +68,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
             $executionCachedStores = [];
             $context->setRuntimeObject(MetadataDokuWikiStore::class, $stores);
         }
-        $path = $resourceCombo->getPathObject()->toQualifiedId();
+        $path = $resourceCombo->getPathObject()->toQualifiedPath();
         if (isset($executionCachedStores[$path])) {
             return $executionCachedStores[$path];
         }
@@ -87,7 +87,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
              *
              *
              */
-            $wikiId = $resourceCombo->toQualifiedId();
+            $wikiId = $resourceCombo->toQualifiedPath();
             self::noRenderingCheck($wikiId);
             $data = p_read_metadata($wikiId);
         }

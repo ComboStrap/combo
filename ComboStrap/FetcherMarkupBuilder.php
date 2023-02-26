@@ -233,7 +233,7 @@ class FetcherMarkupBuilder
                     $wikiId = $markuSourceWikiPath->toUriString();
                 }
             } catch (ExceptionCast $e) {
-                $wikiId = $this->builderMarkupSourcePath->toQualifiedId();
+                $wikiId = $this->builderMarkupSourcePath->toQualifiedPath();
                 try {
                     $localFile = $this->builderMarkupSourcePath->toLocalPath();
                 } catch (ExceptionCast $e) {

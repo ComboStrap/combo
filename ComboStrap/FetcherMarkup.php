@@ -419,12 +419,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 throw new ExceptionRuntimeInternal("A source path should be available as this is a path execution");
             }
         }
-        $id = $path->toQualifiedId();
+        $id = $path->toQualifiedPath();
         try {
             $slotLocalFilePath = $path
                 ->toLocalPath()
                 ->toAbsolutePath()
-                ->toQualifiedId();
+                ->toQualifiedPath();
         } catch (ExceptionCast $e) {
             throw new ExceptionRuntimeInternal("The path type ($path) is not supported, we couldn't store the snippets.");
         }
@@ -970,7 +970,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
 
         try {
-            $globalSnippets = SnippetSystem::getFromContext()->getSnippetsForSlot($this->getRequestedExecutingPath()->toQualifiedId());
+            $globalSnippets = SnippetSystem::getFromContext()->getSnippetsForSlot($this->getRequestedExecutingPath()->toQualifiedPath());
         } catch (ExceptionNotFound $e) {
             // string execution
             $globalSnippets = [];

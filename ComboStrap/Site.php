@@ -1038,11 +1038,11 @@ class Site
         }
         $scriptName = LocalPath::createFromPathString($_SERVER['SCRIPT_NAME']);
         if ($scriptName->getExtension() === 'php') {
-            return Url::toUrlSeparator($scriptName->getParent()->toQualifiedId());
+            return Url::toUrlSeparator($scriptName->getParent()->toQualifiedPath());
         }
         $phpSelf = LocalPath::createFromPathString($_SERVER['PHP_SELF']);
         if ($phpSelf->getExtension() === "php") {
-            return Url::toUrlSeparator($scriptName->getParent()->toQualifiedId());
+            return Url::toUrlSeparator($scriptName->getParent()->toQualifiedPath());
         }
         if ($_SERVER['DOCUMENT_ROOT'] && $_SERVER['SCRIPT_FILENAME']) {
             $dir = preg_replace('/^' . preg_quote($_SERVER['DOCUMENT_ROOT'], '/') . '/', '',

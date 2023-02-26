@@ -74,7 +74,7 @@ class ClassUtility
             throw new ExceptionRuntimeInternal("We could load the ClassUtility class. Error: {$e->getMessage()}");
         }
         foreach (FileSystems::getChildrenLeaf($parent) as $child) {
-            include_once $child->toQualifiedId();
+            include_once $child->toQualifiedPath();
         }
     }
 }

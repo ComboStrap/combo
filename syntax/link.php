@@ -94,6 +94,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      */
     const TITLE_ATTRIBUTE = "title";
     const STRETCHED_LINK = "stretched-link";
+    const CANONICAL = "link";
 
 
     /**
@@ -369,7 +370,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $linkLabel = LinkMarkup::createFromRef($markupRef)
                                 ->getDefaultLabel();
                         } catch (ExceptionCompile $e) {
-                            LogUtility::error("No defaul Label can be defined. Error while parsing the markup ref ($markupRef). Error: {$e->getMessage()}");
+                            LogUtility::error("No default Label can be defined. Error while parsing the markup ref ($markupRef). Error: {$e->getMessage()}",self::CANONICAL, $e);
                         }
 
                     }

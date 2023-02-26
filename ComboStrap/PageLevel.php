@@ -24,7 +24,7 @@ class PageLevel extends MetadataInteger
 
     public function getValue(): int
     {
-        return substr_count($this->getResource()->getPathObject()->toQualifiedId(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) - 1;
+        return substr_count($this->getResource()->getPathObject()->toQualifiedPath(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) - 1;
     }
 
 

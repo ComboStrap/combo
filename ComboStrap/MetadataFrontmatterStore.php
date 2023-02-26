@@ -450,7 +450,7 @@ EOF;
         $newPageContent = $this->toMarkup();
         $resourceCombo = $this->getResource();
         if ($resourceCombo instanceof MarkupPath) {
-            $resourceCombo->setContent($newPageContent, "Metadata frontmatter store upsert");
+            $resourceCombo->setContentWithCommitMessage($newPageContent, "Metadata frontmatter store upsert");
         }
         return $this;
     }

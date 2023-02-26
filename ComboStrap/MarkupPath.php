@@ -11,8 +11,7 @@ use renderer_plugin_combo_analytics;
 
 /**
  *
- * A markup (ie slot) is a logical unit
- * that represents a markup file
+ * A markup is a logical unit that represents a markup file.
  *
  * For instance:
  *   * the main slot is the main markdown file and the header and footer slot
@@ -557,8 +556,15 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
+    /**
+     * @param $content
+     * @param $summary
+     * @return $this
+     * @deprecated use {@link FileSystems::setContent()} instead as this function
+     * wraps {@link saveWikiText()} it implements the events system and may have side-effects
+     */
     public
-    function setContent($content, $summary = "Default"): MarkupPath
+    function setContentWithCommitMessage($content, $summary = "Default"): MarkupPath
     {
         $path = $this->getPathObject();
         if (!($path instanceof WikiPath)) {
@@ -957,7 +963,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function getNamespacePath(): string
     {
 
-        return $this->getParent()->toQualifiedId();
+        return $this->getParent()->toQualifiedPath();
 
     }
 
@@ -1163,7 +1169,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         global $conf;
         $startPageName = $conf['start'];
-        return $this->getPathObject()->toQualifiedId() === ":$startPageName";
+        return $this->getPathObject()->toQualifiedPath() === ":$startPageName";
 
     }
 
@@ -2181,9 +2187,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return $this->path->getNames();
     }
 
-    function toQualifiedId(): string
+    function toQualifiedPath(): string
     {
-        return $this->path->toQualifiedId();
+        return $this->path->toQualifiedPath();
     }
 
     function toUriString(): string

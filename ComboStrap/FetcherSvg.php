@@ -1106,7 +1106,7 @@ class FetcherSvg extends IFetcherLocalImage
                  */
                 try {
                     $path = $this->getSourcePath();
-                    $pathString = $path->toAbsolutePath()->toQualifiedId();
+                    $pathString = $path->toAbsolutePath()->toQualifiedPath();
                     if (
                         preg_match("/carbon|eva/i", $pathString) === 1
                     ) {

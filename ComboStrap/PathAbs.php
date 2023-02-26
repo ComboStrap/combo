@@ -70,7 +70,7 @@ abstract class PathAbs implements Path
 
     public function toUriString(): string
     {
-        return $this->toQualifiedId();
+        return $this->toQualifiedPath();
     }
 
     /**
@@ -109,6 +109,9 @@ abstract class PathAbs implements Path
         }
         if ($this instanceof WikiPath) {
             return $this->toLocalPath();
+        }
+        if ($this instanceof MarkupPath) {
+            return $this->getPathObject()->toLocalPath();
         }
         throw new ExceptionCast("Unable to cast to LocalPath as this path is not a wiki path or a local path but a " . get_class($this));
     }

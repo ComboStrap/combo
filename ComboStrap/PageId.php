@@ -145,7 +145,7 @@ class PageId extends MetadataText
                  * If they are the same, we return the page id
                  * (because due to duplicate in canonical, the row returned may be from another resource)
                  */
-                $resourcePath = $resource->getPathObject()->toQualifiedId();
+                $resourcePath = $resource->getPathObject()->toQualifiedPath();
                 if ($pathDbValue === $resourcePath) {
                     return parent::buildFromStoreValue($value);
                 }
@@ -157,11 +157,16 @@ class PageId extends MetadataText
         $actualValue = self::generateUniquePageId();
         parent::buildFromStoreValue($actualValue);
         try {
-            // Store the page id on the file system
-            MetadataDokuWikiStore::getOrCreateFromResource($resource)
-                ->set($this);
+            /**
+             * Store the page id on the file system
+             */
+            MetadataDokuWikiStore::getOrCreateFromResource($resource)->set($this);
+
             /**
              * Create the row in the database (to allow permanent url redirection {@link PageUrlType})
+             *
+             * Problem: Conflict with the fact that the file is not yet replicated and
+             * should then not be in the database
              */
             DatabasePageRow::createFromPageObject($resource)
                 ->upsertAttributes([PageId::getPersistentName() => $actualValue]);

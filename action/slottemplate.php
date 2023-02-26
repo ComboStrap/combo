@@ -36,7 +36,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
         try {
             $page = MarkupPath::createFromRequestedPage();
         } catch (ExceptionNotFound $e) {
-            LogUtility::error("The requested page was not found");
+            LogUtility::warning("The requested page was not found");
             return;
         }
 
@@ -44,7 +44,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
          * Header
          */
         $pageHeaderSlotName = Site::getPageHeaderSlotName();
-        $toQualifiedId = $page->getPathObject()->toQualifiedId();
+        $toQualifiedId = $page->getPathObject()->toQualifiedPath();
         if ($toQualifiedId === ":$pageHeaderSlotName") {
             $pageHeaderPath = PageTemplateElement::getDefaultElementContentPath(PageTemplate::PAGE_HEADER_ELEMENT);
             try {

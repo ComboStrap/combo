@@ -84,7 +84,7 @@ class BacklinkCount extends MetadataInteger
         /** @noinspection SqlResolve */
         $request = $sqlite
             ->createRequest()
-            ->setQueryParametrized("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", [$this->getResource()->getPathObject()->toQualifiedId()]);
+            ->setQueryParametrized("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", [$this->getResource()->getPathObject()->toQualifiedPath()]);
         $count = 0;
         try {
             $count = $request

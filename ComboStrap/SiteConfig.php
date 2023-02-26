@@ -367,5 +367,14 @@ class SiteConfig
         return $this->setConf('toptoclevel',$int, self::GLOBAL_SCOPE);
     }
 
+    public function getMetaDataDirectory(): LocalPath
+    {
+        $metadataDirectory = $this->getValue('metadir', null,self::GLOBAL_SCOPE);
+        if ($metadataDirectory === null) {
+            throw new ExceptionRuntime("The meta directory configuration value ('metadir') is null");
+        }
+        return LocalPath::createFromPathString($metadataDirectory);
+    }
+
 
 }

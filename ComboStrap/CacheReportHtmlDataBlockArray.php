@@ -66,7 +66,7 @@ class CacheReportHtmlDataBlockArray
                 $data = [
                     self::RESULT_STATUS => $result->getResult(),
                     self::DATE_MODIFIED => $modifiedDate,
-                    self::CACHE_FILE => $cacheFile->toQualifiedId()
+                    self::CACHE_FILE => $cacheFile->toQualifiedPath()
                 ];
 
                 if ($mode === FetcherMarkup::XHTML_MODE) {
@@ -76,7 +76,7 @@ class CacheReportHtmlDataBlockArray
                     $data[self::DEPENDENCY_ATT] = $dependencies;
                 }
 
-                $htmlDataBlock[$sourcePath->toQualifiedId()][$mode] = $data;
+                $htmlDataBlock[$sourcePath->toQualifiedPath()][$mode] = $data;
 
             }
 

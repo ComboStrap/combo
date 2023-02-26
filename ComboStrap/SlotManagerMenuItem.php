@@ -93,7 +93,7 @@ class SlotManagerMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return DirectoryLayout::getComboImagesDirectory()->resolve('entypo-text-document-inverted.svg')->toQualifiedId();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('entypo-text-document-inverted.svg')->toQualifiedPath();
     }
 
     public function createHtml(): string
@@ -136,7 +136,7 @@ class SlotManagerMenuItem extends AbstractItem
                 }
                 $secondaryPath = $parentPath->resolveId($secondarySlot);
 
-                $secondaryPage = MarkupPath::createPageFromQualifiedId($secondaryPath->toQualifiedId());
+                $secondaryPage = MarkupPath::createPageFromQualifiedId($secondaryPath->toQualifiedPath());
                 $class = StyleUtility::addComboStrapSuffix(\syntax_plugin_combo_link::TAG);
                 if (FileSystems::exists($secondaryPath)) {
                     $action = self::EDIT_ACTION;
@@ -149,7 +149,7 @@ class SlotManagerMenuItem extends AbstractItem
                     ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $secondaryPage->getWikiId())
                     ->addQueryParameter("do", "edit");
 
-                $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"{$url->toHtmlString()}\" class=\"$class\"$style>{$secondaryPath->toQualifiedId()}</a></td></tr>";
+                $html .= "<tr><td class='pe-2'>$action</td><td><a href=\"{$url->toHtmlString()}\" class=\"$class\"$style>{$secondaryPath->toQualifiedPath()}</a></td></tr>";
 
                 if ($action === self::EDIT_ACTION) {
                     break;

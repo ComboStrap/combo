@@ -306,20 +306,14 @@ class ExecutionContext
     public function close()
     {
 
+        /**
+         * Restore the global $conf of dokuwiki
+         */
         $this->getApp()->getConfig()->restoreConfigState();
-
-        unset($this->executingMainFetcher);
-        unset($this->executingMarkupHandlerStack);
-        unset($this->executionScopedVariables);
-        unset($this->cacheManager);
-        unset($this->idManager);
 
         /** global dokuwiki messages variable */
         global $MSG;
         unset($MSG);
-
-        MetadataDokuWikiStore::unsetGlobalVariables();
-
 
         /**
          * Environment restoration
@@ -335,12 +329,22 @@ class ExecutionContext
 
         // global scope store
         MetadataDbStore::resetAll();
+        MetadataDokuWikiStore::unsetGlobalVariables();
 
-        try {
-            Event::purgeQueue();
-        } catch (ExceptionCompile $e) {
-            throw new ExceptionRuntime("Queue could not be purged", "combotest", 0, $e);
-        }
+        /**
+         * Close execution variables
+         * (and therefore also {@link Sqlite}
+         */
+        $this->closeExecutionVariables();
+
+        /**
+         * Is this really needed ?
+         * as we unset the execution context below
+         */
+        unset($this->executingMainFetcher);
+        unset($this->executingMarkupHandlerStack);
+        unset($this->cacheManager);
+        unset($this->idManager);
 
         /**
          * Deleting
@@ -398,7 +402,12 @@ class ExecutionContext
                 // not a template engine running
                 // `id` may be asked by acl to determine the right
                 global $ACT;
-                if (!in_array($ACT, [ExecutionContext::SHOW_ACTION, ExecutionContext::PREVIEW_ACTION, FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME])) {
+                if (!in_array($ACT, [
+                    ExecutionContext::SHOW_ACTION,
+                    ExecutionContext::PREVIEW_ACTION,
+                    ExecutionContext::EDIT_ACTION,
+                    FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME
+                ])) {
                     throw new ExceptionNotFound("No page is rendering. Act is ($ACT)");
                 }
 
@@ -777,7 +786,7 @@ class ExecutionContext
         try {
 
             $executingPath = $markupHandler->getRequestedExecutingPath();
-            $executingId = $executingPath->toQualifiedId();
+            $executingId = $executingPath->toQualifiedPath();
             $this->setExecutingId($executingId);
         } catch (ExceptionNotFound $e) {
             // no executing path dynamic markup execution
@@ -965,6 +974,56 @@ class ExecutionContext
             return [];
         }
 
+    }
+
+    /**
+     * This method will delete the global identifier
+     * and call the 'close' method if the method exists.
+     * @param string $globalObjectIdentifier
+     * @return void
+     */
+    public function deleteAndEventuallyCloseExecutionVariable(string $globalObjectIdentifier)
+    {
+
+        /**
+         * Get the object references
+         */
+        $object = &$this->executionScopedVariables[$globalObjectIdentifier];
+
+        /**
+         * Call the close method
+         */
+        if (is_object($object)) {
+            if (method_exists($object, 'close')) {
+                $object->close();
+            }
+        }
+
+        /**
+         * Close it really by setting null
+         *
+         * (Forwhatever reason, sqlite closing in php
+         * is putting the variable to null)
+         */
+        $object = null;
+
+        /**
+         * Delete it from the array
+         */
+        unset($this->executionScopedVariables[$globalObjectIdentifier]);
+
+    }
+
+    /**
+     * Close all execution variables
+     */
+    public function closeExecutionVariables(): ExecutionContext
+    {
+        $scopedVariables = array_keys($this->executionScopedVariables);
+        foreach ($scopedVariables as $executionScopedVariableKey) {
+            $this->deleteAndEventuallyCloseExecutionVariable($executionScopedVariableKey);
+        }
+        return $this;
     }
 
 

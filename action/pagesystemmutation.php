@@ -30,7 +30,9 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
 
 
         /**
-         * To delete sidebar (cache) cache when a page was modified in a namespace
+         * ComboFs
+         *
+         * And To delete sidebar (cache) cache when a page was modified in a namespace
          * https://combostrap.com/sideslots
          */
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'createFileSystemMutation', array());
@@ -80,7 +82,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                 action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                 [
                     self::TYPE_ATTRIBUTE => self::TYPE_CREATION,
-                    PagePath::getPersistentName() => $file->toWikiPath()->toQualifiedId()
+                    PagePath::getPersistentName() => $file->toWikiPath()->toQualifiedPath()
                 ]
             );
             return;
@@ -108,7 +110,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                     action_plugin_combo_pagesystemmutation::PAGE_SYSTEM_MUTATION_EVENT_NAME,
                     [
                         self::TYPE_ATTRIBUTE => self::TYPE_DELETION,
-                        PagePath::getPersistentName() => $file->toWikiPath()->toQualifiedId()
+                        PagePath::getPersistentName() => $file->toWikiPath()->toQualifiedPath()
                     ]
                 );
             }

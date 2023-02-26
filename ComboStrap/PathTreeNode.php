@@ -110,7 +110,7 @@ class PathTreeNode extends TreeNode
 
     function getTreeIdentifier(): string
     {
-        return $this->path->toQualifiedId();
+        return $this->path->toQualifiedPath();
     }
 
 

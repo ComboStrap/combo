@@ -126,7 +126,7 @@ class FetcherRaster extends IFetcherLocalImage
          * $dimensions = media_image_preview_size($this->id, '', false);
          */
         $path = $this->getSourcePath()->toLocalPath();
-        $imageSize = getimagesize($path->toAbsolutePath()->toQualifiedId());
+        $imageSize = getimagesize($path->toAbsolutePath()->toQualifiedPath());
         if ($imageSize === false) {
             throw new ExceptionBadSyntax("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", self::CANONICAL);
         }

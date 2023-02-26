@@ -103,7 +103,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         $lowerSearchTerm = strtolower($searchTerm);
         foreach ($pages as $page) {
             $id = $page->getWikiId();
-            $path = $page->getPathObject()->toQualifiedId();
+            $path = $page->getPathObject()->toQualifiedPath();
             /**
              * The name is the label that is put
              * punt in the markup link

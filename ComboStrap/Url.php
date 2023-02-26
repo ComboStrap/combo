@@ -628,7 +628,7 @@ class Url extends PathAbs
         return $this->setPath($parentPath);
     }
 
-    function toQualifiedId(): string
+    function toQualifiedPath(): string
     {
         try {
             return $this->getPath();

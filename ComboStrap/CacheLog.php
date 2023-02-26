@@ -42,7 +42,7 @@ class CacheLog
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $contentCachePath->toQualifiedId(),
+                $contentCachePath->toQualifiedPath(),
                 $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_DELETION,
                 $message
@@ -65,7 +65,7 @@ class CacheLog
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $fetcher->getSourcePath()->toQualifiedId(),
+                $fetcher->getSourcePath()->toQualifiedPath(),
                 $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_CREATION,
                 $message

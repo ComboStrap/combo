@@ -129,7 +129,7 @@ class WikiPath extends PathAbs
 
         if (trim($path) === "") {
             try {
-                $path = WikiPath::getContextPath()->toQualifiedId();
+                $path = WikiPath::getContextPath()->toQualifiedPath();
             } catch (ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("The context path is unknwon. The empty path string needs it.");
             }
@@ -551,11 +551,11 @@ class WikiPath extends PathAbs
                 /**
                  * May be a symlink link
                  */
-                if (!is_link($drivePath->toQualifiedId())) {
+                if (!is_link($drivePath->toQualifiedPath())) {
                     continue;
                 }
                 try {
-                    $realPath = readlink($drivePath->toQualifiedId());
+                    $realPath = readlink($drivePath->toQualifiedPath());
                     $drivePath = LocalPath::createFromPathString($realPath);
                     $relativePath = $path->relativize($drivePath);
                 } catch (ExceptionBadArgument $e) {
@@ -563,7 +563,7 @@ class WikiPath extends PathAbs
                     continue;
                 }
             }
-            $wikiId = $relativePath->toQualifiedId();
+            $wikiId = $relativePath->toQualifiedPath();
             if (FileSystems::isDirectory($path)) {
                 WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiId);
             }
@@ -931,7 +931,7 @@ class WikiPath extends PathAbs
      * The absolute path for a wiki path
      * @return string - the wiki path version
      */
-    function toQualifiedId(): string
+    function toQualifiedPath(): string
     {
         return self::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
     }
@@ -1106,9 +1106,9 @@ class WikiPath extends PathAbs
                 }
                 $idFileSystem = str_replace(':', '/', $this->id);
                 if (empty($this->rev)) {
-                    $filePathString = Site::getPageDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $extension)->toQualifiedId();
+                    $filePathString = Site::getPageDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $extension)->toQualifiedPath();
                 } else {
-                    $filePathString = Site::getOldDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension)->toQualifiedId();
+                    $filePathString = Site::getOldDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension)->toQualifiedPath();
                     if ($conf['compression']) {
                         //test for extensions here, we want to read both compressions
                         if (file_exists($filePathString . '.gz')) {
@@ -1134,7 +1134,7 @@ class WikiPath extends PathAbs
                 foreach ($this->getNames() as $name) {
                     $filePath = $filePath->resolve($name);
                 }
-                $filePathString = $filePath->toQualifiedId();
+                $filePathString = $filePath->toQualifiedPath();
                 break;
         }
         return LocalPath::createFromPathString($filePathString);

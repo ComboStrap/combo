@@ -103,9 +103,6 @@ class DatabasePageRow
      */
     public function replicate(): DatabasePageRow
     {
-        if ($this->sqlite === null) {
-            throw new ExceptionCompile("Sqlite is mandatory for database replication");
-        }
 
         if (!FileSystems::exists($this->markupPath)) {
             throw new ExceptionCompile("You can't replicate the non-existing page ($this->markupPath) on the file system");
@@ -593,7 +590,7 @@ class DatabasePageRow
             }
 
             $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->markupPath->getPathObject()->getWikiId();
-            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toQualifiedId();
+            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toQualifiedPath();
             /**
              * Default implements the auto-canonical feature
              */
@@ -1105,7 +1102,7 @@ class DatabasePageRow
     function addRedirectAliasWhileBuildingRow(MarkupPath $pageAlias)
     {
 
-        $aliasPath = $pageAlias->getPathObject()->toQualifiedId();
+        $aliasPath = $pageAlias->getPathObject()->toQualifiedPath();
         try {
             Aliases::createForPage($this->markupPath)
                 ->addAlias($aliasPath)

@@ -64,18 +64,27 @@ class DatabasePageRow
      * @var MarkupPath
      */
     private $markupPath;
-
+    /**
+     * @var Sqlite|null
+     */
+    private $sqlite;
 
     /**
      * @var array
      */
-    private array $row;
+    private $row;
 
     /**
      * Replicate constructor.
      */
     public function __construct()
     {
+
+        /**
+         * Persist on the DB
+         */
+        $this->sqlite = Sqlite::createOrGetSqlite();
+
 
     }
 
@@ -501,6 +510,9 @@ class DatabasePageRow
     public function upsertAttributes(array $attributes): void
     {
 
+        if ($this->sqlite === null) {
+            throw new ExceptionSqliteNotAvailable();
+        }
 
         if (empty($attributes)) {
             throw new ExceptionBadState("The page database attribute passed should not be empty");
@@ -532,7 +544,7 @@ class DatabasePageRow
             $values[] = $rowId;
 
             $updateStatement = "update PAGES SET " . implode(", ", $columnClauses) . " where ROWID = ?";
-            $request = Sqlite::createOrGetSqlite()
+            $request = $this->sqlite
                 ->createRequest()
                 ->setQueryParametrized($updateStatement, $values);
             $countChanges = 0;
@@ -602,7 +614,7 @@ class DatabasePageRow
              */
             $this->addPageIdAttributeIfNeeded($values);
 
-            $request = Sqlite::createOrGetSqlite()
+            $request = $this->sqlite
                 ->createRequest()
                 ->setTableRow('PAGES', $values);
             try {
@@ -724,7 +736,8 @@ class DatabasePageRow
     private
     function buildInitObjectFields()
     {
-        unset($this->row);
+        $this->row = null;
+
     }
 
     public
@@ -957,13 +970,12 @@ class DatabasePageRow
 
     /**
      * @throws ExceptionNotFound
-     * @throws ExceptionSqliteNotAvailable|ExceptionBadArgument
      */
     public
     function getDatabaseRowFromAttribute(string $attribute, string $value)
     {
         $query = $this->getParametrizedLookupQuery($attribute);
-        $request = Sqlite::createOrGetSqlite()
+        $request = $this->sqlite
             ->createRequest()
             ->setQueryParametrized($query, [$value]);
         $rows = [];
@@ -1116,7 +1128,7 @@ class DatabasePageRow
     public
     function getFromRow(string $attribute)
     {
-        if (!isset($this->row)) {
+        if ($this->row === null) {
             return null;
         }
 

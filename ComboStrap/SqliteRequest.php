@@ -103,7 +103,7 @@ class SqliteRequest
         }
         $do = $adapter->getDb();
         if ($do === null) {
-            throw new ExceptionRuntimeInternal("The database object is null, it seems that the database connection has been closed");
+            throw new ExceptionRuntimeInternal("The database object is null, it seems that the database connection has been closed. Are you in two differents execution context ?");
         }
         $errorInfo = $do->errorInfo();
         $message = "";

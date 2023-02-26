@@ -1,15 +1,14 @@
 <?php
 
 use ComboStrap\DatabasePageRow;
+use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\LogUtility;
-use ComboStrap\MarkupCacheDependencies;
-use ComboStrap\Event;
 use ComboStrap\FileSystems;
 use ComboStrap\LocalPath;
+use ComboStrap\LogUtility;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\MarkupPath;
-use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\PageId;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
@@ -46,7 +45,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
         /**
          * Synchronization with the combo file system
          */
-        $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'comboFsSynchronization', array());
+        $controller->register_hook('COMMON_WIKIPAGE_SAVE', 'AFTER', $this, 'comboFsSynchronization', array());
 
         /**
          * process the Async event
@@ -161,28 +160,38 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
     public function comboFsSynchronization($event)
     {
 
-        /**
-         * For now, we just sync the page id in the index tables (pages)
-         *
-         * This is mandatory to allow permanent url redirection {@link PageUrlType})
-         */
-        $id = $event->data[2];
+        $id = $event->data['id'];
         $markup = MarkupPath::createMarkupFromId($id);
-        try {
-            PageId::createForPage($markup)
-                ->getValue();
-        } catch (ExceptionNotFound $e) {
 
-            $pageId = PageId::generateAndStorePageId($markup);
+        $changedType = $event->data['changeType'];
+        switch ($changedType) {
+            // creation
+            case DOKU_CHANGE_TYPE_CREATE:
+                /**
+                 * For now, we just sync the page id in the index tables (pages)
+                 *
+                 * This is mandatory to allow permanent url redirection {@link PageUrlType})
+                 */
+                try {
+                    PageId::createForPage($markup)
+                        ->getValue();
+                } catch (ExceptionNotFound $e) {
 
-            try {
+                    $pageId = PageId::generateAndStorePageId($markup);
+
+                    try {
+                        DatabasePageRow::createFromPageObject($markup)
+                            ->upsertAttributes([PageId::getPersistentName() => $pageId]);
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::error("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, $e);
+                    }
+
+                }
+                return;
+            case DOKU_CHANGE_TYPE_DELETE:
                 DatabasePageRow::createFromPageObject($markup)
-                    ->upsertAttributes([PageId::getPersistentName() => $pageId]);
-            } catch (ExceptionCompile $e) {
-                LogUtility::error("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, $e);
-            }
-
-
+                    ->deleteIfExist();
+                return;
         }
 
 

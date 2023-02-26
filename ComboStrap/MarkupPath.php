@@ -2093,6 +2093,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     }
 
+    public function setContent(string $textContent): MarkupPath
+    {
+        FileSystems::setContent($this, $textContent);
+        return $this;
+    }
+
     private function getPrimaryFooterPage(): ?MarkupPath
     {
         $nearest = page_findnearest(Site::getMainFooterSlotName());

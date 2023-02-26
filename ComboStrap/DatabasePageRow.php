@@ -160,7 +160,7 @@ class DatabasePageRow
     private function addPageIdMeta(array &$metaRecord)
     {
         try {
-            $pageId  = $this->markupPath->getPageId();
+            $pageId = $this->markupPath->getPageId();
         } catch (ExceptionNotFound $e) {
             $pageId = PageId::generateAndStorePageId($this->markupPath);
         }
@@ -250,13 +250,14 @@ class DatabasePageRow
 
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function createFromDokuWikiId($id): DatabasePageRow
     {
         $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromDokuWikiId($id);
-        if ($row !== null) {
-            $databasePage->setRow($row);
-        }
+        $databasePage->setRow($row);
         return $databasePage;
     }
 

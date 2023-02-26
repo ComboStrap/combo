@@ -1,10 +1,16 @@
 <?php
 
+use ComboStrap\DatabasePageRow;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\Event;
 use ComboStrap\FileSystems;
 use ComboStrap\LocalPath;
 use ComboStrap\MarkupPath;
+use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\PageId;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 
@@ -23,6 +29,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
     const TYPE_ATTRIBUTE = "type";
     const TYPE_CREATION = "creation";
     const TYPE_DELETION = "deletion";
+    const CANONICAL = "combo-file-system";
 
 
     public function register(Doku_Event_Handler $controller)
@@ -30,12 +37,16 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
 
 
         /**
-         * ComboFs
          *
          * And To delete sidebar (cache) cache when a page was modified in a namespace
          * https://combostrap.com/sideslots
          */
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'createFileSystemMutation', array());
+
+        /**
+         * Synchronization with the combo file system
+         */
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'comboFsSynchronization', array());
 
         /**
          * process the Async event
@@ -66,6 +77,8 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
 
 
         /**
+         * TODO ?: the common uses the  common_wikipage_save instead ?
+         *   https://www.dokuwiki.org/devel:event:common_wikipage_save
          * File creation
          *
          * ```
@@ -140,6 +153,40 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
 
     }
 
+    /**
+     * Store into the Combo file system
+     * @param $event
+     * @return void
+     */
+    public function comboFsSynchronization($event)
+    {
+
+        /**
+         * For now, we just sync the page id in the index tables (pages)
+         *
+         * This is mandatory to allow permanent url redirection {@link PageUrlType})
+         */
+        $id = $event->data[2];
+        $markup = MarkupPath::createMarkupFromId($id);
+        try {
+            PageId::createForPage($markup)
+                ->getValue();
+        } catch (ExceptionNotFound $e) {
+
+            $pageId = PageId::generateAndStorePageId($markup);
+
+            try {
+                DatabasePageRow::createFromPageObject($markup)
+                    ->upsertAttributes([PageId::getPersistentName() => $pageId]);
+            } catch (ExceptionCompile $e) {
+                LogUtility::error("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, $e);
+            }
+
+
+        }
+
+
+    }
 
 }
 

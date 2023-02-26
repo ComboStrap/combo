@@ -130,7 +130,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                 ->setWriteStore(MetadataDbStore::class)
                 ->persist();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Reference error when persisting to the file system store: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
+            LogUtility::error("Reference error when persisting to the file system store: " . $e->getMessage(), self::CANONICAL, $e);
         }
 
     }

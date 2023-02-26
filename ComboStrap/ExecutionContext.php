@@ -451,11 +451,9 @@ class ExecutionContext
                     }
                 }
 
-                if ($ACT === ExecutionContext::SHOW_ACTION) {
-                    // markup based on file
-                    LogUtility::errorIfDevOrTest("In a show action, the requested id should not be empty.");
-                }
-                // markup based on string (test)
+                // not that show action is the default even if it's not set
+                // we can't then control if the id should exists or not
+                // markup based on string (test) or snippet of code
                 throw new ExceptionNotFound();
             }
 

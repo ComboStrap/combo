@@ -59,7 +59,7 @@ class Sqlite
      * @return Sqlite $sqlite
      * @throws ExceptionSqliteNotAvailable
      */
-    public static function createOrGetSqlite($databaseName = self::MAIN_DATABASE_NAME): ?Sqlite
+    public static function createOrGetSqlite($databaseName = self::MAIN_DATABASE_NAME): Sqlite
     {
 
         $sqliteExecutionObjectIdentifier = Sqlite::class . "-$databaseName";

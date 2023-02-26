@@ -19,6 +19,17 @@ class MetadataDbStore extends MetadataStoreAbs
      * @var DatabasePageRow[]
      */
     private static array $dbRows = [];
+    private Sqlite $sqlite;
+
+    /**
+     * @throws ExceptionSqliteNotAvailable
+     */
+    public function __construct(ResourceCombo $page)
+    {
+        // sqlite in the constructor to handle only one sqlite exception
+        $this->sqlite = Sqlite::createOrGetSqlite();
+        parent::__construct($page);
+    }
 
 
     static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
@@ -71,16 +82,15 @@ class MetadataDbStore extends MetadataStoreAbs
     }
 
     /**
-     * @throws ExceptionCompile
+     *
      */
     private function syncTabular(MetadataTabular $metadata)
     {
 
-
         try {
             $uid = $metadata->getUidObject();
         } catch (ExceptionBadArgument $e) {
-            throw new ExceptionCompile("The uid class should be defined for the metadata ($metadata)");
+            throw new ExceptionRuntimeInternal("The uid class should be defined for the metadata ($metadata)");
         }
 
         $sourceRows = $metadata->toStoreValue();
@@ -89,16 +99,15 @@ class MetadataDbStore extends MetadataStoreAbs
         }
 
         $targetRows = $this->getDbTabularData($metadata);
-        if ($targetRows !== null) {
-            foreach ($targetRows as $targetRow) {
-                $targetRowId = $targetRow[$uid::getPersistentName()];
-                if (isset($sourceRows[$targetRowId])) {
-                    unset($sourceRows[$targetRowId]);
-                } else {
-                    $this->deleteRow($targetRow, $metadata);
-                }
+        foreach ($targetRows as $targetRow) {
+            $targetRowId = $targetRow[$uid::getPersistentName()];
+            if (isset($sourceRows[$targetRowId])) {
+                unset($sourceRows[$targetRowId]);
+            } else {
+                $this->deleteRow($targetRow, $metadata);
             }
         }
+
 
         foreach ($sourceRows as $sourceRow) {
             $this->addRow($sourceRow, $metadata);
@@ -111,7 +120,6 @@ class MetadataDbStore extends MetadataStoreAbs
      * @param array $row
      * @param Metadata $metadata
      * @return void
-     * @throws ExceptionCompile - if page id is null
      */
     private function addRow(array $row, Metadata $metadata): void
     {
@@ -121,14 +129,17 @@ class MetadataDbStore extends MetadataStoreAbs
          */
         $resourceCombo = $metadata->getResource();
         $resourceUidObject = $resourceCombo->getUidObject();
-        $uidValue = $resourceUidObject->getValue();
-        if ($uidValue === null) {
-            throw new ExceptionCompile("The id ($resourceUidObject) is null for the resource $resourceCombo. We can't add a row in the database.");
+        try {
+            $uidValue = $resourceUidObject->getValue();
+        } catch (ExceptionNotFound $e) {
+            // not yet in db
+            return;
         }
+
         $row[$resourceUidObject::getPersistentName()] = $uidValue;
 
         $tableName = $this->getTableName($metadata);
-        $request = Sqlite::createOrGetSqlite()
+        $request = $this->sqlite
             ->createRequest()
             ->setTableRow($tableName, $row);
         try {
@@ -176,35 +187,29 @@ EOF;
 
 
     /**
-     * @return null
-     * @throws ExceptionCompile
+     * @return array - the rows
      * @var Metadata $metadata
      */
-    private function getDbTabularData(Metadata $metadata): ?array
+    private function getDbTabularData(Metadata $metadata): array
     {
 
-        $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite === null) {
-            return null;
-        }
+
         if ($metadata->getResource() === null) {
-            LogUtility::msg("The page resource is unknown. We can't retrieve the aliases");
-            return null;
+            throw new ExceptionRuntimeInternal("The page resource is unknown. We can't retrieve the tabular data");
         }
 
         $uid = $metadata->getResource()->getUid();
-        $pageId = $uid->getValue();
-        if ($uid->getValue() === null) {
-
-            LogUtility::msg("The resource identifier has no id. We can't retrieve the database data", LogUtility::LVL_MSG_ERROR, $this->getCanonical());
-            return null;
-
+        try {
+            $pageId = $uid->getValue();
+        } catch (ExceptionNotFound $e) {
+            // no uid, not yet in the db
+            return [];
         }
 
         $uidAttribute = $uid::getPersistentName();
         $children = $metadata->getChildrenObject();
         if ($children === null) {
-            throw new ExceptionCompile("The children of the tabular metadata ($metadata) should be set to synchronize into the database");
+            throw new ExceptionRuntimeInternal("The children of the tabular metadata ($metadata) should be set to synchronize into the database");
         }
         $attributes = [];
         foreach ($children as $child) {
@@ -213,7 +218,7 @@ EOF;
         $tableName = $this->getTableName($metadata);
         $query = Sqlite::createSelectFromTableAndColumns($tableName, $attributes);
         $query = "$query where $uidAttribute = ? ";
-        $res = $sqlite
+        $res = $this->sqlite
             ->createRequest()
             ->setQueryParametrized($query, [$pageId]);
         $rows = [];
@@ -222,8 +227,7 @@ EOF;
                 ->execute()
                 ->getRows();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("An exception has occurred with the $tableName ({$metadata->getResource()}) selection query. Message: {$e->getMessage()}, Query: ($query");
-            return null;
+            throw new ExceptionRuntimeInternal("An exception has occurred with the $tableName ({$metadata->getResource()}) selection query. Message: {$e->getMessage()}, Query: ($query", self::CANONICAL, 1, $e);
         } finally {
             $res->close();
         }

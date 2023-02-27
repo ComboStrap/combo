@@ -244,6 +244,10 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
             $wikiId = $this->getWikiId();
             if (self::isRendering($wikiId)) {
 
+                /**
+                 * It seems that {@link p_set_metadata()} uses it also
+                 * but we show it here
+                 */
                 global $METADATA_RENDERERS;
                 $METADATA_RENDERERS[$wikiId][self::CURRENT_METADATA][$name] = $value;
                 $METADATA_RENDERERS[$wikiId][self::PERSISTENT_METADATA][$name] = $value;

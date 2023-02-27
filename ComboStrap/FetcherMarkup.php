@@ -1142,6 +1142,16 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 // not a wiki path execution
                 $wikiId = null;
             }
+
+            /**
+             * Dokuwiki global variable used to see if the process is in rendering mode
+             * See {@link p_get_metadata()}
+             * Store the original metadata in the global $METADATA_RENDERERS
+             * ({@link p_set_metadata()} use it)
+             */
+            global $METADATA_RENDERERS;
+            $METADATA_RENDERERS[$wikiId] =& $actualMeta;
+
             // add an extra key for the event - to tell event handlers the page whose metadata this is
             $actualMeta['page'] = $wikiId;
             $evt = new \dokuwiki\Extension\Event('PARSER_METADATA_RENDER', $actualMeta);
@@ -1152,6 +1162,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
                 // set up the renderer
                 $renderer = new Doku_Renderer_metadata();
+
 
                 /**
                  * Runtime/ Derived metadata
@@ -1185,10 +1196,17 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 }
 
                 $evt->result = array('current' => &$renderer->meta, 'persistent' => &$renderer->persistent);
+
             }
             $evt->advise_after();
 
             $this->meta = $evt->result;
+
+            /**
+             * Dokuwiki global variable
+             * See {@link p_get_metadata()}
+             */
+            unset($METADATA_RENDERERS[$wikiId]);
 
             /**
              * Storage

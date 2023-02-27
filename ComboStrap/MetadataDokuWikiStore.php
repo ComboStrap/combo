@@ -278,9 +278,18 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     public function getData(): array
     {
         /**
-         * persistent array should have duplicate values
-         * (the only diff is that the persistent value are always
-         * available during a {@link p_render_metadata() metadata render})
+         * We return only the current data.
+         *
+         * WHy ?
+         * To be consistent with {@link p_get_metadata()} that retrieves only from the `current` array
+         * Therefore the `persistent` array values should always be duplicated in the `current` array
+         *
+         * (the only diff is that the persistent value are still available during a {@link p_render_metadata() metadata render})
+         *
+         * Note that Dokuwiki load them also for the requested path
+         * at `global $INFO, $info['meta']` with {@link pageinfo()}
+         * and is synced in {@link p_save_metadata()}
+         *
          */
         return p_read_metadata($this->getWikiId(), true)['current'];
     }

@@ -257,7 +257,8 @@ class FetcherMarkupBuilder
              * Runtime Meta cache
              * (Technically, it's derived from the instructions)
              */
-            $newFetcherMarkup->derivedMetaCache = new CacheRenderer($wikiId, $localFile, 'metadata');
+            $newFetcherMarkup->metaPath = LocalPath::createFromPathString(metaFN($wikiId, '.meta'));
+            $newFetcherMarkup->metaCache = new CacheRenderer($wikiId, $localFile, 'metadata');
 
         }
 

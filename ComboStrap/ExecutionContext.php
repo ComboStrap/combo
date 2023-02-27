@@ -791,7 +791,10 @@ class ExecutionContext
         }
 
         /**
-         * Fragment run
+         * $INFO  (Fragment run, ...)
+         * We don't use {@link pageinfo()} for now
+         * We just advertise if this is a fragment run
+         * via the `id`
          */
         global $INFO;
         $oldContextId = $INFO['id'];

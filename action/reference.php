@@ -46,7 +46,8 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         /**
          * https://www.dokuwiki.org/devel:event:parser_handler_done
          */
-        $controller->register_hook('PARSER_HANDLER_DONE', 'AFTER', $this, 'storeReference', array());
+        //$controller->register_hook('PARSER_HANDLER_DONE', 'AFTER', $this, 'storeReference', array());
+        $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER', $this, 'storeReference', array());
 
 
     }
@@ -59,6 +60,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
      */
     function storeReference(Doku_Event $event, $params)
     {
+
         global $ID;
         if ($ID === null) {
             if (!PluginUtility::isDevOrTest()) {

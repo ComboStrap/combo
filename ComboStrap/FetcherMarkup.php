@@ -67,7 +67,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public array $contextData;
 
     public CacheInstructions $instructionsCache;
-    public CacheRenderer $derivedMetaCache;
+
+    /**
+     * @var CacheRenderer This cache file stores the last render timestamp (see {@link p_get_metadata()}
+     */
+    public CacheRenderer $metaCache;
+    public LocalPath $metaPath;
 
     /**
      * @var CacheParser
@@ -1069,19 +1074,26 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
 
     /**
-     * Adaptation of {@link p_render_metadata()} and {@link p_get_metadata()}
+     * Adaptation of {@link p_get_metadata()}
      * to take into account {@link self::getInstructions()}
-     * @return void
+     * where we can just pass our own instructions.
+     *
+     * And yes, adaptation of {@link p_get_metadata()}
+     * that process the metadata. Yeah, it calls {@link p_render_metadata()}
+     * and save them
+     *
      */
     public function processMetadataIfNotYetDone(): FetcherMarkup
     {
 
         /**
-         * Already set
+         * Already set ?
          */
         if (isset($this->meta)) {
             return $this;
         }
+
+        $actualMeta = [];
 
         /**
          * We wrap the whole block
@@ -1095,50 +1107,67 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
              * Can we read from the meta file
              */
             try {
-                $wikiId = $this->getSourcePath()->toWikiPath()->getWikiId();
 
-                /**
-                 * Dokuwiki load them at `global $INFO, $info['meta']`
-                 * with {@link pageinfo()}
-                 */
-                $actualMeta = p_read_metadata($wikiId);
 
                 if ($this->isPathExecution()) {
+
                     /**
-                     * The metadata useCache function has side effect
-                     * and triggers a render that fails if the wiki file does not exists
+                     * If the meta file exists
                      */
-                    $depends['files'][] = $this->instructionsCache->cache;
-                    $useCache = $this->derivedMetaCache->useCache($depends);
-                    if ($useCache) {
-                        $this->meta = $actualMeta;
-                        return $this;
+                    if (FileSystems::exists($this->getMetaPath())) {
+
+                        $executingPath = $this->getRequestedExecutingPath();
+                        $actualMeta = MetadataDokuWikiStore::getOrCreateFromResource(MarkupPath::createPageFromPathObject($executingPath))
+                            ->getData();
+                        /**
+                         * The metadata useCache function has side effect
+                         * and triggers a render that fails if the wiki file does not exists
+                         */
+                        $depends['files'][] = $this->instructionsCache->cache;
+                        $depends['files'][] = $executingPath->toAbsolutePath()->toQualifiedPath();
+                        $useCache = $this->metaCache->useCache($depends);
+                        if ($useCache) {
+                            $this->meta = $actualMeta;
+                            return $this;
+                        }
                     }
                 }
-            } catch (ExceptionCast|ExceptionNotFound $e) {
+            } catch (ExceptionNotFound $e) {
                 // no wiki id
                 $actualMeta = [];
-                $wikiId = null;
             }
 
             /**
              * Process and derived meta
              */
+            try {
+                $wikiId = $this->getRequestedExecutingPath()->toWikiPath()->getWikiId();
+            } catch (ExceptionCast|ExceptionNotFound $e) {
+                // not a wiki path execution
+                $wikiId = null;
+            }
             // add an extra key for the event - to tell event handlers the page whose metadata this is
             $actualMeta['page'] = $wikiId;
             $evt = new \dokuwiki\Extension\Event('PARSER_METADATA_RENDER', $actualMeta);
             if ($evt->advise_before()) {
 
-                // get instructions
+                // get instructions (from string or file)
                 $instructions = $this->getInstructions();
 
                 // set up the renderer
                 $renderer = new Doku_Renderer_metadata();
+
                 /**
                  * Runtime/ Derived metadata
+                 * The runtime meta are not even deleted
+                 * (See {@link p_render_metadata()}
                  */
                 $renderer->meta =& $actualMeta['current'];
 
+                /**
+                 * The {@link Doku_Renderer_metadata}
+                 * will fail if the file and the date modified property does not exist
+                 */
                 try {
                     $path = $this->getRequestedExecutingPath();
                     if (!FileSystems::exists($path)) {
@@ -1149,9 +1178,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 }
 
                 /**
-                 * Persistent data set by the user
-                 * (Strange as this is a run to derive metadata, this should not exists
-                 * but they mixed it to have an easy access, it seems)
+                 * The persistent data are now available
                  */
                 $renderer->persistent =& $actualMeta['persistent'];
 
@@ -1172,11 +1199,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
              */
             if ($wikiId !== null) {
                 p_save_metadata($wikiId, $this->meta);
-                /**
-                 * In {@link p_get_metadata()}, they store a timestamp in order to make sure that the cachefile is touched
-                 * If the metadata has changed, the (Xhtml, ... ) rendering should occur again
-                 */
-                $this->derivedMetaCache->storeCache(time());
+                $this->metaCache->storeCache(time());
             }
 
         } finally {
@@ -1184,6 +1207,17 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
         return $this;
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getMetaPath(): LocalPath
+    {
+        if(isset($this->metaPath)){
+            return $this->metaPath;
+        }
+        throw new ExceptionNotFound("No meta path for this markup");
     }
 
 }

@@ -217,6 +217,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     public static function createPageFromPathObject(Path $path): MarkupPath
     {
+        if($path instanceof MarkupPath){
+            return $path;
+        }
         return new MarkupPath($path);
     }
 

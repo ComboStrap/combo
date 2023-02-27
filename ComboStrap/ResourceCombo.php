@@ -28,7 +28,7 @@ interface ResourceCombo
     public function getPathObject(): Path;
 
     /**
-     * @return mixed - the global unique id
+     * @return Metadata - the global unique id
      */
     public function getUid(): Metadata;
 

@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ComboFs;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
@@ -177,20 +178,16 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                         ->getValue();
                 } catch (ExceptionNotFound $e) {
 
-                    $pageId = PageId::generateAndStorePageId($markup);
-
                     try {
-                        DatabasePageRow::createFromPageObject($markup)
-                            ->upsertAttributes([PageId::getPersistentName() => $pageId]);
+                        ComboFs::create($markup);
                     } catch (ExceptionCompile $e) {
-                        LogUtility::error("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, $e);
+                        LogUtility::error($e->getMessage(), self::CANONICAL, $e);
                     }
 
                 }
                 return;
             case DOKU_CHANGE_TYPE_DELETE:
-                DatabasePageRow::createFromPageObject($markup)
-                    ->deleteIfExist();
+                ComboFs::delete($markup);
                 return;
         }
 

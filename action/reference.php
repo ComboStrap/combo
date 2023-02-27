@@ -6,6 +6,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
 use ComboStrap\LinkMarkup;
 use ComboStrap\LogUtility;
@@ -44,9 +45,8 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
 
 
         /**
-         * https://www.dokuwiki.org/devel:event:parser_handler_done
+         * https://www.dokuwiki.org/devel:event:parser_metadata_render
          */
-        //$controller->register_hook('PARSER_HANDLER_DONE', 'AFTER', $this, 'storeReference', array());
         $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER', $this, 'storeReference', array());
 
 
@@ -61,78 +61,38 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
     function storeReference(Doku_Event $event, $params)
     {
 
-        global $ID;
-        if ($ID === null) {
-            if (!PluginUtility::isDevOrTest()) {
-                LogUtility::msg("The request ID was not set and should be present to store references.");
-            }
+        try {
+            $wikiPath = ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingWikiPath();
+        } catch (ExceptionNotFound $e) {
+            // markup string run
             return;
         }
 
-        /**
-         * @var Call[] $links
-         */
-        $page = MarkupPath::createMarkupFromId($ID);
-
-        /**
-         * {@link \ComboStrap\PageId} is given only when the page exists
-         * This event can be called even if the page does not exist
-         */
-        if (!FileSystems::exists($page->getPathObject())) {
-            return;
-        }
-
-        /**
-         * @var Doku_Handler $handler
-         */
-        $handler = $event->data;
-        $callStack = CallStack::createFromHandler($handler);
-        $callStack->moveToStart();
+        $page = MarkupPath::createPageFromPathObject($wikiPath);
 
         $references = References::createFromResource($page)
             ->setReadStore(MetadataDokuWikiStore::class);
 
-        while ($actualCall = $callStack->next()) {
-            if (
-                $actualCall->getTagName() === syntax_plugin_combo_link::TAG
-                && $actualCall->getState() === DOKU_LEXER_ENTER
-            ) {
-                $ref = $actualCall->getAttribute(syntax_plugin_combo_link::MARKUP_REF_ATTRIBUTE);
-                if ($ref === null) {
-                    /**
-                     * The reference data is null for this link, it may be an external
-                     * link created by a component such as {@link syntax_plugin_combo_share}
-                     */
-                    continue;
-                }
-                try {
-                    $link = MarkupRef::createLinkFromRef($ref);
-                } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
-                    LogUtility::error("Error while parsing the reference link. Error: " . $e->getMessage(), self::CANONICAL, $e);
-                    continue;
-                }
-
-                try {
-                    $path = $link->getPath();
-                    $ref = Reference::createFromResource($page)
-                        ->buildFromStoreValue($path->toQualifiedPath());
-                    $references->addRow([$ref]);
-                } catch (ExceptionNotFound $e) {
-                    // no local path ok
-                }
-
-
+        $internalIdReferences = $event->data['current']['relation']['references'];
+        foreach($internalIdReferences as $internalIdReferenceValue => $internalIdReferenceExist){
+            $ref = Reference::createFromResource($page)
+                ->setReadStore(MetadataDokuWikiStore::class)
+                ->buildFromStoreValue($internalIdReferenceValue);
+            try {
+                $references->addRow([$ref]);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The identifier and the value identifier should be known at this stage",self::CANONICAL, $e);
             }
         }
 
         try {
+            // persist to database
             $references
-                ->setWriteStore(MetadataDokuWikiStore::class)
-                ->persist()
                 ->setWriteStore(MetadataDbStore::class)
                 ->persist();
         } catch (ExceptionCompile $e) {
-            LogUtility::error("Reference error when persisting to the file system store: " . $e->getMessage(), self::CANONICAL, $e);
+            LogUtility::warning("Reference error when persisting to the file system store: " . $e->getMessage(), self::CANONICAL, $e);
         }
 
     }

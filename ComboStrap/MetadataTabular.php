@@ -40,7 +40,7 @@ abstract class MetadataTabular extends Metadata
     {
         $this->buildCheck();
         if ($this->rows === null) {
-            throw new ExceptionNotFound("No tabular data found");
+            throw new ExceptionNotFound("No tabular data found.");
         }
         return $this->rows;
     }
@@ -282,6 +282,7 @@ abstract class MetadataTabular extends Metadata
     }
 
     /**
+     * @throws ExceptionNotFound - if the identifier or it's value was not found
      * @var Metadata[] $metas
      */
     public function addRow(array $metas): MetadataTabular
@@ -295,8 +296,7 @@ abstract class MetadataTabular extends Metadata
             }
         }
         if ($identifier === null) {
-            LogUtility::msg("The identifier value was not found in the row");
-            return $this;
+            throw new ExceptionNotFound("The identifier value was not found in the row");
         }
         $this->rows[$identifier] = $row;
         return $this;

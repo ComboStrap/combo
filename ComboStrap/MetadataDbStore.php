@@ -22,16 +22,41 @@ class MetadataDbStore extends MetadataStoreAbs
     private Sqlite $sqlite;
 
     /**
-     * @throws ExceptionSqliteNotAvailable
+     * @var Metadata - the uid metadata
+     * They are here to throw at construct time
      */
-    public function __construct(ResourceCombo $page)
+    private Metadata $resourceUidMeta;
+    /**
+     * @var mixed - the uid metadata value
+     * They are here to throw at construct time
+     */
+    private $resourceUidMetaValue;
+
+    /**
+     * @throws ExceptionSqliteNotAvailable
+     * @throws ExceptionNotExists - if the resource does not exist in the database
+     */
+    public function __construct(ResourceCombo $resource)
     {
         // sqlite in the constructor to handle only one sqlite exception
         $this->sqlite = Sqlite::createOrGetSqlite();
-        parent::__construct($page);
+
+        // uid of the resoure
+        $this->resourceUidMeta = $resource->getUid();
+        try {
+            $this->resourceUidMetaValue = $this->resourceUidMeta->getValue();
+        } catch (ExceptionNotFound $e) {
+            // no uid, not yet in the db
+            throw new ExceptionNotExists("The resource ({$resource}) has no uid. It's not yet in the database.");
+        }
+        parent::__construct($resource);
     }
 
 
+    /**
+     * @throws ExceptionNotExists
+     * @throws ExceptionSqliteNotAvailable
+     */
     static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
         return new MetadataDbStore($resourceCombo);
@@ -107,7 +132,6 @@ class MetadataDbStore extends MetadataStoreAbs
                 $this->deleteRow($targetRow, $metadata);
             }
         }
-
 
         foreach ($sourceRows as $sourceRow) {
             $this->addRow($sourceRow, $metadata);
@@ -193,18 +217,8 @@ EOF;
     private function getDbTabularData(Metadata $metadata): array
     {
 
-
-        if ($metadata->getResource() === null) {
-            throw new ExceptionRuntimeInternal("The page resource is unknown. We can't retrieve the tabular data");
-        }
-
-        $uid = $metadata->getResource()->getUid();
-        try {
-            $pageId = $uid->getValue();
-        } catch (ExceptionNotFound $e) {
-            // no uid, not yet in the db
-            return [];
-        }
+        $uid = $this->resourceUidMeta;
+        $uidValue = $this->resourceUidMetaValue;
 
         $uidAttribute = $uid::getPersistentName();
         $children = $metadata->getChildrenObject();
@@ -220,7 +234,7 @@ EOF;
         $query = "$query where $uidAttribute = ? ";
         $res = $this->sqlite
             ->createRequest()
-            ->setQueryParametrized($query, [$pageId]);
+            ->setQueryParametrized($query, [$uidValue]);
         $rows = [];
         try {
             $rows = $res

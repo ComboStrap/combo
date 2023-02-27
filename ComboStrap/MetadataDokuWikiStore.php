@@ -73,26 +73,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
             return $executionCachedStores[$path];
         }
 
-        if (!($resourceCombo instanceof MarkupPath)) {
-            LogUtility::msg("The resource is not a page. File System store supports only page resources");
-            $data = null;
-        } else {
-            /**
-             * Note that {@link p_get_metadata()} can trigger a rendering of the meta again
-             * and it has a fucking cache
-             *
-             * Due to the cache in {@link p_get_metadata()} we can't use {@link p_read_metadata}
-             * when testing a {@link \action_plugin_combo_imgmove move} otherwise
-             * the move meta is not seen and the tests are failing.
-             *
-             *
-             */
-            $wikiId = $resourceCombo->toQualifiedPath();
-            self::noRenderingCheck($wikiId);
-            $data = p_read_metadata($wikiId);
-        }
-
-        $metadataStore = new MetadataDokuWikiStore($resourceCombo, $data);
+        $metadataStore = new MetadataDokuWikiStore($resourceCombo);
         $executionCachedStores[$path] = $metadataStore;
         return $metadataStore;
 
@@ -200,7 +181,15 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
      */
     public function getFromPersistentName(string $name, $default = null)
     {
-        $value = p_get_metadata($this->getWikiId(), $name);
+        /**
+         * We don't use {@link p_get_metadata()}
+         * because it will trigger a {@link p_render_metadata()}
+         * But we may just want to check if there is a {@link PageId}
+         * before rendering
+         */
+        $data = $this->getData();
+        $value = $data[$name];
+
         /**
          * Empty string return null
          * because Dokuwiki does not allow to delete keys
@@ -261,6 +250,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
                     $name => $value
                 ]
             );
+            $this->setGlobalCacheIfAny($name, $value);
             /**
              * Event
              */
@@ -381,5 +371,22 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     public function reset()
     {
         self::unsetGlobalVariables();
+    }
+
+    /**
+     * In {@link p_read_metadata()}, there is a global cache
+     * @param string $name
+     * @param mixed $value
+     */
+    private function setGlobalCacheIfAny(string $name, $value)
+    {
+        global $cache_metadata;
+
+        $id = $this->getWikiId();
+        if (isset($cache_metadata[$id])){
+            $cache_metadata[$id]['persistent'][$name]=$value;
+            $cache_metadata[$id]['current'][$name]=$value;
+        }
+
     }
 }

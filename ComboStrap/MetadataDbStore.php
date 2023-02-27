@@ -11,7 +11,7 @@ namespace ComboStrap;
  * TODO: {@link DatabasePageRow} should be integrated into MetadataDbStore
  *   A tabular metadata should be created to get all {@link DatabasePageRow::getMetaRecord()}
  */
-class MetadataDbStore extends MetadataStoreAbs
+class MetadataDbStore extends MetadataStoreAbs implements MetadataStore
 {
     const CANONICAL = "database";
 
@@ -41,14 +41,15 @@ class MetadataDbStore extends MetadataStoreAbs
         // sqlite in the constructor to handle only one sqlite exception
         $this->sqlite = Sqlite::createOrGetSqlite();
 
-        // uid of the resoure
+        // uid of the resoure (the old page id)
         $this->resourceUidMeta = $resource->getUid();
-        try {
-            $this->resourceUidMetaValue = $this->resourceUidMeta->getValue();
-        } catch (ExceptionNotFound $e) {
+        $this->resourceUidMetaValue = MetadataDokuWikiStore::getOrCreateFromResource($resource)
+            ->getFromPersistentName($this->resourceUidMeta::getPersistentName());
+        if ($this->resourceUidMetaValue === null) {
             // no uid, not yet in the db
             throw new ExceptionNotExists("The resource ({$resource}) has no uid. It's not yet in the database.");
         }
+
         parent::__construct($resource);
     }
 

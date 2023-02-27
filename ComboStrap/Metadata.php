@@ -787,7 +787,10 @@ abstract class Metadata
         if ($this->writeStore === null) {
             return $this->getReadStore();
         }
-        if (!$this->writeStore instanceof MetadataStore) {
+        /**
+         * WriteStore may be just the string class name
+         */
+        if (!($this->writeStore instanceof MetadataStore)) {
             $this->writeStore = MetadataStoreAbs::toMetadataStore($this->writeStore, $this->getResource());
         }
         return $this->writeStore;

@@ -1134,7 +1134,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getPageId(): string
     {
-        return $this->pageId->getValue();
+        return PageId::createForPage($this)->getValue();
     }
 
 
@@ -1176,23 +1176,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     }
 
-    /**
-     * Used when the page is moved to take the Page Id of the source
-     * @param string|null $pageId
-     * @return MarkupPath
-     * @throws ExceptionCompile
-     */
-    public
-    function setPageId(?string $pageId): MarkupPath
-    {
-
-        $this->pageId
-            ->setValue($pageId)
-            ->sendToWriteStore();
-
-        return $this;
-
-    }
 
     /**
      * @throws ExceptionNotFound
@@ -1618,7 +1601,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPage($this);
         $this->ldJson = LdJson::createForPage($this);
         $this->canonical = Canonical::createForPage($this);
-        $this->pageId = PageId::createForPage($this);
         $this->description = PageDescription::createForPage($this);
         $this->h1 = PageH1::createForPage($this);
         $this->type = PageType::createForPage($this);
@@ -1966,7 +1948,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getUid(): Metadata
     {
-        return $this->pageId;
+        return PageId::createForPage($this);
     }
 
 

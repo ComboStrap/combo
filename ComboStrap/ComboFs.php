@@ -22,12 +22,16 @@ class ComboFs
     {
 
         $markup = MarkupPath::createPageFromPathObject($path);
-        $pageId = PageId::generateAndStorePageId($markup);
         try {
-            DatabasePageRow::createFromPageObject($markup)
-                ->upsertAttributes([PageId::getPersistentName() => $pageId]);
+            $databasePageRow = DatabasePageRow::createFromPageObject($markup);
+            if(!$databasePageRow->exists()) {
+                $pageId = PageId::generateAndStorePageId($markup);
+                $databasePageRow->upsertAttributes([PageId::getPersistentName() => $pageId]);
+            } else {
+                throw new ExceptionCompile("The resource is already in the database");
+            }
         } catch (ExceptionCompile $e) {
-             throw new ExceptionCompile("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, $e);
+            throw new ExceptionCompile("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, $e);
         }
     }
 

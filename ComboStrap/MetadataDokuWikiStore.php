@@ -63,10 +63,10 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
         $context = ExecutionContext::getActualOrCreateFromEnv();
 
         try {
-            $executionCachedStores = $context->getRuntimeObject(MetadataDokuWikiStore::class);
+            $executionCachedStores = &$context->getRuntimeObject(MetadataDokuWikiStore::class);
         } catch (ExceptionNotFound $e) {
             $executionCachedStores = [];
-            $context->setRuntimeObject(MetadataDokuWikiStore::class, $stores);
+            $context->setRuntimeObject(MetadataDokuWikiStore::class, $executionCachedStores);
         }
         $path = $resourceCombo->getPathObject()->toQualifiedPath();
         if (isset($executionCachedStores[$path])) {
@@ -81,22 +81,21 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
 
     /**
      *
-     * $METADATA_RENDERERS: A global cache variable where the persistent data is set/exist
-     * only during metadata rendering with the function {@link p_render_metadata()}
+     * In a rendering, you should not use the {@link p_set_metadata()}
+     * but use {@link \Doku_Renderer_metadata::meta} and {@link \Doku_Renderer_metadata::$persistent}
+     * to set the metadata
      *
-     * Setting a metadata does not immediately flushed the value on disk when there is a
-     * rendering. They are going into the global $METADATA_RENDERERS
-     *
-     * The function {@link p_set_metadata()} and {@link p_get_metadata()} use it.
-     *
-     * The data are rendererd and stored in {@link p_get_metadata()} via {@link p_save_metadata()}
+     * Why ?
+     * The metadata are set in $METADATA_RENDERERS (A global cache variable where the persistent data is set/exist
+     * only during metadata rendering with the function {@link p_render_metadata()}) and then
+     * saved at the end
      *
      */
     private static function noRenderingCheck(string $wikiId)
     {
         global $METADATA_RENDERERS;
         if (isset($METADATA_RENDERERS[$wikiId])) {
-            $message = "There is a rendering going on, the setting will not flush";
+            $message = "There is a rendering going on, the setting will not flush, uses the meta and persitent array of the metadata renderer.";
             //Console::log($message);
             throw new ExceptionRuntime($message);
         }
@@ -244,6 +243,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
              * By default, the value is copied in the current and persistent array
              * and there is no render
              */
+            self::noRenderingCheck($this->getWikiId());
             $wikiId = $this->getWikiId();
             p_set_metadata($wikiId,
                 [
@@ -281,7 +281,12 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
          * and is synced in {@link p_save_metadata()}
          *
          */
-        return p_read_metadata($this->getWikiId(), true)['current'];
+        $data = p_read_metadata($this->getWikiId(), true);
+        if(empty($data)){
+            LogUtility::internalError("The metadata cache was empty");
+            $data = p_read_metadata($this->getWikiId());
+        }
+        return $data['current'];
     }
 
     private function getWikiId(): string

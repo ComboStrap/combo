@@ -43,11 +43,12 @@ class MetadataDbStore extends MetadataStoreAbs implements MetadataStore
 
         // uid of the resoure (the old page id)
         $this->resourceUidMeta = $resource->getUid();
+        $persistentName = $this->resourceUidMeta::getPersistentName();
         $this->resourceUidMetaValue = MetadataDokuWikiStore::getOrCreateFromResource($resource)
-            ->getFromPersistentName($this->resourceUidMeta::getPersistentName());
+            ->getFromPersistentName($persistentName);
         if ($this->resourceUidMetaValue === null) {
             // no uid, not yet in the db
-            throw new ExceptionNotExists("The resource ({$resource}) has no uid. It's not yet in the database.");
+            throw new ExceptionNotExists("The resource ({$resource}) has no uid ($persistentName). It's not yet stored in the database.");
         }
 
         parent::__construct($resource);

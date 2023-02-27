@@ -42,9 +42,10 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     const CANONICAL = Metadata::CANONICAL;
 
     /**
-     * When the value of a metadata has changed
+     * When the value of a metadata has changed, an event is created
      */
     public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
+
     const NEW_VALUE_ATTRIBUTE = "new_value";
 
 

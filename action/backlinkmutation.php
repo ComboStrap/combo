@@ -60,15 +60,12 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
          * Delete and recompute analytics
          */
         $analyticsDocument = $reference->fetchAnalyticsDocument();
-        try {
-            CacheLog::deleteCacheIfExistsAndLog(
-                $analyticsDocument,
-                self::BACKLINK_MUTATION_EVENT_NAME,
-                "Backlink mutation"
-            );
-        } finally {
-            $analyticsDocument->close();
-        }
+        CacheLog::deleteCacheIfExistsAndLog(
+            $analyticsDocument,
+            self::BACKLINK_MUTATION_EVENT_NAME,
+            "Backlink mutation"
+        );
+
         try {
             $reference->getDatabasePage()->replicateAnalytics();
         } catch (ExceptionCompile $e) {
@@ -83,7 +80,6 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
             MarkupCacheDependencies::BACKLINKS_DEPENDENCY,
             self::BACKLINK_MUTATION_EVENT_NAME
         );
-
 
 
     }

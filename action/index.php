@@ -18,23 +18,18 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
-
 
 /**
+ * Process metadata to put them in the database
+ * (ie create index)
  *
- * This code is part of the backlink mutation features.
- *
- * It stores the references for a pages at once
- * (and not one by one as Dokuwiki does)
- *
- * If the data mutate, the {@link action_plugin_combo_backlinkmutation}
- * will trigger, to recalculate the backlink analytics
- *
+ * This is the equivalent of the dokuwiki {@link \dokuwiki\Search\Indexer}
+ * (textual search engine, plus metadata index)
  */
-class action_plugin_combo_reference extends DokuWiki_Action_Plugin
+class action_plugin_combo_index extends DokuWiki_Action_Plugin
 {
-    const CANONICAL = "reference";
+
+    const CANONICAL = "index";
 
 
     /**
@@ -47,18 +42,13 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         /**
          * https://www.dokuwiki.org/devel:event:parser_metadata_render
          */
-        $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER', $this, 'storeReference', array());
+        $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER', $this, 'indexMetadata', array());
 
 
     }
 
 
-    /**
-     * Store the references set for the whole page
-     * The datastore will then see a mutation
-     * processed by {@link action_plugin_combo_backlinkmutation}
-     */
-    function storeReference(Doku_Event $event, $params)
+    function indexMetadata(Doku_Event $event, $params)
     {
 
         try {

@@ -1106,35 +1106,31 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             /**
              * Can we read from the meta file
              */
-            try {
 
 
-                if ($this->isPathExecution()) {
+            if ($this->isPathExecution()) {
+
+                /**
+                 * If the meta file exists
+                 */
+                if (FileSystems::exists($this->getMetaPathOrFail())) {
+
+                    $executingPath = $this->getExecutingPathOrFail();
+                    $actualMeta = MetadataDokuWikiStore::getOrCreateFromResource(MarkupPath::createPageFromPathObject($executingPath))
+                        ->getDataCurrentAndPersistent();
 
                     /**
-                     * If the meta file exists
+                     * The metadata useCache function has side effect
+                     * and triggers a render that fails if the wiki file does not exists
                      */
-                    if (FileSystems::exists($this->getMetaPath())) {
-
-                        $executingPath = $this->getRequestedExecutingPath();
-                        $actualMeta = MetadataDokuWikiStore::getOrCreateFromResource(MarkupPath::createPageFromPathObject($executingPath))
-                            ->getData();
-                        /**
-                         * The metadata useCache function has side effect
-                         * and triggers a render that fails if the wiki file does not exists
-                         */
-                        $depends['files'][] = $this->instructionsCache->cache;
-                        $depends['files'][] = $executingPath->toAbsolutePath()->toQualifiedPath();
-                        $useCache = $this->metaCache->useCache($depends);
-                        if ($useCache) {
-                            $this->meta = $actualMeta;
-                            return $this;
-                        }
+                    $depends['files'][] = $this->instructionsCache->cache;
+                    $depends['files'][] = $executingPath->toAbsolutePath()->toQualifiedPath();
+                    $useCache = $this->metaCache->useCache($depends);
+                    if ($useCache) {
+                        $this->meta = $actualMeta;
+                        return $this;
                     }
                 }
-            } catch (ExceptionNotFound $e) {
-                // no wiki id
-                $actualMeta = [];
             }
 
             /**
@@ -1212,12 +1208,45 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @throws ExceptionNotFound
      */
-    private function getMetaPath(): LocalPath
+    private
+    function getMetaPath(): LocalPath
     {
-        if(isset($this->metaPath)){
+        if (isset($this->metaPath)) {
             return $this->metaPath;
         }
         throw new ExceptionNotFound("No meta path for this markup");
+    }
+
+    /**
+     * A wrapper from when we are in a code block
+     * were we expect to be a {@link self::isPathExecution()}
+     * All path should then be available
+     * @return Path
+     */
+    private
+    function getExecutingPathOrFail(): Path
+    {
+        try {
+            return $this->getRequestedExecutingPath();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime($e);
+        }
+    }
+
+    /**
+     * A wrapper from when we are in a code block
+     * were we expect to be a {@link self::isPathExecution()}
+     * All path should then be available
+     * @return Path
+     */
+    private
+    function getMetaPathOrFail()
+    {
+        try {
+            return $this->getMetaPath();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntime($e);
+        }
     }
 
 }

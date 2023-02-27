@@ -91,16 +91,14 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
      * saved at the end
      *
      */
-    private static function noRenderingCheck(string $wikiId)
+    private static function isRendering(string $wikiId): bool
     {
         global $METADATA_RENDERERS;
         if (isset($METADATA_RENDERERS[$wikiId])) {
-            $message = "There is a rendering going on, the setting will not flush, uses the meta and persitent array of the metadata renderer.";
-            //Console::log($message);
-            throw new ExceptionRuntime($message);
+            return true;
         }
+        return false;
     }
-
 
 
     /**
@@ -243,13 +241,22 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
              * By default, the value is copied in the current and persistent array
              * and there is no render
              */
-            self::noRenderingCheck($this->getWikiId());
             $wikiId = $this->getWikiId();
-            p_set_metadata($wikiId,
-                [
-                    $name => $value
-                ]
-            );
+            if (self::isRendering($wikiId)) {
+
+                global $METADATA_RENDERERS;
+                $METADATA_RENDERERS[$wikiId][self::CURRENT_METADATA][$name] = $value;
+                $METADATA_RENDERERS[$wikiId][self::PERSISTENT_METADATA][$name] = $value;
+
+            } else {
+
+                p_set_metadata($wikiId,
+                    [
+                        $name => $value
+                    ]
+                );
+
+            }
             $this->setGlobalCacheIfAny($name, $value);
             /**
              * Event
@@ -281,12 +288,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
          * and is synced in {@link p_save_metadata()}
          *
          */
-        $data = p_read_metadata($this->getWikiId(), true);
-        if(empty($data)){
-            LogUtility::internalError("The metadata cache was empty");
-            $data = p_read_metadata($this->getWikiId());
-        }
-        return $data['current'];
+        return $this->getDataCurrentAndPersistent()[self::CURRENT_METADATA];
     }
 
     private function getWikiId(): string
@@ -341,7 +343,6 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     }
 
 
-
     public function isHierarchicalTextBased(): bool
     {
         return true;
@@ -361,8 +362,6 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     {
         return "DokuMeta ({$this->getWikiId()}";
     }
-
-
 
 
     public function deleteAndFlush()
@@ -388,10 +387,25 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
         global $cache_metadata;
 
         $id = $this->getWikiId();
-        if (isset($cache_metadata[$id])){
-            $cache_metadata[$id]['persistent'][$name]=$value;
-            $cache_metadata[$id]['current'][$name]=$value;
+        if (isset($cache_metadata[$id])) {
+            $cache_metadata[$id]['persistent'][$name] = $value;
+            $cache_metadata[$id]['current'][$name] = $value;
         }
 
+    }
+
+    /**
+     * @return array -the full array only needed by the rendering process
+     * You should use {@link self::getData()} otherwise
+     */
+    public function getDataCurrentAndPersistent(): array
+    {
+
+        $data = p_read_metadata($this->getWikiId(), true);
+        if (empty($data)) {
+            LogUtility::internalError("The metadata cache was empty");
+            $data = p_read_metadata($this->getWikiId());
+        }
+        return $data;
     }
 }

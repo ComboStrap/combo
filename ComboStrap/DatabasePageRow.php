@@ -363,21 +363,22 @@ class DatabasePageRow
     }
 
     /**
-     * @return Json|null the analytics array or null if not in db
+     * @return Json the analytics array or null if not in db
      */
     public
-    function getAnalyticsData(): ?Json
+    function getAnalyticsData(): Json
     {
 
         $jsonString = $this->getFromRow(self::ANALYTICS_ATTRIBUTE);
         if ($jsonString === null) {
-            return null;
+            // we put an empty json to not get any problem with the json database function
+            // on an empty string / null (for sqlite)
+            return Json::createEmpty();
         }
         try {
             return Json::createFromString($jsonString);
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while building back the analytics JSON object. {$e->getMessage()}");
-            return null;
+            throw ExceptionRuntimeInternal::withMessageAndError("Error while building back the analytics JSON object. {$e->getMessage()}", $e);
         }
 
     }
@@ -506,15 +507,10 @@ class DatabasePageRow
     }
 
     /**
-     * @throws ExceptionBadState
-     * @throws ExceptionSqliteNotAvailable
+     * @throws ExceptionBadState - if the array is empty
      */
     public function upsertAttributes(array $attributes): void
     {
-
-        if ($this->sqlite === null) {
-            throw new ExceptionSqliteNotAvailable();
-        }
 
         if (empty($attributes)) {
             throw new ExceptionBadState("The page database attribute passed should not be empty");
@@ -585,10 +581,16 @@ class DatabasePageRow
                 $pageIdAbbr = PageId::getAbbreviated($pageId);
                 $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $pageIdAbbr;
             }
+
             $databasePage = DatabasePageRow::createFromPageIdAbbr($pageIdAbbr);
             if ($databasePage->exists()) {
                 $duplicatePage = $databasePage->getMarkupPath();
-                throw new ExceptionBadState("The page ($this->markupPath) cannot be replicated to the database because it has the same page id abbreviation ($pageIdAbbr) than the page ($duplicatePage)");
+                if ($duplicatePage->getPathObject()->toUriString() === $this->markupPath->toUriString()) {
+                    $message = "The page ($this->markupPath) is already in the database with the uid ($pageIdAbbr).";
+                } else {
+                    $message = "The page ($this->markupPath) cannot be replicated to the database because it has the same page id abbreviation ($pageIdAbbr) than the page ($duplicatePage)";
+                }
+                throw new ExceptionBadState($message);
             }
 
             $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->markupPath->getPathObject()->getWikiId();

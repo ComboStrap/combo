@@ -18,20 +18,18 @@ class ComboFs
      * @return void
      * @throws ExceptionCompile - for any error
      */
-    public static function create(Path $path)
+    public static function createIfNotExists(Path $path)
     {
 
         $markup = MarkupPath::createPageFromPathObject($path);
         try {
             $databasePageRow = DatabasePageRow::createFromPageObject($markup);
-            if(!$databasePageRow->exists()) {
+            if (!$databasePageRow->exists()) {
                 $pageId = PageId::generateAndStorePageId($markup);
                 $databasePageRow->upsertAttributes([PageId::getPersistentName() => $pageId]);
-            } else {
-                throw new ExceptionCompile("The resource is already in the database");
             }
         } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, $e);
+            throw new ExceptionCompile("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, 1, $e);
         }
     }
 

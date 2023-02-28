@@ -33,6 +33,12 @@ use ComboStrap\References;
  *
  * This is the equivalent of the dokuwiki {@link \dokuwiki\Search\Indexer}
  * (textual search engine, plus metadata index)
+ *
+ * Note that you can disable a page to go into the index
+ * via the `internal index` metadata. See {@link idx_addPage()}
+ * ```
+ * $indexenabled = p_get_metadata($page, 'internal index', METADATA_RENDER_UNLIMITED);
+ * ```
  */
 class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
 {
@@ -70,7 +76,6 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
         $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_async_event', array());
 
 
-
     }
 
     /**
@@ -83,12 +88,7 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
          * Check that the actual page has analytics data
          * (if there is a cache, it's pretty quick)
          */
-        global $ID;
-        if ($ID == null) {
-            $id = $event->data['page'];
-        } else {
-            $id = $ID;
-        }
+        $id = $event->data['page'];
         $page = MarkupPath::createMarkupFromId($id);
 
         /**
@@ -136,7 +136,6 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
     }
 
 
-
     function indexViaMetadataRendering(Doku_Event $event, $params)
     {
 
@@ -154,14 +153,14 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
             ->setReadStore(MetadataDokuWikiStore::class);
 
         $internalIdReferences = $event->data['current']['relation']['references'];
-        foreach($internalIdReferences as $internalIdReferenceValue => $internalIdReferenceExist){
+        foreach ($internalIdReferences as $internalIdReferenceValue => $internalIdReferenceExist) {
             $ref = Reference::createFromResource($page)
                 ->setReadStore(MetadataDokuWikiStore::class)
                 ->buildFromStoreValue($internalIdReferenceValue);
             try {
                 $references->addRow([$ref]);
             } catch (ExceptionNotFound $e) {
-                LogUtility::internalError("The identifier and the value identifier should be known at this stage",self::CANONICAL, $e);
+                LogUtility::internalError("The identifier and the value identifier should be known at this stage", self::CANONICAL, $e);
             }
         }
 
@@ -175,7 +174,6 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
         }
 
     }
-
 
 
 }

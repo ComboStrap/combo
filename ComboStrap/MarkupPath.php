@@ -567,7 +567,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * wraps {@link saveWikiText()} it implements the events system and may have side-effects
      */
     public
-    function setContentWithCommitMessage($content, $summary = "Default"): MarkupPath
+    function setContentWithLog($content, $summary = "Default"): MarkupPath
     {
         $path = $this->getPathObject();
         if (!($path instanceof WikiPath)) {
@@ -591,7 +591,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $keepACT = $ACT;
         try {
             $ACT = "show";
-            $ID = $this->getPathObject()->getWikiId();
+            $ID = $this->getPathObject()->toWikiPath()->getWikiId();
             idx_addPage($ID);
         } finally {
             $ID = $keep;
@@ -1138,12 +1138,19 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
+    /**
+     * @throws ExceptionNotExists
+     */
     public
     function fetchAnalyticsDocument(): FetcherMarkup
     {
         return renderer_plugin_combo_analytics::createAnalyticsFetcherForPageFragment($this);
     }
 
+    /**
+     * @throws ExceptionCompile
+     * @throws ExceptionNotExists
+     */
     public
     function fetchAnalyticsPath(): Path
     {

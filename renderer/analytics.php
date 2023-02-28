@@ -4,6 +4,7 @@
 use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\ExceptionRuntimeInternal;
@@ -156,6 +157,9 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
      */
     private MarkupPath $page;
 
+    /**
+     * @throws ExceptionNotExists - if the file does not exists
+     */
     public static function createAnalyticsFetcherForPageFragment(MarkupPath $markupPath): FetcherMarkup
     {
         $path = $markupPath->getPathObject();
@@ -168,6 +172,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             ->setRequestedMime(Mime::getJson())
             ->setRequestedRenderer(self::RENDERER_NAME_MODE)
             ->build();
+
     }
 
     public static function getMime(): Mime

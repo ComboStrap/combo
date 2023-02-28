@@ -179,7 +179,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                 } catch (ExceptionNotFound $e) {
 
                     try {
-                        ComboFs::create($markup);
+                        ComboFs::createIfNotExists($markup);
                     } catch (ExceptionCompile $e) {
                         LogUtility::error($e->getMessage(), self::CANONICAL, $e);
                     }

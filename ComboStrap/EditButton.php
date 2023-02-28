@@ -245,11 +245,6 @@ class EditButton
         }
 
 
-        global $ACT;
-        if ($ACT !== "show") {
-            throw new ExceptionBadState("The HTML is not the rendering of a page (ACT is not show)");
-        }
-
         /**
          * Request based because the button are added only for a user that can write
          */

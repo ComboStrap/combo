@@ -628,9 +628,14 @@ class ExecutionContext
         return $this;
     }
 
+    /**
+     * @param string $value
+     * @return $this
+     * @deprecated use the {@link SiteConfig::setCanonicalUrlType()} instead
+     */
     public function setCanonicalUrlType(string $value): ExecutionContext
     {
-        $this->setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, $value);
+        $this->getConfig()->setCanonicalUrlType($value);
         return $this;
     }
 

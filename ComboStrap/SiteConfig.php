@@ -376,5 +376,10 @@ class SiteConfig
         return LocalPath::createFromPathString($metadataDirectory);
     }
 
+    public function setCanonicalUrlType(string $value): SiteConfig
+    {
+        return $this->setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, $value);
+    }
+
 
 }

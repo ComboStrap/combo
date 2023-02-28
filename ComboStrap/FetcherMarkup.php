@@ -874,6 +874,18 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @return bool true if the markup string comes from a path
      * This is motsly important for cache as we use the path as the cache key
+     * (Cache:
+     * * of the {@link self::getInstructions() instructions},
+     * * of the {@link self::getCacheDependencies() output dependencies}
+     * * of the {@link self::getSnippets() snippets}
+     * * of the {@link self::processMetadataIfNotYetDone() metadata}
+     *
+     * The rule is this is a path execution of the {@link self::$markupSourcePath executing source path} is set.
+     *
+     * Ie this is not a path execution, if the input is:
+     * * {@link self::$requestedInstructions} (used for templating)
+     * * a {@link self::$markupString} (used for test or webcode)
+     *
      */
     public function isPathExecution(): bool
     {

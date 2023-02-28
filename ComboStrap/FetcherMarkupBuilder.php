@@ -150,9 +150,34 @@ class FetcherMarkupBuilder
     public function build(): FetcherMarkup
     {
 
+        /**
+         * One input should be given
+         */
         if ($this->builderMarkupSourcePath === null && $this->builderMarkupString === null && $this->builderRequestedInstructions === null) {
             throw new ExceptionRuntimeInternal("A markup source path, a markup string or instructions should be given");
         }
+        /**
+         * Only one input should be given
+         */
+        $foundInput = "";
+        if ($this->builderMarkupSourcePath !== null){
+            $foundInput = "markup path";
+        }
+        if ($this->builderMarkupString !== null){
+            if(!empty($foundInput)){
+                throw new ExceptionRuntimeInternal("Only one input should be given, we have found 2 inputs ($foundInput and markup string)");
+            }
+            $foundInput = "markup path";
+        }
+        if ($this->builderRequestedInstructions !== null){
+            if(!empty($foundInput)){
+                throw new ExceptionRuntimeInternal("Only one input should be given, we have found 2 inputs ($foundInput and instructions)");
+            }
+        }
+
+        /**
+         * Other Mandatory
+         */
         if (!isset($this->mime)) {
             throw new ExceptionRuntimeInternal("A mime is mandatory");
         }
@@ -160,6 +185,9 @@ class FetcherMarkupBuilder
             throw new ExceptionRuntimeInternal("A context path is mandatory");
         }
 
+        /**
+         * Building
+         */
         $newFetcherMarkup = new FetcherMarkup();
         $newFetcherMarkup->requestedContextPath = $this->requestedContextPath;
         if ($this->builderMarkupString !== null) {

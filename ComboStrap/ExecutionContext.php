@@ -399,17 +399,15 @@ class ExecutionContext
                 return $this->getExecutingMarkupHandler()
                     ->getRequestedContextPath();
             } catch (ExceptionNotFound $e) {
-                // not a template engine running
-                // `id` may be asked by acl to determine the right
-                global $ACT;
-                if (!in_array($ACT, [
-                    ExecutionContext::SHOW_ACTION,
-                    ExecutionContext::PREVIEW_ACTION,
-                    ExecutionContext::EDIT_ACTION,
-                    FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME
-                ])) {
-                    throw new ExceptionNotFound("No page is rendering. Act is ($ACT)");
-                }
+
+
+                /**
+                 * not a template engine running
+                 * `id` may be asked by acl to determine the right
+                 * The id notion is a little bit everywhere
+                 * That's why we just don't check the action ($ACT)
+                 */
+
 
                 global $INPUT;
                 $inputId = $INPUT->str("id");

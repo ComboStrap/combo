@@ -449,7 +449,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 ->addClassName(LinkMarkup::getHtmlClassNotExist());
                             $renderer->doc .= $markupAttributes->toHtmlEnterTag("a") . $e->getMessage();
 
-                            LogUtility::error($e->getMessage(), "link", $e);
+                            LogUtility::warning($e->getMessage(), "link", $e);
                             return false;
 
                         }

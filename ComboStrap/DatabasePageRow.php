@@ -436,7 +436,7 @@ class DatabasePageRow
             // no canonical
         }
 
-        // we send a not exist
+                // we send a not exist
         throw new ExceptionNotExists("No row could be found");
 
 

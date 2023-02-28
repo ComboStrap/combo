@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metaprocessing;
 use syntax_plugin_combo_frontmatter;
 
 class PageDescription extends MetadataText
@@ -66,7 +67,7 @@ class PageDescription extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
     }
 
     public function getDataType(): string

@@ -67,6 +67,7 @@ abstract class MetadataTabular extends Metadata
 
     public function toStoreValue(): ?array
     {
+        $this->buildCheck();
         if ($this->rows === null) {
             return null;
         }

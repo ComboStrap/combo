@@ -11,6 +11,11 @@ abstract class MetadataStoreAbs implements MetadataStore
     private $page;
 
 
+    public function isDokuWikiStore(): bool
+    {
+        return $this instanceof MetadataDokuWikiStore || $this instanceof MetadataDokuWikiArrayStore;
+    }
+
     /**
      * MetadataFormStore constructor.
      * @param ResourceCombo $page

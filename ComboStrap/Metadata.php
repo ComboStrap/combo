@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metadescription;
+use action_plugin_combo_metaprocessing;
 
 abstract class Metadata
 {
@@ -89,6 +90,9 @@ abstract class Metadata
         return null;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public static function getForName(string $name): ?Metadata
     {
 
@@ -168,11 +172,13 @@ abstract class Metadata
                 return new PageLevel();
             case DisqusIdentifier::PROPERTY_NAME:
                 return new DisqusIdentifier();
+            case References::getName():
+                return new References();
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
                 LogUtility::msg($msg, LogUtility::LVL_MSG_INFO, self::CANONICAL);
         }
-        return null;
+        throw new ExceptionNotFound("No metadata found with the name ($name)");
 
     }
 
@@ -426,7 +432,7 @@ abstract class Metadata
 
 
     /**
-     * @return null|string|array the value to be persisted by the store
+     * @return null|string|array the value to be persisted to the {@link self::setWriteStore()}
      * the reverse action is {@link Metadata::setFromStoreValue()}
      *
      * Null may be returned (no exception is thrown)
@@ -498,7 +504,7 @@ abstract class Metadata
      * Therefore all metadata are persistent
      *
      * Ie a {@link MetadataDokuWikiStore::CURRENT_METADATA} is only derived
-     * in a rendering context. A {@link MetadataDokuWikiStore::PERSISTENT_METADATA} is always stored.
+     * in a rendering context. A {@link action_plugin_combo_metaprocessing::PERSISTENT_METADATA} is always stored.
      *
      *
      *

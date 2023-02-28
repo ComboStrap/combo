@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metaprocessing;
+
 class ResourceName extends MetadataText
 {
 
@@ -69,7 +71,7 @@ class ResourceName extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
     }
 
     public function getMutable(): bool

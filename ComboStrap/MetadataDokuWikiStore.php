@@ -3,6 +3,7 @@
 
 namespace ComboStrap;
 
+use action_plugin_combo_metaprocessing;
 use dokuwiki\Extension\Event;
 
 /**
@@ -25,28 +26,9 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
      * if not found in the persistent
      */
     public const CURRENT_METADATA = "current";
-    /**
-     * Persistent metadata (data that should be in a backup)
-     *
-     * They are used as the default of the current metadata
-     * and is never cleaned
-     *
-     * https://www.dokuwiki.org/devel:metadata#metadata_persistence
-     *
-     * Because the current is only usable in rendering, all
-     * metadata are persistent inside dokuwiki
-     */
-    public const PERSISTENT_METADATA = "persistent";
 
 
     const CANONICAL = Metadata::CANONICAL;
-
-    /**
-     * When the value of a metadata has changed, an event is created
-     */
-    public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
-
-    const NEW_VALUE_ATTRIBUTE = "new_value";
 
 
     /**
@@ -251,7 +233,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
                  */
                 global $METADATA_RENDERERS;
                 $METADATA_RENDERERS[$wikiId][self::CURRENT_METADATA][$name] = $value;
-                $METADATA_RENDERERS[$wikiId][self::PERSISTENT_METADATA][$name] = $value;
+                $METADATA_RENDERERS[$wikiId][action_plugin_combo_metaprocessing::PERSISTENT_METADATA][$name] = $value;
 
             } else {
 
@@ -263,16 +245,6 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
 
             }
             $this->setGlobalCacheIfAny($name, $value);
-            /**
-             * Event
-             */
-            $data = [
-                "name" => $name,
-                self::NEW_VALUE_ATTRIBUTE => $value,
-                "old_value" => $oldValue,
-                PagePath::getPersistentName() => ":$wikiId"
-            ];
-            Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $data);
         }
         return $this;
     }
@@ -371,7 +343,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
 
     public function deleteAndFlush()
     {
-        $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], MetadataDokuWikiStore::PERSISTENT_METADATA => []];
+        $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], action_plugin_combo_metaprocessing::PERSISTENT_METADATA => []];
         $dokuwikiId = $this->getWikiId();
         p_save_metadata($dokuwikiId, $emptyMeta);
     }

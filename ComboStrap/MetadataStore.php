@@ -13,6 +13,11 @@ namespace ComboStrap;
 interface MetadataStore
 {
 
+    /**
+     * Return if the data has the dokuwiki format
+     * @return bool
+     */
+    public function isDokuWikiStore(): bool;
 
 
     /**
@@ -90,4 +95,5 @@ interface MetadataStore
      * @return MetadataStore
      */
     static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore;
+
 }

@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metaprocessing;
+
 class Canonical extends MetadataWikiPath
 {
 
@@ -47,7 +49,7 @@ class Canonical extends MetadataWikiPath
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
     }
 
     public function getMutable(): bool

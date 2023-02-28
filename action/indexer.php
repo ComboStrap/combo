@@ -28,10 +28,10 @@ use ComboStrap\References;
 
 
 /**
- * Process metadata to put them in the sqlite database
- * (ie create derived index)
+ * Process metadata put them in the sqlite database (ie create derived index)
  *
- * This is the equivalent of the dokuwiki {@link \dokuwiki\Search\Indexer}
+ *
+ * For the replication, this is the equivalent of the dokuwiki {@link \dokuwiki\Search\Indexer}
  * (textual search engine, plus metadata index)
  *
  * Note that you can disable a page to go into the index
@@ -68,12 +68,11 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
         $controller->register_hook('INDEXER_PAGE_ADD', 'AFTER', $this, 'indexViaIndexerAdd', array());
 
         /**
-         * Process the event table
          *
-         * We do it after because if there is an error
-         * We will not stop the Dokuwiki Processing
+         * https://www.dokuwiki.org/devel:event:parser_metadata_render
+         *
          */
-        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_async_event', array());
+
 
 
     }
@@ -117,20 +116,6 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
                 }
             }
         }
-
-
-    }
-
-    /**
-     */
-    public function handle_async_event(Doku_Event $event, $param)
-    {
-
-
-        /**
-         * Process the async event
-         */
-        Event::dispatchEvent();
 
 
     }

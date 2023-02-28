@@ -3,7 +3,9 @@
 use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
 use ComboStrap\Event;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;
@@ -35,7 +37,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
         /**
          * create the async event
          */
-        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_quality_mutation', array());
+        $controller->register_hook(action_plugin_combo_metaprocessing::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_quality_mutation', array());
 
         /**
          * process the Async event
@@ -63,17 +65,24 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          *
          */
         foreach ($page->getBacklinks() as $backlink) {
-            $htmlDocument = $backlink->createHtmlFetcherWithContextPath();
             try {
-                $desc = $data[self::DESC];
-                CacheLog::deleteCacheIfExistsAndLog(
-                    $htmlDocument,
-                    self::QUALITY_MUTATION_EVENT_NAME,
-                    "The {$backlink->getWikiId()} of {$path} had its HTML cache deleted ($desc)."
-                );
-            } finally {
-                $htmlDocument->close();
+                $htmlDocument = $backlink->createHtmlFetcherWithContextPath();
+            } catch (ExceptionNotExists $e) {
+                continue;
             }
+            try {
+                $wikiId = $backlink->getWikiId();
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("Backlink should be only for wiki path");
+                continue;
+            }
+            $desc = $data[self::DESC];
+            CacheLog::deleteCacheIfExistsAndLog(
+                $htmlDocument,
+                self::QUALITY_MUTATION_EVENT_NAME,
+                "The {$wikiId} of {$path} had its HTML cache deleted ($desc)."
+            );
+
         }
     }
 
@@ -96,7 +105,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
             return;
         }
 
-        $newValue = $data[MetadataDokuWikiStore::NEW_VALUE_ATTRIBUTE];
+        $newValue = $data[action_plugin_combo_metaprocessing::NEW_VALUE_ATTRIBUTE];
         $path = $data[PagePath::getPersistentName()];
         Event::createEvent(
             self::QUALITY_MUTATION_EVENT_NAME,

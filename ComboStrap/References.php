@@ -61,7 +61,7 @@ class References extends MetadataTabular
             LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");
             return $this;
         }
-        if ($metadataStore instanceof MetadataDokuWikiStore) {
+        if ($metadataStore->isDokuWikiStore()) {
 
             $relation = $metadataStore->getFromPersistentName("relation");
             if ($relation !== null) {

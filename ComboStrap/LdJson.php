@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metagoogle;
+use action_plugin_combo_metaprocessing;
 
 /**
  *
@@ -77,7 +78,12 @@ class LdJson extends MetadataJson
         $schemaImages = array();
         foreach ($imagesSet as $pageImage) {
 
-            $pageImagePath = $pageImage->getSourcePath();
+            try {
+                $pageImagePath = $pageImage->getSourcePath()->toWikiPath();
+            } catch (ExceptionCast $e) {
+                LogUtility::internalError("The page image should come from a wiki path", self::CANONICAL, $e);
+                continue;
+            }
             $mime = $pageImagePath->getMime()->toString();
             if (in_array($mime, $supportedMime)) {
                 if (FileSystems::exists($pageImagePath)) {
@@ -116,7 +122,7 @@ class LdJson extends MetadataJson
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
     }
 
     public function getCanonical(): string

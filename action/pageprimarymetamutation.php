@@ -31,7 +31,7 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
         /**
          * create the async event
          */
-        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'createPrimaryMetaMutation', array());
+        $controller->register_hook(action_plugin_combo_metaprocessing::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'createPrimaryMetaMutation', array());
 
         /**
          * process the Async event

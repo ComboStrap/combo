@@ -331,13 +331,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             return;
         }
         $metadata = MetadataDokuWikiStore::getOrCreateFromResource($page)->getData();
-        $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_METADATA];
+        $persistent = $metadata[action_plugin_combo_metaprocessing::PERSISTENT_METADATA];
         ksort($persistent);
         $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
         ksort($current);
         $form = FormMeta::create("raw_metadata")
             ->addField(
-                FormMetaField::create(MetadataDokuWikiStore::PERSISTENT_METADATA, DataType::JSON_TYPE_VALUE)
+                FormMetaField::create(action_plugin_combo_metaprocessing::PERSISTENT_METADATA, DataType::JSON_TYPE_VALUE)
                     ->setLabel("Persistent Metadata (User Metadata)")
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata contains raw values. They contains the values set by the user and the fixed values such as page id.")
@@ -375,7 +375,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Only Persistent, current cannot be modified
          */
-        $persistentMetadataType = MetadataDokuWikiStore::PERSISTENT_METADATA;
+        $persistentMetadataType = action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
         $postMeta = json_decode($post[$persistentMetadataType], true);
         if ($postMeta === null) {
             ExecutionContext::getActualOrCreateFromEnv()

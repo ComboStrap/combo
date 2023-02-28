@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metaprocessing;
+
 class PageImages extends MetadataTabular
 {
 
@@ -149,7 +151,7 @@ class PageImages extends MetadataTabular
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
     }
 
 
@@ -307,6 +309,28 @@ class PageImages extends MetadataTabular
     public static function getOldPersistentNames(): array
     {
         return [self::OLD_PROPERTY_NAME];
+    }
+
+    /**
+     * @param array $data
+     * @return void
+     *
+     * Trick to advertise the image
+     * saved in {@link \ComboStrap\Metadata}
+     * if the frontmatter is not used
+     *
+     */
+    public function modifyMetaDokuWikiArray(array &$data)
+    {
+        $pageImages = $this->getValueAsPageImages();
+        foreach ($pageImages as $pageImage) {
+            /**
+             * {@link Doku_Renderer_metadata::_recordMediaUsage()}
+             */
+            $dokuPath = $pageImage->getImagePath();
+            $data[MetadataDokuWikiStore::CURRENT_METADATA]['relation']['media'][$dokuPath->getWikiId()] = FileSystems::exists($dokuPath);
+        }
+
     }
 
 

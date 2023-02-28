@@ -210,6 +210,9 @@ class XmlTagProcessing
             case PermalinkTag::TAG:
                 $renderer->doc .= PermalinkTag::renderEnterSpecialXhtml($data);
                 return true;
+            case HrTag::TAG:
+                $renderer->doc .= HrTag::render($tagAttributes);
+                return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                 return false;

@@ -41,16 +41,16 @@ class XmlElement
     /**
      * @throws ExceptionNotFound
      */
-    public function getFirstChild(): XmlElement
+    public function getFirstChildElement(): XmlElement
     {
-        $domNode = $this->domElement->firstChild;
-        if ($domNode === null) {
-            throw new ExceptionNotFound("No first child");
+        $firstChild = $this->domElement->firstChild;
+        while (!($firstChild instanceof DOMElement)) {
+            if ($firstChild === null) {
+                throw new ExceptionNotFound("No first child element");
+            }
+            $firstChild = $firstChild->nextSibling;
         }
-        if (!($domNode instanceof DOMElement)) {
-            throw new ExceptionNotFound("The first child is not a DOM Element");
-        }
-        return new XmlElement($domNode, $this->document);
+        return new XmlElement($firstChild, $this->document);
     }
 
     /**

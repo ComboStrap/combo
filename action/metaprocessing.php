@@ -90,7 +90,11 @@ class action_plugin_combo_metaprocessing
 
         $page = MarkupPath::createMarkupFromId($afterId);
 
-        $attributes = [References::getPersistentName()];
+        $primaryMetas = action_plugin_combo_pageprimarymetamutation::PRIMARY_METAS;
+        $referencesAttributes = [References::getPersistentName()];
+        $qualityMetadata = action_plugin_combo_qualitymutation::getQualityMetas();
+        $attributes = array_merge($primaryMetas, $referencesAttributes, $qualityMetadata);
+
         $beforeStore = MetadataDokuWikiArrayStore::getOrCreateFromResource($page, $beforeMetaArray);
         $afterStore = MetadataDokuWikiArrayStore::getOrCreateFromResource($page, $afterMetaArray);
         /**
@@ -131,11 +135,11 @@ class action_plugin_combo_metaprocessing
             }
         }
 
-    /**
-     * Trick, don't know if this is always true
-     */
-PageImages::createForPage($page)->modifyMetaDokuWikiArray($event->data);
+        /**
+         * Trick, don't know if this is always true
+         */
+        PageImages::createForPage($page)->modifyMetaDokuWikiArray($event->data);
 
-}
+    }
 
 }

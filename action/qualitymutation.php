@@ -16,10 +16,9 @@ use ComboStrap\PagePath;
 use ComboStrap\Site;
 
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
- * Delete the backlinks when there is a quality mutation
+ * Delete the backlinks when there is a page quality mutation
  */
 class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
 {
@@ -28,6 +27,14 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
     public const QUALITY_MUTATION_EVENT_NAME = 'quality_mutation';
     const CANONICAL = "low_quality";
     const DESC = "desc";
+
+    public static function getQualityMetas(): array
+    {
+        return [
+            LowQualityCalculatedIndicator::getPersistentName(),
+            LowQualityPageOverwrite::getPersistentName()
+        ];
+    }
 
 
     public function register(Doku_Event_Handler $controller)
@@ -101,7 +108,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $variableName = $data["name"];
-        if (!(in_array($variableName, [LowQualityCalculatedIndicator::getPersistentName(), LowQualityPageOverwrite::getPersistentName()]))) {
+        if (!(in_array($variableName, self::getQualityMetas()))) {
             return;
         }
 

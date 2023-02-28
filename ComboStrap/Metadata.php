@@ -150,6 +150,8 @@ abstract class Metadata
                 return new QualityDynamicMonitoringOverwrite();
             case LowQualityPageOverwrite::PROPERTY_NAME:
                 return new LowQualityPageOverwrite();
+            case LowQualityCalculatedIndicator::getName():
+                return new LowQualityCalculatedIndicator();
             case PageId::PROPERTY_NAME:
                 return new PageId();
             case PagePath::PROPERTY_NAME:

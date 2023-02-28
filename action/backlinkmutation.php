@@ -15,7 +15,6 @@ use ComboStrap\Reference;
 use ComboStrap\References;
 
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * Refresh the analytics when a backlink mutation occurs for a page
@@ -73,7 +72,8 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
         try {
             /**
-             * This is only to recompute the {@link \ComboStrap\BacklinkCount backlinks metric}
+             * This is only to recompute the {@link \ComboStrap\BacklinkCount backlinks metric} and
+             * {@link \ComboStrap\LowQualityPage low quality page metrics}
              * TODO: when the derived meta are in the meta array and not in the {@link renderer_plugin_combo_analytics document},
              *   we could just compute them there and modify it with a plus 1
              */

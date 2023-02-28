@@ -103,7 +103,7 @@ class PageDescription extends MetadataText
     {
 
         $metaDataStore = $this->getReadStore();
-        if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
+        if (!$metaDataStore->isDokuWikiStore()) {
             parent::buildFromStoreValue($value);
             return $this;
         }
@@ -208,13 +208,13 @@ class PageDescription extends MetadataText
         return $this->descriptionOrigin;
     }
 
-    private function getGeneratedValueFromDokuWikiStore(MetadataDokuWikiStore $metaDataStore): ?string
+    private function getGeneratedValueFromDokuWikiStore(MetadataStore $metaDataStore): ?string
     {
 
         /**
          * The generated is in the current metadata
          */
-        $descriptionArray = $metaDataStore->getCurrentFromName(self::PROPERTY_NAME);
+        $descriptionArray = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME);
         if (empty($descriptionArray)) {
             return null;
         }

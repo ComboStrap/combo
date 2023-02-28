@@ -403,9 +403,12 @@ class ExecutionContext
 
                 /**
                  * not a template engine running
-                 * `id` may be asked by acl to determine the right
                  * The id notion is a little bit everywhere
                  * That's why we just don't check the action ($ACT)
+                 *
+                 * Example:
+                 * * `id` may be asked by acl to determine the right
+                 * * ...
                  */
 
 

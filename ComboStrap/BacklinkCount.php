@@ -51,7 +51,7 @@ class BacklinkCount extends MetadataInteger
             case MetadataDokuWikiStore::class:
                 $resource = $this->getResource();
                 if (!($resource instanceof MarkupPath)) {
-                    LogUtility::msg("Backlink count is not supported on the resource type ({$resource->getType()}");
+                    LogUtility::msg("Backlink count is not yet supported on the resource type ({$resource->getType()}");
                     return $this;
                 }
                 $backlinks = $resource->getBacklinks();

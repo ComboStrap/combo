@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
@@ -59,7 +60,11 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         /**
          * Delete and recompute analytics
          */
-        $analyticsDocument = $reference->fetchAnalyticsDocument();
+        try {
+            $analyticsDocument = $reference->fetchAnalyticsDocument();
+        } catch (ExceptionNotExists $e) {
+            return;
+        }
         CacheLog::deleteCacheIfExistsAndLog(
             $analyticsDocument,
             self::BACKLINK_MUTATION_EVENT_NAME,
@@ -67,6 +72,11 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         );
 
         try {
+            /**
+             * This is only to recompute the {@link \ComboStrap\BacklinkCount backlinks metric}
+             * TODO: when the derived meta are in the meta array and not in the {@link renderer_plugin_combo_analytics document},
+             *   we could just compute them there and modify it with a plus 1
+             */
             $reference->getDatabasePage()->replicateAnalytics();
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Backlink Mutation: Error while trying to replicate the analytics. Error: {$e->getMessage()}");

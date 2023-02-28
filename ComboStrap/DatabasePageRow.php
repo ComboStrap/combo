@@ -76,10 +76,10 @@ class DatabasePageRow
 
     /**
      * Replicate constructor.
+     * @throws ExceptionSqliteNotAvailable
      */
     public function __construct()
     {
-
         /**
          * Persist on the DB
          */
@@ -181,6 +181,12 @@ class DatabasePageRow
         return $databasePage;
     }
 
+    /**
+     * @param MarkupPath $page
+     * @return DatabasePageRow
+     * @throws ExceptionSqliteNotAvailable - if there is no sqlite available
+     * @noinspection PhpDocRedundantThrowsInspection
+     */
     public static function createFromPageObject(MarkupPath $page): DatabasePageRow
     {
 
@@ -188,16 +194,27 @@ class DatabasePageRow
         try {
             $row = $databasePage->getDatabaseRowFromPage($page);
             $databasePage->setRow($row);
-        } catch (ExceptionSqliteNotAvailable|ExceptionNotExists $e) {
-            // ok
+            return $databasePage;
+        } catch (ExceptionNotExists $e) {
+            // page copied on the local system
+            try {
+                ComboFs::createIfNotExists($page);
+                $row = $databasePage->getDatabaseRowFromPage($page);
+                $databasePage->setRow($row);
+                return $databasePage;
+            } catch (ExceptionNotExists $e) {
+                throw ExceptionRuntimeInternal::withMessageAndError("The row should exists as we created it specifically", $e);
+            }
         }
-        return $databasePage;
+
     }
+
 
     /**
      *
      */
-    public static function createFromPageIdAbbr(string $pageIdAbbr): DatabasePageRow
+    public
+    static function createFromPageIdAbbr(string $pageIdAbbr): DatabasePageRow
     {
         $databasePage = new DatabasePageRow();
         try {
@@ -214,7 +231,8 @@ class DatabasePageRow
      * @param $canonical
      * @return DatabasePageRow
      */
-    public static function createFromCanonical($canonical): DatabasePageRow
+    public
+    static function createFromCanonical($canonical): DatabasePageRow
     {
 
         WikiPath::addRootSeparatorIfNotPresent($canonical);
@@ -230,7 +248,8 @@ class DatabasePageRow
 
     }
 
-    public static function createFromAlias($alias): DatabasePageRow
+    public
+    static function createFromAlias($alias): DatabasePageRow
     {
 
         WikiPath::addRootSeparatorIfNotPresent($alias);
@@ -253,7 +272,8 @@ class DatabasePageRow
     /**
      * @throws ExceptionNotFound
      */
-    public static function createFromDokuWikiId($id): DatabasePageRow
+    public
+    static function createFromDokuWikiId($id): DatabasePageRow
     {
         $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromDokuWikiId($id);
@@ -261,7 +281,8 @@ class DatabasePageRow
         return $databasePage;
     }
 
-    public function getPageId()
+    public
+    function getPageId()
     {
         return $this->getFromRow(PageId::PROPERTY_NAME);
     }
@@ -387,10 +408,9 @@ class DatabasePageRow
      * Return the database row
      *
      *
-     * @throws ExceptionSqliteNotAvailable - if sqlite is not available
      * @throws ExceptionNotExists - if the row does not exists
      */
-    private
+    public
     function getDatabaseRowFromPage(MarkupPath $markupPath): array
     {
 
@@ -436,7 +456,7 @@ class DatabasePageRow
             // no canonical
         }
 
-                // we send a not exist
+        // we send a not exist
         throw new ExceptionNotExists("No row could be found");
 
 
@@ -446,7 +466,8 @@ class DatabasePageRow
     /**
      * @return DateTime|null
      */
-    public function getReplicationDate(): ?DateTime
+    public
+    function getReplicationDate(): ?DateTime
     {
         $dateString = $this->getFromRow(ReplicationDate::getPersistentName());
         if ($dateString === null) {
@@ -466,7 +487,8 @@ class DatabasePageRow
      * @throws ExceptionBadState
      * @throws ExceptionSqliteNotAvailable
      */
-    public function replicatePage(): void
+    public
+    function replicatePage(): void
     {
 
         if (!FileSystems::exists($this->markupPath)) {
@@ -499,7 +521,8 @@ class DatabasePageRow
      * @throws ExceptionBadState
      * @throws ExceptionSqliteNotAvailable
      */
-    public function replicateMetaAttributes(): void
+    public
+    function replicateMetaAttributes(): void
     {
 
         $this->upsertAttributes($this->getMetaRecord());
@@ -509,7 +532,8 @@ class DatabasePageRow
     /**
      * @throws ExceptionBadState - if the array is empty
      */
-    public function upsertAttributes(array $attributes): void
+    public
+    function upsertAttributes(array $attributes): void
     {
 
         if (empty($attributes)) {
@@ -838,7 +862,8 @@ class DatabasePageRow
     /**
      * @throws ExceptionNotFound
      */
-    private function getDatabaseRowFromPageId(string $pageIdValue)
+    private
+    function getDatabaseRowFromPageId(string $pageIdValue)
     {
 
         $pageIdAttribute = PageId::PROPERTY_NAME;
@@ -884,7 +909,8 @@ class DatabasePageRow
     }
 
 
-    public function setMarkupPath(MarkupPath $page)
+    public
+    function setMarkupPath(MarkupPath $page)
     {
         $this->markupPath = $page;
         return $this;
@@ -893,7 +919,8 @@ class DatabasePageRow
     /**
      * @throws ExceptionNotFound
      */
-    private function getDatabaseRowFromCanonical($canonicalValue)
+    private
+    function getDatabaseRowFromCanonical($canonicalValue)
     {
         $canoncialName = Canonical::PROPERTY_NAME;
         $query = $this->getParametrizedLookupQuery($canoncialName);
@@ -954,7 +981,8 @@ class DatabasePageRow
     /**
      * @throws ExceptionNotFound
      */
-    private function getDatabaseRowFromPath(string $path): ?array
+    private
+    function getDatabaseRowFromPath(string $path): ?array
     {
         WikiPath::addRootSeparatorIfNotPresent($path);
         return $this->getDatabaseRowFromAttribute(PagePath::PROPERTY_NAME, $path);
@@ -1158,7 +1186,8 @@ class DatabasePageRow
     /**
      * @throws ExceptionCompile
      */
-    public function replicateAnalytics()
+    public
+    function replicateAnalytics()
     {
 
         try {
@@ -1195,7 +1224,8 @@ class DatabasePageRow
         $this->upsertAttributes($record);
     }
 
-    private function checkCollision($wikiIdInDatabase, $attribute, $value)
+    private
+    function checkCollision($wikiIdInDatabase, $attribute, $value)
     {
         if ($this->markupPath === null) {
             return;

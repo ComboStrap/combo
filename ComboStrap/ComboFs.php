@@ -16,20 +16,21 @@ class ComboFs
     /**
      * @param Path $path - the path (no more markup, ultimately, it should be a CombPath)
      * @return void
-     * @throws ExceptionCompile - for any error
      */
     public static function createIfNotExists(Path $path)
     {
 
         $markup = MarkupPath::createPageFromPathObject($path);
         try {
-            $databasePageRow = DatabasePageRow::createFromPageObject($markup);
-            if (!$databasePageRow->exists()) {
+            $databasePage = new DatabasePageRow();
+            try {
+                 $databasePage->getDatabaseRowFromPage($markup);
+            } catch (ExceptionNotExists $e) {
                 $pageId = PageId::generateAndStorePageId($markup);
-                $databasePageRow->upsertAttributes([PageId::getPersistentName() => $pageId]);
+                $databasePage->upsertAttributes([PageId::getPersistentName() => $pageId]);
             }
         } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, 1, $e);
+            throw new ExceptionRuntimeInternal("Unable to store the page id in the database. Message:" . $e->getMessage(), self::CANONICAL, 1, $e);
         }
     }
 

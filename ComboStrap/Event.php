@@ -211,29 +211,33 @@ class Event
         $evt->advise_after();
     }
 
-    /**
-     * @throws ExceptionCompile
-     */
-    public static function getQueue(): array
-    {
-        $sqlite = Sqlite::createOrGetBackendSqlite();
-        if ($sqlite === null) {
-            throw new ExceptionCompile("Sqlite is not available");
-        }
 
+    public static function getQueue(string $eventName = null): array
+    {
+        try {
+            $sqlite = Sqlite::createOrGetBackendSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
+            LogUtility::internalError("Sqlite is not available, no events was returned", self::CANONICAL);
+            return [];
+        }
 
         /**
          * Execute
          */
         $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, DatabasePageRow::ROWID];
         $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME, $attributes);
-        $request = $sqlite->createRequest()
-            ->setQuery($select);
+        $request = $sqlite->createRequest();
+        if (empty($eventName)) {
+            $request->setQuery($select);
+        } else {
+            $request->setQueryParametrized($select . " where " . self::EVENT_NAME_ATTRIBUTE . " = ?", [$eventName]);
+        }
         try {
             return $request->execute()
                 ->getRows();
         } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("Unable to get the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+            LogUtility::internalError("Unable to get the queue. Error:" . $e->getMessage(), self::CANONICAL,  $e);
+            return [];
         } finally {
             $request->close();
         }
@@ -261,13 +265,19 @@ class Event
             return $request->execute()
                 ->getChangeCount();
         } catch (ExceptionCompile $e) {
-            throw new ExceptionCompile("Unable to count the number of event in the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+            throw new ExceptionCompile("Unable to count the number of event in the queue. Error:" . $e->getMessage(), self::CANONICAL, 0, $e);
         } finally {
             $request->close();
         }
     }
 
-
+    /**
+     * @throws ExceptionCompile
+     */
+    public static function getEvents(string $eventName): array
+    {
+        return Event::getQueue($eventName);
+    }
 
 
 }

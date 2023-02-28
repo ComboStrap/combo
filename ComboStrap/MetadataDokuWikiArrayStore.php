@@ -7,7 +7,7 @@ namespace ComboStrap;
 /**
  * Class MetadataArrayStore
  * @package ComboStrap
- * A store based on a single array for a single resource
+ * Represents the current dokuwiki array that can be read with {@link p_read_metadata()}
  */
 class MetadataDokuWikiArrayStore extends MetadataSingleArrayStore
 {

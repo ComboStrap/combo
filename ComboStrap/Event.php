@@ -157,12 +157,12 @@ class Event
     function createEvent(string $name, array $data)
     {
 
-        $sqlite = Sqlite::createOrGetBackendSqlite();
-        if ($sqlite === null) {
-            LogUtility::msg("Unable to create the event $name. Sqlite is not available");
+        try {
+            $sqlite = Sqlite::createOrGetBackendSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
+            LogUtility::error("Unable to create the event $name. Sqlite is not available");
             return;
         }
-
 
         /**
          * If not present
@@ -172,9 +172,9 @@ class Event
             "timestamp" => Iso8601Date::createFromNow()->toString()
         );
 
-        if ($data !== null) {
-            $entry["data"] = Json::createFromArray($data)->toPrettyJsonString();
-        }
+
+        $entry["data"] = Json::createFromArray($data)->toPrettyJsonString();
+        $entry["data_hash"] = md5($entry["data"]);
 
         /**
          * Execute
@@ -184,7 +184,7 @@ class Event
         try {
             $request->execute();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Unable to create the event $name. Error:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+            LogUtility::error("Unable to create the event $name. Error:" . $e->getMessage(), self::CANONICAL, $e);
         } finally {
             $request->close();
         }
@@ -236,7 +236,7 @@ class Event
             return $request->execute()
                 ->getRows();
         } catch (ExceptionCompile $e) {
-            LogUtility::internalError("Unable to get the queue. Error:" . $e->getMessage(), self::CANONICAL,  $e);
+            LogUtility::internalError("Unable to get the queue. Error:" . $e->getMessage(), self::CANONICAL, $e);
             return [];
         } finally {
             $request->close();

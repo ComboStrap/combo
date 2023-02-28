@@ -86,11 +86,12 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
     }
 
     /**
+     * @return string
      * @throws ExceptionBadState - if the markup was not defined
+     * @throws ExceptionCompile - if any error
      */
     public function getFetchString(): string
     {
-
 
         /**
          * Conf
@@ -112,11 +113,17 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
 
         $requestedMarkup = $this->getRequestedMarkup();
 
-        $mainContent = MarkupRenderer::createFromMarkup($requestedMarkup, null, null)
-            ->setDeleteRootBlockElement(true)
-            ->setRendererName("xhtml")
-            ->setRequestedMimeToXhtml()
-            ->getOutput();
+        try {
+            $mainContent = FetcherMarkup::getBuilder()
+                ->setRequestedMarkupString($requestedMarkup)
+                ->setDeleteRootBlockElement(true)
+                ->setRequestedMimeToXhtml()
+                ->setRequestedContextPathWithDefault()
+                ->build()
+                ->getFetchString();
+        } catch (ExceptionNotExists|ExceptionCompile $e) {
+            throw new ExceptionRuntimeInternal("An error has occurred while transforming the markup fragment to HTML. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+        }
 
         $title = $this->getRequestedTitle();
 

@@ -10,8 +10,6 @@ use ComboStrap\ExecutionContext;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PageTemplate;
-use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 
 if (!defined('DOKU_INC')) die();
@@ -205,11 +203,11 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
                      * Add Bootstrap scripts
                      * At the top of the queue
                      */
-                    if ($bootStrapMajorVersion === "4") {
-                        $useJqueryDoku = SiteConfig::getConfValue(self::CONF_JQUERY_DOKU, self::CONF_JQUERY_DOKU_DEFAULT);
+                    if ($bootStrapMajorVersion === 4) {
+                        $useJqueryDoku = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getBooleanValue(self::CONF_JQUERY_DOKU, self::CONF_JQUERY_DOKU_DEFAULT);
                         if (
                             !Identity::isLoggedIn()
-                            && $useJqueryDoku === 0
+                            && !$useJqueryDoku
                         ) {
                             /**
                              * We take the Javascript of Bootstrap

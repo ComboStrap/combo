@@ -127,6 +127,7 @@ class FetcherSvg extends IFetcherLocalImage
     private ?string $requestedClass = null;
     private int $intrinsicHeight;
     private int $intrinsicWidth;
+    private string $name;
 
 
     private static function createSvgEmpty(): FetcherSvg
@@ -155,11 +156,14 @@ class FetcherSvg extends IFetcherLocalImage
     }
 
     /**
+     * @param string $markup - the svg as a string
+     * @param string $name - a name identifier (used in diff)
+     * @return FetcherSvg
      * @throws ExceptionBadSyntax
      */
-    public static function createSvgFromMarkup(string $markup): FetcherSvg
+    public static function createSvgFromMarkup(string $markup, string $name): FetcherSvg
     {
-        return self::createSvgEmpty()->setMarkup($markup);
+        return self::createSvgEmpty()->setMarkup($markup, $name);
     }
 
     /**
@@ -708,7 +712,20 @@ class FetcherSvg extends IFetcherLocalImage
     public
     function __toString()
     {
-        return $this->getSourcePath()->__toString();
+        if(isset($this->name)){
+            return $this->name;
+        }
+        if(isset($this->path)){
+            try {
+                return $this->path->getLastNameWithoutExtension();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("root not possible, we should have a last name", self::CANONICAL);
+                return "Anonymous";
+            }
+        }
+        return "Anonymous";
+
+
 
     }
 
@@ -785,10 +802,13 @@ class FetcherSvg extends IFetcherLocalImage
     }
 
     /**
+     * @param string $markup - the svg as a string
+     * @param string $name - a name identifier (used in diff)
      * @throws ExceptionBadSyntax
      */
-    private function setMarkup(string $markup): FetcherSvg
+    private function setMarkup(string $markup, string $name): FetcherSvg
     {
+        $this->name = $name;
         $this->buildXmlDocumentIfNeeded($markup);
         return $this;
     }
@@ -1634,6 +1654,10 @@ class FetcherSvg extends IFetcherLocalImage
          */
         if ($markup !== null) {
             $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($markup);
+            $localName = $this->xmlDocument->getElement()->getLocalName();
+            if($localName !== "svg"){
+                throw new ExceptionBadSyntax("This is not a svg but a $localName element.");
+            }
             $this->setIntrinsicDimensions();
             return $this;
         }

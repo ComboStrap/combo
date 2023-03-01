@@ -109,7 +109,7 @@ class ExecutionContext
     private Url $url;
 
 
-    private HttpResponse $response;
+    public HttpResponse $response;
 
     /**
      * @var IFetcher - the fetcher that takes into account the HTTP request
@@ -334,6 +334,10 @@ class ExecutionContext
         // global scope store
         MetadataDbStore::resetAll();
         MetadataDokuWikiStore::unsetGlobalVariables();
+
+        // dokuwiki global
+        global $EVENT_HANDLER;
+        unset($EVENT_HANDLER);
 
         /**
          * Close execution variables

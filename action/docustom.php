@@ -34,7 +34,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
     /**
      * @return bool
      */
-    public static function isTemplateSystemEnabled(): bool
+    public static function isThemeSystemEnabled(): bool
     {
         $confValue = SiteConfig::getConfValue(SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM, SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
         return $confValue === 1;
@@ -103,7 +103,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         $action = $event->data;
 
-        if (self::isTemplateSystemEnabled()) {
+        if (self::isThemeSystemEnabled()) {
             switch ($action) {
                 case "show":
                     $action = self::getDoParameterValue(FetcherPage::NAME);

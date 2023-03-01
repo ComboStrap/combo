@@ -86,6 +86,16 @@ class HttpRequest
 
         }
 
+        if (ExecutionContext::getActualOrCreateFromEnv()->response()->hasEnded()) {
+            /**
+             * As of today, the execution context is responsible to
+             * send back the response
+             * (There is no routing context, therefore for
+             * each http request, a new context needs to be created)
+             */
+            throw new ExceptionRuntimeInternal("The execution context has ended, you should close it and open another one");
+        }
+
         try {
             $path = $this->url->getPath();
             if (!in_array($path, UrlEndpoint::DOKU_ENDPOINTS)) {

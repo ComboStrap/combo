@@ -53,7 +53,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
 
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-        if ($executionContext->isPublicationAction()) {
+        if (!$executionContext->isPublicationAction()) {
             // a search for instance
             return;
         }

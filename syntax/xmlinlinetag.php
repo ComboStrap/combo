@@ -41,6 +41,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
         $array[] = DropDownTag::TAG;
         $array[] = NoteTag::TAG_INOTE;
         $array[] = PermalinkTag::TAG;
+        $array[] = DateTag::TAG;
         return $array;
     }
 

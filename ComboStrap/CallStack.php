@@ -176,7 +176,7 @@ class CallStack
     static function createFromMarkup($markup): CallStack
     {
 
-        $handler = \ComboStrap\Parser::dokuWikiParse($markup);
+        $handler = \ComboStrap\Parser::parseMarkupToHandler($markup);
         return self::createFromHandler($handler);
 
     }

@@ -244,7 +244,7 @@ class SiteConfig
         // in a admin or dynamic rendering
         // dokuwiki may have set a $ID
         global $ID;
-        if (isset($ID) && $ID !== ExecutionContext::DEFAULT_INDEX_CONTEXT_ID) {
+        if (isset($ID)) {
             return WikiPath::createMarkupPathFromId($ID);
         }
         return WikiPath::createRootNamespacePathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);

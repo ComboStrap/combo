@@ -8,14 +8,18 @@ class Parser
 {
 
 
-    public static function dokuWikiParse($markup): Doku_Handler
+    /**
+     * @param $markup - the markup
+     * @return Doku_Handler - the handler
+     */
+    public static function parseMarkupToHandler($markup): Doku_Handler
     {
         global $ID;
         $keep = $ID;
         global $ACT;
         $keepAct = $ACT;
-        if ($ID === null && PluginUtility::isTest()) {
-            $ID = ExecutionContext::DEFAULT_INDEX_CONTEXT_ID;
+        if ($ID === null) {
+            $ID = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getDefaultContextPath()->getWikiId();
         }
         try {
             $ACT = "show";

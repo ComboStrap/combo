@@ -73,9 +73,7 @@ class IconTag
         $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
         $message = "Icon ({$tagAttribute->getValue("name")}). Error while rendering: {$e->getMessage()}";
         $html = "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
-        if (!PluginUtility::isTest()) {
-            LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_icon::CANONICAL);
-        }
+        LogUtility::warning($message, syntax_plugin_combo_icon::CANONICAL, $e);
         return $html;
     }
 
@@ -89,7 +87,8 @@ class IconTag
         try {
             return Icon::createFromTagAttributes($tagAttributes)
                 ->toHtml();
-        } catch (ExceptionCompile $e) {
+        } catch (\Exception $e) {
+            // catch all
             return IconTag::exceptionHandling($e, $tagAttributes);
         }
 

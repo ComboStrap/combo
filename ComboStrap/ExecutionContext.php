@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 
-use dokuwiki\ActionRouter;
 use TestRequest;
 
 
@@ -98,11 +97,6 @@ class ExecutionContext
      * Null because you can unset a static variable
      */
     private static ?ExecutionContext $executionContext = null;
-
-    /**
-     * The default context id if not set
-     */
-    public const DEFAULT_INDEX_CONTEXT_ID = "start";
 
     private ?string $capturedGlobalId;
     /**

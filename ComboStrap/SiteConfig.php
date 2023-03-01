@@ -36,6 +36,10 @@ class SiteConfig
     public const HTML_ALWAYS_INLINE_LOCAL_JAVASCRIPT = "combo-conf-004";
     const CANONICAL = "site-config";
     const GLOBAL_SCOPE = null;
+    /**
+     * The default name
+     */
+    public const CONF_DEFAULT_INDEX_NAME = "start";
 
 
     /**
@@ -330,7 +334,7 @@ class SiteConfig
 
     public function getIndexPageName()
     {
-        return $this->getValue("start",ExecutionContext::DEFAULT_INDEX_CONTEXT_ID,self::GLOBAL_SCOPE);
+        return $this->getValue("start", self::CONF_DEFAULT_INDEX_NAME,self::GLOBAL_SCOPE);
     }
 
     public function getAuthorizedUrlSchemes(): ?array

@@ -352,7 +352,7 @@ class MediaMarkup
          * We store linking as attribute (to make it possible to change the linking by other plugin)
          * (ie no linking in heading , ...)
          */
-        $attributes[MediaMarkup::LINKING_KEY] = null;
+        $attributes[MediaMarkup::LINKING_KEY] = $this->linking;
         $attributes[MarkupRef::REF_ATTRIBUTE] = $this->markupRef->getRef();
         $attributes[Align::ALIGN_ATTRIBUTE] = $this->align;
         $attributes[TagAttributes::TITLE_KEY] = $this->label;

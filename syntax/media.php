@@ -219,9 +219,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 }
             }
 
+            $callStackArray = $mediaMarkup->toCallStackArray();
             return array(
                 PluginUtility::STATE => $state,
-                PluginUtility::ATTRIBUTES => $mediaMarkup->toCallStackArray(),
+                PluginUtility::ATTRIBUTES => $callStackArray,
                 PluginUtility::CONTEXT => $parentTag
             );
         }

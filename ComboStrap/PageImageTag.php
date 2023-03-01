@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 use Exception;
+use Mpdf\Gif\Image;
 
 
 class PageImageTag
@@ -34,6 +35,7 @@ class PageImageTag
         PageImageTag::DESCENDANT_TYPE,
         PageImageTag::LOGO_TYPE
     ];
+    const PATH_ATTRIBUTE = "path";
 
 
     /**
@@ -91,8 +93,13 @@ class PageImageTag
         /**
          * Image selection
          */
-        $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
-        $page = MarkupPath::createPageFromPathObject($path);
+        $pathString = $tagAttributes->getComponentAttributeValueAndRemoveIfPresent(self::PATH_ATTRIBUTE);
+        if ($pathString != null) {
+            $path = WikiPath::createMarkupPathFromPath($pathString);
+        } else {
+            $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+        }
+        $contextPage = MarkupPath::createPageFromPathObject($path);
 
         /**
          * Image Order of precedence
@@ -103,14 +110,14 @@ class PageImageTag
             switch ($pageImageProcessing) {
                 case PageImageTag::META_TYPE:
                     try {
-                        $imageFetcher = self::selectAndGetBestMetadataPageImageFetcherForRatio($page, $tagAttributes);
+                        $imageFetcher = self::selectAndGetBestMetadataPageImageFetcherForRatio($contextPage, $tagAttributes);
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
                     break;
                 case PageImageTag::DESCENDANT_TYPE:
                 case "parent": // old
-                    $parent = $page;
+                    $parent = $contextPage;
                     while (true) {
                         try {
                             $parent = $parent->getParent();
@@ -132,7 +139,7 @@ class PageImageTag
                     break;
                 case PageImageTag::FIRST_TYPE:
                     try {
-                        $imageFetcher = FirstImage::createForPage($page)
+                        $imageFetcher = FirstImage::createForPage($contextPage)
                             ->getLocalImageFetcher();
                     } catch (ExceptionNotFound $e) {
                         continue 2;
@@ -140,16 +147,16 @@ class PageImageTag
                     break;
                 case PageImageTag::VIGNETTE_TYPE:
                     try {
-                        $imageFetcher = FetcherVignette::createForPage($page);
+                        $imageFetcher = FetcherVignette::createForPage($contextPage);
                     } catch (ExceptionNotFound|ExceptionBadArgument $e) {
-                        LogUtility::error("Error while creating the vignette for the page ($page). Error: {$e->getMessage()}", self::CANONICAL, $e);
+                        LogUtility::warning("Error while creating the vignette for the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
                     }
                     break;
                 case PageImageTag::LOGO_TYPE:
                     try {
                         $imageFetcher = FetcherSvg::createSvgFromPath(Site::getLogoAsSvgImage());
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::msg("No page image could be find for the page ($path)", LogUtility::LVL_MSG_INFO, PageImageTag::CANONICAL);
+                        LogUtility::info("No page image could be find for the page ($path)", PageImageTag::CANONICAL);
                     }
                     break;
                 case PageImageTag::NONE_TYPE:
@@ -242,7 +249,7 @@ class PageImageTag
                 ->toHtml();
         } catch (ExceptionCompile $e) {
             $message = "Error while rendering the page image: {$e->getMessage()}";
-            LogUtility::error($message, self::CANONICAL,$e);
+            LogUtility::error($message, self::CANONICAL, $e);
             return $message;
         }
 
@@ -291,5 +298,10 @@ class PageImageTag
             }
         }
         return $selectedPageImage;
+    }
+
+    public static function getDefaultAttributes(): array
+    {
+        return [MediaMarkup::LINKING_KEY => MediaMarkup::LINKING_NOLINK_VALUE];
     }
 }

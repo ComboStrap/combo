@@ -98,6 +98,7 @@ class syntax_plugin_combo_xmlemptytag extends DokuWiki_Syntax_Plugin
                 break;
             case PageImageTag::MARKUP:
                 $knownTypes = PageImageTag::TYPES;
+                $defaultAttributes = PageImageTag::getDefaultAttributes();
                 break;
             case ShareTag::MARKUP:
                 $knownTypes = Brand::getBrandNamesForButtonType(BrandButton::TYPE_BUTTON_SHARE);

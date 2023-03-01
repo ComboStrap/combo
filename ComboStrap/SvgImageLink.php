@@ -60,7 +60,7 @@ class SvgImageLink extends ImageLink
 
         $svgInjection = ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()
-            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE,1);
+            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE,0);
 
         /**
          * Snippet
@@ -122,7 +122,7 @@ class SvgImageLink extends ImageLink
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg-injection");
         } else if ($lazyLoad && !$svgInjection) {
             $snippetManager->attachJavascriptFromComponentId("lozad-svg");
-            $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg-cs");
+            $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg");
         } else if ($svgInjection && !$lazyLoad) {
             $snippetManager->attachJavascriptFromComponentId("svg-injector");
             $svgFunctionalClass = StyleUtility::addComboStrapSuffix("svg-injection");

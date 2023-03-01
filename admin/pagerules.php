@@ -91,7 +91,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
     public function getMenuIcon()
     {
-        return DirectoryLayout::getComboImagesDirectory()->resolve('page-next.svg')->toQualifiedPath();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('page-next.svg')->toAbsoluteString();
     }
 
 
@@ -265,7 +265,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('delete.svg')->toQualifiedPath()));
+                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('delete.svg')->toAbsoluteString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="Delete"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');
@@ -273,7 +273,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toQualifiedPath()));
+                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toAbsoluteString()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="upsert"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');

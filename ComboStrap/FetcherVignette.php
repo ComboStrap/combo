@@ -108,8 +108,8 @@ class FetcherVignette extends FetcherImage
              */
             $margin = 80;
             $x = $margin;
-            $normalFont = Font::getLiberationSansFontRegularPath()->toQualifiedPath();
-            $boldFont = Font::getLiberationSansFontBoldPath()->toQualifiedPath();
+            $normalFont = Font::getLiberationSansFontRegularPath()->toAbsoluteString();
+            $boldFont = Font::getLiberationSansFontBoldPath()->toAbsoluteString();
             try {
                 $mutedRgb = ColorRgb::createFromString("gray");
                 $blackGdColor = imagecolorallocate($vignetteImageHandler, 0, 0, 0);
@@ -217,7 +217,7 @@ class FetcherVignette extends FetcherImage
             /**
              * Store
              */
-            $fileStringPath = $cache->getFile()->toAbsolutePath()->toQualifiedPath();
+            $fileStringPath = $cache->getFile()->toAbsolutePath()->toAbsoluteString();
             switch ($extension) {
                 case self::PNG_EXTENSION:
                     imagetruecolortopalette($vignetteImageHandler, false, 255);
@@ -276,12 +276,12 @@ class FetcherVignette extends FetcherImage
 
         switch ($extension) {
             case self::PNG_EXTENSION:
-                return imagecreatefrompng($imagePath->toQualifiedPath());
+                return imagecreatefrompng($imagePath->toAbsoluteString());
             case self::JPG_EXTENSION:
             case self::JPEG_EXTENSION:
-                return imagecreatefromjpeg($imagePath->toQualifiedPath());
+                return imagecreatefromjpeg($imagePath->toAbsoluteString());
             case self::WEBP_EXTENSION:
-                return imagecreatefromwebp($imagePath->toQualifiedPath());
+                return imagecreatefromwebp($imagePath->toAbsoluteString());
             default:
                 throw new ExceptionNotFound("Bad mime should have been caught by the setter");
         }

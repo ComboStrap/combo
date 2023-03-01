@@ -53,9 +53,9 @@ class Site
     private $executingContext;
 
     /**
-     * @param $executingContext
+     * @param ExecutionContext $executingContext
      */
-    public function __construct($executingContext)
+    public function __construct(ExecutionContext $executingContext)
     {
         $this->executingContext = $executingContext;
     }
@@ -1038,11 +1038,11 @@ class Site
         }
         $scriptName = LocalPath::createFromPathString($_SERVER['SCRIPT_NAME']);
         if ($scriptName->getExtension() === 'php') {
-            return Url::toUrlSeparator($scriptName->getParent()->toQualifiedPath());
+            return Url::toUrlSeparator($scriptName->getParent()->toAbsoluteString());
         }
         $phpSelf = LocalPath::createFromPathString($_SERVER['PHP_SELF']);
         if ($phpSelf->getExtension() === "php") {
-            return Url::toUrlSeparator($scriptName->getParent()->toQualifiedPath());
+            return Url::toUrlSeparator($scriptName->getParent()->toAbsoluteString());
         }
         if ($_SERVER['DOCUMENT_ROOT'] && $_SERVER['SCRIPT_FILENAME']) {
             $dir = preg_replace('/^' . preg_quote($_SERVER['DOCUMENT_ROOT'], '/') . '/', '',

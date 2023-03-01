@@ -58,7 +58,7 @@ class Font
         foreach (FileSystems::getChildrenLeaf($path) as $path) {
             $extension = strtolower($path->getExtension());
             if ($extension === "ttf") {
-                echo $path->toQualifiedPath() . "\n";
+                echo $path->toAbsoluteString() . "\n";
             }
         }
     }

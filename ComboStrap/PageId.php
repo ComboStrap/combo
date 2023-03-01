@@ -158,7 +158,7 @@ class PageId extends MetadataText
                      * If they are the same, we return the page id
                      * (because due to duplicate in canonical, the row returned may be from another resource)
                      */
-                    $resourcePath = $resource->getPathObject()->toQualifiedPath();
+                    $resourcePath = $resource->getPathObject()->toAbsoluteString();
                     if ($pathDbValue === $resourcePath) {
                         return parent::buildFromStoreValue($value);
                     }

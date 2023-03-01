@@ -94,9 +94,9 @@ class ExecutionContext
 
     /**
      * A root execution context if any
-     * Null because you can unset a static variable
+     * Null because you can not unset a static variable
      */
-    private static ?ExecutionContext $executionContext = null;
+    private static ?ExecutionContext $actualExecutionContext = null;
 
     private ?string $capturedGlobalId;
     /**
@@ -130,10 +130,13 @@ class ExecutionContext
      * This class is called by the main fetcher to create a page
      */
     private PageTemplate $executingPageTemplate;
+    private string $creationTime;
 
 
     public function __construct()
     {
+
+        $this->creationTime = Iso8601Date::createFromNow()->toIsoStringMs();
 
         $this->url = Url::createFromGetOrPostGlobalVariable();
 
@@ -189,10 +192,10 @@ class ExecutionContext
      */
     public static function getExecutionContext(): ExecutionContext
     {
-        if (!isset(self::$executionContext)) {
+        if (!isset(self::$actualExecutionContext)) {
             throw new ExceptionNotFound("No root context");
         }
-        return self::$executionContext;
+        return self::$actualExecutionContext;
     }
 
     /**
@@ -226,11 +229,11 @@ class ExecutionContext
     public static function createBlank(): ExecutionContext
     {
 
-        if (self::$executionContext !== null) {
-            LogUtility::internalError("The previous root context should be closed first");
+        if (self::$actualExecutionContext !== null) {
+            throw new ExceptionRuntimeInternal("The previous root context should be closed first");
         }
         $rootExecutionContext = (new ExecutionContext());
-        self::$executionContext = $rootExecutionContext;
+        self::$actualExecutionContext = $rootExecutionContext;
         return $rootExecutionContext;
 
     }
@@ -301,6 +304,13 @@ class ExecutionContext
     {
 
         /**
+         * Check that this execution context was not closed
+         */
+        if (self::$actualExecutionContext->creationTime !== $this->creationTime) {
+            throw new ExceptionRuntimeInternal("This execution context was already closed");
+        }
+
+        /**
          * Restore the global $conf of dokuwiki
          */
         $this->getApp()->getConfig()->restoreConfigState();
@@ -343,7 +353,7 @@ class ExecutionContext
         /**
          * Deleting
          */
-        self::$executionContext = null;
+        self::$actualExecutionContext = null;
 
 
     }
@@ -361,7 +371,7 @@ class ExecutionContext
 
     public function getCacheManager(): CacheManager
     {
-        $root = self::$executionContext;
+        $root = self::$actualExecutionContext;
         if (!isset($root->cacheManager)) {
             $root->cacheManager = new CacheManager($this);
         }
@@ -783,7 +793,7 @@ class ExecutionContext
         try {
 
             $executingPath = $markupHandler->getRequestedExecutingPath();
-            $executingId = $executingPath->toQualifiedPath();
+            $executingId = $executingPath->toAbsoluteString();
             $this->setExecutingId($executingId);
         } catch (ExceptionNotFound $e) {
             // no executing path dynamic markup execution
@@ -1024,6 +1034,11 @@ class ExecutionContext
             $this->deleteAndEventuallyCloseExecutionVariable($executionScopedVariableKey);
         }
         return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->creationTime;
     }
 
 

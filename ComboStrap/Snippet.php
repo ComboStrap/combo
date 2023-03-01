@@ -281,7 +281,7 @@ class Snippet implements JsonSerializable
                 $snippet->addSlot($wikiId);
             } catch (ExceptionCast $e) {
                 // not a wiki path
-                $wikiId = $executingFetcher->getSourcePath()->toQualifiedPath();
+                $wikiId = $executingFetcher->getSourcePath()->toAbsoluteString();
                 $snippet->addSlot($wikiId);
             } catch (ExceptionNotFound $e) {
                 // string/dynamic run
@@ -725,7 +725,7 @@ class Snippet implements JsonSerializable
     {
 
         $dataToSerialize = [
-            self::JSON_PATH_PROPERTY => $this->getPath()->toQualifiedPath(),
+            self::JSON_PATH_PROPERTY => $this->getPath()->toAbsoluteString(),
             self::JSON_DRIVE_PROPERTY => $this->getPath()->getDrive()
         ];
 

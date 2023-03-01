@@ -63,7 +63,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
              * {@link getMimeTypes()}
              */
             global $config_cascade;
-            $svgMimeConf = DirectoryLayout::getComboResourcesDirectory()->resolve("conf")->resolve("svg.mime.conf")->toQualifiedPath();
+            $svgMimeConf = DirectoryLayout::getComboResourcesDirectory()->resolve("conf")->resolve("svg.mime.conf")->toAbsoluteString();
             $config_cascade['mime']['local'][] = $svgMimeConf;
         }
 

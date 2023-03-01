@@ -215,13 +215,13 @@ class MarkupCacheDependencies
             case MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
                 try {
                     $parentPath = $requestedPage->getPathObject()->getParent();
-                    return $parentPath->toQualifiedPath();
+                    return $parentPath->toAbsoluteString();
                 } catch (ExceptionNotFound $e) {
                     // root
                     return ":";
                 }
             case MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY:
-                return $requestedPage->getPathObject()->toQualifiedPath();
+                return $requestedPage->getPathObject()->toAbsoluteString();
             default:
                 throw new ExceptionRuntimeInternal("The requested dependency value ($dependenciesValue) has no calculation");
         }
@@ -298,7 +298,7 @@ class MarkupCacheDependencies
     function getDefaultKey(): string
     {
         try {
-            $toQualifiedId = $this->markupFetcher->getRequestedExecutingPath()->toQualifiedPath();
+            $toQualifiedId = $this->markupFetcher->getRequestedExecutingPath()->toAbsoluteString();
             $keyDokuWikiCompliant = str_replace("\\", "/", $toQualifiedId);
             return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
         } catch (ExceptionNotFound $e) {
@@ -381,7 +381,7 @@ class MarkupCacheDependencies
             throw new ExceptionRuntimeInternal("The executing path ($executingPath) could not be cast to a local path", self::CANONICAL, $e);
         }
 
-        $this->dependenciesCacheStore = new CacheParser($localPath->toQualifiedPath(), $localPath, "deps.json");
+        $this->dependenciesCacheStore = new CacheParser($localPath->toAbsoluteString(), $localPath, "deps.json");
         return $this->dependenciesCacheStore;
     }
 

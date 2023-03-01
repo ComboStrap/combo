@@ -70,7 +70,7 @@ abstract class PathAbs implements Path
 
     public function toUriString(): string
     {
-        return $this->toQualifiedPath();
+        return $this->toAbsoluteString();
     }
 
     /**

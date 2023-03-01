@@ -618,7 +618,7 @@ class DatabasePageRow
             }
 
             $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->markupPath->getPathObject()->getWikiId();
-            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toQualifiedPath();
+            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toAbsoluteString();
             /**
              * Default implements the auto-canonical feature
              */
@@ -1131,7 +1131,7 @@ class DatabasePageRow
     function addRedirectAliasWhileBuildingRow(MarkupPath $pageAlias)
     {
 
-        $aliasPath = $pageAlias->getPathObject()->toQualifiedPath();
+        $aliasPath = $pageAlias->getPathObject()->toAbsoluteString();
         try {
             Aliases::createForPage($this->markupPath)
                 ->addAlias($aliasPath)

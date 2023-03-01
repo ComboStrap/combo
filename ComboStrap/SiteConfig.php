@@ -63,9 +63,9 @@ class SiteConfig
     private array $interWikis;
 
     /**
-     * @param $executionContext
+     * @param ExecutionContext $executionContext
      */
-    public function __construct($executionContext)
+    public function __construct(ExecutionContext $executionContext)
     {
         $this->executionContext = $executionContext;
     }

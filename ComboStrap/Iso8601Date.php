@@ -229,6 +229,11 @@ class Iso8601Date
         return $this->getDateTime()->format(self::getFormat());
     }
 
+    public function toIsoStringMs()
+    {
+        return $this->getDateTime()->format("Y-m-d\TH:i:s.u");
+    }
+
     /**
      * Shortcut to {@link DateTime::format()}
      * Format only in English

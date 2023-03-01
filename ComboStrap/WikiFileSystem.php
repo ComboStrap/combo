@@ -103,7 +103,7 @@ class WikiFileSystem implements FileSystem
      */
     public function isDirectory(Path $path): bool
     {
-        return WikiPath::isNamespacePath($path->toQualifiedPath());
+        return WikiPath::isNamespacePath($path->toAbsoluteString());
         // and not FileSystems::isDirectory($path->toLocalPath());
     }
 

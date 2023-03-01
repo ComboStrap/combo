@@ -84,15 +84,7 @@ class HttpRequest
 
             throw new ExceptionRuntime("Real HTTP fetch not yet implemented, only test fetch");
 
-        } else {
-
-            /**
-             * Close the previous executing environment if any
-             */
-            ExecutionContext::getActualOrCreateFromEnv()->close();
-
         }
-
 
         try {
             $path = $this->url->getPath();

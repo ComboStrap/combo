@@ -424,12 +424,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 throw new ExceptionRuntimeInternal("A source path should be available as this is a path execution");
             }
         }
-        $id = $path->toQualifiedPath();
+        $id = $path->toAbsoluteString();
         try {
             $slotLocalFilePath = $path
                 ->toLocalPath()
                 ->toAbsolutePath()
-                ->toQualifiedPath();
+                ->toAbsoluteString();
         } catch (ExceptionCast $e) {
             throw new ExceptionRuntimeInternal("The path type ($path) is not supported, we couldn't store the snippets.");
         }
@@ -987,7 +987,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
 
         try {
-            $globalSnippets = SnippetSystem::getFromContext()->getSnippetsForSlot($this->getRequestedExecutingPath()->toQualifiedPath());
+            $globalSnippets = SnippetSystem::getFromContext()->getSnippetsForSlot($this->getRequestedExecutingPath()->toAbsoluteString());
         } catch (ExceptionNotFound $e) {
             // string execution
             $globalSnippets = [];
@@ -1136,7 +1136,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                      * and triggers a render that fails if the wiki file does not exists
                      */
                     $depends['files'][] = $this->instructionsCache->cache;
-                    $depends['files'][] = $executingPath->toAbsolutePath()->toQualifiedPath();
+                    $depends['files'][] = $executingPath->toAbsolutePath()->toAbsoluteString();
                     $useCache = $this->metaCache->useCache($depends);
                     if ($useCache) {
                         $this->meta = $actualMeta;

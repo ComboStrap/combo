@@ -235,7 +235,7 @@ class PageUrlPath extends MetadataWikiPath
     {
 
         $page = $this->getResource();
-        $pagePath = $page->getPathObject()->toQualifiedPath();
+        $pagePath = $page->getPathObject()->toAbsoluteString();
         if ((!$page instanceof MarkupPath)) {
             $message = "The url path is only for page resources";
             LogUtility::internalError($message, $this->getCanonical());

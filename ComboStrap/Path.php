@@ -11,7 +11,7 @@ namespace ComboStrap;
  *
  * For the path operations, see {@link FileSystems}
  *
- * The {@link Path::toQualifiedPath()} function is just the path part (no other URI query parameters)
+ * The {@link Path::toAbsoluteString()} function is just the path part (no other URI query parameters)
  *
  * A lot of overlap with {@link Url}
  */
@@ -76,13 +76,26 @@ interface Path
      * (such as {@link LocalPath} or {@link WikiPath} path
      *
      */
-    function toQualifiedPath(): string;
+    function toAbsoluteString(): string;
 
     /**
      * @return string the uri string representation of this path (with all information, scheme, drive, attributes)
      */
     function toUriString(): string;
 
+    /**
+     *
+     * @return Path the absolute representation of the path
+     *
+     *
+     * This is:
+     * * the {@link WikiPath::getWikiId()} with the root character for a WikiPath
+     * * the asbolute path element for all others
+     *
+     * It's used mostly as common identifier that can be used with any path
+     * (such as {@link LocalPath} or {@link WikiPath} path
+     *
+     */
     function toAbsolutePath(): Path;
 
     /**

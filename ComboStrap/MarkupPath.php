@@ -968,7 +968,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function getNamespacePath(): string
     {
 
-        return $this->getParent()->toQualifiedPath();
+        return $this->getParent()->toAbsoluteString();
 
     }
 
@@ -1181,7 +1181,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         global $conf;
         $startPageName = $conf['start'];
-        return $this->getPathObject()->toQualifiedPath() === ":$startPageName";
+        return $this->getPathObject()->toAbsoluteString() === ":$startPageName";
 
     }
 
@@ -2187,9 +2187,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return $this->path->getNames();
     }
 
-    function toQualifiedPath(): string
+    function toAbsoluteString(): string
     {
-        return $this->path->toQualifiedPath();
+        return $this->path->toAbsoluteString();
     }
 
     function toUriString(): string

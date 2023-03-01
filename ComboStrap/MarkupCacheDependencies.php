@@ -204,11 +204,7 @@ class MarkupCacheDependencies
          *
          * Scope is directory/namespace based
          */
-        try {
-            $path = $this->markupFetcher->getRequestedExecutingPath();
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("No executing path markup fetcher should not ask for a dependencies key");
-        }
+        $path = $this->markupFetcher->getRequestedContextPath();
         $requestedPage = MarkupPath::createPageFromPathObject($path);
         switch ($dependenciesValue) {
             case MarkupCacheDependencies::NAMESPACE_OLD_VALUE:
@@ -298,8 +294,14 @@ class MarkupCacheDependencies
     function getDefaultKey(): string
     {
         try {
-            $toQualifiedId = $this->markupFetcher->getRequestedExecutingPath()->toAbsoluteString();
-            $keyDokuWikiCompliant = str_replace("\\", "/", $toQualifiedId);
+            try {
+                // dokuwiki cache key compatible
+                $wikiId = $this->markupFetcher->getRequestedExecutingPath()->toWikiPath()->getWikiId();
+                $absoluteString = wikiFN($wikiId);
+            } catch (ExceptionCast|ExceptionNotFound $e) {
+                $absoluteString = $this->markupFetcher->getRequestedExecutingPath()->toAbsoluteString();
+            }
+            $keyDokuWikiCompliant = str_replace("\\", "/", $absoluteString);
             return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("No executing path to calculate the cache key");

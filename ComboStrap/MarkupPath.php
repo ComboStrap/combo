@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 use action_plugin_combo_qualitymessage;
 use DateTime;
+use dokuwiki\ChangeLog\ChangeLog;
 use Exception;
 use renderer_plugin_combo_analytics;
 
@@ -217,7 +218,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     public static function createPageFromPathObject(Path $path): MarkupPath
     {
-        if($path instanceof MarkupPath){
+        if ($path instanceof MarkupPath) {
             return $path;
         }
         return new MarkupPath($path);
@@ -560,14 +561,15 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
 
     /**
-     * @param $content
-     * @param $summary
+     * Save the content with the {@link ChangeLog}
+     * @param string $content
+     * @param string $summary
      * @return $this
-     * @deprecated use {@link FileSystems::setContent()} instead as this function
-     * wraps {@link saveWikiText()} it implements the events system and may have side-effects
+     * Use {@link FileSystems::setContent()} if you don't want any log
+     * This function wraps {@link saveWikiText()} it implements the events system and may have side-effects
      */
     public
-    function setContentWithLog($content, $summary = "Default"): MarkupPath
+    function setContentWithLog(string $content, string $summary = "Default"): MarkupPath
     {
         $path = $this->getPathObject();
         if (!($path instanceof WikiPath)) {

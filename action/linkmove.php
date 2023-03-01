@@ -7,6 +7,7 @@ use ComboStrap\Aliases;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\File;
 use ComboStrap\FileSystems;
@@ -33,6 +34,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 
 
     const CANONICAL = "move";
+    const FILE_MOVE_OPERATION = "move";
 
     private static function checkAndSendAMessageIfLockFilePresent(): bool
     {
@@ -103,6 +105,8 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
      */
     function handle_rename_before(Doku_Event $event, $params)
     {
+
+
         /**
          * Check that the lock file is not older
          * Lock file bigger than 5 minutes
@@ -111,7 +115,43 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         $result = self::checkAndSendAMessageIfLockFilePresent();
         if ($result === true) {
             $event->preventDefault();
-            LogUtility::msg("The move lock file is present, the move was canceled.");
+            LogUtility::warning("The move lock file is present, the move was canceled.");
+            return;
+        }
+
+        /**
+         * The move plugin just delete the file
+         * and recreate it.
+         * There is no move operation
+         * Therefore, because a delete in the database is a soft delete (ie if not exists)
+         * We move it now
+         */
+        $sourceId = $event->data["src_id"];
+        $targetId = $event->data["dst_id"];
+        try {
+
+            /**
+             * Update the dokuwiki id and path
+             */
+            try {
+                $databasePage = DatabasePageRow::getFromDokuWikiId($sourceId);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::warning("The source database row $sourceId was not found in the database");
+                return;
+            }
+
+            $databasePage->updatePathAndDokuwikiId($targetId);
+
+            /**
+             * Advertise the move
+             * Because otherwise the file is deleted
+             * in {@link action_plugin_combo_pagesystemmutation}
+             */
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->setRuntimeObject(self::FILE_MOVE_OPERATION, $sourceId);
+
+        } catch (Exception $exception) {
+            $this->reportError($exception);
         }
 
     }
@@ -140,11 +180,12 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             /**
              * Update the dokuwiki id and path
              */
-            $databasePage = DatabasePageRow::createFromDokuWikiId($sourceId);
-            if (!$databasePage->exists()) {
+            try {
+                $databasePage = DatabasePageRow::getFromDokuWikiId($targetId);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::warning("The target database row with the id ($targetId) was not found in the database");
                 return;
             }
-            $databasePage->updatePathAndDokuwikiId($targetId);
 
             /**
              * Check page id
@@ -154,9 +195,15 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             $targetPageIdValue = $targetPageId->getValueFromStore();
             $databasePageIdValue = $databasePage->getPageId();
 
-            if ($databasePageIdValue !== $targetPageIdValue) {
-                // this should never happened in test/dev
-                $targetPageId->setValueForce($targetPageIdValue);
+            if ($targetPageIdValue === null) {
+                $targetPageId
+                    ->setValue($databasePageIdValue)
+                    ->persist();
+            } else {
+                // should not happen in dev
+                $targetPageId
+                    ->setValueForce($databasePageIdValue)
+                    ->persist();
             }
 
             /**
@@ -171,16 +218,14 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
                 ->sendToWriteStore()
                 ->persist();
 
+            /**
+             * Stop advertising the move
+             */
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->closeExecutionVariableIfExists(self::FILE_MOVE_OPERATION);
 
         } catch (Exception $exception) {
-            // We catch the errors if any to not stop the move
-            // There is no transaction feature (it happens or not)
-            $message = "An error occurred during the move replication to the database. Error message was: " . $exception->getMessage();
-            if (PluginUtility::isDevOrTest()) {
-                throw new RuntimeException($exception);
-            } else {
-                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            }
+            $this->reportError($exception);
         }
 
     }
@@ -267,6 +312,18 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         }
 
 
+    }
+
+    private function reportError(Exception $exception)
+    {
+        // We catch the errors if any to not stop the move
+        // There is no transaction feature (it happens or not)
+        $message = "An error occurred during the move replication to the database. Error message was: " . $exception->getMessage();
+        if (PluginUtility::isDevOrTest()) {
+            throw new RuntimeException($exception);
+        } else {
+            LogUtility::error($message, self::CANONICAL, $exception);
+        }
     }
 
 

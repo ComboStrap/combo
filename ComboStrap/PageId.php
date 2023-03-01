@@ -286,7 +286,11 @@ class PageId extends MetadataText
         if (!is_string($value) || !preg_match("/[" . self::PAGE_ID_ALPHABET . "]/", $value)) {
             throw new ExceptionCompile("The page id value to set ($value) is not an alphanumeric string (Page: {$this->getResource()})", $this->getCanonical());
         }
-        $actualId = $this->getValue();
+        try {
+            $actualId = $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            $actualId = null;
+        }
 
         if ($force !== true) {
             if ($actualId !== null && $actualId !== $value) {

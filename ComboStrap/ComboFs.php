@@ -37,7 +37,11 @@ class ComboFs
     public static function delete(Path $path)
     {
         $markup = MarkupPath::createPageFromPathObject($path);
-        DatabasePageRow::createFromPageObject($markup)
-            ->deleteIfExist();
+        try {
+            DatabasePageRow::getOrCreateFromPageObject($markup)
+                ->deleteIfExist();
+        } catch (ExceptionSqliteNotAvailable $e) {
+            //
+        }
     }
 }

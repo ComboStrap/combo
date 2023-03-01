@@ -88,6 +88,19 @@ class DatabasePageRow
 
     }
 
+    public static function getFromPageObject(MarkupPath $page): DatabasePageRow
+    {
+        $databasePage = new DatabasePageRow();
+        try {
+            $row = $databasePage->getDatabaseRowFromPage($page);
+            $databasePage->setRow($row);
+            return $databasePage;
+        } catch (ExceptionNotExists $e) {
+            //
+        }
+        return $databasePage;
+    }
+
     /**
      * Delete the cache,
      * Process the analytics
@@ -187,7 +200,7 @@ class DatabasePageRow
      * @throws ExceptionSqliteNotAvailable - if there is no sqlite available
      * @noinspection PhpDocRedundantThrowsInspection
      */
-    public static function createFromPageObject(MarkupPath $page): DatabasePageRow
+    public static function getOrCreateFromPageObject(MarkupPath $page): DatabasePageRow
     {
 
         $databasePage = new DatabasePageRow();
@@ -273,7 +286,7 @@ class DatabasePageRow
      * @throws ExceptionNotFound
      */
     public
-    static function createFromDokuWikiId($id): DatabasePageRow
+    static function getFromDokuWikiId($id): DatabasePageRow
     {
         $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromDokuWikiId($id);
@@ -369,7 +382,7 @@ class DatabasePageRow
     function delete()
     {
 
-        $request = Sqlite::createOrGetSqlite()
+        $request = $this->sqlite
             ->createRequest()
             ->setQueryParametrized('delete from pages where id = ?', [$this->markupPath->getWikiId()]);
         try {
@@ -692,7 +705,7 @@ class DatabasePageRow
     function updatePathAndDokuwikiId($targetId)
     {
         if (!$this->exists()) {
-            LogUtility::msg("The `database` page ($this) does not exist and cannot be moved to ($targetId)", LogUtility::LVL_MSG_ERROR);
+            LogUtility::error("The `database` page ($this) does not exist and cannot be moved to ($targetId)");
         }
 
         $path = $targetId;
@@ -779,10 +792,7 @@ class DatabasePageRow
                 $this->setRow($row);
             } catch (ExceptionNotExists $e) {
                 // ok
-            } catch (ExceptionSqliteNotAvailable $e) {
-                throw new ExceptionRuntimeInternal($e);
             }
-
         }
         return $this;
 

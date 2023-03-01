@@ -5,6 +5,7 @@ use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
 use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
@@ -177,16 +178,23 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                     PageId::createForPage($markup)
                         ->getValue();
                 } catch (ExceptionNotFound $e) {
-
-                    try {
-                        ComboFs::createIfNotExists($markup);
-                    } catch (ExceptionCompile $e) {
-                        LogUtility::error($e->getMessage(), self::CANONICAL, $e);
-                    }
-
+                    ComboFs::createIfNotExists($markup);
                 }
                 return;
             case DOKU_CHANGE_TYPE_DELETE:
+                /**
+                 * Is this a delete from a move ?
+                 */
+                try {
+                    $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+                    $sourceId = $executionContext
+                        ->getRuntimeObject(action_plugin_combo_linkmove::FILE_MOVE_OPERATION);
+                    if (":$sourceId" === $markup->toAbsoluteString()) {
+                        return;
+                    }
+                } catch (ExceptionNotFound $e) {
+                    // not a move
+                }
                 ComboFs::delete($markup);
                 return;
         }

@@ -99,7 +99,7 @@ class MetadataDbStore extends MetadataStoreAbs implements MetadataStore
             $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($pageMetaFromFileSystem);
             $pageMetaFromFileSystem->setReadStore($fsStore);
 
-            $database = DatabasePageRow::createFromPageObject($pageMetaFromFileSystem);
+            $database = DatabasePageRow::getOrCreateFromPageObject($pageMetaFromFileSystem);
             if (!$database->exists()) {
                 return null;
             }
@@ -299,7 +299,7 @@ EOF;
         $row = self::$dbRows[$mapKey];
         if ($row === null) {
             $page = $this->getResource();
-            $row = DatabasePageRow::createFromPageObject($page);
+            $row = DatabasePageRow::getOrCreateFromPageObject($page);
             self::$dbRows[$mapKey] = $row;
         }
         return $row;

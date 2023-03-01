@@ -100,10 +100,10 @@ class ExecutionContext
     private static ?ExecutionContext $executionContext = null;
 
     /**
-     * The id used if
-     * @deprecated to delete
+     * The default context id if not set
      */
-    public const DEFAULT_SLOT_ID_FOR_TEST = "start";
+    public const DEFAULT_INDEX_CONTEXT_ID = "start";
+
     private ?string $capturedGlobalId;
     /**
      * It may be an array when preview/save/cancel
@@ -376,9 +376,7 @@ class ExecutionContext
     }
 
     /**
-     *
-     * @throws ExceptionNotFound - no page rendering requested
-     *
+     * Return the root path if nothing is found
      */
     public function getRequestedPath(): WikiPath
     {
@@ -455,7 +453,8 @@ class ExecutionContext
                 // not that show action is the default even if it's not set
                 // we can't then control if the id should exists or not
                 // markup based on string (test) or snippet of code
-                throw new ExceptionNotFound();
+                // return the default context path (ie the root page)
+                return $this->getConfig()->getDefaultContextPath();
             }
 
         }

@@ -233,6 +233,9 @@ class SiteConfig
         return $this;
     }
 
+    /**
+     * @return WikiPath - the default context path is if not set the root page
+     */
     public function getDefaultContextPath(): WikiPath
     {
         if (isset($this->defaultContextPath)) {
@@ -241,7 +244,7 @@ class SiteConfig
         // in a admin or dynamic rendering
         // dokuwiki may have set a $ID
         global $ID;
-        if (isset($ID) && $ID !== ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST) {
+        if (isset($ID) && $ID !== ExecutionContext::DEFAULT_INDEX_CONTEXT_ID) {
             return WikiPath::createMarkupPathFromId($ID);
         }
         return WikiPath::createRootNamespacePathOnMarkupDrive()->resolve(Site::getIndexPageName() . "." . WikiPath::MARKUP_DEFAULT_TXT_EXTENSION);
@@ -327,7 +330,7 @@ class SiteConfig
 
     public function getIndexPageName()
     {
-        return $this->getValue("start","start",self::GLOBAL_SCOPE);
+        return $this->getValue("start",ExecutionContext::DEFAULT_INDEX_CONTEXT_ID,self::GLOBAL_SCOPE);
     }
 
     public function getAuthorizedUrlSchemes(): ?array

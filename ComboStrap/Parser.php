@@ -15,7 +15,7 @@ class Parser
         global $ACT;
         $keepAct = $ACT;
         if ($ID === null && PluginUtility::isTest()) {
-            $ID = ExecutionContext::DEFAULT_SLOT_ID_FOR_TEST;
+            $ID = ExecutionContext::DEFAULT_INDEX_CONTEXT_ID;
         }
         try {
             $ACT = "show";

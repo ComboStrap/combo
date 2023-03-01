@@ -364,7 +364,7 @@ EOF;
                     case self::DESCENDANTS:
                         if ($this->requestedPage !== null) {
                             try {
-                                $query = $this->requestedPage->getPathObject()->getParent()->resolve("%")->toQualifiedId();
+                                $query = $this->requestedPage->getPathObject()->getParent()->resolve("%")->toAbsoluteString();
                                 $this->parameters[] = $query;
                                 $this->parameters[] = PageLevel::createForPage($this->requestedPage)->getValue();
                             } catch (ExceptionNotFound $e) {

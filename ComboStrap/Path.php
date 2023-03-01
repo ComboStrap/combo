@@ -104,7 +104,7 @@ interface Path
      */
     function getMime(): ?Mime;
 
-    function resolve(string $name);
+    function resolve(string $name): Path;
 
     /**
      * @return Url - the local URL

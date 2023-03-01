@@ -2207,7 +2207,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return $this->path->getMime();
     }
 
-    function resolve(string $name)
+    function resolve(string $name): Path
     {
         return $this->path->resolve($name);
     }

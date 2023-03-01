@@ -133,16 +133,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
 
     /**
-     * @throws ExceptionBadArgument
-     */
-    public static function createPageFragmentFetcherFromUrl(Url $fetchUrl): FetcherMarkup
-    {
-        $pageFragment = new FetcherMarkup();
-        $pageFragment->buildFromUrl($fetchUrl);
-        return $pageFragment;
-    }
-
-    /**
      * @param Path $executingPath - the path where we can find the markup
      * @param ?WikiPath $contextPath - the context path, the requested path in the browser url (from where relative component are resolved (ie links, ...))
      * @return FetcherMarkup

@@ -44,6 +44,16 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     }
 
     /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createPageFragmentFetcherFromUrl(Url $fetchUrl): FetcherPage
+    {
+        $pageFragment = new FetcherPage();
+        $pageFragment->buildFromUrl($fetchUrl);
+        return $pageFragment;
+    }
+
+    /**
      * @param Url|null $url
      * @return Url
      *

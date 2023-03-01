@@ -328,7 +328,7 @@ class WikiPath extends PathAbs
     /**
      * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
      * @return WikiPath - a dokuwiki Id hello:my:lord
-     * @deprecated for {@link FetcherMarkup::createPageFragmentFetcherFromUrl()}
+     * @deprecated for {@link FetcherPage::createPageFragmentFetcherFromUrl()}
      */
     public static function createFromUrl($url): WikiPath
     {

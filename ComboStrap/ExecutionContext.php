@@ -732,6 +732,10 @@ class ExecutionContext
     public function closeMainExecutingFetcher(): ExecutionContext
     {
         unset($this->executingMainFetcher);
+        /**
+         * Snippet are not yet fully coupled to the {@link FetcherMarkup}
+         */
+        $this->closeExecutionVariableIfExists(Snippet::CANONICAL);
         return $this;
     }
 
@@ -992,13 +996,18 @@ class ExecutionContext
      * @param string $globalObjectIdentifier
      * @return void
      */
-    public function deleteAndEventuallyCloseExecutionVariable(string $globalObjectIdentifier)
+    public function closeExecutionVariableIfExists(string $globalObjectIdentifier)
     {
+
+        if (!isset($this->executionScopedVariables[$globalObjectIdentifier])) {
+            return;
+        }
 
         /**
          * Get the object references
          */
         $object = &$this->executionScopedVariables[$globalObjectIdentifier];
+
 
         /**
          * Call the close method
@@ -1031,7 +1040,7 @@ class ExecutionContext
     {
         $scopedVariables = array_keys($this->executionScopedVariables);
         foreach ($scopedVariables as $executionScopedVariableKey) {
-            $this->deleteAndEventuallyCloseExecutionVariable($executionScopedVariableKey);
+            $this->closeExecutionVariableIfExists($executionScopedVariableKey);
         }
         return $this;
     }

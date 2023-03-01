@@ -120,6 +120,7 @@ class HttpResponse
     {
 
         $this->hasEnded = true;
+
         /**
          * Execution context can be unset
          * when it's used via a {@link  self::createFromDokuWikiResponse()}

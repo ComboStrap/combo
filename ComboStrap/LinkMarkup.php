@@ -262,6 +262,7 @@ EOF;
                     $preview = $outputAttributes->hasComponentAttributeAndRemove(self::PREVIEW_ATTRIBUTE);
                     if ($preview || $previewConfig === 1) {
                         Tooltip::addToolTipSnippetIfNeeded();
+                        // The name and not the tooltip because otherwise it would be to lengthy
                         $tooltipHtml = <<<EOF
 <h3>{$page->getNameOrDefault()}</h3>
 <p>{$page->getDescriptionOrElseDokuWiki()}</p>

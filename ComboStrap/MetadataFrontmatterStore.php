@@ -62,9 +62,11 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
         if ($metaFilePath !== null) {
             $metaModifiedTime = FileSystems::getModifiedTime($metaFilePath);
             $pageModifiedTime = FileSystems::getModifiedTime($resourceCombo->getPathObject());
-            $diff = $pageModifiedTime->diff($metaModifiedTime);
-            $secondDiff = intval($diff->format('%s'));
-            if ($secondDiff > 0) {
+            $older = Iso8601Date::createFromDateTime($pageModifiedTime)->olderThan($metaModifiedTime);
+            if (!$older) {
+                /**
+                 * Weird case that may happen
+                 */
                 $resourceCombo->renderMetadataAndFlush();
             }
         }

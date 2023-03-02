@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\EventHandler;
 use TestRequest;
 
 
@@ -336,8 +337,9 @@ class ExecutionContext
         MetadataDokuWikiStore::unsetGlobalVariables();
 
         // dokuwiki global
+        // reset event handler
         global $EVENT_HANDLER;
-        unset($EVENT_HANDLER);
+        $EVENT_HANDLER = new EventHandler();
 
         /**
          * Close execution variables

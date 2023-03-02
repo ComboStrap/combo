@@ -318,5 +318,24 @@ class Iso8601Date
         return $formatted;
     }
 
+    public function olderThan(DateTime $rightTime): bool
+    {
+
+        $internalMs = DataType::toMilliSeconds($this->dateTime);
+        $externalMilliSeconds = DataType::toMilliSeconds($rightTime);
+        if ($externalMilliSeconds > $internalMs) {
+            return true;
+        }
+        return false;
+
+    }
+
+    public function diff(DateTime $rightTime): \DateInterval
+    {
+        // example get the s part of the diff (even if there is day of diff)
+        // $seconds = $diff->format('%s');
+        return $this->dateTime->diff($rightTime, true);
+    }
+
 
 }

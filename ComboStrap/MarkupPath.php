@@ -1629,7 +1629,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
         $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
-        $this->modifiedTime = \ComboStrap\ModificationDate::createForPage($this);
+        $this->modifiedTime = ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
         $this->layout = PageLayoutName::createFromPage($this);
 

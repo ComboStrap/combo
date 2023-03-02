@@ -178,5 +178,15 @@ class DataType
         return gettype($value);
     }
 
+    public static function toMilliSeconds(\DateTime $dateTime)
+    {
+
+        $secs = $dateTime->getTimestamp(); // Gets the seconds
+        $millisecs = $secs * 1000; // Converted to milliseconds
+        $millisecs += $dateTime->format("u") / 1000; // Microseconds converted to seconds
+        return $millisecs;
+
+    }
+
 
 }

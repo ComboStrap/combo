@@ -104,14 +104,14 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
         /**
          * {@link p_read_metadata() global cache}
          */
-        global $cache_metadata;
-        unset($cache_metadata);
+        unset($GLOBALS['cache_metadata']);
 
         /**
          * {@link p_render_metadata()} temporary render cache
+         * global $METADATA_RENDERERS;
          */
-        global $METADATA_RENDERERS;
-        unset($METADATA_RENDERERS);
+        unset($GLOBALS['METADATA_RENDERERS']);
+
     }
 
 
@@ -386,10 +386,11 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     public function getDataCurrentAndPersistent(): array
     {
 
-        $data = p_read_metadata($this->getWikiId(), true);
+        $id = $this->getWikiId();
+        $data = p_read_metadata($id, true);
         if (empty($data)) {
             LogUtility::internalError("The metadata cache was empty");
-            $data = p_read_metadata($this->getWikiId());
+            $data = p_read_metadata($id);
         }
         return $data;
     }

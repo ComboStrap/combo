@@ -195,7 +195,7 @@ abstract class MetadataTabular extends Metadata
         foreach ($value as $item) {
 
             /**
-             * Single value, this is the identifier
+             * By default, the single value is the identifier
              *
              * (Note that from {@link MetadataFormDataStore}, tabular data
              * should be build before via the {@link self::buildFromReadStore()}

@@ -305,7 +305,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     function handleManagerGet(Doku_Event $event, MarkupPath $page)
     {
         $formMeta = MetaManagerForm::createForPage($page)->toFormMeta();
-        $payload = json_encode($formMeta->toAssociativeArray());
+        $formMetaAssociativeArray = $formMeta->toAssociativeArray();
+        $payload = json_encode($formMetaAssociativeArray);
         ExecutionContext::getActualOrCreateFromEnv()
             ->response()
             ->setStatus(HttpResponseStatus::ALL_GOOD)

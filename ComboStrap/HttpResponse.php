@@ -424,5 +424,13 @@ class HttpResponse
         return $this;
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
+    public function getBodyAsJson(): Json
+    {
+        return Json::createFromString($this->getBody());
+    }
+
 
 }

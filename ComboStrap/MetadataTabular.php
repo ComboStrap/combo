@@ -196,9 +196,20 @@ abstract class MetadataTabular extends Metadata
 
             // Single value, this is the identifier
             if (is_string($item)) {
-                $identifierMetadata = Metadata::toMetadataObject($identifierMetadataObject, $this)
-                    ->setFromStoreValue($item);
-                $identifierValue = $identifierMetadata->getValue(); // normalize if any
+                try {
+                    $identifierMetadata = Metadata::toMetadataObject($identifierMetadataObject, $this)->setFromStoreValue($item);
+                } catch (ExceptionBadArgument $e) {
+                    throw ExceptionRuntimeInternal::withMessageAndError("The $identifierMetadataObject should be known", $e);
+                }
+                try {
+                    $identifierValue = $identifierMetadata->getValue(); // normalize if any
+                } catch (ExceptionNotFound $e) {
+                    if ($this->getReadStore() instanceof MetadataFormDataStore && $item === "") {
+                        // in tabular form data, an empty row can be send
+                        continue;
+                    }
+                    throw ExceptionRuntimeInternal::withMessageAndError("The meta identifier ($identifierMetadata) should have a value", $e);
+                }
                 $this->rows[$identifierValue] = [$identifierPersistentName => $identifierMetadata];
                 continue;
             }

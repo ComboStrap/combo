@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 class MetadataStoreTransfer
 {
+    const CANONICAL = "meta-store-transfer";
 
     /**
      * @var MetadataStore
@@ -32,7 +33,10 @@ class MetadataStoreTransfer
      */
     private array $metadatasThatMayBeStored;
 
-    private array $originalMetadatas = [];
+    /**
+     * @var Metadata[] - the original metas (no default as we check if they were already set)
+     */
+    private array $originalMetadatas;
 
     /**
      * MetadataStoreTransfer constructor.
@@ -67,7 +71,12 @@ class MetadataStoreTransfer
         foreach ($this->originalMetadatas as $originalMetaKey => $originalMetaValue) {
 
 
-            $metadataObject = Metadata::getForName($originalMetaKey);
+            try {
+                $metadataObject = Metadata::getForName($originalMetaKey);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::error("The meta ($originalMetaKey) was not found", self::CANONICAL, $e);
+                continue;
+            }
 
             /**
              * Take old name or renaming into account
@@ -99,12 +108,20 @@ class MetadataStoreTransfer
                 continue;
             }
 
+
             /**
-             * Valid metadata to proceed in the next phase
+             * We build and not set with {@link Metadata::setFromStoreValue()}
+             * because tabular data in forms have several key by columns (ie on key is a column
+             * that may have several values)
+             * Therefore tabular data needs to get access to the whole source store
+             * to be build
              */
             $metadataObject
                 ->setResource($this->page)
-                ->setFromStoreValue($originalMetaValue);
+                ->setReadStore($this->sourceStore)
+                ->setWriteStore($this->targetStore)
+                ->buildFromReadStore();
+
             $this->metadatasThatMayBeStored[$name] = $metadataObject;
 
         }
@@ -124,14 +141,19 @@ class MetadataStoreTransfer
     }
 
     /**
-     * @param array $data
+     * @param Metadata[]|null $data - the metadadata (@deprecate for {@link self::setMetadatas()}
      * @return $this
      */
     public function process(array $data = null): MetadataStoreTransfer
     {
 
+        /**
+         * We may use this object to validate, setting before the processing
+         */
         if (isset($this->originalMetadatas) && $data !== null) {
             throw new ExceptionRuntimeInternal("The metadata to process were already set");
+        } else {
+            $this->originalMetadatas = $data;
         }
         $messages = [];
 
@@ -142,7 +164,6 @@ class MetadataStoreTransfer
         $validatedMetadata = $this->validate()->getValidatedMetadatas();
 
         foreach ($validatedMetadata as $metadata) {
-
 
             /**
              * Persistent ?
@@ -157,12 +178,7 @@ class MetadataStoreTransfer
              * Sync
              */
             try {
-                $metadata
-                    ->setResource($this->page)
-                    ->setReadStore($this->sourceStore)
-                    ->buildFromReadStore()
-                    ->setWriteStore($this->targetStore)
-                    ->sendToWriteStore();
+                $metadata->sendToWriteStore();
             } catch (ExceptionCompile $e) {
                 $messages[] = Message::createErrorMessage("Error while replicating the meta ($metadata) from the store ($this->sourceStore) to the store ($this->targetStore). Message: " . $e->getMessage())
                     ->setCanonical($metadata->getCanonical());
@@ -194,7 +210,11 @@ class MetadataStoreTransfer
         return $this->metadatasThatMayBeStored;
     }
 
-    public function setMetadatas($originalMetadatas): MetadataStoreTransfer
+    /**
+     * @param Metadata[] $originalMetadatas
+     * @return $this
+     */
+    public function setMetadatas(array $originalMetadatas): MetadataStoreTransfer
     {
         $this->originalMetadatas = $originalMetadatas;
         return $this;

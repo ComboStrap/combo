@@ -123,11 +123,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     {
 
         $name = $metadata->getName();
-        try {
-            $persistentValue = $metadata->toStoreValue();
-        } catch (ExceptionNotFound $e) {
-            $persistentValue = null;
-        }
+        $persistentValue = $metadata->toStoreValue();
         $defaultValue = $metadata->toStoreDefaultValue();
         $resource = $metadata->getResource();
         $this->checkResource($resource);

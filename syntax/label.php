@@ -185,14 +185,16 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $collapsed = $attribute[self::COLLAPSED];
                             if ($collapsed == "false") {
                                 $collapsedClass = "collapsed";
+                                $ariaExpanded = "true";
                             } else {
                                 $collapsedClass = "";
+                                $ariaExpanded = "false";
                             }
                             $renderer->doc .= "<div class=\"card-header\" id=\"$headingId\">" . DOKU_LF;
                             $renderer->doc .= "<h2 class=\"mb-0\">";
                             $dataNamespace = Bootstrap::getDataNamespace();
                             /** @noinspection HtmlUnknownAttribute */
-                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
+                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$collapseId\" aria-expanded=\"$ariaExpanded\" aria-controls=\"$collapseId\">";
                             break;
                         case TabsTag::TAG:
                             $attributes = $data[PluginUtility::ATTRIBUTES];

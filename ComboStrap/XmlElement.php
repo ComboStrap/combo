@@ -404,5 +404,14 @@ class XmlElement
         return $toString;
     }
 
+    public function hasClass(string $needleClass): bool
+    {
+        $classes = preg_split("/\s/", $this->getClass());
+        if (in_array($needleClass,$classes)) {
+            return true;
+        }
+        return false;
+    }
+
 
 }

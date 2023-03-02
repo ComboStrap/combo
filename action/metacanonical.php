@@ -11,7 +11,7 @@ use ComboStrap\Site;
  * In 1.14. we keep the name of the class with canonical to be able to update
  * Above 1.15, in a release branch, you can just modify it
  */
-class action_plugin_combo_metacanonical
+class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
 {
 
 

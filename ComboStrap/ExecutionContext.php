@@ -8,7 +8,9 @@ use TestRequest;
 
 
 /**
- * An execution object permits to get access to environment variable.
+ * An execution object permits to manage the variable state for
+ * an execution (ie one HTTP request)
+ *
  *
  * Note that normally every page has a page context
  * meaning that you can go from an admin page to show the page.

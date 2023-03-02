@@ -4,7 +4,6 @@ use ComboStrap\ColorRgb;
 use ComboStrap\Mime;
 use ComboStrap\Site;
 
-if (!defined('DOKU_INC')) die();
 
 
 /**

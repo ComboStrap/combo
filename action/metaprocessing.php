@@ -1,15 +1,12 @@
 <?php
 
 
-use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntimeInternal;
-use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiArrayStore;
-use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\MarkupPath;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\PageImages;
 use ComboStrap\PagePath;
@@ -27,7 +24,7 @@ use dokuwiki\Extension\Event;
  * because we want to notify modication on array level (such as references, images)
  * and not only on scalar.
  */
-class action_plugin_combo_metaprocessing
+class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
 {
 
 

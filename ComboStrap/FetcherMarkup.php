@@ -817,7 +817,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @return Snippet[]
      */
-    private function getSnippets(): array
+    public function getSnippets(): array
     {
 
         $snippets = $this->localSnippets;

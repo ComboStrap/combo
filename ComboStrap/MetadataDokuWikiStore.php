@@ -29,6 +29,18 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
 
 
     const CANONICAL = Metadata::CANONICAL;
+    /**
+     * Persistent metadata (data that should be in a backup)
+     *
+     * They are used as the default of the current metadata
+     * and is never cleaned
+     *
+     * https://www.dokuwiki.org/devel:metadata#metadata_persistence
+     *
+     * Because the current is only usable in rendering, all
+     * metadata are persistent inside dokuwiki
+     */
+    public const PERSISTENT_METADATA = "persistent";
 
 
     /**
@@ -233,7 +245,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
                  */
                 global $METADATA_RENDERERS;
                 $METADATA_RENDERERS[$wikiId][self::CURRENT_METADATA][$name] = $value;
-                $METADATA_RENDERERS[$wikiId][action_plugin_combo_metaprocessing::PERSISTENT_METADATA][$name] = $value;
+                $METADATA_RENDERERS[$wikiId][self::PERSISTENT_METADATA][$name] = $value;
 
             } else {
 
@@ -343,7 +355,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
 
     public function deleteAndFlush()
     {
-        $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], action_plugin_combo_metaprocessing::PERSISTENT_METADATA => []];
+        $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], self::PERSISTENT_METADATA => []];
         $dokuwikiId = $this->getWikiId();
         p_save_metadata($dokuwikiId, $emptyMeta);
     }

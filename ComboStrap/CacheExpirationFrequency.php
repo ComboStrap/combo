@@ -79,7 +79,7 @@ class CacheExpirationFrequency extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_METADATA;
     }
 
     public function getMutable(): bool

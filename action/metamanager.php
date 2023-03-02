@@ -331,13 +331,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             return;
         }
         $metadata = MetadataDokuWikiStore::getOrCreateFromResource($page)->getDataCurrentAndPersistent();
-        $persistent = $metadata[action_plugin_combo_metaprocessing::PERSISTENT_METADATA];
+        $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_METADATA];
         ksort($persistent);
         $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
         ksort($current);
         $form = FormMeta::create("raw_metadata")
             ->addField(
-                FormMetaField::create(action_plugin_combo_metaprocessing::PERSISTENT_METADATA, DataType::JSON_TYPE_VALUE)
+                FormMetaField::create(MetadataDokuWikiStore::PERSISTENT_METADATA, DataType::JSON_TYPE_VALUE)
                     ->setLabel("Persistent Metadata (User Metadata)")
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata contains raw values. They contains the values set by the user and the fixed values such as page id.")
@@ -366,35 +366,38 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     {
 
         $metadataStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
-        $metaData = $metadataStore->getDataCurrentAndPersistent();
+        $actualMeta = $metadataStore->getDataCurrentAndPersistent();
 
         /**
          * @var Message[]
          */
         $messages = [];
         /**
-         * Only Persistent, current cannot be modified
+         * Technically, persistent is a copy of persistent data
+         * but on the ui for now, only persistent data can be modified
          */
-        $persistentMetadataType = action_plugin_combo_metaprocessing::PERSISTENT_METADATA;
-        $postMeta = json_decode($post[$persistentMetadataType], true);
+        $postMeta = json_decode($post[MetadataDokuWikiStore::PERSISTENT_METADATA], true);
         if ($postMeta === null) {
             ExecutionContext::getActualOrCreateFromEnv()
                 ->response()
                 ->setStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
-                ->setBodyAsJsonMessage("The metadata $persistentMetadataType should be in json format")
+                ->setBodyAsJsonMessage("The metadata should be in json format")
                 ->end();
             return;
         }
-        $persistentPageMeta = &$metaData[$persistentMetadataType];
 
 
         $managedMetaMessageSuffix = "is a managed metadata, you need to use the metadata manager to delete it";
 
         /**
          * Process the actual attribute
+         * We loop only over the persistent metadata
+         * that are the one that we want change
          */
-        foreach ($persistentPageMeta as $key => $value) {
+        $persistentMetadata = $actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA];
+        foreach ($persistentMetadata as $key => $value) {
+
             $postMetaValue = null;
             if (isset($postMeta[$key])) {
                 $postMetaValue = $postMeta[$key];
@@ -403,27 +406,29 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
             if ($postMetaValue === null) {
                 if (in_array($key, Metadata::MUTABLE_METADATA)) {
-                    $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) $managedMetaMessageSuffix");
+                    $messages[] = Message::createInfoMessage("The metadata ($key) $managedMetaMessageSuffix");
                     continue;
                 }
                 if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
-                    $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) is a internal metadata, you can't delete it");
+                    $messages[] = Message::createInfoMessage("The metadata ($key) is a internal metadata, you can't delete it");
                     continue;
                 }
-                unset($persistentPageMeta[$key]);
-                $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) with the value ($value) was deleted");
+                unset($actualMeta[MetadataDokuWikiStore::CURRENT_METADATA][$key]);
+                unset($actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA][$key]);
+                $messages[] = Message::createInfoMessage("The metadata ($key) with the value ($value) was deleted");
             } else {
                 if ($value !== $postMetaValue) {
                     if (in_array($key, Metadata::MUTABLE_METADATA)) {
-                        $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) $managedMetaMessageSuffix");
+                        $messages[] = Message::createInfoMessage("The metadata ($key) $managedMetaMessageSuffix");
                         continue;
                     }
                     if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
-                        $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) is a internal metadata, you can't modify it");
+                        $messages[] = Message::createInfoMessage("The metadata ($key) is a internal metadata, you can't modify it");
                         continue;
                     }
-                    $persistentPageMeta[$key] = $postMetaValue;
-                    $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
+                    $actualMeta[MetadataDokuWikiStore::CURRENT_METADATA][$key] = $postMetaValue;
+                    $actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA][$key] = $postMetaValue;
+                    $messages[] = Message::createInfoMessage("The metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
                 }
             }
         }
@@ -433,25 +438,21 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         foreach ($postMeta as $key => $value) {
             if (in_array($key, Metadata::MUTABLE_METADATA)) {
                 // This meta should be modified via the form
-                $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) can only be added via the meta manager");
+                $messages[] = Message::createInfoMessage("The metadata ($key) can only be added via the meta manager");
                 continue;
             }
             if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
                 // this meta are not modifiable
-                $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) is a internal metadata, you can't modify it");
+                $messages[] = Message::createInfoMessage("The metadata ($key) is a internal metadata, you can't modify it");
                 continue;
             }
-            $persistentPageMeta[$key] = $value;
-            $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) was created with the value ($value)");
+            $actualMeta[MetadataDokuWikiStore::CURRENT_METADATA][$key] = $value;
+            $actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA][$key] = $value;
+            $messages[] = Message::createInfoMessage("The metadata ($key) was created with the value ($value)");
         }
 
-        /**
-         * Delete the runtime if present
-         * (They were saved in persistent)
-         */
-        Metadata::deleteIfPresent($persistentPageMeta, Metadata::RUNTIME_META);
 
-        p_save_metadata($page->getWikiId(), $metaData);
+        p_save_metadata($page->getWikiId(), $actualMeta);
 
         if (sizeof($messages) !== 0) {
             $messagesToSend = [];

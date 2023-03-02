@@ -35,18 +35,6 @@ class action_plugin_combo_metaprocessing
      * When the value of a metadata has changed, an event is created
      */
     public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
-    /**
-     * Persistent metadata (data that should be in a backup)
-     *
-     * They are used as the default of the current metadata
-     * and is never cleaned
-     *
-     * https://www.dokuwiki.org/devel:metadata#metadata_persistence
-     *
-     * Because the current is only usable in rendering, all
-     * metadata are persistent inside dokuwiki
-     */
-    public const PERSISTENT_METADATA = "persistent";
     public const NEW_VALUE_ATTRIBUTE = "new_value";
     private array $beforeMetaArray;
 

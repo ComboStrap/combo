@@ -506,7 +506,7 @@ abstract class Metadata
      * Therefore all metadata are persistent
      *
      * Ie a {@link MetadataDokuWikiStore::CURRENT_METADATA} is only derived
-     * in a rendering context. A {@link action_plugin_combo_metaprocessing::PERSISTENT_METADATA} is always stored.
+     * in a rendering context. A {@link MetadataDokuWikiStore::PERSISTENT_METADATA} is always stored.
      *
      *
      *

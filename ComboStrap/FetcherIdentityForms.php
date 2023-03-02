@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\ActionRouter;
+
 /**
  * No Cache for the idenity forms
  * as if there is a cache problems,
@@ -105,7 +107,8 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
          */
         ob_start();
         global $ACT;
-        \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT, 'tpl_content_core');
+        $actionName = FetcherIdentityForms::class . "::tpl_content_core";
+        \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT, $actionName);
         $mainHtml = ob_get_clean();
 
 
@@ -135,6 +138,29 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
         return self::NAME;
     }
 
+    /**
+     * We take over the {@link tpl_content_core()} of Dokuwiki
+     * because the instance of the router is not reinit.
+     * We get then problem on test because of the private global static {@link ActionRouter::$instance) variable
+     * @return bool
+     * @noinspection PhpUnused - is a callback to the event TPL_ACT_RENDER called in this class
+     */
+    static public function tpl_content_core(): bool
+    {
+
+        /**
+         * Was false, is true
+         */
+        $router = ActionRouter::getInstance(true);
+        try {
+            $router->getAction()->tplContent();
+        } catch (\dokuwiki\Action\Exception\FatalException $e) {
+            // there was no content for the action
+            msg(hsc($e->getMessage()), -1);
+            return false;
+        }
+        return true;
+    }
 
     /**
      * @throws ExceptionNotFound

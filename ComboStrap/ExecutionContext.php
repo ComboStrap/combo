@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\ActionRouter;
 use dokuwiki\Extension\EventHandler;
 use TestRequest;
 
@@ -338,10 +339,16 @@ class ExecutionContext
         MetadataDbStore::resetAll();
         MetadataDokuWikiStore::unsetGlobalVariables();
 
-        // dokuwiki global
+        // Router: dokuwiki global
         // reset event handler
         global $EVENT_HANDLER;
         $EVENT_HANDLER = new EventHandler();
+        /**
+         * We can't give the getInstance, a true value
+         * because it will otherwise start the routing process
+         * {@link ActionRouter::getInstance()}
+         */
+
 
         /**
          * Close execution variables

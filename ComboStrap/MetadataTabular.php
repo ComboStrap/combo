@@ -194,7 +194,14 @@ abstract class MetadataTabular extends Metadata
         }
         foreach ($value as $item) {
 
-            // Single value, this is the identifier
+            /**
+             * Single value, this is the identifier
+             *
+             * (Note that from {@link MetadataFormDataStore}, tabular data
+             * should be build before via the {@link self::buildFromReadStore()}
+             * as tabular data is represented as a series of column)
+             *
+             */
             if (is_string($item)) {
                 try {
                     $identifierMetadata = Metadata::toMetadataObject($identifierMetadataObject, $this)->setFromStoreValue($item);
@@ -204,10 +211,6 @@ abstract class MetadataTabular extends Metadata
                 try {
                     $identifierValue = $identifierMetadata->getValue(); // normalize if any
                 } catch (ExceptionNotFound $e) {
-                    if ($this->getReadStore() instanceof MetadataFormDataStore && $item === "") {
-                        // in tabular form data, an empty row can be send
-                        continue;
-                    }
                     throw ExceptionRuntimeInternal::withMessageAndError("The meta identifier ($identifierMetadata) should have a value", $e);
                 }
                 $this->rows[$identifierValue] = [$identifierPersistentName => $identifierMetadata];

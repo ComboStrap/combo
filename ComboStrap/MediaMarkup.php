@@ -693,6 +693,7 @@ class MediaMarkup
      * @throws ExceptionNotFound - if this markup does not have a path origin
      * @deprecated A media may be generated (ie {@link FetcherVignette}
      * therefore the path may be not present
+     * If you want to known the mime use {@link self::getFetcher()} then {@link IFetcher::getMime()}
      */
     public function getPath(): WikiPath
     {

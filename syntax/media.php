@@ -260,8 +260,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     $mediaMarkup->getInternalExternalType() === MediaMarkup::INTERNAL_MEDIA_CALL_NAME
                 ) {
                     try {
-                        $isImage = FileSystems::getMime($mediaMarkup->getPath())->isImage();
-                    } catch (ExceptionNotFound $e) {
+                        $isImage = $mediaMarkup->getFetcher()->getMime()->isImage();
+                    } catch (\Exception $e) {
                         $isImage = false;
                     }
                     if ($isImage) {

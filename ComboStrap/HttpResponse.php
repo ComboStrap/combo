@@ -355,9 +355,12 @@ class HttpResponse
         return $this->hasEnded;
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     */
     public function getBodyAsJsonArray(): array
     {
-        return json_decode($this->getBody(), true);
+        return Json::createFromString($this->getBody())->toArray();
     }
 
     private function setDokuWikiResponse(\TestResponse $response): HttpResponse

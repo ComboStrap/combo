@@ -330,7 +330,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->end();
             return;
         }
-        $metadata = MetadataDokuWikiStore::getOrCreateFromResource($page)->getData();
+        $metadata = MetadataDokuWikiStore::getOrCreateFromResource($page)->getDataCurrentAndPersistent();
         $persistent = $metadata[action_plugin_combo_metaprocessing::PERSISTENT_METADATA];
         ksort($persistent);
         $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
@@ -366,7 +366,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     {
 
         $metadataStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
-        $metaData = $metadataStore->getData();
+        $metaData = $metadataStore->getDataCurrentAndPersistent();
 
         /**
          * @var Message[]
@@ -452,7 +452,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         Metadata::deleteIfPresent($persistentPageMeta, Metadata::RUNTIME_META);
 
         p_save_metadata($page->getWikiId(), $metaData);
-        $metadataStore->setData($metaData);
 
         if (sizeof($messages) !== 0) {
             $messagesToSend = [];

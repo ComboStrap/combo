@@ -160,17 +160,11 @@ class Identity
 
     }
 
-    public static function isManager()
+    public static function isManager(): bool
     {
-        global $INFO;
-        if ($INFO !== null) {
-            return $INFO['ismanager'];
-        } else {
-            /**
-             * In test
-             */
-            return auth_ismanager();
-        }
+
+        return auth_ismanager();
+
     }
 
     public static function getUser(): string

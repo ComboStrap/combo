@@ -124,12 +124,16 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * @var string
      */
     private string $fetchString;
-    private bool $instructionsHasExecuted = false;
+
 
     /**
      * @var array
      */
     private array $meta;
+    /**
+     * @var array - the instructions processed
+     */
+    private array $processedInstructions;
 
 
     /**
@@ -271,7 +275,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return true;
         }
 
-        if ($this->instructionsHasExecuted) {
+        if (isset($this->processedInstructions)) {
             return false;
         }
 
@@ -913,34 +917,20 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
         }
 
+        if (isset($this->processedInstructions)) {
+            return $this->processedInstructions;
+        }
 
         if (!$this->shouldInstructionProcess()) {
 
-            return $this->instructionsCache->retrieveCache();
+            $this->processedInstructions = $this->instructionsCache->retrieveCache();
+
+        } else {
+
+            $this->processInstructions();
 
         }
-
-        $this->instructionsHasExecuted = true;
-        $markup = $this->getMarkupStringToExecute();
-        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
-            ->setExecutingMarkupHandler($this);
-        try {
-            $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
-                ->setRequestedMimeToInstruction();
-            $instructions = $markupRenderer->getOutput();
-            if (isset($this->instructionsCache)) {
-                /**
-                 * Not a string execution, ie {@link self::isPathExecution()}
-                 * a path execution
-                 */
-                $this->instructionsCache->storeCache($instructions);
-            }
-            return $instructions;
-        } catch (\Exception $e) {
-            throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-        } finally {
-            $executionContext->closeExecutingMarkupHandler();
-        }
+        return $this->processedInstructions;
 
 
     }
@@ -1266,6 +1256,35 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return $this->getMetaPath();
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime($e);
+        }
+    }
+
+    public function processInstructions()
+    {
+        if (isset($this->processedInstructions)) {
+            return $this;
+        }
+
+        $markup = $this->getMarkupStringToExecute();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
+            ->setExecutingMarkupHandler($this);
+        try {
+            $markupRenderer = MarkupRenderer::createFromMarkup($markup, $this->getExecutingPathOrNull(), $this->getRequestedContextPath())
+                ->setRequestedMimeToInstruction();
+            $instructions = $markupRenderer->getOutput();
+            if (isset($this->instructionsCache)) {
+                /**
+                 * Not a string execution, ie {@link self::isPathExecution()}
+                 * a path execution
+                 */
+                $this->instructionsCache->storeCache($instructions);
+            }
+            $this->processedInstructions = $instructions;
+            return $this;
+        } catch (\Exception $e) {
+            throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+        } finally {
+            $executionContext->closeExecutingMarkupHandler();
         }
     }
 

@@ -7,6 +7,7 @@
 use ComboStrap\ButtonTag;
 use ComboStrap\DateTag;
 use ComboStrap\DropDownTag;
+use ComboStrap\IconTag;
 use ComboStrap\NoteTag;
 use ComboStrap\PermalinkTag;
 use ComboStrap\PluginUtility;
@@ -42,6 +43,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
         $array[] = NoteTag::TAG_INOTE;
         $array[] = PermalinkTag::TAG;
         $array[] = DateTag::TAG;
+        $array[] = IconTag::TAG;
         return $array;
     }
 

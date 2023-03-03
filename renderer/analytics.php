@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * A analysis Renderer that exports stats/quality/metadata in a json format
  * You can export the data with
  * doku.php?id=somepage&do=export_combo_analytics
+ *
+ * TODO: Move the metadata part to the metadata render and the quality part to the indexer.
  */
 class renderer_plugin_combo_analytics extends Doku_Renderer
 {

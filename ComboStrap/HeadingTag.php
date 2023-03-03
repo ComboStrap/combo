@@ -166,13 +166,10 @@ class HeadingTag
      * @param $data
      * @param Doku_Renderer_metadata $renderer
      */
-    public static function processHeadingMetadata($data, Doku_Renderer_metadata $renderer)
+    public static function processHeadingEnterMetadata($data, Doku_Renderer_metadata $renderer)
     {
 
-        $state = $data[PluginUtility::STATE];
-        if ($state !== DOKU_LEXER_ENTER) {
-            return;
-        }
+
         /**
          * Only outline heading metadata
          * Not component heading

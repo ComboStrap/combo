@@ -5,6 +5,7 @@ namespace ComboStrap;
 use Doku_Handler;
 use Doku_Renderer_metadata;
 use Exception;
+use syntax_plugin_combo_tooltip;
 use syntax_plugin_combo_xmlinlinetag;
 use syntax_plugin_combo_icon;
 use syntax_plugin_combo_link;
@@ -20,7 +21,6 @@ class IconTag
     public static function handleSpecial(TagAttributes $tagAttributes, Doku_Handler $handler): array
     {
         // Get the parameters
-
         $callStack = CallStack::createFromHandler($handler);
         $parent = $callStack->moveToParent();
         $context = "";
@@ -73,7 +73,7 @@ class IconTag
         $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
         $message = "Icon ({$tagAttribute->getValue("name")}). Error while rendering: {$e->getMessage()}";
         $html = "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
-        LogUtility::warning($message, syntax_plugin_combo_icon::CANONICAL, $e);
+        LogUtility::warning($message, self::CANONICAL, $e);
         return $html;
     }
 
@@ -81,7 +81,7 @@ class IconTag
      * @param TagAttributes $tagAttributes
      * @return string
      */
-    public static function render(TagAttributes $tagAttributes): string
+    public static function renderEmptyTag(TagAttributes $tagAttributes): string
     {
 
         try {
@@ -126,5 +126,33 @@ class IconTag
             PluginUtility::ATTRIBUTES => $openingCall->getAttributes(),
             PluginUtility::CONTEXT => $openingCall->getContext()
         );
+    }
+
+    public static function renderEnterTag(TagAttributes $tagAttributes): string
+    {
+        $tooltip = $tagAttributes->getValueAndRemoveIfPresent(Tooltip::TOOLTIP_ATTRIBUTE);
+        $html = "";
+        if ($tooltip !== null) {
+            /**
+             * If there is a tooltip, we need
+             * to start with a span to wrap the svg with it
+             */
+
+
+            $tooltipTag = TagAttributes::createFromCallStackArray([Tooltip::TOOLTIP_ATTRIBUTE => $tooltip])
+                ->addClassName(syntax_plugin_combo_tooltip::TOOLTIP_CLASS_INLINE_BLOCK);
+            $html .= $tooltipTag->toHtmlEnterTag("span");
+        }
+        /**
+         * Print the icon
+         */
+        $html .= IconTag::renderEmptyTag($tagAttributes);
+        /**
+         * Close the span if we are in a tooltip context
+         */
+        if ($tooltip !== null) {
+            $html .= "</span>";
+        }
+        return $html;
     }
 }

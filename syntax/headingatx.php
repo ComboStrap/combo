@@ -167,7 +167,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
             /**
              * @var Doku_Renderer_metadata $renderer
              */
-            HeadingTag::processHeadingMetadata($data, $renderer);
+            HeadingTag::processHeadingEnterMetadata($data, $renderer);
 
         }
 

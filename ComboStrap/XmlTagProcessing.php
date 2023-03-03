@@ -62,6 +62,7 @@ class XmlTagProcessing
             case DateTag::TAG:
             case PageExplorerTag::LOGICAL_TAG:
             case PermalinkTag::TAG:
+            case IconTag::TAG:
                 return true;
             case DropDownTag::TAG:
                 $renderer->doc .= DropDownTag::renderExitXhtml();
@@ -212,6 +213,9 @@ class XmlTagProcessing
                 return true;
             case HrTag::TAG:
                 $renderer->doc .= HrTag::render($tagAttributes);
+                return true;
+            case IconTag::TAG:
+                $renderer->doc .= IconTag::renderEnterTag($tagAttributes);
                 return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -383,6 +387,9 @@ class XmlTagProcessing
             case PermalinkTag::TAG:
                 $returnedArray = PermalinkTag::handleEnterSpecial($tagAttributes, DOKU_LEXER_ENTER, $handler);
                 break;
+            case IconTag::TAG:
+                $returnedArray = IconTag::handleEnter($tagAttributes, $handler);
+                break;
         }
 
         /**
@@ -424,12 +431,10 @@ class XmlTagProcessing
                 break;
             case 'metadata':
                 /** @var Doku_Renderer_metadata $renderer */
-                switch ($logicalTag) {
-                    case HeadingTag::LOGICAL_TAG:
-                        HeadingTag::processHeadingMetadata($data, $renderer);
-                        return true;
+                if ($state !== DOKU_LEXER_ENTER) {
+                    return true;
                 }
-                break;
+                return XmlTagProcessing::renderStaticEnterMetadata($tagAttributes, $renderer, $data, $plugin);
             case 'xml':
                 /** @var renderer_plugin_combo_xml $renderer */
                 switch ($state) {
@@ -451,6 +456,7 @@ class XmlTagProcessing
                                 return true;
                         }
                 }
+                return false;
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:
                 /**
                  * @var renderer_plugin_combo_analytics $renderer
@@ -555,6 +561,9 @@ class XmlTagProcessing
                 break;
             case PermalinkTag::TAG:
                 PermalinkTag::handeExit($handler);
+                break;
+            case IconTag::TAG:
+                $returnedArray = IconTag::handleExit($handler);
                 break;
         }
         /**
@@ -685,7 +694,7 @@ class XmlTagProcessing
                         $renderer->doc .= SearchTag::render($tagAttributes);
                         break;
                     case IconTag::TAG:
-                        $renderer->doc .= IconTag::render($tagAttributes);
+                        $renderer->doc .= IconTag::renderEmptyTag($tagAttributes);
                         break;
                     case Breadcrumb::TAG:
                         $renderer->doc .= Breadcrumb::render($tagAttributes);
@@ -731,6 +740,20 @@ class XmlTagProcessing
                 break;
         }
         // unsupported $mode
+        return false;
+    }
+
+    private static function renderStaticEnterMetadata(TagAttributes $tagAttributes, Doku_Renderer_metadata $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
+    {
+        $logicalTag = $tagAttributes->getLogicalTag();
+        switch ($logicalTag) {
+            case HeadingTag::LOGICAL_TAG:
+                HeadingTag::processHeadingEnterMetadata($data, $renderer);
+                return true;
+            case IconTag::TAG:
+                IconTag::metadata($renderer, $tagAttributes);
+                return true;
+        }
         return false;
     }
 }

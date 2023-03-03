@@ -214,7 +214,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 /**
                  * @var Doku_Renderer_metadata $renderer
                  */
-                HeadingTag::processHeadingMetadata($data, $renderer);
+                HeadingTag::processHeadingEnterMetadata($data, $renderer);
                 return true;
 
             case renderer_plugin_combo_xml::FORMAT:

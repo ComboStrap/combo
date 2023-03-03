@@ -210,7 +210,7 @@ class FetcherMarkupBuilder
         $newFetcherMarkup->mime = $this->mime;
         $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
         $newFetcherMarkup->rendererName = $this->rendererName;
-        $newFetcherMarkup->isDoc = $this->getIsDoc();
+        $newFetcherMarkup->isDoc = $this->getIsDocumentExecution();
         if (isset($this->builderContextData)) {
             $newFetcherMarkup->contextData = $this->builderContextData;
         }
@@ -325,8 +325,12 @@ class FetcherMarkupBuilder
     }
 
     /**
-     * @param bool $isDoc - if the markup is a document (Outline will be added, ...)
+     * @param bool $isDoc - if the markup is a document or a fragment
      * @return $this
+     * If the markup is a document, an outline is added, a toc is calculated.
+     *
+     * The default is execution parameters dependent if not set
+     * and is calculated at {@link FetcherMarkupBuilder::getIsDocumentExecution()}
      */
     public function setIsDocument(bool $isDoc): FetcherMarkupBuilder
     {
@@ -357,7 +361,7 @@ class FetcherMarkupBuilder
         return $this;
     }
 
-    private function getIsDoc(): bool
+    private function getIsDocumentExecution(): bool
     {
 
         if (isset($this->isDoc)) {

@@ -40,12 +40,10 @@ class HttpRequest
     public static function fetchXhtmlPageResponse(string $wikiId): HttpResponse
     {
 
-        try {
-            $url = FetcherPage::createPageFetcherFromId($wikiId)
-                ->getFetchUrl();
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("Cannot create the fetch url", self::CANONICAL, 1, $e);
-        }
+
+        $url = FetcherPage::createPageFetcherFromId($wikiId)
+            ->getFetchUrl();
+
 
         return HttpRequest::createRequest($url)
             ->withTestRequest()
@@ -106,22 +104,11 @@ class HttpRequest
         }
 
         $testRequest = new \TestRequest();
+        $testRequest->setServer('REQUEST_TIME', time());
 
         if ($this->asAdmin) {
             Identity::becomeSuperUser($testRequest);
         }
-
-        /**
-         * Hack to reset the global
-         * Action router variable
-         */
-//        try {
-//            global $ACT;
-//            $ACT = $this->url->getQueryPropertyValue("do");
-//            ActionRouter::getInstance(true);
-//        } catch (ExceptionNotFound $e) {
-//            // no do action
-//        }
 
         switch ($this->method) {
             case self::GET:

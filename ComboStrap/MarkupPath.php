@@ -1162,13 +1162,23 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
     /**
-     * @throws ExceptionSqliteNotAvailable
      */
     public
     function getDatabasePage(): DatabasePageRow
     {
 
         return DatabasePageRow::getFromPageObject($this);
+
+    }
+
+    /**
+     * @throws ExceptionSqliteNotAvailable
+     */
+    public
+    function getOrCreateDatabasePage(): DatabasePageRow
+    {
+
+        return DatabasePageRow::getOrCreateFromPageObject($this);
 
     }
 

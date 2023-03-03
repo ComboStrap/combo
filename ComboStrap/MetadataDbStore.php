@@ -44,12 +44,12 @@ class MetadataDbStore extends MetadataStoreAbs implements MetadataStore
         // uid of the resoure (the old page id)
         $this->resourceUidMeta = $resource->getUid();
         $persistentName = $this->resourceUidMeta::getPersistentName();
+        /**
+         * If  uid is null, it's not yet in the database
+         * and returns the default or null, or empty array
+         */
         $this->resourceUidMetaValue = MetadataDokuWikiStore::getOrCreateFromResource($resource)
             ->getFromPersistentName($persistentName);
-        if ($this->resourceUidMetaValue === null) {
-            // no uid, not yet in the db
-            throw new ExceptionNotExists("The resource ({$resource}) has no uid ($persistentName). It's not yet stored in the database.");
-        }
 
         parent::__construct($resource);
     }
@@ -221,6 +221,10 @@ EOF;
 
         $uid = $this->resourceUidMeta;
         $uidValue = $this->resourceUidMetaValue;
+        if ($uidValue === null) {
+            // no yet in the db
+            return [];
+        }
 
         $uidAttribute = $uid::getPersistentName();
         $children = $metadata->getChildrenObject();
@@ -268,6 +272,12 @@ EOF;
 
     public function getFromPersistentName(string $name, $default = null)
     {
+
+        if ($this->resourceUidMetaValue === null) {
+            // not yet in the db
+            return $default;
+        }
+
         $row = $this->getDatabaseRow();
         $value = $row->getFromRow($name);
         if ($value !== null) {
@@ -299,7 +309,7 @@ EOF;
         $row = self::$dbRows[$mapKey];
         if ($row === null) {
             $page = $this->getResource();
-            $row = DatabasePageRow::getOrCreateFromPageObject($page);
+            $row = DatabasePageRow::getFromPageObject($page);
             self::$dbRows[$mapKey] = $row;
         }
         return $row;

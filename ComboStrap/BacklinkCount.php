@@ -78,9 +78,6 @@ class BacklinkCount extends MetadataInteger
     {
 
         $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite === null) {
-            return null;
-        }
         /** @noinspection SqlResolve */
         $request = $sqlite
             ->createRequest()
@@ -91,7 +88,7 @@ class BacklinkCount extends MetadataInteger
                 ->execute()
                 ->getFirstCellValue();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR);
+            LogUtility::error($e->getMessage(), self::PROPERTY_NAME, $e);
         } finally {
             $request->close();
         }
@@ -109,7 +106,6 @@ class BacklinkCount extends MetadataInteger
          */
         return $this;
     }
-
 
 
 }

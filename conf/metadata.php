@@ -359,7 +359,7 @@ $meta[ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF] = array('multichoice', '_choi
 /**
  * Take over the show
  */
-$meta[SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM] = array("onoff");
+$meta[SiteConfig::CONF_ENABLE_THEME_SYSTEM] = array("onoff");
 
 /**
  * Railbar

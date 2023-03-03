@@ -593,12 +593,6 @@ class ExecutionContext
     }
 
 
-    public function setEnablePageFetcherAsShowAction(): ExecutionContext
-    {
-        $this->getConfValue(SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM, 1);
-        return $this;
-    }
-
     /**
      * Dokuwiki handler name
      * @return array|mixed|string

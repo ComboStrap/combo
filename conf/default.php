@@ -422,7 +422,7 @@ $conf["defaultLayoutContainer"] = "sm";
 
 /**
  * Enable templating
- * See {@link SiteConfig::CONF_ENABLE_TEMPLATE_SYSTEM}
+ * See {@link SiteConfig::CONF_ENABLE_THEME_SYSTEM}
  */
 $conf["combo-conf-001"] = 1;
 

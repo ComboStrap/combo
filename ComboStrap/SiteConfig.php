@@ -8,10 +8,10 @@ class SiteConfig
     const LOG_EXCEPTION_LEVEL = 'log-exception-level';
 
     /**
-     * A configuration to enable the template system
+     * A configuration to enable the theme/template system
      */
-    public const CONF_ENABLE_TEMPLATE_SYSTEM = "combo-conf-001";
-    public const CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT = 1;
+    public const CONF_ENABLE_THEME_SYSTEM = "combo-conf-001";
+    public const CONF_ENABLE_THEME_SYSTEM_DEFAULT = 1;
 
     /**
      * The default font-size for the pages
@@ -126,13 +126,13 @@ class SiteConfig
 
     public function setDisableTemplating(): SiteConfig
     {
-        $this->setConf(self::CONF_ENABLE_TEMPLATE_SYSTEM, 0);
+        $this->setConf(self::CONF_ENABLE_THEME_SYSTEM, 0);
         return $this;
     }
 
     public function isTemplatingEnabled(): bool
     {
-        return $this->getBooleanValue(self::CONF_ENABLE_TEMPLATE_SYSTEM, self::CONF_ENABLE_TEMPLATE_SYSTEM_DEFAULT);
+        return $this->getBooleanValue(self::CONF_ENABLE_THEME_SYSTEM, self::CONF_ENABLE_THEME_SYSTEM_DEFAULT);
     }
 
     public function getValue(string $key, ?string $default = null, ?string $scope = PluginUtility::PLUGIN_BASE_NAME)
@@ -386,6 +386,12 @@ class SiteConfig
     public function setCanonicalUrlType(string $value): SiteConfig
     {
         return $this->setConf(PageUrlType::CONF_CANONICAL_URL_TYPE, $value);
+    }
+
+    public function setEnableTheming(): SiteConfig
+    {
+        $this->setConf(SiteConfig::CONF_ENABLE_THEME_SYSTEM, 1);
+        return $this;
     }
 
 

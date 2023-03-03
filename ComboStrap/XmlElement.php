@@ -393,13 +393,13 @@ class XmlElement
     public function __toString()
     {
         $toString = $this->getLocalName();
-        if ($this->getId() !== "") {
-            $toString .= "#" . $this->getId();
-        }
         $class = $this->getClass();
         if ($class !== "") {
             $classes = StringUtility::explodeAndTrim($class, " ");
-            $toString .= implode(".", $classes);
+            $toString .= '.' . implode(".", $classes);
+        }
+        if ($this->getId() !== "") {
+            $toString .= "#" . $this->getId();
         }
         return $toString;
     }
@@ -407,7 +407,7 @@ class XmlElement
     public function hasClass(string $needleClass): bool
     {
         $classes = preg_split("/\s/", $this->getClass());
-        if (in_array($needleClass,$classes)) {
+        if (in_array($needleClass, $classes)) {
             return true;
         }
         return false;

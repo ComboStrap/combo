@@ -263,6 +263,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
                 foreach ($frontMatterJsonArray as $key => $value) {
 
+                    /**
+                     * Hack while metadata and analtyics stats are not together
+                     */
+                    if ($key === PageDescription::DESCRIPTION_PROPERTY) {
+                        $value = $value['abstract'];
+                    }
                     $renderer->setAnalyticsMetaForReporting($key, $value);
                     if ($key === PageImages::PROPERTY_NAME) {
                         $this->updateImageStatistics($value, $renderer);

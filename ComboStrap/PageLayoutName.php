@@ -108,9 +108,10 @@ class PageLayoutName extends MetadataText
         }
 
         /**
-         * in test to speed the test execution, the default is {@link PageLayoutName::BLANK_LAYOUT}
+         * Note: in test to speed the test execution,
+         * the default is {@link PageLayoutName::BLANK_LAYOUT}
          */
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(self::CONF_DEFAULT_NAME, self::HOLY_LAYOUT_VALUE);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getConfValue(self::CONF_DEFAULT_NAME, self::HOLY_LAYOUT_VALUE);
 
 
     }

@@ -608,9 +608,9 @@ class XmlTagProcessing
                     'autocomplete' => false
                 );
                 break;
-            case Breadcrumb::TAG:
-                $knownTypes = Breadcrumb::TYPES;
-                $defaultAttributes = [TagAttributes::TYPE_KEY => Breadcrumb::NAVIGATION_TYPE];
+            case BreadcrumbTag::TAG:
+                $knownTypes = BreadcrumbTag::TYPES;
+                $defaultAttributes = BreadcrumbTag::getDefaultAttributes();
                 break;
             case PageImageTag::MARKUP:
                 $knownTypes = PageImageTag::TYPES;
@@ -696,8 +696,8 @@ class XmlTagProcessing
                     case IconTag::TAG:
                         $renderer->doc .= IconTag::renderEmptyTag($tagAttributes);
                         break;
-                    case Breadcrumb::TAG:
-                        $renderer->doc .= Breadcrumb::render($tagAttributes);
+                    case BreadcrumbTag::TAG:
+                        $renderer->doc .= BreadcrumbTag::render($tagAttributes);
                         break;
                     case PageImageTag::MARKUP:
                         $renderer->doc .= PageImageTag::render($tagAttributes, $data);

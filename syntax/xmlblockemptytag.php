@@ -3,24 +3,9 @@
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
-use ComboStrap\BackgroundTag;
-use ComboStrap\Brand;
-use ComboStrap\BrandButton;
-use ComboStrap\BrandListTag;
-use ComboStrap\BrandTag;
-use ComboStrap\Breadcrumb;
-use ComboStrap\CacheTag;
-use ComboStrap\CallStack;
-use ComboStrap\DateTag;
+use ComboStrap\BreadcrumbTag;
 use ComboStrap\HrTag;
-use ComboStrap\IconTag;
-use ComboStrap\LogUtility;
-use ComboStrap\PageImageTag;
-use ComboStrap\PermalinkTag;
 use ComboStrap\PluginUtility;
-use ComboStrap\SearchTag;
-use ComboStrap\ShareTag;
-use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 
 
@@ -56,7 +41,7 @@ class syntax_plugin_combo_xmlblockemptytag extends DokuWiki_Syntax_Plugin
     function getPType(): string
     {
         /**
-         * Empty tag may be also block (ie Navigational {@link Breadcrumb} for instance
+         * Empty tag may be also block (ie Navigational {@link BreadcrumbTag} for instance
          */
         return 'block';
     }

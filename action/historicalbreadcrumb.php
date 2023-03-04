@@ -16,7 +16,6 @@ use ComboStrap\PluginUtility;
 use ComboStrap\HistoricalBreadcrumbMenuItem;
 use ComboStrap\Site;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  *

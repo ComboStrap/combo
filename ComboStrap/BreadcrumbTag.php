@@ -5,8 +5,12 @@ namespace ComboStrap;
 
 /**
  * Utility class for breadcrumb
+ *
+ *
+ *
+ * https://en.wikipedia.org/wiki/Breadcrumb_navigation#Websites
  */
-class Breadcrumb
+class BreadcrumbTag
 {
     /**
      * The type of breadcrumb
@@ -52,11 +56,8 @@ class Breadcrumb
          * Get the page
          */
         $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
-        $actual = MarkupPath::createPageFromPathObject($path);
+        $actualPath = MarkupPath::createPageFromPathObject($path);
 
-        /**
-         * TODO: How to check that we should be able to use the navigational type only once ?
-         */
         $type = $tagAttributes->getType();
 
 
@@ -73,14 +74,14 @@ class Breadcrumb
                 $htmlOutput = $tagAttributes->toHtmlEnterTag("nav");
                 $htmlOutput .= '<ol class="breadcrumb">';
 
-                $lisHtmlOutput = self::getLiHtmlOutput($actual, true);
+                $lisHtmlOutput = self::getLiHtmlOutput($actualPath, true);
                 while (true) {
                     try {
-                        $actual = $actual->getParent();
+                        $actualPath = $actualPath->getParent();
                     } catch (ExceptionNotFound $e) {
                         break;
                     }
-                    $liHtmlOutput = self::getLiHtmlOutput($actual);
+                    $liHtmlOutput = self::getLiHtmlOutput($actualPath);
                     $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
                 }
                 $htmlOutput .= $lisHtmlOutput;
@@ -104,12 +105,12 @@ class Breadcrumb
                 $actualDepth = 0;
                 while (true) {
                     try {
-                        $actual = $actual->getParent();
+                        $actualPath = $actualPath->getParent();
                     } catch (ExceptionNotFound $e) {
                         break;
                     }
                     $actualDepth = $actualDepth + 1;
-                    $nameOrDefault = $actual->getNameOrDefault();
+                    $nameOrDefault = $actualPath->getNameOrDefault();
                     $liHtmlOutput = "<span class=\"breadcrumb-$type-item\">$nameOrDefault</span>";
                     $lisHtmlOutput = $liHtmlOutput . $lisHtmlOutput;
                     if ($actualDepth >= $requiredDepth) {
@@ -182,7 +183,12 @@ class Breadcrumb
             // not a fetcher markup run
         }
 
-        return Breadcrumb::toBreadCrumbHtml($tagAttributes);
+        return BreadcrumbTag::toBreadCrumbHtml($tagAttributes);
 
+    }
+
+    public static function getDefaultAttributes(): array
+    {
+        return [TagAttributes::TYPE_KEY => BreadcrumbTag::NAVIGATION_TYPE];
     }
 }

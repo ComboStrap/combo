@@ -258,7 +258,8 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $pageLang = Lang::createForMarkup($this->getRequestedPage());
         $title = PageTitle::createForMarkup($this->getRequestedPage())->getValueOrDefault();
         try {
-            $this->pageLayout = PageTemplate::createFromLayoutName($this->getRequestedLayoutOrDefault())
+            $layoutName = $this->getRequestedLayoutOrDefault();
+            $this->pageLayout = PageTemplate::createFromLayoutName($layoutName)
                 ->setRequestedContextPath($this->getRequestedPath())
                 ->setRequestedLang($pageLang)
                 ->setRequestedTitle($title);

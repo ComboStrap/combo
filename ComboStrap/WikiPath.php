@@ -239,21 +239,46 @@ class WikiPath extends PathAbs
      * @param string $path - the path in a wiki form that may be relative - if the path is blank, it's the current markup (the requested markup)
      * @param string|null $rev - the revision (ie timestamp in number format)
      * @return WikiPath - the wiki path
+     * @throws ExceptionBadArgument - if a relative path is given and the context path does not have any parent
      */
     public static function createMarkupPathFromPath(string $path, string $rev = null): WikiPath
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
         if ($path == "") {
-            try {
-                return $executionContext
-                    ->getExecutingMarkupHandler()
-                    ->getRequestedContextPath();
-            } catch (ExceptionNotFound $e) {
-                return $executionContext->getDefaultContextPath();
-            }
+            return $executionContext->getContextPath();
         }
         if (WikiPath::isNamespacePath($path)) {
-            return new WikiPath($path, self::MARKUP_DRIVE, $rev);
+
+            if ($path[0] !== self::CURRENT_PATH_CHARACTER) {
+                /**
+                 * Not a relative path
+                 */
+                return new WikiPath($path, self::MARKUP_DRIVE, $rev);
+            }
+            /**
+             * A relative path
+             */
+            $contextPath = $executionContext->getContextPath();
+            if ($path === self::CURRENT_PARENT_PATH_CHARACTER . self::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+                /**
+                 * ie processing `..:`
+                 */
+                try {
+                    return $contextPath->getParent()->getParent();
+                } catch (ExceptionNotFound $e) {
+                    throw new ExceptionBadArgument("The context path ($contextPath) does not have a grand parent, therefore the relative path ($path) is invalid.", $e);
+                }
+            }
+            /**
+             * ie processing `.:`
+             */
+            try {
+                return $contextPath->getParent();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("A context path is a page and should therefore have a parent", $e);
+            }
+
         }
 
         /**
@@ -301,7 +326,8 @@ class WikiPath extends PathAbs
     }
 
 
-    public static function createMediaPathFromPath($path, $rev = null): WikiPath
+    public
+    static function createMediaPathFromPath($path, $rev = null): WikiPath
     {
         try {
             return new WikiPath($path, WikiPath::MEDIA_DRIVE, $rev);
@@ -320,7 +346,8 @@ class WikiPath extends PathAbs
      * @param $id
      * @return WikiPath
      */
-    public static function createFromUnknownRoot($id): WikiPath
+    public
+    static function createFromUnknownRoot($id): WikiPath
     {
         return new WikiPath($id, WikiPath::UNKNOWN_DRIVE);
     }
@@ -330,7 +357,8 @@ class WikiPath extends PathAbs
      * @return WikiPath - a dokuwiki Id hello:my:lord
      * @deprecated for {@link FetcherPage::createPageFragmentFetcherFromUrl()}
      */
-    public static function createFromUrl($url): WikiPath
+    public
+    static function createFromUrl($url): WikiPath
     {
         // Replace / by : and suppress the first : because the global $ID does not have it
         $parsedQuery = parse_url($url, PHP_URL_QUERY);
@@ -353,7 +381,8 @@ class WikiPath extends PathAbs
      * @param $pathId
      * @return false|string
      */
-    public static function getLastPart($pathId)
+    public
+    static function getLastPart($pathId)
     {
         $endSeparatorLocation = StringUtility::lastIndexOf($pathId, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT);
         if ($endSeparatorLocation === false) {
@@ -372,7 +401,8 @@ class WikiPath extends PathAbs
      * @return string
      * Return an path from a id
      */
-    public static function IdToAbsolutePath($id)
+    public
+    static function IdToAbsolutePath($id)
     {
         if (is_null($id)) {
             LogUtility::msg("The id passed should not be null");
@@ -397,7 +427,8 @@ class WikiPath extends PathAbs
 
     }
 
-    public static function createMediaPathFromId($id, $rev = null): WikiPath
+    public
+    static function createMediaPathFromId($id, $rev = null): WikiPath
     {
         WikiPath::addRootSeparatorIfNotPresent($id);
         return self::createMediaPathFromPath($id, $rev);
@@ -406,7 +437,8 @@ class WikiPath extends PathAbs
     /**
      * @throws ExceptionBadArgument
      */
-    public static function createFromUri(string $uri)
+    public
+    static function createFromUri(string $uri)
     {
 
         $schemeQualified = WikiFileSystem::SCHEME . "://";
@@ -449,7 +481,8 @@ class WikiPath extends PathAbs
     }
 
 
-    public static function createMarkupPathFromId($id, $rev = null): WikiPath
+    public
+    static function createMarkupPathFromId($id, $rev = null): WikiPath
     {
         if (strpos($id, WikiFileSystem::SCHEME . "://") !== false) {
             return WikiPath::createFromUri($id);
@@ -463,7 +496,8 @@ class WikiPath extends PathAbs
      * it's added (ie to transform an id to a path)
      * @param string $path
      */
-    public static function addRootSeparatorIfNotPresent(string &$path)
+    public
+    static function addRootSeparatorIfNotPresent(string &$path)
     {
         $firstCharacter = substr($path, 0, 1);
         if (!in_array($firstCharacter, [WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, WikiPath::CURRENT_PATH_CHARACTER])) {
@@ -475,7 +509,8 @@ class WikiPath extends PathAbs
      * @param string $relativePath
      * @return string - a dokuwiki path (replacing the windows or linux path separator to the dokuwiki separator)
      */
-    public static function toDokuWikiSeparator(string $relativePath): string
+    public
+    static function toDokuWikiSeparator(string $relativePath): string
     {
         return preg_replace('/[\\\\\/]/', ":", $relativePath);
     }
@@ -485,7 +520,8 @@ class WikiPath extends PathAbs
      * @param $path - a manual path value
      * @return string -  a valid path
      */
-    public static function toValidAbsolutePath($path): string
+    public
+    static function toValidAbsolutePath($path): string
     {
         $path = cleanID($path);
         WikiPath::addRootSeparatorIfNotPresent($path);
@@ -494,7 +530,8 @@ class WikiPath extends PathAbs
 
     /**
      */
-    public static function createComboResource($stringPath): WikiPath
+    public
+    static function createComboResource($stringPath): WikiPath
     {
         return new WikiPath($stringPath, self::COMBO_DRIVE);
     }
@@ -506,7 +543,8 @@ class WikiPath extends PathAbs
      * @param string $rev - the revision
      * @return WikiPath
      */
-    public static function createWikiPath($path, $drive, string $rev = ''): WikiPath
+    public
+    static function createWikiPath($path, $drive, string $rev = ''): WikiPath
     {
         return new WikiPath($path, $drive, $rev);
     }
@@ -515,7 +553,8 @@ class WikiPath extends PathAbs
      * The executing markup
      * @throws ExceptionNotFound
      */
-    public static function createExecutingMarkupWikiPath(): WikiPath
+    public
+    static function createExecutingMarkupWikiPath(): WikiPath
     {
         return ExecutionContext::getActualOrCreateFromEnv()
             ->getExecutingWikiPath();
@@ -526,7 +565,8 @@ class WikiPath extends PathAbs
     /**
      * @throws ExceptionNotFound
      */
-    public static function createRequestedPagePathFromRequest(): WikiPath
+    public
+    static function createRequestedPagePathFromRequest(): WikiPath
     {
         return ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
     }
@@ -534,7 +574,8 @@ class WikiPath extends PathAbs
     /**
      * @throws ExceptionBadArgument - if the path is not a local path or is not in a known drive
      */
-    public static function createFromPathObject(Path $path): WikiPath
+    public
+    static function createFromPathObject(Path $path): WikiPath
     {
         if ($path instanceof WikiPath) {
             return $path;
@@ -578,7 +619,8 @@ class WikiPath extends PathAbs
     /**
      * @return LocalPath[]
      */
-    public static function getDriveRoots(): array
+    public
+    static function getDriveRoots(): array
     {
         return [
             self::MEDIA_DRIVE => Site::getMediaDirectory(),
@@ -605,7 +647,8 @@ class WikiPath extends PathAbs
      * @param string $namespacePath
      * @return bool
      */
-    public static function isNamespacePath(string $namespacePath): bool
+    public
+    static function isNamespacePath(string $namespacePath): bool
     {
         if (substr($namespacePath, -1) !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             return false;
@@ -617,7 +660,8 @@ class WikiPath extends PathAbs
     /**
      * @throws ExceptionBadSyntax
      */
-    public static function checkNamespacePath(string $namespacePath)
+    public
+    static function checkNamespacePath(string $namespacePath)
     {
         if (!self::isNamespacePath($namespacePath)) {
             throw new ExceptionBadSyntax("The path ($namespacePath) is not a namespace path");
@@ -631,7 +675,8 @@ class WikiPath extends PathAbs
      * @param string $namespaceAttribute
      * @return void
      */
-    public static function addNamespaceEndSeparatorIfNotPresent(string &$namespaceAttribute)
+    public
+    static function addNamespaceEndSeparatorIfNotPresent(string &$namespaceAttribute)
     {
         if (substr($namespaceAttribute, -1) !== WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
             $namespaceAttribute = $namespaceAttribute . WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT;
@@ -644,13 +689,15 @@ class WikiPath extends PathAbs
      * @param string|null $rev
      * @return WikiPath
      */
-    public static function createFromPath(string $path, string $drive, string $rev = null): WikiPath
+    public
+    static function createFromPath(string $path, string $drive, string $rev = null): WikiPath
     {
         return new WikiPath($path, $drive, $rev);
     }
 
 
-    public static function getContextPath(): WikiPath
+    public
+    static function getContextPath(): WikiPath
     {
         return ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
     }
@@ -667,12 +714,14 @@ class WikiPath extends PathAbs
      *
      * as an {@link WikiPath::getWikiId() id} is a validated absolute path without root character
      */
-    public static function normalizeWikiPath(string $id)
+    public
+    static function normalizeWikiPath(string $id)
     {
         return str_replace(WikiPath::NAMESPACE_SEPARATOR_SLASH, WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $id);
     }
 
-    public static function createRootNamespacePathOnMarkupDrive(): WikiPath
+    public
+    static function createRootNamespacePathOnMarkupDrive(): WikiPath
     {
         return WikiPath::createMarkupPathFromPath(self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
     }
@@ -681,7 +730,8 @@ class WikiPath extends PathAbs
      * @param $path
      * @return string with the root path
      */
-    public static function removeRootSepIfPresent($path): string
+    public
+    static function removeRootSepIfPresent($path): string
     {
         $id = $path;
         if ($id[0] === WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
@@ -695,7 +745,8 @@ class WikiPath extends PathAbs
      * The last part of the path
      * @throws ExceptionNotFound
      */
-    public function getLastName(): string
+    public
+    function getLastName(): string
     {
         /**
          * See also {@link noNSorNS}
@@ -738,7 +789,8 @@ class WikiPath extends PathAbs
     /**
      * @return bool true if this id represents a page
      */
-    public function isPage(): bool
+    public
+    function isPage(): bool
     {
 
         if (
@@ -754,7 +806,8 @@ class WikiPath extends PathAbs
     }
 
 
-    public function isGlob(): bool
+    public
+    function isGlob(): bool
     {
         /**
          * {@link search_universal} triggers ACL check
@@ -837,7 +890,8 @@ class WikiPath extends PathAbs
      *
      * @throws ExceptionNotFound - if the revision is not set and the path does not exist
      */
-    public function getRevisionOrDefault()
+    public
+    function getRevisionOrDefault()
     {
         try {
             return $this->getRevision();
@@ -902,7 +956,8 @@ class WikiPath extends PathAbs
 
     }
 
-    public function isPublic(): bool
+    public
+    function isPublic(): bool
     {
         return $this->getAuthAclValue() >= AUTH_READ;
     }
@@ -912,13 +967,15 @@ class WikiPath extends PathAbs
      * See the file defines.php
      *
      */
-    public function getAuthAclValue(): int
+    public
+    function getAuthAclValue(): int
     {
         return auth_quickaclcheck($this->getWikiId());
     }
 
 
-    public static function getReservedWords(): array
+    public
+    static function getReservedWords(): array
     {
         if (self::$reservedWords == null) {
             self::$reservedWords = array_merge(Url::RESERVED_WORDS, LocalPath::RESERVED_WINDOWS_CHARACTERS);
@@ -1028,7 +1085,8 @@ class WikiPath extends PathAbs
         return "localhost";
     }
 
-    public function resolveId($markupId): WikiPath
+    public
+    function resolveId($markupId): WikiPath
     {
         if ($this->getDrive() !== self::MARKUP_DRIVE) {
             return $this->resolve($markupId);
@@ -1051,7 +1109,8 @@ class WikiPath extends PathAbs
      * TODO: change it for a constructor on LocalPath
      * @throws ExceptionCast
      */
-    public function toLocalPath(): LocalPath
+    public
+    function toLocalPath(): LocalPath
     {
         /**
          * File path

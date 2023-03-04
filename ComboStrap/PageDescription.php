@@ -108,12 +108,15 @@ class PageDescription extends MetadataText
             return $this;
         }
 
-        if ($value !== null && is_array($value)) {
+        if (is_array($value)) {
             $description = $value[self::ABSTRACT_KEY];
             if ($description !== null) {
-                $this->descriptionOrigin = $value[self::DESCRIPTION_ORIGIN];
-                parent::buildFromStoreValue($description);
-                return $this;
+                $descriptionOrigin = $value[self::DESCRIPTION_ORIGIN];
+                if ($descriptionOrigin !== null) {
+                    $this->descriptionOrigin = $descriptionOrigin;
+                    parent::buildFromStoreValue($description);
+                    return $this;
+                }
             }
         }
         /**

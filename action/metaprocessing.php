@@ -8,6 +8,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiArrayStore;
 use ComboStrap\MetadataFrontmatterStore;
+use ComboStrap\MetadataMutation;
 use ComboStrap\PageImages;
 use ComboStrap\PagePath;
 use ComboStrap\Path;
@@ -30,11 +31,6 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
 {
 
 
-    /**
-     * When the value of a metadata has changed, an event is created
-     */
-    public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
-    public const NEW_VALUE_ATTRIBUTE = "new_value";
     private array $beforeMetaArray;
 
     public function register(Doku_Event_Handler $controller)
@@ -108,7 +104,7 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
             $valueBefore = $beforeMeta->toStoreValue();
             $valueAfter = $afterMeta->toStoreValue();
 
-            Metadata::notifyMetadataMutation($attribute, $valueBefore, $valueAfter, $page);
+            MetadataMutation::notifyMetadataMutation($attribute, $valueBefore, $valueAfter, $page);
         }
 
         /**

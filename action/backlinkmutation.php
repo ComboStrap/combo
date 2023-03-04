@@ -10,6 +10,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MarkupPath;
+use ComboStrap\MetadataMutation;
 use ComboStrap\PagePath;
 use ComboStrap\Reference;
 use ComboStrap\References;
@@ -33,7 +34,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         /**
          * create the async event
          */
-        $controller->register_hook(action_plugin_combo_metaprocessing::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_backlink_mutation', array());
+        $controller->register_hook(MetadataMutation::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_backlink_mutation', array());
 
         /**
          * process the Async event

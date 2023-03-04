@@ -4,6 +4,7 @@ use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\DokuwikiId;
 use ComboStrap\Event;
 use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\MetadataMutation;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PagePath;
@@ -31,7 +32,7 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
         /**
          * create the async event
          */
-        $controller->register_hook(action_plugin_combo_metaprocessing::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'createPrimaryMetaMutation', array());
+        $controller->register_hook(MetadataMutation::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'createPrimaryMetaMutation', array());
 
         /**
          * process the Async event

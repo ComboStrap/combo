@@ -12,6 +12,7 @@ use ComboStrap\LowQualityCalculatedIndicator;
 use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MarkupPath;
+use ComboStrap\MetadataMutation;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 
@@ -44,7 +45,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
         /**
          * create the async event
          */
-        $controller->register_hook(action_plugin_combo_metaprocessing::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_quality_mutation', array());
+        $controller->register_hook(MetadataMutation::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_quality_mutation', array());
 
         /**
          * process the Async event
@@ -112,7 +113,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
             return;
         }
 
-        $newValue = $data[action_plugin_combo_metaprocessing::NEW_VALUE_ATTRIBUTE];
+        $newValue = $data[MetadataMutation::NEW_VALUE_ATTRIBUTE];
         $path = $data[PagePath::getPersistentName()];
         Event::createEvent(
             self::QUALITY_MUTATION_EVENT_NAME,

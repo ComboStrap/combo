@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metaprocessing;
+use dokuwiki\Extension\Event;
 
 abstract class Metadata
 {
@@ -59,6 +60,36 @@ abstract class Metadata
     public function __construct(Metadata $parent = null)
     {
         $this->parent = $parent;
+    }
+
+    /**
+     *
+     * Metadata modification can happen:
+     * * on the whole set (ie after rendering the meta on references for instance)
+     * * or for scalar mutation
+     *
+     * This function is then used in tow places.
+     *
+     * @param string $attribute
+     * @param $valueBefore
+     * @param $valueAfter
+     * @param Path $wikiPath
+     * @return void
+     */
+    public static function notifyMetadataMutation(string $attribute, $valueBefore, $valueAfter, Path $wikiPath)
+    {
+        if ($valueAfter !== $valueBefore) {
+            /**
+             * Event
+             */
+            $eventData = [
+                "name" => $attribute,
+                action_plugin_combo_metaprocessing::NEW_VALUE_ATTRIBUTE => $valueAfter,
+                "old_value" => $valueBefore,
+                PagePath::getPersistentName() => $wikiPath->toAbsoluteString()
+            ];
+            Event::createAndTrigger(action_plugin_combo_metaprocessing::PAGE_METADATA_MUTATION_EVENT, $eventData);
+        }
     }
 
     /**
@@ -666,8 +697,19 @@ abstract class Metadata
      */
     public function persist(): Metadata
     {
+        $oldValue = $this->getWriteStore()->get($this);
         $this->sendToWriteStore();
         $this->getWriteStore()->persist();
+        try {
+            $actualValue = $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            $actualValue = null;
+        }
+
+
+        $attribute = $this->getName();
+        self::notifyMetadataMutation($attribute, $oldValue, $actualValue, $this->getResource()->getPathObject());
+
         return $this;
     }
 

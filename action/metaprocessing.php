@@ -10,7 +10,9 @@ use ComboStrap\MetadataDokuWikiArrayStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\PageImages;
 use ComboStrap\PagePath;
+use ComboStrap\Path;
 use ComboStrap\References;
+use ComboStrap\WikiPath;
 use dokuwiki\Extension\Event;
 
 /**
@@ -106,18 +108,7 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
             $valueBefore = $beforeMeta->toStoreValue();
             $valueAfter = $afterMeta->toStoreValue();
 
-            if ($valueAfter !== $valueBefore) {
-                /**
-                 * Event
-                 */
-                $eventData = [
-                    "name" => $attribute,
-                    self::NEW_VALUE_ATTRIBUTE => $valueAfter,
-                    "old_value" => $valueBefore,
-                    PagePath::getPersistentName() => ":$afterId"
-                ];
-                Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $eventData);
-            }
+            Metadata::notifyMetadataMutation($attribute, $valueBefore, $valueAfter, $page);
         }
 
         /**

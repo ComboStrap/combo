@@ -117,7 +117,6 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
 
     /**
      * @throws ExceptionBadState - if for any reason, it's not possible to store the data
-     * @throws ExceptionNoValueToStore - if there
      */
     public function set(Metadata $metadata)
     {

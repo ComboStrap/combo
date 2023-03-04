@@ -275,6 +275,7 @@ class Site
      * @param $value
      * @param string|null $namespace - the plugin name
      * @return void
+     * @deprecated use {@link SiteConfig::setConf()}
      */
     public static function setConf($key, $value, ?string $namespace = PluginUtility::PLUGIN_BASE_NAME)
     {

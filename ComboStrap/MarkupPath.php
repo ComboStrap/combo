@@ -376,7 +376,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      *
-     * @throws ExceptionNotExists
+     * @throws ExceptionNotExists - if the path does not exists
      */
     public function createHtmlFetcherWithContextPath(WikiPath $contextPath = null): FetcherMarkup
     {

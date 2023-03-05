@@ -667,17 +667,15 @@ abstract class Metadata
      */
     public function persist(): Metadata
     {
+
         $oldValue = $this->getWriteStore()->get($this);
         $this->sendToWriteStore();
         $this->getWriteStore()->persist();
-        try {
-            $actualValue = $this->getValue();
-        } catch (ExceptionNotFound $e) {
-            $actualValue = null;
-        }
-
-
+        $actualValue = $this->toStoreValue();
         $attribute = $this->getName();
+        /**
+         * TODO: add a toEventStoreValue/toFrontmatter/toInternal function to get the data in a event format value ?
+         */
         MetadataMutation::notifyMetadataMutation($attribute, $oldValue, $actualValue, $this->getResource()->getPathObject());
 
         return $this;

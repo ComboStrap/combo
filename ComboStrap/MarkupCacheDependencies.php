@@ -163,7 +163,12 @@ class MarkupCacheDependencies
         $slots = $page->getPrimaryIndependentSlots();
         foreach ($slots as $slot) {
 
-            $slotFetcher = $slot->createHtmlFetcherWithContextPath($wikiPath);
+            try {
+                $slotFetcher = $slot->createHtmlFetcherWithContextPath($wikiPath);
+            } catch (ExceptionNotExists $e) {
+                // layout fragment does not exists
+                continue;
+            }
             $cacheDependencies = $slotFetcher->getCacheDependencies();
             if ($cacheDependencies->hasDependency($dependency)) {
                 $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);

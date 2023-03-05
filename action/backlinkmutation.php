@@ -16,7 +16,6 @@ use ComboStrap\Reference;
 use ComboStrap\References;
 
 
-
 /**
  * Refresh the analytics when a backlink mutation occurs for a page
  */
@@ -44,7 +43,11 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
     }
 
-
+    /**
+     * @param Doku_Event $event
+     * @param $param
+     * @return void
+     */
     public function handle_backlink_mutation(Doku_Event $event, $param)
     {
 
@@ -106,37 +109,51 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         /**
          * If this is not a mutation on references we return.
          */
-        if ($data["name"] !== References::getPersistentName()) {
+        if ($data[MetadataMutation::NAME_ATTRIBUTE] !== References::getPersistentName()) {
             return;
         };
 
-        $newRows = $data["new_value"];
-        $oldRows = $data["old_value"];
+        $actualReferenceDatas = $data[MetadataMutation::NEW_VALUE_ATTRIBUTE];
+        $oldReferenceDatas = $data[MetadataMutation::OLD_VALUE_ATTRIBUTE];
 
-        $afterReferences = [];
-        if ($newRows !== null) {
-            foreach ($newRows as $rowNewValue) {
-                $reference = $rowNewValue[Reference::getPersistentName()];
-                $afterReferences[$reference] = $reference;
+        /**
+         * Create an array of the actual reference with the key as path
+         */
+        $actualReferences = [];
+        if ($actualReferenceDatas !== null) {
+            foreach ($actualReferenceDatas as $actualReferenceData) {
+                $actualReferenceWikiPathString = $actualReferenceData[Reference::getPersistentName()];
+                $actualReferences[$actualReferenceWikiPathString] = $actualReferenceWikiPathString;
             }
         }
 
-        if ($oldRows !== null) {
-            foreach ($oldRows as $oldRow) {
-                $beforeReference = $oldRow[Reference::getPersistentName()];
-                if (isset($afterReferences[$beforeReference])) {
-                    unset($afterReferences[$beforeReference]);
-                } else {
-                    Event::createEvent(
-                        action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME,
-                        [
-                            PagePath::getPersistentName() => $beforeReference
-                        ]
-                    );
+        if ($oldReferenceDatas !== null) {
+            foreach ($oldReferenceDatas as $oldReferenceData) {
+
+                $oldReferenceWikiPathString = $oldReferenceData[Reference::getPersistentName()];
+
+                if (isset($actualReferences[$oldReferenceWikiPathString])) {
+                    unset($actualReferences[$oldReferenceWikiPathString]);
+                    continue;
                 }
+
+                /**
+                 * Deleted reference
+                 */
+                Event::createEvent(
+                    action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME,
+                    [
+                        PagePath::getPersistentName() => $oldReferenceWikiPathString
+                    ]
+                );
+
             }
         }
-        foreach ($afterReferences as $newReference) {
+
+        /**
+         * The new references
+         */
+        foreach ($actualReferences as $newReference) {
             Event::createEvent(
                 action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME,
                 [PagePath::getPersistentName() => $newReference]);

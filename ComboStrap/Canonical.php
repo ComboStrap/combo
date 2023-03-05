@@ -57,7 +57,7 @@ class Canonical extends MetadataWikiPath
         return true;
     }
 
-    public function getDefaultValue(): ?string
+    public function getDefaultValue(): string
     {
 
         $resourceCombo = $this->getResource();
@@ -71,7 +71,7 @@ class Canonical extends MetadataWikiPath
         // How many last parts are taken into account in the canonical processing (2 by default)
         $canonicalLastNamesCount = SiteConfig::getConfValue(self::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
         if ($canonicalLastNamesCount <= 0) {
-            throw new ExceptionNotFound("Default canonical value is not enabled");
+            throw new ExceptionNotFound("Default canonical value is not enabled, no default canonical");
         }
 
         /**

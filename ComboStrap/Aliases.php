@@ -154,15 +154,19 @@ class Aliases extends MetadataTabular
      *
      * Once
      * @return Alias[]
+     * @throws ExceptionSqliteNotAvailable
      * @deprecated 2021-10-31
      */
     private
     function getAndDeleteDeprecatedAlias(): array
     {
         $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite === null) return [];
 
-        $canonicalOrDefault = $this->getResource()->getCanonicalOrDefault();
+        try {
+            $canonicalOrDefault = $this->getResource()->getCanonicalOrDefault();
+        } catch (ExceptionNotFound $e) {
+            return [];
+        }
         /** @noinspection SqlResolve */
         $request = $sqlite
             ->createRequest()

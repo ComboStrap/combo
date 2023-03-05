@@ -91,7 +91,7 @@ class HttpRequest
              * (There is no routing context, therefore for
              * each http request, a new context needs to be created)
              */
-            throw new ExceptionRuntimeInternal("The execution context has ended, you should close it and open another one");
+            throw new ExceptionRuntimeInternal("The execution context has ended, you should reopen another one");
         }
 
         try {

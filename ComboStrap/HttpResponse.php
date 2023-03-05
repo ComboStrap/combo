@@ -26,6 +26,7 @@ class HttpResponse
      * `Content-type: text/html;charset=UTF-8`
      */
     public const HEADER_CONTENT_TYPE = "Content-type";
+    public const LOCATION_HEADER_NAME = "Location";
 
     /**
      * @var int

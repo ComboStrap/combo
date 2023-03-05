@@ -94,8 +94,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     const PAGE_404 = "<html lang=\"en\"><body></body></html>";
     const REFRESH_HEADER_NAME = "Refresh";
     const REFRESH_HEADER_PREFIX = self::REFRESH_HEADER_NAME . ': 0;url=';
-    const LOCATION_HEADER_NAME = "Location";
-    const LOCATION_HEADER_PREFIX = self::LOCATION_HEADER_NAME . ": ";
+    const LOCATION_HEADER_PREFIX = HttpResponse::LOCATION_HEADER_NAME . ": ";
     public const URL_MANAGER_NAME = "Router";
 
 

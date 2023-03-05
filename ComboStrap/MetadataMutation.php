@@ -29,6 +29,10 @@ class MetadataMutation
      * @param $valueAfter
      * @param Path $wikiPath
      * @return void
+     *
+     * TODO: The data is now store dependent
+     *   * Can we also pass the store to decode
+     *   * or do we pass just the objects
      */
     public static function notifyMetadataMutation(string $attribute, $valueBefore, $valueAfter, Path $wikiPath)
     {

@@ -673,9 +673,7 @@ abstract class Metadata
         $this->getWriteStore()->persist();
         $actualValue = $this->toStoreValue();
         $attribute = $this->getName();
-        /**
-         * TODO: add a toEventStoreValue/toFrontmatter/toInternal function to get the data in a event format value ?
-         */
+
         MetadataMutation::notifyMetadataMutation($attribute, $oldValue, $actualValue, $this->getResource()->getPathObject());
 
         return $this;

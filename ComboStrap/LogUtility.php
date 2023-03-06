@@ -57,6 +57,7 @@ class LogUtility
 
 
     const LOGLEVEL_URI_QUERY_PROPERTY = "loglevel";
+    const SUPPORT_CANONICAL = "support";
 
     /**
      *

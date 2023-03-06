@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Cache\CacheInstructions;
+use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
 
 /**
@@ -221,7 +222,7 @@ class FetcherMarkupBuilder
          * (Why ? for test purpose, where we want to check if the dependencies was applied)
          * !!! Attention, the build of the dependencies should happen after that the markup source path is set !!!
          */
-        $newFetcherMarkup->cacheDependencies = MarkupCacheDependencies::create($newFetcherMarkup);
+        $newFetcherMarkup->outputCacheDependencies = MarkupCacheDependencies::create($newFetcherMarkup);
 
         /**
          * The cache object depends on the running request
@@ -274,7 +275,20 @@ class FetcherMarkupBuilder
              */
             $extension = $this->mime->getExtension();
             $newFetcherMarkup->contentCache = new CacheRenderer($wikiId, $localFile, $extension);
-            $newFetcherMarkup->cacheDependencies->rerouteCacheDestination($newFetcherMarkup->contentCache);
+            $newFetcherMarkup->outputCacheDependencies->rerouteCacheDestination($newFetcherMarkup->contentCache);
+
+            /**
+             * Snippet Cache
+             * Snippet.json is data dependent
+             *
+             * For instance, the carrousel may add glide or grid as snippet. It depends on the the number of backlinks.
+             *
+             * Therefore the output should be unique by rendered slot
+             * Therefore we reroute (recalculate the cache key to the same than the html file)
+             */
+            $newFetcherMarkup->snippetCache = new CacheParser($wikiId, $localFile, "snippet.json");
+            $newFetcherMarkup->outputCacheDependencies->rerouteCacheDestination($newFetcherMarkup->snippetCache);
+
 
             /**
              * Instructions cache

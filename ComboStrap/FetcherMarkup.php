@@ -77,7 +77,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @var CacheParser
      */
-    private CacheParser $snippetCache;
+    public CacheParser $snippetCache;
 
     /**
      * @var bool threat the markup as a document (not as a fragment)
@@ -87,7 +87,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public Mime $mime;
     private bool $cacheAfterRendering = true;
-    public MarkupCacheDependencies $cacheDependencies;
+    public MarkupCacheDependencies $outputCacheDependencies;
 
 
     /**
@@ -376,7 +376,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 try {
                     $nativeSnippets[] = Snippet::createFromJson($snippet);
                 } catch (ExceptionCompile $e) {
-                    LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
+                    LogUtility::error("The snippet json array cannot be build into a snippet object. " . $e->getMessage() . "\n" . ArrayUtility::formatAsString($snippet), LogUtility::SUPPORT_CANONICAL,);
                 }
 
             }
@@ -409,43 +409,18 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         if (isset($this->snippetCache)) {
             return $this->snippetCache;
         }
-
-        $path = null;
-        try {
-            $path = $this->getSourcePath();
-        } catch (ExceptionNotFound $e) {
-            if ($this->isPathExecution()) {
-                throw new ExceptionRuntimeInternal("A source path should be available as this is a path execution");
-            }
+        if ($this->isPathExecution()) {
+            throw new ExceptionRuntimeInternal("A source path should be available as this is a path execution");
         }
-        $id = $path->toAbsoluteString();
-        try {
-            $slotLocalFilePath = $path
-                ->toLocalPath()
-                ->toAbsolutePath()
-                ->toAbsoluteString();
-        } catch (ExceptionCast $e) {
-            throw new ExceptionRuntimeInternal("The path type ($path) is not supported, we couldn't store the snippets.");
-        }
-        $this->snippetCache = new CacheParser($id, $slotLocalFilePath, "snippet.json");
+        throw new ExceptionRuntime("There is no snippet cache store for a non-path execution");
 
-        /**
-         * Snippet.json is data dependent
-         *
-         * For instance, the carrousel may add glide or grid as snippet. It depends on the the number of backlinks.
-         *
-         * Therefore the output should be unique by rendered slot
-         * Therefore we reroute (recalculate the cache key to the same than the html file)
-         */
-        $this->cacheDependencies->rerouteCacheDestination($this->snippetCache);
-        return $this->snippetCache;
     }
 
 
     public
     function getDependenciesCacheStore(): CacheParser
     {
-        return $this->cacheDependencies->getDependenciesCacheStore();
+        return $this->outputCacheDependencies->getDependenciesCacheStore();
     }
 
     /**
@@ -578,7 +553,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         /**
          * Cache output dependencies
          */
-        $this->cacheDependencies->storeDependencies();
+        $this->outputCacheDependencies->storeDependencies();
 
         /**
          * We store always the output in the cache
@@ -592,7 +567,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * Reroute the cache output by runtime dependencies
          * set during processing
          */
-        $this->cacheDependencies->rerouteCacheDestination($this->contentCache);
+        $this->outputCacheDependencies->rerouteCacheDestination($this->contentCache);
         io_saveFile($this->contentCache->cache, $this->fetchString);
 
         return $this;
@@ -682,9 +657,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
 
-    public function getCacheDependencies(): MarkupCacheDependencies
+    public function getOutputCacheDependencies(): MarkupCacheDependencies
     {
-        return $this->cacheDependencies;
+        return $this->outputCacheDependencies;
     }
 
 
@@ -870,7 +845,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * This is motsly important for cache as we use the path as the cache key
      * (Cache:
      * * of the {@link self::getInstructions() instructions},
-     * * of the {@link self::getCacheDependencies() output dependencies}
+     * * of the {@link self::getOutputCacheDependencies() output dependencies}
      * * of the {@link self::getSnippets() snippets}
      * * of the {@link self::processMetadataIfNotYetDone() metadata}
      *

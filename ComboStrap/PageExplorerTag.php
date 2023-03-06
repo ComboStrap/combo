@@ -304,7 +304,7 @@ class PageExplorerTag
              */
             $executionContext
                 ->getExecutingMarkupHandler()
-                ->getCacheDependencies()
+                ->getOutputCacheDependencies()
                 ->addDependency(MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY)
                 ->addDependency(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
         } catch (ExceptionNotFound $e) {
@@ -334,7 +334,7 @@ class PageExplorerTag
             try {
                 $executionContext
                     ->getExecutingMarkupHandler()
-                    ->getCacheDependencies()
+                    ->getOutputCacheDependencies()
                     ->addDependency(MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY);
             } catch (ExceptionNotFound $e) {
                 // ok

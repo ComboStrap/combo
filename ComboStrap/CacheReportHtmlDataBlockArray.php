@@ -71,7 +71,7 @@ class CacheReportHtmlDataBlockArray
 
                 if ($mode === FetcherMarkup::XHTML_MODE) {
                     $dependencies = FetcherMarkup::createXhtmlMarkupFetcherFromPath($sourcePath, $sourcePath)
-                        ->getCacheDependencies()
+                        ->getOutputCacheDependencies()
                         ->getDependencies();
                     $data[self::DEPENDENCY_ATT] = $dependencies;
                 }

@@ -14,7 +14,7 @@ use DateTime;
  * This is just another namespace extension of {@link ExecutionContext}
  * to not have all function in the same place
  *
- * Except for the cache dependencies of a {@link FetcherMarkup::getCacheDependencies() Markup}
+ * Except for the cache dependencies of a {@link FetcherMarkup::getOutputCacheDependencies() Markup}
  */
 class CacheManager
 {

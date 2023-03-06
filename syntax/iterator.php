@@ -347,7 +347,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     try {
                         $cacheDependencies = ExecutionContext::getActualOrCreateFromEnv()
                             ->getExecutingMarkupHandler()
-                            ->getCacheDependencies();
+                            ->getOutputCacheDependencies();
 
                         switch ($table) {
                             case PageSqlTreeListener::BACKLINKS:

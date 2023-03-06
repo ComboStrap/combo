@@ -169,7 +169,7 @@ class MarkupCacheDependencies
                 // layout fragment does not exists
                 continue;
             }
-            $cacheDependencies = $slotFetcher->getCacheDependencies();
+            $cacheDependencies = $slotFetcher->getOutputCacheDependencies();
             if ($cacheDependencies->hasDependency($dependency)) {
                 $link = PluginUtility::getDocumentationHyperLink("cache:slot", "Slot Dependency", false);
                 $message = "$link ($dependency) was met with the primary slot ($pathAddedOrDeleted).";

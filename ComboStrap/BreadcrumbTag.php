@@ -174,7 +174,7 @@ class BreadcrumbTag
         try {
             ExecutionContext::getActualOrCreateFromEnv()
                 ->getExecutingMarkupHandler()
-                ->getCacheDependencies()
+                ->getOutputCacheDependencies()
                 // the output has the data from the requested page
                 ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY)
                 // the data from the requested page is dependent on the name, title or description of the page

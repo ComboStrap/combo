@@ -10,6 +10,7 @@ use ComboStrap\DropDownTag;
 use ComboStrap\IconTag;
 use ComboStrap\NoteTag;
 use ComboStrap\PermalinkTag;
+use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\XmlTagProcessing;
 
@@ -44,6 +45,7 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
         $array[] = PermalinkTag::TAG;
         $array[] = DateTag::TAG;
         $array[] = IconTag::TAG;
+        $array[] = PipelineTag::TAG;
         return $array;
     }
 

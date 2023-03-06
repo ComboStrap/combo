@@ -237,7 +237,7 @@ BrandTag
                 try {
                     ExecutionContext::getActualOrCreateFromEnv()
                         ->getExecutingMarkupHandler()
-                        ->getCacheDependencies()
+                        ->getOutputCacheDependencies()
                         ->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
                 } catch (ExceptionNotFound $e) {
                     // not a fetcher markup run

@@ -82,14 +82,36 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
             $fetcherMarkup = $executionContext->getExecutingMarkupHandler();
+            $isFragment = $fetcherMarkup->isFragment() === true;
+            try {
+                $executingPath = $fetcherMarkup->getRequestedExecutingPath();
+            } catch (ExceptionNotFound $e) {
+                $executingPath = null;
+            }
         } catch (ExceptionNotFound $e) {
-            return;
+            /**
+             * What fucked up is fucked up
+             * {@link pageinfo()} in common may starts before an handler is created
+             * {@link action_plugin_combo_docustom}
+             */
+            $requestedPath = $executionContext->getRequestedPath();
+            $isFragment = true;
+            $executingPath = null;
+            try {
+                $executingId = $executionContext->getExecutingWikiId();
+                if ($executingId === $requestedPath->getWikiId()) {
+                    $isFragment = false;
+                }
+                $executingPath = WikiPath::createMarkupPathFromId($executingId);
+            } catch (ExceptionNotFound $e) {
+                //
+            }
         }
 
         /**
          * Fragment execution
          */
-        if ($fetcherMarkup->isFragment() === true) {
+        if ($isFragment) {
             $callStack = CallStack::createFromHandler($handler);
             // no outline or edit button for dynamic rendering
             // but closing of atx heading
@@ -103,19 +125,13 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * (add outline section, ...)
          */
         $callStack = CallStack::createFromHandler($handler);
-        try {
-            $executingPath = $fetcherMarkup->getRequestedExecutingPath();
-            $executingMarkupPath = MarkupPath::createPageFromPathObject($executingPath);
-        } catch (ExceptionNotFound $e) {
-            $executingMarkupPath = null;
-        }
+        $executingMarkupPath = MarkupPath::createPageFromPathObject($executingPath);
         $outline = Outline::createFromCallStack($callStack, $executingMarkupPath);
         if (!$executionContext->getConfig()->isTemplatingEnabled()) {
             $handler->calls = $outline->toDokuWikiTemplateInstructionCalls();
         } else {
             $handler->calls = $outline->toHtmlSectionOutlineCalls();
         }
-
 
 
     }

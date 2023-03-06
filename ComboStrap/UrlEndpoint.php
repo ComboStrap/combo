@@ -8,6 +8,7 @@ class UrlEndpoint
     const LIB_EXE_FETCH_PHP = '/lib/exe/fetch.php';
     const LIB_EXE_DETAIL_PHP = '/lib/exe/detail.php';
     const LIB_EXE_RUNNER_PHP = '/lib/exe/taskrunner.php';
+    const LIB_EXE_CSS_PHP = '/lib/exe/css.php';
     const DOKU_PHP = '/doku.php';
     const LIB_EXE_AJAX_PHP = "/lib/exe/ajax.php";
     const DOKU_ENDPOINTS = [
@@ -15,7 +16,8 @@ class UrlEndpoint
         self::LIB_EXE_FETCH_PHP,
         self::LIB_EXE_DETAIL_PHP,
         self::LIB_EXE_RUNNER_PHP,
-        self::LIB_EXE_AJAX_PHP
+        self::LIB_EXE_AJAX_PHP,
+        self::LIB_EXE_CSS_PHP
     ];
 
 
@@ -77,7 +79,10 @@ class UrlEndpoint
         return Url::createEmpty()->setPath(self::LIB_EXE_AJAX_PHP);
     }
 
-
+    public static function createCssUrl(): Url
+    {
+        return Url::createEmpty()->setPath(self::LIB_EXE_CSS_PHP);
+    }
 
 
 }

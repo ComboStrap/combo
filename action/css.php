@@ -1,6 +1,9 @@
 <?php
 
 
+use ComboStrap\Api\ApiRouter;
+use ComboStrap\ArrayUtility;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
 use ComboStrap\Identity;
 use ComboStrap\PluginUtility;
@@ -35,10 +38,14 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     const CONF_DISABLE_DOKUWIKI_STYLESHEET = 'disableDokuwikiStylesheet';
 
     /**
-     * Front end or backend
+     * Anonymous or not
      */
-    const WHICH_END_KEY = 'end';
-    const VALUE_FRONT = 'front';
+    const ANONYMOUS_KEY = 'ano';
+    /**
+     * Combo theme or not
+     */
+    const COMBO_THEME_KEY = "combo-theme";
+
     const VALUE_BACK = 'back';
 
     /**
@@ -61,6 +68,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
         "usermanager"
     );
 
+
     /**
      * Registers a callback function for a given event
      *
@@ -74,28 +82,24 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
 
-
-        /**
-         * For front-end/public only
-         */
-        $urlPropertyValue = PluginUtility::getPropertyValue(self::WHICH_END_KEY, self::VALUE_BACK);
-        if (PluginUtility::getRequestScript() == "css.php" && $urlPropertyValue == self::VALUE_FRONT) {
-            /**
-             * The process follows the following steps:
-             *     * With CSS_STYLES_INCLUDED, you choose the file that you want
-             *     * then with CSS_CACHE_USE, you can change the cache key name
-             */
-            $controller->register_hook('CSS_STYLES_INCLUDED', 'BEFORE', $this, 'handle_front_css_styles');
-            $controller->register_hook('CSS_CACHE_USE', 'BEFORE', $this, 'handle_css_cache');
-        }
-
-        /**
-         * Add a property to the URL to create two CSS file:
-         *   * one public
-         *   * one private (logged in)
-         */
-        if (PluginUtility::getRequestScript() === "doku.php") {
-            $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'handle_css_metaheader');
+        $requestScript = PluginUtility::getRequestScript();
+        switch ($requestScript) {
+            case "css.php":
+                /**
+                 * The process follows the following steps:
+                 *     * With CSS_STYLES_INCLUDED, you choose the file that you want
+                 *     * then with CSS_CACHE_USE, you can change the cache key name
+                 */
+                $controller->register_hook('CSS_STYLES_INCLUDED', 'BEFORE', $this, 'handle_front_css_styles');
+                $controller->register_hook('CSS_CACHE_USE', 'BEFORE', $this, 'handle_css_cache');
+                break;
+            case "doku.php":
+                /**
+                 * Add property to the css URL to create multiple CSS file:
+                 *   * public/private (anonymous/loggedIn)
+                 */
+                $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'handle_css_metaheader');
+                break;
         }
 
 
@@ -116,27 +120,31 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 
         $config = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
         $disableDokuwikiStylesheet = $config->getBooleanValue(self::CONF_DISABLE_DOKUWIKI_STYLESHEET, false);
-        $enableMinimalFrontEnd = $config->getBooleanValue(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, false);
 
-        if (Identity::isAnonymous() && ($disableDokuwikiStylesheet || $enableMinimalFrontEnd)) {
+        $links = &$event->data['link'];
+        foreach ($links as $key => &$link) {
 
-            $links = &$event->data['link'];
-            foreach ($links as $key => &$link) {
-                $pos = strpos($link['href'], 'css.php');
-                if ($pos !== false) {
-
-                    if ($disableDokuwikiStylesheet) {
-                        unset($links[$key]);
-                        return;
-                    }
-
-                    if ($enableMinimalFrontEnd) {
-                        $link['href'] .= '&' . self::WHICH_END_KEY . '=' . self::VALUE_FRONT;
-                        return;
-                    }
-
-                }
+            $pos = strpos($link['href'], 'css.php');
+            if ($pos === false) {
+                continue;
             }
+
+            if ($disableDokuwikiStylesheet) {
+                unset($links[$key]);
+                return;
+            }
+
+            if (Identity::isAnonymous()) {
+                $link['href'] .= '&' . self::ANONYMOUS_KEY;
+            }
+
+            try {
+                $executingPageTemplate = ExecutionContext::getActualOrCreateFromEnv()->getExecutingPageTemplate();
+                $link['href'] .= '&' . self::COMBO_THEME_KEY;
+            } catch (ExceptionNotFound $e) {
+                //
+            }
+
         }
 
     }
@@ -160,14 +168,28 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     public function handle_css_cache(Doku_Event &$event, $param)
     {
 
-        $enableMinimalFrontEnd = $this->getConf(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, false);
-        if ($enableMinimalFrontEnd) {
-            $propertyValue = PluginUtility::getPropertyValue(self::WHICH_END_KEY);
-            if ($propertyValue == self::VALUE_FRONT) {
-                $event->data->key .= self::VALUE_FRONT;
-                $event->data->cache = getCacheName($event->data->key, $event->data->ext);
+        /**
+         * Add Anonymous and comboTheme in the cache key
+         * if present
+         */
+        $keys = [self::ANONYMOUS_KEY, self::COMBO_THEME_KEY];
+        $foundKeys = [];
+        foreach ($keys as $key) {
+            if (ApiRouter::hasRequestParameter($key)) {
+                $foundKeys[] = $key;
             }
         }
+        if (empty($foundKeys)) {
+            return;
+        }
+
+        /**
+         * Add Anonymous and comboTheme in the cache key
+         * if present
+         */
+        $event->data->key .= implode('.', $foundKeys);
+        $event->data->cache = getCacheName($event->data->key, $event->data->ext);
+
 
     }
 
@@ -182,21 +204,16 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
      */
     public function handle_front_css_styles(Doku_Event &$event, $param)
     {
-        /**
-         * Trick to be able to test
-         * The {@link register()} function is called only once when a test
-         * is started
-         * we change the value to see if the payload is less big
-         */
-        $propertyValue = PluginUtility::getPropertyValue(self::WHICH_END_KEY);
-        if ($propertyValue == self::VALUE_BACK) {
+
+        $isAnonymous = ApiRouter::hasRequestParameter(self::ANONYMOUS_KEY);
+        $isComboTheme = ApiRouter::hasRequestParameter(self::COMBO_THEME_KEY);
+        if (!$isAnonymous && !$isComboTheme) {
             return;
         }
 
-
         /**
          * There is one call by:
-         *   * mediatype (ie scree, all, print, speech)
+         *   * mediatype (ie screen, all, print, speech)
          *   * and one call for the dokuwiki default
          */
         switch ($event->data['mediatype']) {
@@ -236,7 +253,9 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
                 break;
 
             case 'speech':
-                $event->preventDefault();
+                if (!PluginUtility::isTest()) {
+                    $event->preventDefault();
+                }
                 break;
             case 'DW_DEFAULT':
                 // Interwiki styles are here, we keep (in the lib/css.php file)

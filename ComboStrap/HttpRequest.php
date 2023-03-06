@@ -3,8 +3,6 @@
 namespace ComboStrap;
 
 
-use dokuwiki\ActionRouter;
-
 /**
  * A request to the application
  * It's now a wrapper around {@link \TestRequest}

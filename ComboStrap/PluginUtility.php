@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Api\ApiRouter;
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 
@@ -475,6 +476,7 @@ class PluginUtility
      * set with {@link self::setTestProperty}
      * This is used to test script that are not supported by the dokuwiki test framework
      * such as css.php
+     * @deprecated use {@link ApiRouter::getRequestParameter()}
      */
     public
     static function getPropertyValue($name, $default = null)
@@ -1024,7 +1026,7 @@ class PluginUtility
         return MarkupRenderUtility::getInstructionsAndStripPEventually($markiCode);
     }
 
-    public static function isTest()
+    public static function isTest(): bool
     {
         return defined('DOKU_UNITTEST');
     }

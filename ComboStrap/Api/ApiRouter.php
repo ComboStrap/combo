@@ -1,5 +1,7 @@
 <?php
+
 namespace ComboStrap\Api;
+
 use ComboStrap\ExceptionNotFound;
 use dokuwiki\Extension\Event;
 
@@ -32,20 +34,44 @@ class ApiRouter
         /**
          * Shared check between post and get HTTP method
          */
-        $id = $_GET[$parameter];
-        if ($id !== null) {
-            return $id;
+        if (array_key_exists($parameter, $_GET)) {
+            /**
+             * May be null value with boolean
+             */
+            return $_GET[$parameter];
         }
+
         /**
          * With {@link TestRequest}
          * for instance
          */
-        $id = $_REQUEST[$parameter];
-        if ($id !== null) {
-            return $id;
+        if (array_key_exists($parameter, $_REQUEST)) {
+            return $_REQUEST[$parameter];
+        }
+
+        global $INPUT;
+        if ($INPUT->has($parameter)) {
+            return $INPUT->str($parameter);
+        }
+
+        if (defined('DOKU_UNITTEST')) {
+            global $COMBO;
+            if (array_key_exists($parameter, $COMBO)) {
+                return $COMBO[$parameter];
+            }
         }
 
         throw new ExceptionNotFound("The parameter ($parameter) was not found for this request");
 
+    }
+
+    public static function hasRequestParameter(string $parameter): bool
+    {
+        try {
+            self::getRequestParameter($parameter);
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
     }
 }

@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_qualitymessage;
+use ComboStrap\Api\QualityMessageHandler;
 
 class QualityDynamicMonitoringOverwrite extends MetadataBoolean
 {
@@ -15,7 +15,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
     public const PROPERTY_NAME = "dynamic_quality_monitoring";
     public const EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT = true;
 
-    public static function createFromPage(MarkupPath $page)
+    public static function createFromPage(MarkupPath $page): QualityDynamicMonitoringOverwrite
     {
         return (new QualityDynamicMonitoringOverwrite())
             ->setResource($page);
@@ -38,7 +38,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
 
     public function getCanonical(): string
     {
-        return action_plugin_combo_qualitymessage::CANONICAL;
+        return QualityMessageHandler::CANONICAL;
     }
 
 
@@ -57,6 +57,21 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
         return true;
     }
 
+    /**
+     * @return bool
+     */
+    public function getValueOrDefault(): bool
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
+    /**
+     * @return bool
+     */
     public function getDefaultValue(): bool
     {
         return self::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT;

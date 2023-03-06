@@ -262,7 +262,7 @@ EOF;
         if ($this->status !== null) {
             return $this->status;
         }
-        if ($this->type === null) {
+        if (!isset($this->type)) {
             return HttpResponseStatus::ALL_GOOD;
         }
         switch ($this->type) {

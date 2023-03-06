@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Api\QualityMessageHandler;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\Canonical;
@@ -127,8 +128,8 @@ $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE] = PluginUtility::getDocum
 /**
  * Excluded rules
  */
-$lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - If chosen, the quality rules will not be monitored.)";
-$lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
+$lang[QualityMessageHandler::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - If chosen, the quality rules will not be monitored.)";
+$lang[QualityMessageHandler::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
 
 /**
  * Link

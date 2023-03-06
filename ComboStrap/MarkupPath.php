@@ -3,7 +3,7 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_qualitymessage;
+use ComboStrap\Api\QualityMessageHandler;
 use DateTime;
 use dokuwiki\ChangeLog\ChangeLog;
 use Exception;
@@ -377,11 +377,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     /**
      *
      * @throws ExceptionNotExists - if the path does not exists
+     * @throws ExceptionCast - if the path is not a wiki path which is mandatory for the context
      */
     public function createHtmlFetcherWithItselfAsContextPath(): FetcherMarkup
     {
         $path = $this->getPathObject();
-        return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $path);
+        return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $path->toWikiPath());
     }
 
     /**
@@ -1757,7 +1758,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getDefaultQualityMonitoring(): bool
     {
-        if (SiteConfig::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
+        if (SiteConfig::getConfValue(QualityMessageHandler::CONF_DISABLE_QUALITY_MONITORING) === 1) {
             return false;
         } else {
             return true;

@@ -21,6 +21,10 @@ abstract class MetadataBoolean extends Metadata
         return DataType::BOOLEAN_TYPE_VALUE;
     }
 
+    /**
+     * @return bool
+     * @throws ExceptionNotFound
+     */
     public function getValue(): bool
     {
         $this->buildCheck();

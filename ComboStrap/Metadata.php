@@ -758,7 +758,7 @@ abstract class Metadata
 
     /**
      * @return mixed - set the memory value from the store and return ut
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound - if not found
      */
     public function getValueFromStore()
     {

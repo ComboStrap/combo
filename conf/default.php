@@ -176,8 +176,8 @@ $conf['mandatoryQualityRules'] = 'words_min,internal_backlinks_min,internal_link
 
 
 /**
- * {@link action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING}
- * {@link action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING}
+ * {@link QualityMessageHandler::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING}
+ * {@link QualityMessageHandler::CONF_DISABLE_QUALITY_MONITORING}
  */
 $conf['excludedQualityRulesFromDynamicMonitoring'] = 'words_by_section_avg_min,words_by_section_avg_max';
 $conf['disableDynamicQualityMonitoring'] = 0;

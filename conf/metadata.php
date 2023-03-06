@@ -6,6 +6,7 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Api\QualityMessageHandler;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
 use ComboStrap\Breakpoint;
@@ -150,8 +151,8 @@ $meta[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = array('mu
 /**
  * The quality rules excluded from monitoring
  */
-$meta[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = array('onoff');
-$meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
+$meta[QualityMessageHandler::CONF_DISABLE_QUALITY_MONITORING] = array('onoff');
+$meta[QualityMessageHandler::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
 
 /**
  * Link

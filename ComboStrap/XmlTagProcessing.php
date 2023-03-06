@@ -724,6 +724,9 @@ class XmlTagProcessing
                     case PermalinkTag::TAG:
                         $renderer->doc .= PermalinkTag::renderEnterSpecialXhtml($data);
                         return true;
+                    case QualityTag::MARKUP_TAG:
+                        $renderer->doc .= QualityTag::renderXhtml($tagAttributes);
+                        return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
                 }

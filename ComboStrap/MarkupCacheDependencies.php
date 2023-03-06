@@ -381,14 +381,8 @@ class MarkupCacheDependencies
             throw new ExceptionRuntimeInternal("There is no executing path, you can create a cache dependencies store", self::CANONICAL);
         }
 
-        try {
-            $localPath = $executingPath->toLocalPath()
-                ->toAbsolutePath();
-        } catch (ExceptionCast $e) {
-            throw new ExceptionRuntimeInternal("The executing path ($executingPath) could not be cast to a local path", self::CANONICAL, $e);
-        }
-
-        $this->dependenciesCacheStore = new CacheParser($localPath->toAbsoluteString(), $localPath, "deps.json");
+        list($wikiId, $localPath) = FetcherMarkupBuilder::getWikiIdAndLocalFileDokuwikiCompliant($executingPath);
+        $this->dependenciesCacheStore = new CacheParser($wikiId, $localPath, "deps.json");
         return $this->dependenciesCacheStore;
     }
 

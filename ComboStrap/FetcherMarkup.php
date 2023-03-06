@@ -424,6 +424,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return $this->outputCacheDependencies->getDependenciesCacheStore();
     }
 
+    public
+    function getDependenciesCachePath(): LocalPath
+    {
+        $cachePath = $this->outputCacheDependencies->getDependenciesCacheStore()->cache;
+        return LocalPath::createFromPathString($cachePath);
+    }
+
     /**
      * @return LocalPath the fetch path - start the process and returns a path. If the cache is on, return the {@link FetcherMarkup::getContentCachePath()}
      * @throws ExceptionCompile
@@ -1236,7 +1243,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
     }
 
-    public function processInstructions()
+    public function processInstructions(): FetcherMarkup
     {
         if (isset($this->processedInstructions)) {
             return $this;
@@ -1271,5 +1278,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return LocalPath::createFromPathString($cache);
 
     }
+
+    public function getMetadataPath(): LocalPath
+    {
+        return $this->metaPath;
+    }
+
 
 }

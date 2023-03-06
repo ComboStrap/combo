@@ -41,6 +41,47 @@ class FetcherMarkupBuilder
     }
 
     /**
+     * The local path is part of the key cache and should be the same
+     * than dokuwiki
+     *
+     * For whatever reason, Dokuwiki uses:
+     *   * `/` as separator on Windows
+     *   * and Windows short path `GERARD~1` not gerardnico
+     * See {@link wikiFN()}
+     * There is also a cache in the function
+     *
+     * We can't use our {@link Path} class to be compatible because the
+     * path is on windows format without the short path format
+     */
+    public static function getWikiIdAndLocalFileDokuwikiCompliant(Path $sourcePath): array
+    {
+
+        try {
+            $markuSourceWikiPath = $sourcePath->toWikiPath();
+
+            if ($markuSourceWikiPath->getDrive() === WikiPath::MARKUP_DRIVE) {
+                /**
+                 * Dokuwiki special function
+                 * that should be the same to conform to the cache key
+                 */
+                $wikiId = $markuSourceWikiPath->getWikiId();
+                $localFile = wikiFN($wikiId);
+            } else {
+                $localFile = $markuSourceWikiPath->toLocalPath();
+                $wikiId = $markuSourceWikiPath->toUriString();
+            }
+        } catch (ExceptionCast $e) {
+            $wikiId = $sourcePath->toAbsoluteString();
+            try {
+                $localFile = $sourcePath->toLocalPath();
+            } catch (ExceptionCast $e) {
+                throw new ExceptionRuntimeInternal("The source path ({$sourcePath}) is not supported as markup source path.", $e);
+            }
+        }
+        return [$wikiId, $localFile];
+    }
+
+    /**
      * @param string $markupString - the markup is a string format
      * @return FetcherMarkupBuilder
      */
@@ -161,17 +202,17 @@ class FetcherMarkupBuilder
          * Only one input should be given
          */
         $foundInput = "";
-        if ($this->builderMarkupSourcePath !== null){
+        if ($this->builderMarkupSourcePath !== null) {
             $foundInput = "markup path";
         }
-        if ($this->builderMarkupString !== null){
-            if(!empty($foundInput)){
+        if ($this->builderMarkupString !== null) {
+            if (!empty($foundInput)) {
                 throw new ExceptionRuntimeInternal("Only one input should be given, we have found 2 inputs ($foundInput and markup string)");
             }
             $foundInput = "markup path";
         }
-        if ($this->builderRequestedInstructions !== null){
-            if(!empty($foundInput)){
+        if ($this->builderRequestedInstructions !== null) {
+            if (!empty($foundInput)) {
                 throw new ExceptionRuntimeInternal("Only one input should be given, we have found 2 inputs ($foundInput and instructions)");
             }
         }
@@ -234,41 +275,12 @@ class FetcherMarkupBuilder
         if ($this->builderMarkupSourcePath !== null) {
 
 
-            /**
-             * The local path is part of the key cache and should be the same
-             * than dokuwiki
-             *
-             * For whatever reason, Dokuwiki uses:
-             *   * `/` as separator on Windows
-             *   * and Windows short path `GERARD~1` not gerardnico
-             * See {@link wikiFN()}
-             * There is also a cache in the function
-             *
-             * We can't use our {@link Path} class to be compatible because the
-             * path is on windows format without the short path format
-             */
-            try {
-                $markuSourceWikiPath = $this->builderMarkupSourcePath->toWikiPath();
+            list($wikiId, $localFile) = self::getWikiIdAndLocalFileDokuwikiCompliant($this->builderMarkupSourcePath);
 
-                if($markuSourceWikiPath->getDrive()===WikiPath::MARKUP_DRIVE){
-                    /**
-                     * Dokuwiki special function
-                     * that should be the same to conform to the cache key
-                     */
-                    $wikiId = $markuSourceWikiPath->getWikiId();
-                    $localFile = wikiFN($wikiId);
-                } else {
-                    $localFile = $markuSourceWikiPath->toLocalPath();
-                    $wikiId = $markuSourceWikiPath->toUriString();
-                }
-            } catch (ExceptionCast $e) {
-                $wikiId = $this->builderMarkupSourcePath->toAbsoluteString();
-                try {
-                    $localFile = $this->builderMarkupSourcePath->toLocalPath();
-                } catch (ExceptionCast $e) {
-                    throw new ExceptionRuntimeInternal("The source path ({$this->builderMarkupSourcePath}) is not supported as markup source path.", $e);
-                }
-            }
+            /**
+             * Instructions cache
+             */
+            $newFetcherMarkup->instructionsCache = new CacheInstructions($wikiId, $localFile);
 
             /**
              * Content cache
@@ -289,11 +301,6 @@ class FetcherMarkupBuilder
             $newFetcherMarkup->snippetCache = new CacheParser($wikiId, $localFile, "snippet.json");
             $newFetcherMarkup->outputCacheDependencies->rerouteCacheDestination($newFetcherMarkup->snippetCache);
 
-
-            /**
-             * Instructions cache
-             */
-            $newFetcherMarkup->instructionsCache = new CacheInstructions($wikiId, $localFile);
 
             /**
              * Runtime Meta cache

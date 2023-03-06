@@ -215,5 +215,10 @@ class Identity
         return getSecurityToken();
     }
 
+    public static function isAnonymous(): bool
+    {
+        return !self::isLoggedIn();
+    }
+
 
 }

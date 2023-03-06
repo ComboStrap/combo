@@ -2,6 +2,7 @@
 
 
 use ComboStrap\ExecutionContext;
+use ComboStrap\Identity;
 use ComboStrap\PluginUtility;
 
 
@@ -113,10 +114,12 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     public function handle_css_metaheader(Doku_Event &$event, $param)
     {
 
-        $disableDokuwikiStylesheet = $this->getConf(self::CONF_DISABLE_DOKUWIKI_STYLESHEET, false);
-        $enableMinimalFrontEnd = $this->getConf(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, false);
+        $config = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
+        $disableDokuwikiStylesheet = $config->getBooleanValue(self::CONF_DISABLE_DOKUWIKI_STYLESHEET, false);
+        $enableMinimalFrontEnd = $config->getBooleanValue(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, false);
 
-        if (empty($_SERVER['REMOTE_USER']) && ($disableDokuwikiStylesheet || $enableMinimalFrontEnd)) {
+        if (Identity::isAnonymous() && ($disableDokuwikiStylesheet || $enableMinimalFrontEnd)) {
+
             $links = &$event->data['link'];
             foreach ($links as $key => &$link) {
                 $pos = strpos($link['href'], 'css.php');

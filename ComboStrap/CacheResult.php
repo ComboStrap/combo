@@ -49,7 +49,7 @@ class CacheResult
         return $this->cacheParser->mode;
     }
 
-    public function getPageFragment(): MarkupPath
+    public function getMarkupPath(): MarkupPath
     {
         return MarkupPath::createMarkupFromId($this->cacheParser->page);
     }

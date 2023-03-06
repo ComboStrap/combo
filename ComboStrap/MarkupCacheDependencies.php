@@ -164,7 +164,7 @@ class MarkupCacheDependencies
         foreach ($slots as $slot) {
 
             try {
-                $slotFetcher = $slot->createHtmlFetcherWithContextPath($wikiPath);
+                $slotFetcher = $slot->createHtmlFetcherWithRequestedPathAsContextPath();
             } catch (ExceptionNotExists $e) {
                 // layout fragment does not exists
                 continue;

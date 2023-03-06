@@ -364,6 +364,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
     /**
+     * This functon loads the snippets in the global array
+     * by creating them. Not ideal but works for now.
      * @return Snippet[]
      */
     public
@@ -379,7 +381,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 } catch (ExceptionCompile $e) {
                     LogUtility::error("The snippet json array cannot be build into a snippet object. " . $e->getMessage() . "\n" . ArrayUtility::formatAsString($snippet), LogUtility::SUPPORT_CANONICAL,);
                 }
-
             }
         }
         return $nativeSnippets;

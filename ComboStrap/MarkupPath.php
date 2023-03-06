@@ -378,10 +378,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      *
      * @throws ExceptionNotExists - if the path does not exists
      */
-    public function createHtmlFetcherWithContextPath(WikiPath $contextPath = null): FetcherMarkup
+    public function createHtmlFetcherWithItselfAsContextPath(): FetcherMarkup
     {
         $path = $this->getPathObject();
-        return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $contextPath);
+        return FetcherMarkup::createXhtmlMarkupFetcherFromPath($path, $path);
     }
 
     /**
@@ -390,7 +390,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function getHtmlPath(): LocalPath
     {
 
-        $fetcher = $this->createHtmlFetcherWithContextPath();
+        $fetcher = $this->createHtmlFetcherWithItselfAsContextPath();
         return $fetcher->processIfNeededAndGetFetchPath();
 
     }
@@ -934,7 +934,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function toXhtml(): string
     {
 
-        $fetcherMarkup = $this->createHtmlFetcherWithContextPath();
+        $fetcherMarkup = $this->createHtmlFetcherWithItselfAsContextPath();
         return $fetcherMarkup->getFetchString();
 
 
@@ -2104,6 +2104,20 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         FileSystems::setContent($this, $textContent);
         return $this;
+    }
+
+    /**
+     * @throws ExceptionNotExists - if the path does not exist
+     */
+    public function createHtmlFetcherWithRequestedPathAsContextPath(): FetcherMarkup
+    {
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $executingPath = $this->getPathObject();
+        return FetcherMarkup::getBuilder()
+            ->setRequestedMimeToXhtml()
+            ->setRequestedContextPath($executionContext->getRequestedPath())
+            ->setRequestedExecutingPath($executingPath)
+            ->build();
     }
 
     private function getPrimaryFooterPage(): ?MarkupPath

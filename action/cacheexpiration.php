@@ -162,7 +162,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
                 $outputDocument,
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 $message);
-            $fetcher = $slot->createHtmlFetcherWithContextPath();
+            $fetcher = $slot->createHtmlFetcherWithItselfAsContextPath();
             CacheLog::deleteCacheIfExistsAndLog(
                 $fetcher,
                 self::SLOT_CACHE_EXPIRATION_EVENT,
@@ -171,7 +171,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             /**
              * Re-render
              */
-            $fetcher2 = $slot->createHtmlFetcherWithContextPath();
+            $fetcher2 = $slot->createHtmlFetcherWithItselfAsContextPath();
             CacheLog::renderCacheAndLog(
                 $fetcher2,
                 self::SLOT_CACHE_EXPIRATION_EVENT,

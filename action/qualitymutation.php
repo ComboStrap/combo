@@ -74,7 +74,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          */
         foreach ($page->getBacklinks() as $backlink) {
             try {
-                $htmlDocument = $backlink->createHtmlFetcherWithContextPath();
+                $htmlDocument = $backlink->createHtmlFetcherWithItselfAsContextPath();
             } catch (ExceptionNotExists $e) {
                 continue;
             }

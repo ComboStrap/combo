@@ -31,7 +31,8 @@ class CacheReportHtmlDataBlockArray
         $htmlDataBlock = [];
         foreach ($cacheReporters as $cacheReporter) {
 
-            foreach ($cacheReporter->getResults() as $result) {
+            $cacheResults = $cacheReporter->getResults();
+            foreach ($cacheResults as $result) {
 
                 $modifiedDate = "";
                 if ($result->getPath() !== null) {
@@ -43,7 +44,7 @@ class CacheReportHtmlDataBlockArray
                     }
                 }
                 $mode = $result->getMode();
-                $sourcePath = $result->getPageFragment()->getPathObject();
+                $sourcePath = $result->getMarkupPath()->getPathObject();
                 /**
                  * If this is not a wiki path, we try to transform it as wiki path
                  * to get a shorter path (ie id) in the report
@@ -70,9 +71,13 @@ class CacheReportHtmlDataBlockArray
                 ];
 
                 if ($mode === FetcherMarkup::XHTML_MODE) {
-                    $dependencies = FetcherMarkup::createXhtmlMarkupFetcherFromPath($sourcePath, $sourcePath)
-                        ->getOutputCacheDependencies()
-                        ->getDependencies();
+                    try {
+                        $dependencies = FetcherMarkup::createXhtmlMarkupFetcherFromPath($sourcePath, $sourcePath)
+                            ->getOutputCacheDependencies()
+                            ->getDependencies();
+                    } catch (ExceptionNotExists $e) {
+                        continue;
+                    }
                     $data[self::DEPENDENCY_ATT] = $dependencies;
                 }
 

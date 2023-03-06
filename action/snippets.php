@@ -2,12 +2,11 @@
 
 use ComboStrap\CacheManager;
 use ComboStrap\ExceptionBadState;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
-use ComboStrap\LogUtility;
-use ComboStrap\MarkupDynamicRender;
 use ComboStrap\FetcherMarkup;
-use ComboStrap\MarkupPath;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\SnippetSystem;
 
@@ -86,11 +85,8 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             ->setRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED, true);
 
 
-        try {
-            $executionContext->getRequestedPath();
-        } catch (ExceptionNotFound $e) {
-            return;
-        }
+        $requestedPath = $executionContext->getRequestedPath();
+
 
         /**
          * For each processed slot in the execution, retrieve the snippets
@@ -104,10 +100,14 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                     if ($report->getMode() !== FetcherMarkup::XHTML_MODE) {
                         continue;
                     }
-
-                    $pageFragment = $report->getPageFragment()->createHtmlFetcherWithContextPath();
-                    $pageFragment->loadSnippets();
-
+                    $markupPath = $report->getMarkupPath();
+                    try {
+                        $fetcherMarkupForMarkup = $markupPath->createHtmlFetcherWithRequestedPathAsContextPath();
+                    } catch (ExceptionNotExists $e) {
+                        LogUtility::internalError("The executing markup path ($markupPath) should exists because it was executed.");
+                        continue;
+                    }
+                    $fetcherMarkupForMarkup->loadSnippets();
                 }
 
             }

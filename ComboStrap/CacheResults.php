@@ -12,6 +12,8 @@ use dokuwiki\Cache\CacheParser;
 class CacheResults
 {
 
+    const CANONICAL = "cache-results";
+
     private $cacheResults;
     /**
      * @var string
@@ -30,6 +32,7 @@ class CacheResults
     public function setData(\Doku_Event $event)
     {
 
+
         $cacheParser = $event->data;
         /**
          * Metadata and other rendering may occurs
@@ -45,12 +48,14 @@ class CacheResults
              * Add snippet and output dependencies
              */
             if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
+
                 $page = $cacheParser->page;
                 try {
-                    $markupFetcher = MarkupPath::createMarkupFromId($page)->createHtmlFetcherWithContextPath();
+                    $markupFetcher = MarkupPath::createMarkupFromId($page)->createHtmlFetcherWithRequestedPathAsContextPath();
                 } catch (ExceptionNotExists $e) {
                     // should not happen
-                    LogUtility::internalError("The executing ");
+                    LogUtility::internalError("The executing path should exist as it's executed",self::CANONICAL, $e);
+                    return;
                 }
 
                 /**

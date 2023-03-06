@@ -45,7 +45,7 @@ class CacheExpirationDate extends MetadataDateTime
          * to not create the HTML
          */
         try {
-            $fetcherMarkup = $resourceCombo->createHtmlFetcherWithContextPath();
+            $fetcherMarkup = $resourceCombo->createHtmlFetcherWithItselfAsContextPath();
         } catch (ExceptionNotExists $e) {
             throw new ExceptionNotFound("The executing path does not exist.");
         }

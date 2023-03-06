@@ -61,9 +61,9 @@ class CacheManager
 
 
 
-    public function getCacheResultsForSlot(string $id): CacheResults
+    public function &getCacheResultsForSlot(string $id): CacheResults
     {
-        $cacheManagerForSlot = $this->slotCacheResults[$id];
+        $cacheManagerForSlot = &$this->slotCacheResults[$id];
         if ($cacheManagerForSlot === null) {
             $cacheManagerForSlot = new CacheResults($id);
             $this->slotCacheResults[$id] = $cacheManagerForSlot;

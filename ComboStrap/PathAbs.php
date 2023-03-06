@@ -40,7 +40,11 @@ abstract class PathAbs implements Path
     public function getLastNameWithoutExtension(): string
     {
         $lastName = $this->getLastName();
-        return pathinfo($lastName, PATHINFO_FILENAME);
+        $firstPoint = strpos($lastName, '.');
+        if ($firstPoint === false) {
+            return $lastName;
+        }
+        return substr($lastName, 0, $firstPoint);
     }
 
     /**

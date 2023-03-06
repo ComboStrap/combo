@@ -352,6 +352,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * At {@link action_plugin_combo_cache::createCacheReport()}
          */
         $snippetCache = $this->getSnippetCacheStore();
+        $this->outputCacheDependencies->rerouteCacheDestination($snippetCache);
 
         if (count($jsonDecodeSnippets) > 0) {
             $data1 = json_encode($jsonDecodeSnippets);
@@ -535,6 +536,12 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
 
 
+
+        /**
+         * Cache output dependencies
+         */
+        $this->outputCacheDependencies->storeDependencies();
+
         /**
          * We make the Snippet store to Html store an atomic operation
          *
@@ -549,11 +556,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
             $this->removeSnippets();
         }
-
-        /**
-         * Cache output dependencies
-         */
-        $this->outputCacheDependencies->storeDependencies();
 
         /**
          * We store always the output in the cache
@@ -1261,6 +1263,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         } finally {
             $executionContext->closeExecutingMarkupHandler();
         }
+    }
+
+    public function getSnippetCachePath(): LocalPath
+    {
+        $cache = $this->getSnippetCacheStore()->cache;
+        return LocalPath::createFromPathString($cache);
+
     }
 
 }

@@ -13,6 +13,6 @@ return array(
     'Hidehalo\\Nanoid\\' => array($vendorDir . '/hidehalo/nanoid-php/src'),
     'Facebook\\WebDriver\\' => array($vendorDir . '/php-webdriver/webdriver/lib'),
     'Cron\\' => array($vendorDir . '/dragonmantank/cron-expression/src/Cron'),
-    'ComboStrap\\' => array($baseDir . '/ComboStrap'),
+    'ComboStrap\\' => array($baseDir . '/ComboStrap', $baseDir . '/_test/ComboStrap'),
     'Antlr\\Antlr4\\Runtime\\' => array($vendorDir . '/antlr/antlr4-php-runtime/src'),
 );

@@ -2,15 +2,16 @@
     "name": "combostrap/combo",
     "homepage": "https://combostrap.com",
     "require": {
-        "php": "=7.4",
+        "php": "^7.4",
         "dragonmantank/cron-expression": "^1.2",
         "hidehalo/nanoid-php": "^1.1",
         "carica/phpcss": "^2.0",
         "ext-dom": "*",
         "ext-json": "*",
-        "ext-gd2": "*",
+        "ext-gd": "*",
         "antlr/antlr4-php-runtime": "0.5.1",
-        "php-webdriver/webdriver": "^1.12"
+        "php-webdriver/webdriver": "^1.12",
+        "salesforce/handlebars-php": "^3.0"
     },
     "autoload": {
         "psr-4": {

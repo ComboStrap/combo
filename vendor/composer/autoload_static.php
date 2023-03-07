@@ -75,10 +75,21 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         'ComboStrap\\' => 
         array (
             0 => __DIR__ . '/../..' . '/ComboStrap',
+            1 => __DIR__ . '/../..' . '/_test/ComboStrap',
         ),
         'Antlr\\Antlr4\\Runtime\\' => 
         array (
             0 => __DIR__ . '/..' . '/antlr/antlr4-php-runtime/src',
+        ),
+    );
+
+    public static $prefixesPsr0 = array (
+        'H' => 
+        array (
+            'Handlebars' => 
+            array (
+                0 => __DIR__ . '/..' . '/salesforce/handlebars-php/src',
+            ),
         ),
     );
 
@@ -96,6 +107,7 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$prefixesPsr0;
             $loader->classMap = ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764::$classMap;
 
         }, null, ClassLoader::class);

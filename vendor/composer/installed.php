@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'abd46d23b0da5cff85a22e46b6d9cd3db0eb2cbe',
+    'reference' => '2f6124749024aa75cd4eceab69a2c0a1da5548a9',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -36,7 +36,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'abd46d23b0da5cff85a22e46b6d9cd3db0eb2cbe',
+      'reference' => '2f6124749024aa75cd4eceab69a2c0a1da5548a9',
     ),
     'dragonmantank/cron-expression' => 
     array (
@@ -80,6 +80,15 @@
       array (
       ),
       'reference' => 'b27ddf458d273c7d4602106fcaf978aa0b7fe15a',
+    ),
+    'salesforce/handlebars-php' => 
+    array (
+      'pretty_version' => '3.0.1',
+      'version' => '3.0.1.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'd3a0552d85472249617ef6b56197c844d62d2ac3',
     ),
     'symfony/polyfill-mbstring' => 
     array (

@@ -211,6 +211,12 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
             return;
         }
 
+        $isEnabledMinimalFrontEnd = ExecutionContext::getActualOrCreateFromEnv()
+        ->getConfig()
+        ->getBooleanValue(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET,1);
+
+        $isMinimalFrontEnd = $isAnonymous && $isEnabledMinimalFrontEnd;
+
         /**
          * There is one call by:
          *   * mediatype (ie screen, all, print, speech)
@@ -224,27 +230,39 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
                 $filteredDataFiles = array();
                 $files = $event->data['files'];
                 foreach ($files as $file => $fileDirectory) {
-                    // lib styles
-                    if (strpos($fileDirectory, 'lib/styles')) {
-                        // Geshi (syntax highlighting) and basic style of doku, we keep.
-                        $filteredDataFiles[$file] = $fileDirectory;
+                    /**
+                     * No theme ?
+                     */
+
+                    // template style
+                    if ($isComboTheme && strpos($fileDirectory, 'lib/tpl')) {
                         continue;
                     }
+
+                    // Lib styles
+                    if (($isComboTheme || $isMinimalFrontEnd) && strpos($fileDirectory, 'lib/styles')) {
+                        // Geshi (syntax highlighting) and basic style of doku, we don't keep.
+                        continue;
+                    }
+
                     // No Css from lib scripts
                     // Jquery is here
-                    if (strpos($fileDirectory, 'lib/scripts')) {
+                    if  (($isComboTheme || $isMinimalFrontEnd) && strpos($fileDirectory, 'lib/scripts')) {
                         continue;
                     }
-                    // Excluded
-                    $isExcluded = false;
-                    foreach (self::EXCLUDED_PLUGINS as $plugin) {
-                        if (strpos($file, 'lib/plugins/' . $plugin)) {
-                            $isExcluded = true;
-                            break;
+
+                    if (($isComboTheme || $isMinimalFrontEnd)) {
+                        // Excluded
+                        $isExcluded = false;
+                        foreach (self::EXCLUDED_PLUGINS as $plugin) {
+                            if (strpos($file, 'lib/plugins/' . $plugin)) {
+                                $isExcluded = true;
+                                break;
+                            }
                         }
-                    }
-                    if (!$isExcluded) {
-                        $filteredDataFiles[$file] = $fileDirectory;
+                        if (!$isExcluded) {
+                            $filteredDataFiles[$file] = $fileDirectory;
+                        }
                     }
                 }
 

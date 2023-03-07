@@ -97,7 +97,7 @@ class UrlRewrite
                         try {
                             $id = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER);
                         } catch (ExceptionNotFound $e) {
-                            LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
+                            LogUtility::internalError("The media query should be present for a detail page fetch. No Url rewrite could be done.");
                             return;
                         }
                         $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);

@@ -2,13 +2,14 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\ExecutionContext;
+use ComboStrap\FileSystems;
 use ComboStrap\WikiPath;
 use ComboStrap\Identity;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MarkupPath;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
-
 
 
 /**
@@ -234,7 +235,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         foreach ($pagesToBeAdded as $key => $data) {
 
             // To prevent an Illegal string offset 'id'
-            if(isset($data["id"])) {
+            if (isset($data["id"])) {
 
                 $page = MarkupPath::createMarkupFromId($data["id"]);
 
@@ -305,14 +306,13 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     function handleRobotsMeta(&$event, $param)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
-            // $ID is null
+        $requestedPath = ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
+
+        if (!FileSystems::exists($requestedPath)) {
             return;
         }
 
-        $page = MarkupPath::createMarkupFromId($ID);
+        $page = MarkupPath::createPageFromPathObject($requestedPath);
 
         /**
          * No management for slot page

@@ -6,7 +6,7 @@ namespace ComboStrap;
 /**
  * A page template is the object
  * that generates a HTML page
- * (The templating engine)
+ * (ie the templating engine)
  *
  * It's used by Fetcher that creates pages such
  * as {@link FetcherPage}, {@link FetcherMarkupWebcode} or {@link FetcherPageBundler}
@@ -84,7 +84,9 @@ class PageTemplate
 
         $this->layoutName = $layoutName;
 
-        $layoutDirectory = WikiPath::createWikiPath(":layout:$this->layoutName:", WikiPath::COMBO_DRIVE);
+        $themeName = "default";
+        $layoutDirectory = WikiPath::createWikiPath(":theme:{$themeName}:$this->layoutName:", WikiPath::COMBO_DRIVE);
+
         $this->cssPath = $layoutDirectory->resolve("$this->layoutName.css");
         $this->jsPath = $layoutDirectory->resolve("$this->layoutName.js");
         $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.html");

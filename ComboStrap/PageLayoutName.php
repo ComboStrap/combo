@@ -7,6 +7,7 @@ namespace ComboStrap;
 class PageLayoutName extends MetadataText
 {
 
+
     public const PROPERTY_NAME = "layout";
     public const HOLY_LAYOUT_VALUE = "holy";
     public const MEDIAN_LAYOUT_VALUE = "median";

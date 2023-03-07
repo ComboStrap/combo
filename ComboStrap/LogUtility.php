@@ -330,7 +330,7 @@ class LogUtility
      * @param \Exception|null $e the original exception for trace chaining
      * @return void
      */
-    public static function error(string $message, string $canonical = "support", \Exception $e = null)
+    public static function error(string $message, string $canonical = self::SUPPORT_CANONICAL, \Exception $e = null)
     {
         self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical, $e);
     }
@@ -396,6 +396,18 @@ class LogUtility
             }
             self::error("{$internalErrorMessage}: $message.$errorPreviousMessage", $canonical);
         }
+    }
+
+    /**
+     * @param string $message
+     * @param string $canonical
+     * @param $e
+     * @return void
+     * Debug, trace
+     */
+    public static function debug(string $message, string $canonical = self::SUPPORT_CANONICAL, $e = null)
+    {
+        self::msg($message, LogUtility::LVL_MSG_DEBUG, $canonical, $e);
     }
 
 }

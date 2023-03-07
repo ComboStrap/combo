@@ -39,7 +39,7 @@ class MarkupRef
     public const WEB_URI = 'external';
 
     /**
-     * Type of link
+     * Type of Ref
      */
     public const INTERWIKI_URI = 'interwiki';
     public const WIKI_URI = 'internal';

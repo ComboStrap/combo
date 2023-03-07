@@ -1059,5 +1059,15 @@ class ExecutionContext
         return $this->creationTime;
     }
 
+    public function isExecutingPageTemplate(): bool
+    {
+        try {
+            $this->getExecutingPageTemplate();
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+    }
+
 
 }

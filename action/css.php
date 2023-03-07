@@ -44,9 +44,8 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     /**
      * Combo theme or not
      */
-    const COMBO_THEME_KEY = "combo-theme";
+    const COMBO_THEME_ENABLED_KEY = "combo-theme-enabled";
 
-    const VALUE_BACK = 'back';
 
     /**
      * List of excluded plugin
@@ -118,8 +117,13 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     public function handle_css_metaheader(Doku_Event &$event, $param)
     {
 
-        $config = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
-        $disableDokuwikiStylesheet = $config->getBooleanValue(self::CONF_DISABLE_DOKUWIKI_STYLESHEET, false);
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $config = $executionContext->getConfig();
+        $disableDokuwikiStylesheetConf = $config->getBooleanValue(self::CONF_DISABLE_DOKUWIKI_STYLESHEET, false);
+        $isExecutingTheme = $executionContext->isExecutingPageTemplate();
+
+        $disableDokuwikiStylesheet = $disableDokuwikiStylesheetConf && $isExecutingTheme;
+
 
         $links = &$event->data['link'];
         foreach ($links as $key => &$link) {
@@ -139,8 +143,8 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
             }
 
             try {
-                $executingPageTemplate = ExecutionContext::getActualOrCreateFromEnv()->getExecutingPageTemplate();
-                $link['href'] .= '&' . self::COMBO_THEME_KEY;
+                $executingPageTemplate = $executionContext->getExecutingPageTemplate();
+                $link['href'] .= '&' . self::COMBO_THEME_ENABLED_KEY;
             } catch (ExceptionNotFound $e) {
                 //
             }
@@ -172,7 +176,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
          * Add Anonymous and comboTheme in the cache key
          * if present
          */
-        $keys = [self::ANONYMOUS_KEY, self::COMBO_THEME_KEY];
+        $keys = [self::ANONYMOUS_KEY, self::COMBO_THEME_ENABLED_KEY];
         $foundKeys = [];
         foreach ($keys as $key) {
             if (ApiRouter::hasRequestParameter($key)) {
@@ -206,14 +210,14 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
     {
 
         $isAnonymous = ApiRouter::hasRequestParameter(self::ANONYMOUS_KEY);
-        $isComboTheme = ApiRouter::hasRequestParameter(self::COMBO_THEME_KEY);
-        if (!$isAnonymous && !$isComboTheme) {
+        $isThemeEnabled = ApiRouter::hasRequestParameter(self::COMBO_THEME_ENABLED_KEY);
+        if (!$isAnonymous && !$isThemeEnabled) {
             return;
         }
 
         $isEnabledMinimalFrontEnd = ExecutionContext::getActualOrCreateFromEnv()
-        ->getConfig()
-        ->getBooleanValue(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET,1);
+            ->getConfig()
+            ->getBooleanValue(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, 1);
 
         $isMinimalFrontEnd = $isAnonymous && $isEnabledMinimalFrontEnd;
 
@@ -230,28 +234,25 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
                 $filteredDataFiles = array();
                 $files = $event->data['files'];
                 foreach ($files as $file => $fileDirectory) {
-                    /**
-                     * No theme ?
-                     */
 
                     // template style
-                    if ($isComboTheme && strpos($fileDirectory, 'lib/tpl')) {
+                    if ($isThemeEnabled && strpos($fileDirectory, 'lib/tpl')) {
                         continue;
                     }
 
                     // Lib styles
-                    if (($isComboTheme || $isMinimalFrontEnd) && strpos($fileDirectory, 'lib/styles')) {
+                    if (($isThemeEnabled || $isMinimalFrontEnd) && strpos($fileDirectory, 'lib/styles')) {
                         // Geshi (syntax highlighting) and basic style of doku, we don't keep.
                         continue;
                     }
 
                     // No Css from lib scripts
                     // Jquery is here
-                    if  (($isComboTheme || $isMinimalFrontEnd) && strpos($fileDirectory, 'lib/scripts')) {
+                    if (($isThemeEnabled || $isMinimalFrontEnd) && strpos($fileDirectory, 'lib/scripts')) {
                         continue;
                     }
 
-                    if (($isComboTheme || $isMinimalFrontEnd)) {
+                    if (($isThemeEnabled || $isMinimalFrontEnd)) {
                         // Excluded
                         $isExcluded = false;
                         foreach (self::EXCLUDED_PLUGINS as $plugin) {

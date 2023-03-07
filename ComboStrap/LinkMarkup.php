@@ -145,8 +145,9 @@ class LinkMarkup
          * We can't use the previous {@link wl function}
          * because it encode too much
          */
+        $snippetSystem = PluginUtility::getSnippetManager();
         if ($url->hasProperty(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY)) {
-            PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("search-hit");
+            $snippetSystem->attachCssInternalStyleSheet("search-hit");
         }
 
         /**
@@ -195,7 +196,15 @@ EOF;
                 }
                 // normal link for the `this` wiki
                 if ($interWiki->getWiki() !== "this") {
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(MarkupRef::INTERWIKI_URI);
+                    $snippetSystem->attachCssInternalStyleSheet(MarkupRef::INTERWIKI_URI);
+                }
+                $cssRules = $interWiki->getDefaultCssRules();
+                $snippetSystem->attachCssInternalStyleSheet(MarkupRef::INTERWIKI_URI, $cssRules);
+                try {
+                    $cssRules = $interWiki->getSpecificCssRules();
+                    $snippetSystem->attachCssInternalStyleSheet(MarkupRef::INTERWIKI_URI . "-" . $interWiki->getWiki(), $cssRules);
+                } catch (ExceptionNotFound $e) {
+                    // no media find for the wiki
                 }
                 /**
                  * Target
@@ -205,9 +214,8 @@ EOF;
                     $outputAttributes->addOutputAttributeValue('target', $interWikiConf);
                     $outputAttributes->addOutputAttributeValue('rel', 'noopener');
                 }
-                $outputAttributes->addClassName(self::getHtmlClassInterWikiLink());
-                $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $interWiki->getWiki());
-                $outputAttributes->addClassName($wikiClass);
+                $outputAttributes->addClassName($interWiki->getComponentClass());
+                $outputAttributes->addClassName($interWiki->getSubComponentClass());
                 break;
             case MarkupRef::WIKI_URI:
                 /**
@@ -289,7 +297,7 @@ EOF;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                         $outputAttributes->addClassName(StyleUtility::addComboStrapSuffix(LowQualityPage::CLASS_SUFFIX));
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
-                        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet($snippetLowQualityPageId);
+                        $snippetSystem->attachCssInternalStyleSheet($snippetLowQualityPageId);
                         /**
                          * Note The protection does occur on Javascript level, not on the HTML
                          * because the created page is valid for a anonymous or logged-in user
@@ -402,7 +410,7 @@ EOF;
                  * that points to the local website
                  * (case of the {@link \syntax_plugin_combo_permalink}
                  */
-                if($url->isExternal()) {
+                if ($url->isExternal()) {
 
                     if ($conf['relnofollow']) {
                         $outputAttributes->addOutputAttributeValue("rel", 'nofollow ugc');
@@ -569,19 +577,7 @@ EOF;
         }
     }
 
-    public
-    static function getHtmlClassInterWikiLink(): string
-    {
-        $oldClassName = SiteConfig::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
-        if ($oldClassName) {
-            return "interwiki";
-        } else {
-            return "link-interwiki";
-        }
-    }
-
-    public
-    static function getHtmlClassExternalLink(): string
+    public static function getHtmlClassExternalLink(): string
     {
         $oldClassName = SiteConfig::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {

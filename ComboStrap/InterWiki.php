@@ -12,6 +12,8 @@ class InterWiki
      * The pattern that select the characters to encode in URL
      */
     const CHARACTERS_TO_ENCODE = '/[[\\\\\]^`{|}#%]/';
+    const IW_PREFIX = "iw_";
+
 
     private static ?array $INTERWIKI_URL_TEMPLATES = null;
 
@@ -46,17 +48,29 @@ class InterWiki
 
     public static function addInterWiki(string $name, string $value)
     {
-            ExecutionContext::getActualOrCreateFromEnv()
+        ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()
             ->addInterWiki($name, $value);
 
     }
 
 
-
     public static function createMediaInterWikiFromString(string $ref): InterWiki
     {
         return new InterWiki($ref, MarkupRef::MEDIA_TYPE);
+    }
+
+    /**
+     * @return string - the general component class
+     */
+    public static function getComponentClass(): string
+    {
+        $oldClassName = SiteConfig::getConfValue(LinkMarkup::CONF_USE_DOKUWIKI_CLASS_NAME);
+        if ($oldClassName) {
+            return "interwiki";
+        } else {
+            return "link-interwiki";
+        }
     }
 
     /**
@@ -213,6 +227,51 @@ class InterWiki
     public function getRef(): string
     {
         return $this->ref;
+    }
+
+    /**
+     * @return string - the class for this specific interwiki
+     */
+    public function getSubComponentClass(): string
+    {
+        return self::IW_PREFIX . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getSpecificCssRules(): string
+    {
+
+        /**
+         * Adapted from {@link css_interwiki()}
+         */
+        foreach (['svg', 'png', 'gif'] as $ext) {
+            $file = 'lib/images/interwiki/' . $this->name . '.' . $ext;
+            $urlFile = DOKU_BASE . $file;
+            $class = $this->getSubComponentClass();
+            if (file_exists(DOKU_INC . $file)) {
+                return <<<EOF
+a.$class {
+    background-image: url($urlFile)
+}
+EOF;
+            }
+        }
+        throw new ExceptionNotFound("No interwiki file found");
+    }
+
+    public
+    function getDefaultCssRules(): string
+    {
+        $url = DOKU_BASE . 'lib/images/interwiki.svg';
+        return <<<EOF
+a.interwiki {
+    background: transparent url($url) 0 0 no-repeat;
+    background-size: 1.2em;
+    padding: 0 0 0 1.4em;
+}
+EOF;
     }
 
 

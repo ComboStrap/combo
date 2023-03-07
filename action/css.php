@@ -32,9 +32,12 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 {
 
     /**
-     * Conf
+     * If anonymous
      */
     const CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET = 'enableMinimalFrontEndStylesheet';
+    /**
+     * If anonymous
+     */
     const CONF_DISABLE_DOKUWIKI_STYLESHEET = 'disableDokuwikiStylesheet';
 
     /**
@@ -45,6 +48,12 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
      * Combo theme or not
      */
     const COMBO_THEME_ENABLED_KEY = "combo-theme-enabled";
+
+    /**
+     * When anonymous, apply a minimal frontend optimization ?
+     * (ie without Jquery used mostly for admin, ...)
+     */
+    const ANONYMOUS_MINIMAL_FRONT_KEY = "minimal-front";
 
 
     /**
@@ -66,6 +75,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
         "upgrade",
         "usermanager"
     );
+
 
 
     /**
@@ -133,21 +143,28 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
                 continue;
             }
 
-            if ($disableDokuwikiStylesheet) {
-                unset($links[$key]);
-                return;
-            }
-
             if (Identity::isAnonymous()) {
+
+                if ($disableDokuwikiStylesheet) {
+                    unset($links[$key]);
+                    return;
+                }
+
                 $link['href'] .= '&' . self::ANONYMOUS_KEY;
+                $isEnabledMinimalFrontEnd = ExecutionContext::getActualOrCreateFromEnv()
+                    ->getConfig()
+                    ->getBooleanValue(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, 1);
+
+                if($isEnabledMinimalFrontEnd){
+                    $link['href'] .= '&' . self::ANONYMOUS_MINIMAL_FRONT_KEY;
+                }
             }
 
-            try {
-                $executingPageTemplate = $executionContext->getExecutingPageTemplate();
+            if ($executionContext->isExecutingPageTemplate()) {
                 $link['href'] .= '&' . self::COMBO_THEME_ENABLED_KEY;
-            } catch (ExceptionNotFound $e) {
-                //
             }
+
+
 
         }
 
@@ -176,7 +193,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
          * Add Anonymous and comboTheme in the cache key
          * if present
          */
-        $keys = [self::ANONYMOUS_KEY, self::COMBO_THEME_ENABLED_KEY];
+        $keys = [self::ANONYMOUS_KEY, self::COMBO_THEME_ENABLED_KEY, self::ANONYMOUS_MINIMAL_FRONT_KEY];
         $foundKeys = [];
         foreach ($keys as $key) {
             if (ApiRouter::hasRequestParameter($key)) {
@@ -211,15 +228,12 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 
         $isAnonymous = ApiRouter::hasRequestParameter(self::ANONYMOUS_KEY);
         $isThemeEnabled = ApiRouter::hasRequestParameter(self::COMBO_THEME_ENABLED_KEY);
+        $isMinimalFrontEnd = ApiRouter::hasRequestParameter(self::ANONYMOUS_MINIMAL_FRONT_KEY);
         if (!$isAnonymous && !$isThemeEnabled) {
             return;
         }
 
-        $isEnabledMinimalFrontEnd = ExecutionContext::getActualOrCreateFromEnv()
-            ->getConfig()
-            ->getBooleanValue(self::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET, 1);
 
-        $isMinimalFrontEnd = $isAnonymous && $isEnabledMinimalFrontEnd;
 
         /**
          * There is one call by:
@@ -248,7 +262,8 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
 
                     // No Css from lib scripts
                     // Jquery is here
-                    if (($isThemeEnabled || $isMinimalFrontEnd) && strpos($fileDirectory, 'lib/scripts')) {
+                    if (($isThemeEnabled || $isMinimalFrontEnd) && $isAnonymous && strpos($fileDirectory, 'lib/scripts')) {
+                        // Jquery is needed for admin (not anonymous)
                         continue;
                     }
 

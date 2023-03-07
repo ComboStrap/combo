@@ -36,6 +36,11 @@ class Theme
                     return ShareTag::render($tagAttributes, DOKU_LEXER_SPECIAL);
                 }
             );
+            $this->stringHandleBars->addHelper("runner",
+                function ($template, $context, $args, $source) {
+                    return "runner";
+                }
+            );
         } catch (\Exception $e) {
             throw ExceptionRuntimeInternal::withMessageAndError("Error while initiating handlebars", $e);
         }

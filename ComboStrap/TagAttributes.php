@@ -18,6 +18,9 @@ use syntax_plugin_combo_follow;
 /**
  * An helper to create manipulate component and html attributes
  *
+ * This is the equivalent of an {@link XmlElement}
+ * but does not need any {@link XmlDocument} to be created
+ *
  * You can:
  *   * declare component attribute after parsing
  *   * declare Html attribute during parsing

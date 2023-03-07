@@ -553,31 +553,12 @@ class PageTemplate
         if ($this->requestedEnableTaskRunner === false) {
             return;
         }
+        $taskRunnerImg = $this->getTaskRunnerImg();
         try {
-            $taskRunnerImg = $bodyElement->getDocument()->createElement("img");
-        } catch (\DOMException $e) {
-            LogUtility::internalError("img is a valid tag ban. No exception should happen .Error: {$e->getMessage()}.");
-            return;
+            $bodyElement->insertAdjacentHTML('beforeend', $taskRunnerImg);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+            LogUtility::internalError("This is written code, should not happen", self::CANONICAL, $e);
         }
-
-        try {
-            $htmlUrl = UrlEndpoint::createTaskRunnerUrl()
-                ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedContextPath()->getWikiId())
-                ->addQueryParameter(time())
-                ->toHtmlString();
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("A request path is mandatory when adding a task runner. Disable it if you don't want one in the layout ($this).");
-        }
-
-        // no more 1x1 px image because of ad blockers
-        $taskRunnerImg
-            ->setAttribute("id", PageTemplate::TASK_RUNNER_ID)
-            ->addClass("d-none")
-            ->setAttribute('width', 2)
-            ->setAttribute('height', 1)
-            ->setAttribute('alt', 'Task Runner')
-            ->setAttribute('src', $htmlUrl);
-        $bodyElement->appendChild($taskRunnerImg);
 
     }
 
@@ -1097,7 +1078,7 @@ EOF;
         }
 
         // position fixed to not participate into the grid
-        $toastsHtml =<<<EOF
+        $toastsHtml = <<<EOF
 <div class="toast-container position-fixed mb-3 me-3 bottom-0 end-0" id="toastPlacement" style="z-index:1060">
 $toasts
 </div>
@@ -1112,6 +1093,29 @@ EOF;
         ExecutionContext::getActualOrCreateFromEnv()
             ->getSnippetSystem()
             ->attachJavascriptFromComponentId("toast");
+    }
+
+    private function getTaskRunnerImg(): string
+    {
+
+        try {
+            $htmlUrl = UrlEndpoint::createTaskRunnerUrl()
+                ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedContextPath()->getWikiId())
+                ->addQueryParameter(time())
+                ->toHtmlString();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("A request path is mandatory when adding a task runner. Disable it if you don't want one in the layout ($this).");
+        }
+
+        // no more 1x1 px image because of ad blockers
+        return TagAttributes::createEmpty()
+            ->addOutputAttributeValue("id", PageTemplate::TASK_RUNNER_ID)
+            ->addClassName("d-none")
+            ->addOutputAttributeValue('width', 2)
+            ->addOutputAttributeValue('height', 1)
+            ->addOutputAttributeValue('alt', 'Task Runner')
+            ->addOutputAttributeValue('src', $htmlUrl)
+            ->toHtmlEmptyTag("img");
     }
 
 }

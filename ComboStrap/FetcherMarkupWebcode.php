@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_css;
+use ComboStrap\Api\ApiRouter;
 
 /**
  *
@@ -41,10 +42,11 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
      */
     function getFetchUrl(Url $url = null): Url
     {
-        $url = parent::getFetchUrl($url);
-        $url->addQueryParameter(self::MARKUP_PROPERTY, $this->getRequestedMarkup());
-        $url->addQueryParameter(self::TITLE_PROPERTY, $this->getRequestedTitle());
-        return $url;
+        $url = UrlEndpoint::createAjaxUrl()
+            ->addQueryParameter(ApiRouter::AJAX_CALL_ATTRIBUTE, ApiRouter::AJAX_CALL_VALUE)
+            ->addQueryParameter(self::MARKUP_PROPERTY, $this->getRequestedMarkup())
+            ->addQueryParameter(self::TITLE_PROPERTY, $this->getRequestedTitle());
+        return parent::getFetchUrl($url);
     }
 
 

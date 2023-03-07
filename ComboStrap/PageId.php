@@ -302,7 +302,7 @@ class PageId extends MetadataText
         } else {
             if (PluginUtility::isDevOrTest()) {
                 // this should never happened (exception in test/dev)
-                throw new ExceptionRuntime("Forcing of the page id should not happen in dev/test", $this->getCanonical());
+                LogUtility::internalError("Forcing of the page id should not happen in dev/test", $this->getCanonical());
             }
         }
         return parent::setValue($value);

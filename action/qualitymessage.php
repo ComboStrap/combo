@@ -37,12 +37,6 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'addMenuItem');
 
 
-        /**
-         * The ajax api to return data
-         */
-        $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE', $this, 'ajaxCall');
-
-
     }
 
 
@@ -68,13 +62,5 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
     }
 
-    /**
-     * Main function; dispatches the visual comment actions
-     * @param Doku_Event $event
-     * @param $param
-     */
-    function ajaxCall(Doku_Event &$event, $param): void
-    {
-        ApiRouter::handle($event);
-    }
+
 }

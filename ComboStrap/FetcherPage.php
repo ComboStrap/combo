@@ -22,13 +22,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     private FetcherCache $fetcherCache;
 
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    public static function createPageFetcherFromRequestedPage(): FetcherPage
-    {
-        return self::createPageFetcherFromPath(WikiPath::createRequestedPagePathFromRequest());
-    }
 
     public static function createPageFetcherFromPath(Path $path): FetcherPage
     {
@@ -93,6 +86,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
+        $layout = $tagAttributes->getValueAndRemoveIfPresent(PageLayoutName::PROPERTY_NAME);
+        if($layout!==null){
+            $this->setRequestedLayout($layout);
+        }
         return $this;
     }
 

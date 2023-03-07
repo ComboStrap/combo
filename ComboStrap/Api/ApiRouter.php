@@ -2,11 +2,27 @@
 
 namespace ComboStrap\Api;
 
+use Api\AjaxHandler;
+use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionRuntimeInternal;
+use ComboStrap\ExecutionContext;
+use ComboStrap\HttpResponseStatus;
+use ComboStrap\IFetcher;
+use ComboStrap\Mime;
+use ComboStrap\PluginUtility;
+use ComboStrap\Url;
 use dokuwiki\Extension\Event;
 
 class ApiRouter
 {
+    public const CANONICAL = "ajax";
+
+    /**
+     * The generic call that should be used for {@link \action_plugin_combo_ajax call}
+     */
+    public const AJAX_CALL_VALUE = "combo";
+    const AJAX_CALL_ATTRIBUTE = 'call';
 
     /**
      * @param Event $event
@@ -14,14 +30,43 @@ class ApiRouter
      */
     public static function handle(Event $event)
     {
+
         $call = $event->data;
-        switch ($call) {
-            case QualityMessageHandler::CALL_ID:
-                QualityMessageHandler::handle($event);
-                return;
-            default:
-                return;
+        if ($call == QualityMessageHandler::CALL_ID) {
+            QualityMessageHandler::handle($event);
+            return;
         }
+
+        $fetchUrl = Url::createFromGetOrPostGlobalVariable();
+        if ($call !== self::AJAX_CALL_VALUE && !$fetchUrl->hasProperty(IFetcher::FETCHER_KEY)) {
+            return;
+        }
+
+        // no other ajax call handlers needed
+        $event->stopPropagation();
+        $event->preventDefault();
+
+
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+            $fetcher = $executionContext->createStringMainFetcherFromRequestedUrl($fetchUrl);
+        } catch (\Exception $e) {
+            if (PluginUtility::isTest()) {
+                throw new ExceptionRuntimeInternal("Error while creating the ajax fetcher.", self::CANONICAL, 1, $e);
+            }
+            $executionContext
+                ->response()
+                ->setException($e)
+                ->setBody("Error while creating the fetcher for the fetch Url ($fetchUrl)", Mime::getText())
+                ->end();
+            return;
+        }
+
+        $executionContext
+            ->response()
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
+            ->setBody($fetcher->getFetchString(), $fetcher->getMime())
+            ->end();
 
 
     }

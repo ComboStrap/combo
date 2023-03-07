@@ -40,7 +40,6 @@ class FetcherSystem
         }
 
 
-
         try {
             $fetchDoku = FetcherRawLocalPath::createLocalFromFetchUrl($fetchUrl);
             $dokuPath = $fetchDoku->getSourcePath();

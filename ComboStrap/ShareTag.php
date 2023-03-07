@@ -8,6 +8,11 @@ class ShareTag
     const CANONICAL = "share";
 
 
+    /**
+     * @param TagAttributes $shareAttributes
+     * @param $state
+     * @return string
+     */
     public static function render(TagAttributes $shareAttributes, $state): string
     {
 
@@ -96,6 +101,11 @@ class ShareTag
 
 
 
+    }
+
+    public static function getKnownTypes(): array
+    {
+        return Brand::getBrandNamesForButtonType(BrandButton::TYPE_BUTTON_SHARE);
     }
 
 }

@@ -296,6 +296,15 @@ class TagAttributes
             ->setKnownTypes($knownTypes);
     }
 
+    public static function createFromTagAttributes($match, array $defaultAttributes = [], array $knownTypes = [], bool $allowFirstBooleanAttributesAsType = false): TagAttributes
+    {
+        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes, $allowFirstBooleanAttributesAsType);
+        $tag = PluginUtility::getMarkupTag($match);
+        $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
+        return self::createFromCallStackArray($mergedAttributes, $tag)
+            ->setKnownTypes($knownTypes);
+    }
+
 
     public static function createEmpty($logicalTag = "")
     {
@@ -362,7 +371,7 @@ class TagAttributes
      * @param TagAttributes $tagAttributes
      * @return TagAttributes
      */
-    public static function createFromTagAttributes(TagAttributes $tagAttributes): TagAttributes
+    public static function createFromTagAttributeString(TagAttributes $tagAttributes): TagAttributes
     {
         $newTagAttributes = new TagAttributes($tagAttributes->getComponentAttributes(), $tagAttributes->getLogicalTag());
         foreach ($tagAttributes->getStyleDeclarations() as $property => $value) {

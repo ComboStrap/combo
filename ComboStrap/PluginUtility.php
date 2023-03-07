@@ -252,10 +252,10 @@ class PluginUtility
 
         $match = PluginUtility::getPreprocessEnterTag($match);
 
-// Suppress the tag name (ie until the first blank)
+        // Suppress the tag name (ie until the first blank)
         $spacePosition = strpos($match, " ");
         if (!$spacePosition) {
-// No space, meaning this is only the tag name
+        // No space, meaning this is only the tag name
             return array();
         }
         $match = trim(substr($match, $spacePosition));
@@ -263,7 +263,7 @@ class PluginUtility
             return array();
         }
 
-// Do we have a type as first argument ?
+        // Do we have a type as first argument ?
         $attributes = array();
         $spacePosition = strpos($match, " ");
         if ($spacePosition) {
@@ -891,7 +891,7 @@ class PluginUtility
     {
 // Until the first >
         $pos = strpos($match, ">");
-        if ($pos == false) {
+        if (!$pos) {
             LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_WARNING);
             return null;
         }

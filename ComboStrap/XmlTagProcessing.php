@@ -617,7 +617,7 @@ class XmlTagProcessing
                 $defaultAttributes = PageImageTag::getDefaultAttributes();
                 break;
             case ShareTag::MARKUP:
-                $knownTypes = Brand::getBrandNamesForButtonType(BrandButton::TYPE_BUTTON_SHARE);
+                $knownTypes = ShareTag::getKnownTypes();
                 break;
             case BrandListTag::MARKUP:
                 $knownTypes = BrandButton::TYPE_BUTTONS;

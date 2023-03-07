@@ -11,7 +11,7 @@ class Theme
     private string $stringTemplate;
     private Handlebars $fileHandlebars;
     private Handlebars $stringHandleBars;
-    private array $model;
+    private array $model = [];
 
     /**
      * @param string $stringTemplate
@@ -28,6 +28,14 @@ class Theme
                 "partials_loader" => $partialsLoader
             ]);
             $this->stringHandleBars = new Handlebars();
+            $this->stringHandleBars->addHelper("share",
+                function ($template, $context, $args, $source) {
+                    $attributes = $context->get($args);
+                    $knownType = ShareTag::getKnownTypes();
+                    $tagAttributes = TagAttributes::createFromTagMatch("<share $attributes/>", [], $knownType);
+                    return ShareTag::render($tagAttributes, DOKU_LEXER_SPECIAL);
+                }
+            );
         } catch (\Exception $e) {
             throw ExceptionRuntimeInternal::withMessageAndError("Error while initiating handlebars", $e);
         }

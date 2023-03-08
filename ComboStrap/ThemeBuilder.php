@@ -9,6 +9,11 @@ class ThemeBuilder
 {
 
 
+    /**
+     * We use hbs and not html as extension because it permits
+     * to have syntax highlighting in idea
+     */
+    const EXTENSION_HBS = "hbs";
     private string $partialsDirectory;
 
 
@@ -34,7 +39,7 @@ class ThemeBuilder
                 /**
                  * Handlebars Files
                  */
-                $partialsLoader = new FilesystemLoader($this->partialsDirectory, ["extension" => "html"]);
+                $partialsLoader = new FilesystemLoader($this->partialsDirectory, ["extension" => self::EXTENSION_HBS]);
                 $handleBars = new Handlebars([
                     "loader" => $partialsLoader,
                     "partials_loader" => $partialsLoader

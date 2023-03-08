@@ -90,6 +90,9 @@ class PageTemplate
         $this->cssPath = $layoutDirectory->resolve("$this->layoutName.css");
         $this->jsPath = $layoutDirectory->resolve("$this->layoutName.js");
         $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.html");
+        if(!FileSystems::exists($this->htmlTemplatePath)){
+            $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.hbs");
+        }
         $this->templateDomDocument = $this->htmlTemplatePathToHtmlDom($this->htmlTemplatePath);
 
         foreach (PageTemplate::LAYOUT_ELEMENTS as $elementId) {
@@ -328,7 +331,16 @@ class PageTemplate
              *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
              *  ->setAttribute("xml:lang", $langValue)
              */
-            $this->setRemFontSizeToHtml($htmlXmlElement);
+
+            try {
+                $remSizeInt = $this->getRemFontSize();
+                $htmlXmlElement->addStyle("font-size", "{$remSizeInt}px");
+            } catch (ExceptionNotFound $e) {
+                //
+            }
+
+
+
 
 
             /**
@@ -522,24 +534,26 @@ class PageTemplate
         return $this;
     }
 
-    private function setRemFontSizeToHtml(XmlElement $html)
-    {
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getRemFontSize(){
         /**
          * Same as {@link self::CONF_REM_SIZE}
          */
         $remSize = tpl_getConf("remSize", null);
         if ($remSize === null) {
-            return;
+            throw new ExceptionNotFound("No rem size");
         }
         try {
-            $remSizeInt = DataType::toInteger($remSize);
+            return DataType::toInteger($remSize);
         } catch (ExceptionBadArgument $e) {
             LogUtility::error("The rem size configuration value ($remSize) is not an integer. Error:{$e->getMessage()}", self::CANONICAL);
-            return;
+            throw new ExceptionNotFound("No valid rem size");
         }
-        $html->addStyle("font-size", "{$remSizeInt}px");
-
     }
+
+
 
     private function getLayoutName(): string
     {
@@ -747,7 +761,8 @@ class PageTemplate
             [
                 PageTitle::PROPERTY_NAME => $this->getRequestedTitleOrDefault(),
                 Lang::PROPERTY_NAME => $this->getRequestedLangOrDefault()->getValueOrDefault(),
-                // The direction is not yet calculated from the page, we let the browser determine if from the lang
+                // The direction is not yet calculated from the page, we let the browser determine it from the lang
+                // dokuwiki has a direction config also ...
                 // "dir" => $this->getRequestedLangOrDefault()->getDirection()
             ];
 
@@ -757,6 +772,15 @@ class PageTemplate
         $container = SiteConfig::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
         $containerClass = ContainerTag::getClassName($container);
         $model["layout-container-class"] = $containerClass;
+
+        /**
+         * The rem
+         */
+        try {
+            $model["html-rem-size"] = $this->getRemFontSize();
+        } catch (ExceptionNotFound $e) {
+            // ok none
+        }
 
         /**
          * Data coupled to a page

@@ -2,6 +2,11 @@
 <head>
     <title>{{ title }}</title>
     {{{ head }}}
+    {{#if html-rem-size}}
+        <style>html {
+            font-size: {{html-rem-size}}px
+        }</style>
+    {{/if}}
 </head>
 <body>
 <div id="page-core" class="{{ layout-container-class }}">

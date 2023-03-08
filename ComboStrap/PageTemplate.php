@@ -770,6 +770,7 @@ class PageTemplate
         $containerClass = ContainerTag::getClassName($container);
         $model["layout-container-class"] = $containerClass;
 
+
         /**
          * The rem
          */
@@ -778,6 +779,7 @@ class PageTemplate
         } catch (ExceptionNotFound $e) {
             // ok none
         }
+
 
         /**
          * Body
@@ -788,10 +790,13 @@ class PageTemplate
          */
         $model["body-doku-classes"] = tpl_classes();
 
+        $model["theme-layout-name"] = StyleUtility::addComboStrapSuffix("layout-{$this->getLayoutName()}");
+
         /**
          * Data coupled to a page
          */
         try {
+
             $contextPath = $this->getRequestedContextPath();
             $markupPath = MarkupPath::createPageFromPathObject($contextPath);
             /**
@@ -799,6 +804,13 @@ class PageTemplate
              */
             $metadata = $markupPath->getMetadataForRendering();
             $model = array_merge($metadata, $model);
+
+            /**
+             * Toc
+             */
+            $model['toc-class'] = Toc::getClass();
+            $model['toc-html'] = $this->getTocOrDefault()->toXhtml();
+
             /**
              * Slot
              */
@@ -1020,6 +1032,9 @@ class PageTemplate
         return $this;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     private function getTocOrDefault(): Toc
     {
         if (isset($this->toc)) {

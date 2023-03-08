@@ -8,11 +8,16 @@
         }</style>
     {{/if}}
 </head>
-<body>
-<div id="page-core" class="{{ layout-container-class }} {{body-doku-classes}}">
+{{!-- position relative is for the toast and messages that are in a corner --}}
+<body class="{{body-doku-classes}} position-relative">
+<div id="page-core" class="{{ layout-container-class }}">
     <main id="main-content">
         <h1>{{h1}}</h1>
-        <nav id="main-toc"></nav>
+        {{#if toc-html}}
+            <nav id="main-toc" class="{{toc-class}}">
+                {{{toc-html}}}
+            </nav>
+        {{/if}}
         {{{ main-content }}}
     </main>
 </div>

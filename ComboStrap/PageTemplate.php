@@ -227,7 +227,7 @@ class PageTemplate
                  * The page core does not have any
                  * It's by default contained for all layout
                  * generally applied on the page-core element ie
-                 * <div id="page-core" data-layout-container=>
+                 * <div id="page-core" data-layout-container="true">
                  */
                 if ($domElement->hasAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
                     $domElement->removeAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
@@ -741,6 +741,44 @@ class PageTemplate
 
     }
 
+    public function getModel(): array
+    {
+        $model =
+            [
+                PageTitle::PROPERTY_NAME => $this->getRequestedTitleOrDefault(),
+                Lang::PROPERTY_NAME => $this->getRequestedLangOrDefault()->getValueOrDefault(),
+                // The direction is not yet calculated from the page, we let the browser determine if from the lang
+                // "dir" => $this->getRequestedLangOrDefault()->getDirection()
+            ];
+
+        /**
+         * The width of the layout
+         */
+        $container = SiteConfig::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+        $containerClass = ContainerTag::getClassName($container);
+        $model["layout-container-class"] = $containerClass;
+
+        /**
+         * Data coupled to a page
+         */
+        try {
+            $contextPath = $this->getRequestedContextPath();
+            $markupPath = MarkupPath::createPageFromPathObject($contextPath);
+            /**
+             * Meta
+             */
+            $metadata = $markupPath->getMetadataForRendering();
+            $model = array_merge($metadata, $model);
+            /**
+             * Slot
+             */
+            $model["main-content"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
+        } catch (ExceptionNotFound $e) {
+            // no context path
+        }
+        return $model;
+    }
+
     private function addTitleMeta(XmlElement $head)
     {
 
@@ -748,8 +786,7 @@ class PageTemplate
             $titleMeta = $head->querySelector("title");
         } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
             try {
-                $titleMeta = $head->getDocument()
-                    ->createElement("title");
+                $titleMeta = $head->getDocument()->createElement("title");
                 $head->appendChild($titleMeta);
             } catch (\DOMException $e) {
                 throw new ExceptionRuntimeInternal("Bad local name title, should not occur", self::CANONICAL, 1, $e);
@@ -761,22 +798,17 @@ class PageTemplate
 
     }
 
-    /**
-     * @throws ExceptionNotFound - if there is no title and not path
-     */
+
     private function getRequestedTitleOrDefault(): string
     {
+
         if (isset($this->requestedTitle)) {
             return $this->requestedTitle;
         }
-        try {
-            $path = $this->getRequestedContextPath();
-            $markupPath = MarkupPath::createPageFromPathObject($path);
-            return PageTitle::createForMarkup($markupPath)
-                ->getValueOrDefault();
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("A title should be set when the requested path is not set");
-        }
+
+        $path = $this->getRequestedContextPath();
+        $markupPath = MarkupPath::createPageFromPathObject($path);
+        return PageTitle::createForMarkup($markupPath)->getValueOrDefault();
 
 
     }
@@ -1123,6 +1155,15 @@ EOF;
             ->addOutputAttributeValue('alt', 'Task Runner')
             ->addOutputAttributeValue('src', $htmlUrl)
             ->toHtmlEmptyTag("img");
+    }
+
+    private function getRequestedLangOrDefault(): Lang
+    {
+        try {
+            return $this->getRequestedLang();
+        } catch (ExceptionNotFound $e) {
+            return Lang::createFromValue("en");
+        }
     }
 
 }

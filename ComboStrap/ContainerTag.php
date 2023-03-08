@@ -16,6 +16,11 @@ class ContainerTag
     public const CANONICAL = ContainerTag::TAG;
     /**
      * The value of the default layout container
+     * Page Header and Footer have a {@link BarTag} that permits to set the layout container value
+     *
+     * The page core does not have any It's by default contained for all layout
+     * generally applied on the page-core element ie
+     * <div id="page-core" data-layout-container="true">
      */
     public const DEFAULT_LAYOUT_CONTAINER_CONF = "defaultLayoutContainer";
     public const TAG = "container";

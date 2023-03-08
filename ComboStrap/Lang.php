@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use Collator;
 use dokuwiki\Cache\Cache;
 use PHPUnit\Exception;
 
@@ -227,6 +228,16 @@ class Lang extends MetadataText
     {
         /**
          * TODO: should be base on the page value
+         * Search PHP and CLDR
+         * https://punic.github.io/
+         * https://www.php.net/manual/en/book.intl.php
+         *
+         * Example:
+         * https://github.com/salarmehr/cosmopolitan
+         * use Salarmehr\Cosmopolitan\Cosmo;
+         *
+         * echo Cosmo::create('fa')->direction(); // rlt
+         * echo Cosmo::create('en')->direction(); // ltr
          */
         return Site::getLangDirection();
     }

@@ -437,7 +437,7 @@ class Site
 
             if (extension_loaded("intl")) {
                 $locale = locale_get_default();
-                $localeParts = preg_split("/_/", $locale, 2);
+                $localeParts = explode("_", $locale, 2);
                 if (sizeof($localeParts) === 2) {
                     return $localeParts[1];
                 }

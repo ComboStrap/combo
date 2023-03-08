@@ -194,7 +194,7 @@ class PageTemplate
      * @return string - the page as html string (not dom because that's not how works dokuwiki)
      * @throws ExceptionNotFound|ExceptionBadArgument
      */
-    public function generateAndGetPageHtmlAsString(string $mainHtml): string
+    public function render(string $mainHtml): string
     {
 
         $executionContext = (ExecutionContext::getActualOrCreateFromEnv())
@@ -203,10 +203,10 @@ class PageTemplate
 
             $htmlFragmentByVariables = [];
             try {
-                $pageLayoutElement = $this->getMainElement();
-                $layoutVariable = $pageLayoutElement->getVariableName();
+                $mainElement = $this->getMainElement();
+                $layoutVariable = $mainElement->getVariableName();
                 $htmlFragmentByVariables[$layoutVariable] = $mainHtml;
-                $pageLayoutElement->getDomElement()->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
+                $mainElement->getDomElement()->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
             } catch (ExceptionNotFound $e) {
                 // main element is mandatory, an error should have been thrown at build time
                 throw new ExceptionRuntimeInternal("Main element was not found", self::CANONICAL, 1, $e);
@@ -306,7 +306,7 @@ class PageTemplate
              * Html
              */
             try {
-                $html = $this->getTemplateDomDocument()->querySelector("html");
+                $htmlXmlElement = $this->getTemplateDomDocument()->querySelector("html");
             } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a html element");
             }
@@ -320,7 +320,7 @@ class PageTemplate
                 $langValue = Site::getLang();
                 $langDirection = Site::getLangDirection();
             }
-            $html
+            $htmlXmlElement
                 ->setAttribute("lang", $langValue)
                 ->setAttribute("dir", $langDirection);
             /**
@@ -328,7 +328,7 @@ class PageTemplate
              *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
              *  ->setAttribute("xml:lang", $langValue)
              */
-            $this->setRemFontSizeToHtml($html);
+            $this->setRemFontSizeToHtml($htmlXmlElement);
 
 
             /**
@@ -355,10 +355,6 @@ class PageTemplate
                 LogUtility::internalError("No slot was rendered");
             }
 
-            /**
-             * Messages
-             */
-            $this->addMessages($bodyElement);
 
             /**
              * Toc
@@ -459,6 +455,13 @@ class PageTemplate
                 // if the insert position is not good, should not happen as it's hard coded by us
                 throw new ExceptionRuntimeInternal("Inserting the preloaded HTML returns an error. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
             }
+
+            /**
+             * Messages
+             * (Should come just before the page creation
+             * due to the $MSG_shown mechanism in {@link html_msgarea()}
+             */
+            $this->addMessages($bodyElement);
 
             /**
              * We save as XML because we strive to be XML compliant (ie XHTML)
@@ -855,7 +858,11 @@ class PageTemplate
         }
         $variableName = "headElements";
         $htmlFragmentByVariables[$variableName] = $htmlHeaders;
-        $head->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $variableName);
+        try {
+            $head->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $variableName);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("Unable to add the head variable (should not happen)", self::CANONICAL, $e);
+        }
 
 
     }
@@ -981,7 +988,7 @@ class PageTemplate
      */
     public function generateAndGetPageHtmlAsDom(string $mainHtml): XmlDocument
     {
-        return XmlDocument::createHtmlDocFromMarkup($this->generateAndGetPageHtmlAsString($mainHtml));
+        return XmlDocument::createHtmlDocFromMarkup($this->render($mainHtml));
     }
 
     /**

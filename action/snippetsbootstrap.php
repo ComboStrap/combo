@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\ArrayUtility;
 use ComboStrap\Bootstrap;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
@@ -259,7 +260,7 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
                         } else {
                             $content = $metaData["content"];
                             if (empty($content)) {
-                                $messageEmpty = "the below head meta has an empty content property (" . print_r($metaData, true) . ")";
+                                $messageEmpty = "the below head meta has an empty content property (" . ArrayUtility::formatAsString($metaData) . ")";
                                 LogUtility::error($messageEmpty, self::FRONT_END_OPTIMIZATION_CANONICAL);
                             } else {
                                 $newHeaderData[] = $metaData;

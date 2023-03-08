@@ -115,7 +115,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
         /**
          * Generate the whole html page via the layout
          */
-        return $this->pageLayout->generateAndGetPageHtmlAsString($mainHtml);
+        return $this->pageLayout->render($mainHtml);
 
     }
 

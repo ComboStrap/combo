@@ -411,7 +411,7 @@ class ExecutionContext
                  * Case when the main handler
                  * run the main content before
                  * to inject it in the template page
-                 * {@link PageTemplate::generateAndGetPageHtmlAsString()}
+                 * {@link PageTemplate::render()}
                  */
                 return $this->getExecutingMarkupHandler()
                     ->getRequestedContextPath();

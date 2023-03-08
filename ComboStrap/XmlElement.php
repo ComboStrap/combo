@@ -179,7 +179,7 @@ class XmlElement
      * @param string $string - the text
      * @param string $position - the position on where to insert the text node
      * @return $this
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadArgument - if the text is not a valid text xml expression
      */
     public function insertAdjacentTextNode(string $string, string $position = 'afterbegin'): XmlElement
     {

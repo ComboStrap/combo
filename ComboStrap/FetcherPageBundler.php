@@ -105,7 +105,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
                 ->setToc($toc)
                 ->setDeleteSocialHeadTags(true)
                 ->setRequestedEnableTaskRunner(false)
-                ->generateAndGetPageHtmlAsString($mainContent);
+                ->render($mainContent);
         } catch (ExceptionBadSyntax|ExceptionNotFound|ExceptionBadArgument $e) {
             // layout should be good
             throw new ExceptionRuntimeInternal("The $layoutName template returns an error", self::CANONICAL, 1, $e);

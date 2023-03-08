@@ -133,7 +133,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
             $html = PageTemplate::createFromLayoutName(PageLayoutName::BLANK_LAYOUT)
                 ->setRequestedTitle($title)
                 ->setRequestedEnableTaskRunner(false)
-                ->generateAndGetPageHtmlAsString($mainContent);
+                ->render($mainContent);
         } catch (ExceptionBadSyntax|ExceptionNotFound|ExceptionBadArgument $e) {
             throw new ExceptionRuntimeInternal("An error has occurred while creating the HTML page. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         }

@@ -191,7 +191,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         /**
          * Generate the whole html page via the layout
          */
-        $htmlDocumentString = $this->pageLayout->generateAndGetPageHtmlAsString($mainHtml);
+        $htmlDocumentString = $this->pageLayout->render($mainHtml);
 
         /**
          * We store only the public pages

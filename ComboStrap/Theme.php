@@ -8,79 +8,53 @@ use Handlebars\Loader\FilesystemLoader;
 class Theme
 {
 
-    private string $stringTemplate;
-    private Handlebars $fileHandlebars;
-    private Handlebars $stringHandleBars;
-    private array $model = [];
+
+    private Handlebars $handleBars;
+
 
     /**
-     * @param string $stringTemplate
+     *
      */
-    public function __construct()
+    public function __construct(Handlebars $handlebars)
     {
-        # Set the partials files
-        try {
-            $partialsDir = WikiPath::createComboResource(":layout:")->toLocalPath();
 
-            $partialsLoader = new FilesystemLoader($partialsDir, ["extension" => "html"]);
-            $this->fileHandlebars = new Handlebars([
-                "loader" => $partialsLoader,
-                "partials_loader" => $partialsLoader
-            ]);
-            $this->stringHandleBars = new Handlebars();
-            $this->stringHandleBars->addHelper("share",
-                function ($template, $context, $args, $source) {
-                    $attributes = $context->get($args);
-                    $knownType = ShareTag::getKnownTypes();
-                    $tagAttributes = TagAttributes::createFromTagMatch("<share $attributes/>", [], $knownType);
-                    return ShareTag::render($tagAttributes, DOKU_LEXER_SPECIAL);
-                }
-            );
-            $this->stringHandleBars->addHelper("runner",
-                function ($template, $context, $args, $source) {
-                    return "runner";
-                }
-            );
-        } catch (\Exception $e) {
-            throw ExceptionRuntimeInternal::withMessageAndError("Error while initiating handlebars", $e);
-        }
+        $this->handleBars = $handlebars;
+
     }
 
 
-    public static function create(): Theme
+    public static function withString(): Theme
     {
-        return new Theme();
+        return (new ThemeBuilder())->build();
     }
 
-    public function render(): string
+    public static function withTheme(string $name): Theme
     {
-
-        if (isset($this->stringTemplate)) {
-            return $this->stringHandleBars->render($this->stringTemplate, $this->model);
-        } else {
-            $template = "main";
-            return $this->fileHandlebars->render($template, $this->model);
-        }
-
+        return (new ThemeBuilder())->setThemeName($name)->build();
     }
 
-    public function setTemplateAsString(string $template): Theme
+    public static function withDefaultTheme(): Theme
     {
-        $this->stringTemplate = $template;
-        return $this;
+        return self::withTheme("default");
     }
 
-    public function setModel(array $model): Theme
+    /**
+     * @param string $template - a template file name if a theme is used otherwise a template string
+     * @param $model - the data model
+     * @return string
+     */
+    public function render(string $template, array $model = []): string
     {
-        $this->model = $model;
-        return $this;
+
+        return $this->handleBars->render($template, $model);
+
     }
 
     /**
      * @throws ExceptionBadSyntax - if the xml is not html compliant
      */
-    public function renderAsDom(): XmlDocument
+    public function renderAsDom(string $name, array $model = []): XmlDocument
     {
-        return XmlDocument::createHtmlDocFromMarkup($this->render());
+        return XmlDocument::createHtmlDocFromMarkup($this->render($name, $model));
     }
 }

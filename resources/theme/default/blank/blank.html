@@ -1,11 +1,14 @@
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
-    <title>Blank</title>
+    <title>{{ title }}</title>
 </head>
 <body>
 <div id="page-core" data-layout-container>
-    <nav id="main-toc"></nav>
-    <main id="main-content"></main>
+    <main id="main-content">
+        <h1>{{h1}}</h1>
+        <nav id="main-toc"></nav>
+        {{{ main-content }}}
+    </main>
 </div>
 </body>
 </html>

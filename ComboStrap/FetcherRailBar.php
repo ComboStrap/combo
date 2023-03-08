@@ -372,7 +372,7 @@ EOF;
      */
     public function setRequestedLayout(string $layout): FetcherRailBar
     {
-        if (!in_array($layout, [self::FIXED_LAYOUT, self::OFFCANVAS_LAYOUT])) {
+        if (!in_array($layout, [self::FIXED_LAYOUT, self::OFFCANVAS_LAYOUT, self::BOTH_LAYOUT])) {
             throw new ExceptionBadArgument("The layout ($layout) is not valid");
         }
         $this->requestedLayout = $layout;

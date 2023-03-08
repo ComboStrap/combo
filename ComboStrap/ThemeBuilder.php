@@ -67,6 +67,21 @@ class ThemeBuilder
                     return "echo";
                 }
             );
+            /**
+             * Railbar is a helper
+             * as the layout may be different
+             * by page
+             */
+            $handleBars->addHelper("railbar",
+                function ($template, $context, $args, $source) {
+                    $attributes = $context->get($args);
+                    $requestedPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+                    return FetcherRailBar::createRailBar()
+                        ->setRequestedPath($requestedPath)
+                        ->setRequestedLayout($attributes)
+                        ->getFetchString();
+                }
+            );
             return new Theme($handleBars);
         } catch (\Exception $e) {
             throw ExceptionRuntimeInternal::withMessageAndError("Error while initiating handlebars", $e);

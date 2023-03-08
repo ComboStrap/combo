@@ -663,7 +663,7 @@ class PageTemplate
                     ->setAttribute("rel", "shortcut icon")
                     ->setAttribute("href", FetcherRawLocalPath::createFromPath($icoWikiPath)->getFetchUrl()->toAbsoluteUrl()->toString())
             );
-        } catch (ExceptionNotFound|\DOMException $e) {
+        } catch (\DOMException $e) {
             LogUtility::internalError("The file should be found and the local name should be good. Error: {$e->getMessage()}");
         }
 
@@ -705,7 +705,7 @@ class PageTemplate
                         ->setAttribute("type", Mime::PNG)
                         ->setAttribute("href", FetcherRawLocalPath::createFromPath($iconPath)->getFetchUrl()->toAbsoluteUrl()->toString())
                 );
-            } catch (ExceptionNotFound|\DOMException $e) {
+            } catch (\DOMException $e) {
                 LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
             }
         }
@@ -812,12 +812,21 @@ class PageTemplate
             $model['toc-html'] = $this->getTocOrDefault()->toXhtml();
 
             /**
+             * Railbar is a helper
+             * as the layout may be different
+             * by page
+             */
+
+            /**
              * Slot
              */
             $model["main-content"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
         } catch (ExceptionNotFound $e) {
             // no context path
         }
+
+        $model['html-head']= $this->getHeadHtml();
+
         return $model;
     }
 
@@ -897,39 +906,7 @@ class PageTemplate
     private function addHeadElements(XmlElement $head, &$htmlFragmentByVariables)
     {
 
-        /**
-         * Add the layout js and css first
-         */
-        $snippetManager = PluginUtility::getSnippetManager();
-        try {
-            $content = FileSystems::getContent($this->getCssPath());
-            $snippetManager->attachCssInternalStylesheet(self::CANONICAL, $content);
-        } catch (ExceptionNotFound $e) {
-            // no css found, not a problem
-        }
-        if (FileSystems::exists($this->getJsPath())) {
-            $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $this->getJsPath());
-        }
-
-        /**
-         * Start the meta headers
-         */
-        /**
-         * Meta headers
-         * To delete the not needed headers for an export
-         * such as manifest, alternate, ...
-         */
-        if ($this->deleteSocialHeads) {
-            global $EVENT_HANDLER;
-            $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'deleteSocialHeadTags');
-        }
-        ob_start();
-        try {
-            tpl_metaheaders();
-            $htmlHeaders = ob_get_contents();
-        } finally {
-            ob_end_clean();
-        }
+        $htmlHeaders = $this->getHeadHtml();
         $variableName = "headElements";
         $htmlFragmentByVariables[$variableName] = $htmlHeaders;
         try {
@@ -1209,6 +1186,44 @@ EOF;
         } catch (ExceptionNotFound $e) {
             return Lang::createFromValue("en");
         }
+    }
+
+    private function getHeadHtml()
+    {
+        /**
+         * Add the layout js and css first
+         */
+        $snippetManager = PluginUtility::getSnippetManager();
+        try {
+            $content = FileSystems::getContent($this->getCssPath());
+            $snippetManager->attachCssInternalStylesheet(self::CANONICAL, $content);
+        } catch (ExceptionNotFound $e) {
+            // no css found, not a problem
+        }
+        if (FileSystems::exists($this->getJsPath())) {
+            $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $this->getJsPath());
+        }
+
+        /**
+         * Start the meta headers
+         */
+        /**
+         * Meta headers
+         * To delete the not needed headers for an export
+         * such as manifest, alternate, ...
+         */
+        if ($this->deleteSocialHeads) {
+            global $EVENT_HANDLER;
+            $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'deleteSocialHeadTags');
+        }
+        ob_start();
+        try {
+            tpl_metaheaders();
+            return ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
     }
 
 }

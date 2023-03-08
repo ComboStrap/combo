@@ -90,7 +90,7 @@ class PageTemplate
         $this->cssPath = $layoutDirectory->resolve("$this->layoutName.css");
         $this->jsPath = $layoutDirectory->resolve("$this->layoutName.js");
         $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.html");
-        if(!FileSystems::exists($this->htmlTemplatePath)){
+        if (!FileSystems::exists($this->htmlTemplatePath)) {
             $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.hbs");
         }
         $this->templateDomDocument = $this->htmlTemplatePathToHtmlDom($this->htmlTemplatePath);
@@ -340,9 +340,6 @@ class PageTemplate
             }
 
 
-
-
-
             /**
              * Body
              * {@link tpl_classes} will add the dokuwiki class.
@@ -537,7 +534,8 @@ class PageTemplate
     /**
      * @throws ExceptionNotFound
      */
-    private function getRemFontSize(){
+    private function getRemFontSize()
+    {
         /**
          * Same as {@link self::CONF_REM_SIZE}
          */
@@ -552,7 +550,6 @@ class PageTemplate
             throw new ExceptionNotFound("No valid rem size");
         }
     }
-
 
 
     private function getLayoutName(): string
@@ -781,6 +778,15 @@ class PageTemplate
         } catch (ExceptionNotFound $e) {
             // ok none
         }
+
+        /**
+         * Body
+         * {@link tpl_classes} will add the dokuwiki class.
+         * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
+         * dokuwiki__top ID is needed for the "Back to top" utility
+         * used also by some plugins
+         */
+        $model["body-doku-classes"] = tpl_classes();
 
         /**
          * Data coupled to a page

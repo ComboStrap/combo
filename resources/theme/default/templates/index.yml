@@ -1,0 +1,4 @@
+slots:
+    - 'page-header'
+    - 'page-footer'
+    - 'page-side'

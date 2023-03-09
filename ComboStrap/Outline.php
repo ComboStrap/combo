@@ -424,7 +424,7 @@ class Outline
                 if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";
                 } else {
-                    $mainContainerSelector = "#" . PageTemplate::MAIN_CONTENT_ELEMENT;
+                    $mainContainerSelector = "#" . PageTemplateSlot::MAIN_CONTENT_ID;
                 }
                 /**
                  * Because the HTML file structure is not really fixed

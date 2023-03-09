@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use Handlebars\Context;
 use Handlebars\Handlebars;
 use Handlebars\Loader\FilesystemLoader;
 
@@ -15,6 +16,7 @@ class PageTemplateEngine
      */
     const EXTENSION_HBS = "hbs";
     const DEFAULT_THEME = "default";
+    const CANONICAL = "handlebars";
 
 
     private Handlebars $handleBars;
@@ -108,13 +110,20 @@ class PageTemplateEngine
          * by page
          */
         $handleBars->addHelper("railbar",
-            function ($template, $context, $args, $source) {
-                $attributes = $context->get($args);
-                $requestedPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
-                return FetcherRailBar::createRailBar()
-                    ->setRequestedPath($requestedPath)
-                    ->setRequestedLayout($attributes)
-                    ->getFetchString();
+            function ($template, Context $context, $args, $source) {
+                try {
+                    $requestedPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+                    $railbar = FetcherRailBar::createRailBar()
+                        ->setRequestedPath($requestedPath);
+                    if (!empty($args)) {
+                        $layoutName = trim($args, "\"'");
+                        $railbar->setRequestedLayout($layoutName);
+                    }
+                    return $railbar->getFetchString();
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::error("We were unable to create the railbar. Error: " . $e->getMessage(), self::CANONICAL, $e);
+                    return "";
+                }
             }
         );
     }
@@ -130,7 +139,7 @@ class PageTemplateEngine
      */
     public function getTemplatesDirectory(): LocalPath
     {
-        if(isset($this->templateDirectory)){
+        if (isset($this->templateDirectory)) {
             return $this->templateDirectory;
         }
         throw new ExceptionNotFound("No template directory");

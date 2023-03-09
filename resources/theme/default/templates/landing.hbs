@@ -2,13 +2,16 @@
 <html lang="{{lang}}">
 {{> head-partial }}
 <body class="{{body-classes}}">
-<header id="page-header" class="d-print-none"></header>
+{{>page-header-partial}}
 <div id="page-core">
     <main id="main-content">
         {{{ main-content-html }}}
     </main>
-    <div id="page-tool" class="d-print-none" data-layout="offcanvas"></div>
+    <div id="page-tool" class="d-print-none">
+        {{#railbar "off-canvas"}}{{/railbar}}
+    </div>
 </div>
-<footer id="page-footer" class="d-print-none"></footer>
+{{>page-footer-partial}}
+{{>body-beforeend-partial}}
 </body>
 </html>

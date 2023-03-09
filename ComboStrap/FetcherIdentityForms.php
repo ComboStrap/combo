@@ -77,25 +77,6 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
 
 
         /**
-         * Run the secondary slots
-         */
-        foreach ($this->pageLayout->getPageLayoutElements() as $pageElement) {
-            if ($pageElement->isMain()) {
-                // already done
-                continue;
-            }
-            try {
-                $fetcherPageFragment = $pageElement->getMarkupFetcher();
-                $fetcherPageFragment->processIfNeededAndGetFetchPath();
-            } catch (ExceptionNotFound $e) {
-                // no markup for this slot
-            } catch (ExceptionCompile $e) {
-                LogUtility::error($e->getMessage(), self::CANONICAL, $e);
-            }
-        }
-
-
-        /**
          * The content
          *
          * Adapted from {@link tpl_content()}

@@ -828,7 +828,7 @@ class Site
      */
     public static function getPageFooterSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplate::CONF_PAGE_FOOTER_NAME, PageTemplate::CONF_PAGE_FOOTER_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplateSlot::CONF_PAGE_FOOTER_NAME, PageTemplateSlot::CONF_PAGE_FOOTER_NAME_DEFAULT);
     }
 
     /**
@@ -836,7 +836,7 @@ class Site
      */
     public static function getPageHeaderSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplate::CONF_PAGE_HEADER_NAME, PageTemplate::CONF_PAGE_HEADER_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplateSlot::CONF_PAGE_HEADER_NAME, PageTemplateSlot::CONF_PAGE_HEADER_NAME_DEFAULT);
     }
 
     /**
@@ -844,7 +844,7 @@ class Site
      */
     public static function getMainSideSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplate::CONF_PAGE_MAIN_SIDEKICK_NAME, PageTemplate::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplateSlot::CONF_PAGE_MAIN_SIDEKICK_NAME, PageTemplateSlot::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
     }
 
 

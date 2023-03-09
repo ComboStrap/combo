@@ -16,47 +16,17 @@ use Symfony\Component\Yaml\Yaml;
 class PageTemplate
 {
 
+
     private array $templateDefinition;
-    const CANONICAL = "layout";
-    public const MAIN_FOOTER_ELEMENT = "main-footer";
-    public const PAGE_SIDE_ELEMENT = "page-side";
-    public const MAIN_CONTENT_ELEMENT = "main-content";
-    public const PAGE_CORE_ELEMENT = "page-core";
-    public const LAYOUT_ELEMENTS = [
-        PageTemplate::PAGE_CORE_ELEMENT,
-        PageTemplate::PAGE_SIDE_ELEMENT,
-        PageTemplate::PAGE_HEADER_ELEMENT,
-        PageTemplate::PAGE_MAIN_ELEMENT,
-        PageTemplate::PAGE_FOOTER_ELEMENT,
-        PageTemplate::MAIN_HEADER_ELEMENT,
-        PageTemplate::MAIN_TOC_ELEMENT,
-        PageTemplate::MAIN_CONTENT_ELEMENT,
-        PageTemplate::MAIN_SIDE_ELEMENT,
-        PageTemplate::MAIN_FOOTER_ELEMENT,
-        PageTemplate::PAGE_TOOL_ELEMENT
-    ];
-    public const POSITION_RELATIVE_CLASS = "position-relative";
-    public const PAGE_TOOL_ELEMENT = "page-tool";
-    public const MAIN_SIDE_ELEMENT = "main-side";
-    public const PAGE_FOOTER_ELEMENT = "page-footer";
-    public const MAIN_HEADER_ELEMENT = "main-header";
-    public const PAGE_MAIN_ELEMENT = "page-main";
-    public const MAIN_TOC_ELEMENT = "main-toc";
-    public const PAGE_HEADER_ELEMENT = "page-header";
-    public const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
-    public const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
+    const CANONICAL = "template";
+
+
     public const UTF_8_CHARSET_VALUE = "utf-8";
     public const VIEWPORT_RESPONSIVE_VALUE = "width=device-width, initial-scale=1";
     public const TASK_RUNNER_ID = "task-runner";
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
 
     public const PRELOAD_TAG = "preload";
-    const CONF_PAGE_FOOTER_NAME = "footerSlotPageName";
-    const CONF_PAGE_FOOTER_NAME_DEFAULT = "slot_footer";
-    const CONF_PAGE_HEADER_NAME = "headerSlotPageName";
-    const CONF_PAGE_HEADER_NAME_DEFAULT = "slot_header";
-    const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
-    const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = Site::SLOT_MAIN_SIDE_NAME;
 
     private string $layoutName;
 
@@ -64,7 +34,7 @@ class PageTemplate
     private string $requestedTitle;
 
     /**
-     * @var PageTemplateElement[]
+     * @var PageTemplateSlot[]
      */
     private array $pageElements = [];
 
@@ -174,11 +144,11 @@ class PageTemplate
     /**
      * @return string[]
      */
-    public function getPageLayoutElements(): array
+    public function getSlotIds(): array
     {
         $definition = $this->getDefinition();
         $slots = $definition['slots'];
-        if($slots==null){
+        if ($slots == null) {
             return [];
         }
         return $slots;
@@ -214,7 +184,6 @@ class PageTemplate
             ->getConfig()
             ->getDefaultLayoutName();
     }
-
 
 
     public function __toString()
@@ -444,7 +413,7 @@ class PageTemplate
             $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("template-string");
         }
         // position relative is for the toast and messages that are in the corner
-        $model['body-classes'] ="$bodyDokuwikiClass position-relative $bodyTemplateIdentifierClass";
+        $model['body-classes'] = "$bodyDokuwikiClass position-relative $bodyTemplateIdentifierClass";
 
         /**
          * Data coupled to a page
@@ -459,11 +428,6 @@ class PageTemplate
             $metadata = $markupPath->getMetadataForRendering();
             $model = array_merge($metadata, $model);
 
-            /**
-             * Toc
-             */
-            $model['toc-class'] = Toc::getClass();
-            $model['toc-html'] = $this->getTocOrDefault()->toXhtml();
 
             /**
              * Railbar is a helper
@@ -472,12 +436,35 @@ class PageTemplate
              */
 
             /**
-             * Slot
+             * Main
              */
             if (isset($this->mainContent)) {
                 $model["main-content-html"] = $this->mainContent;
             } else {
-                $model["main-content-html"] = $mainHtml = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();;
+                try {
+                    $model["main-content-html"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
+                } catch (ExceptionCast|ExceptionNotExists|ExceptionNotExists $e) {
+                    LogUtility::error("Error while rendering the page content.", self::CANONICAL, $e);
+                    $model["main-content-html"] = "An error has occured. " . $e->getMessage();
+                }
+            }
+
+            /**
+             * Toc (after main execution please)
+             */
+            $model['toc-class'] = Toc::getClass();
+            $model['toc-html'] = $this->getTocOrDefault()->toXhtml();
+
+            /**
+             * Slots
+             */
+            foreach ($this->getSlotIds() as $slotId) {
+                try {
+                    $model["$slotId-html"] = PageTemplateSlot::createFor($slotId, $this)->getMarkupFetcher()->getFetchString();
+                } catch (ExceptionNotFound|ExceptionCompile $e) {
+                    LogUtility::error("Error while rendering the slot $slotId for the template ($this)", self::CANONICAL, $e);
+                    $model["$slotId-html"] = LogUtility::wrapInRedForHtml("Error: " . $e->getMessage());
+                }
             }
 
             /**
@@ -489,7 +476,7 @@ class PageTemplate
             global $ACT;
             \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT);
             $tplActRenderOutput = ob_get_clean();
-            if(!empty($tplActRenderOutput)) {
+            if (!empty($tplActRenderOutput)) {
                 $model["main-content-afterbegin-html"] = $tplActRenderOutput;
                 $this->hadMessages = true;
             }
@@ -622,8 +609,6 @@ class PageTemplate
             }
         }
     }
-
-
 
 
     /**
@@ -966,11 +951,11 @@ EOF;
     private function getDefinition(): array
     {
         try {
-            if(isset($this->templateDefinition)){
+            if (isset($this->templateDefinition)) {
                 return $this->templateDefinition;
             }
             $file = $this->getEngine()->getTemplatesDirectory()->resolve("$this->layoutName.yml");
-            if(!FileSystems::exists($file)){
+            if (!FileSystems::exists($file)) {
                 return [];
             }
             $this->templateDefinition = Yaml::parseFile($file->toAbsoluteString());

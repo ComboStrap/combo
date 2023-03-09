@@ -1,7 +1,7 @@
 <html lang="{{lang}}">
 {{> head-partial }}
 <body class="{{body-classes}}">
-<header id="page-header" class="d-print-none"></header>
+{{> page-header-partial }}
 <div id="page-core" class="{{ layout-container-class }}">
     <aside id="page-side" class="d-print-none"></aside>
     <main id="page-main">
@@ -15,7 +15,7 @@
     </main>
     <div id="page-tool" class="d-print-none"></div>
 </div>
-<footer id="page-footer" class="d-print-none"></footer>
+{{>page-footer-partial}}
 {{>body-beforeend-partial}}
 </body>
 </html>

@@ -25,7 +25,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
     const CANONICAL = self::NAME;
     const NAME = "railbar";
     const FIXED_LAYOUT = "fixed";
-    const OFFCANVAS_LAYOUT = "offcanvas";
+    const OFFCANVAS_LAYOUT = "off-canvas";
     const VIEWPORT_WIDTH = "viewport";
     const LAYOUT_ATTRIBUTE = "layout";
     /**
@@ -36,7 +36,8 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
      * When do we toggle from offcanvas to fixed railbar
      */
     public const CONF_BREAKPOINT_RAIL_BAR = "breakpointRailbar";
-    const BOTH_LAYOUT = "all_layout";
+    const BOTH_LAYOUT = "all";
+    const KNOWN_LAYOUT = [self::FIXED_LAYOUT, self::OFFCANVAS_LAYOUT, self::BOTH_LAYOUT];
 
 
     private int $requestedViewPort;
@@ -372,8 +373,8 @@ EOF;
      */
     public function setRequestedLayout(string $layout): FetcherRailBar
     {
-        if (!in_array($layout, [self::FIXED_LAYOUT, self::OFFCANVAS_LAYOUT, self::BOTH_LAYOUT])) {
-            throw new ExceptionBadArgument("The layout ($layout) is not valid");
+        if (!in_array($layout, self::KNOWN_LAYOUT)) {
+            throw new ExceptionBadArgument("The layout ($layout) is not valid. The known-layout are : ".ArrayUtility::formatAsString(self::KNOWN_LAYOUT));
         }
         $this->requestedLayout = $layout;
         return $this;

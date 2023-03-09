@@ -1,20 +1,22 @@
-<html lang="en">
-<head>
-    <title>Index</title>
-</head>
+<!doctype html>
+<html lang="{{lang}}">
+{{> head-partial }}
 <body>
-<header id="page-header" class="d-print-none"></header>
+{{>page-header-partial}}
 
 <div id="page-core" class="d-flex justify-content-md-center" data-layout-container>
     <div class="row">
         <aside id="page-side" class="col-md-3 order-last order-md-first"></aside>
         <main id="page-main" class="col-md-9 order-first">
-            <div id="main-content"></div>
+            <div id="main-content">
+                {{{ main-content-html }}}
+            </div>
         </main>
     </div>
     <div id="page-tool" class="d-print-none"></div>
 </div>
 
-<footer id="page-footer" class="d-print-none"></footer>
+{{>page-footer-partial}}
+{{>body-beforeend-partial}}
 </body>
 </html>

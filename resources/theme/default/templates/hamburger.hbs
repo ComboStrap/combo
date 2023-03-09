@@ -1,13 +1,13 @@
-<html lang="en">
-<head>
-    <title>Hamburger</title>
-</head>
+<!doctype html>
+<html lang="{{lang}}">
+{{> head-partial }}
 <body>
-<header id="page-header" class="d-print-none"></header>
-<div id="page-core" data-layout-container>
+{{>page-header-partial}}
+<div id="page-core">
     <main id="main-content"></main>
     <div id="page-tool" class="d-print-none"></div>
 </div>
-<footer id="page-footer" class="d-print-none"></footer>
+{{>page-footer-partial}}
+{{>body-beforeend-partial}}
 </body>
 </html>

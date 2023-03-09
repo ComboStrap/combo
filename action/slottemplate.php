@@ -7,7 +7,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\FetcherPage;
-use ComboStrap\PageTemplateElement;
+use ComboStrap\PageTemplateSlot;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Site;
@@ -46,7 +46,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
         $pageHeaderSlotName = Site::getPageHeaderSlotName();
         $toQualifiedId = $page->getPathObject()->toAbsoluteString();
         if ($toQualifiedId === ":$pageHeaderSlotName") {
-            $pageHeaderPath = PageTemplateElement::getDefaultElementContentPath(PageTemplate::PAGE_HEADER_ELEMENT);
+            $pageHeaderPath = PageTemplateSlot::getDefaultElementContentPath(PageTemplateSlot::PAGE_HEADER_ID);
             try {
                 $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
                 $event->data["doreplace"] = false;
@@ -64,7 +64,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
 
         $pageFooterSlotName = Site::getPageFooterSlotName();
         if ($toQualifiedId === ":$pageFooterSlotName") {
-            $pageFooterPath = PageTemplateElement::getDefaultElementContentPath(PageTemplate::PAGE_FOOTER_ELEMENT);
+            $pageFooterPath = PageTemplateSlot::getDefaultElementContentPath(PageTemplateSlot::PAGE_FOOTER_ID);
             try {
                 $event->data["tpl"] = FileSystems::getContent($pageFooterPath);
                 $event->data["doreplace"] = false;

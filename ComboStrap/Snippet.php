@@ -123,7 +123,7 @@ class Snippet implements JsonSerializable
      * @var bool run as soon as possible
      */
     private bool $async;
-    private WikiPath $path;
+    private Path $path;
     private string $componentId;
 
     /**
@@ -138,11 +138,10 @@ class Snippet implements JsonSerializable
     private bool $hasHtmlOutputOccurred = false;
 
     /**
-     * @param WikiPath $path - wiki path mandatory
-     *   because it's the path of fetch and it's the storage format
+     * @param Path $path - path mandatory because it's the path of fetch and it's the storage format
      * use {@link Snippet::getOrCreateFromContext()}
      */
-    private function __construct(WikiPath $path)
+    private function __construct(Path $path)
     {
         $this->path = $path;
     }
@@ -426,7 +425,7 @@ class Snippet implements JsonSerializable
         return FileSystems::getContent($path);
     }
 
-    public function getPath(): WikiPath
+    public function getPath(): Path
     {
         return $this->path;
     }

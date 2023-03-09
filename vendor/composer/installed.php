@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '2f6124749024aa75cd4eceab69a2c0a1da5548a9',
+    'reference' => '7db93969e68c1dffb7de2ad7298050df787c55dc',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -36,7 +36,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '2f6124749024aa75cd4eceab69a2c0a1da5548a9',
+      'reference' => '7db93969e68c1dffb7de2ad7298050df787c55dc',
     ),
     'dragonmantank/cron-expression' => 
     array (
@@ -90,6 +90,24 @@
       ),
       'reference' => 'd3a0552d85472249617ef6b56197c844d62d2ac3',
     ),
+    'symfony/deprecation-contracts' => 
+    array (
+      'pretty_version' => 'v2.5.2',
+      'version' => '2.5.2.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'e8b495ea28c1d97b5e0c121748d6f9b53d075c66',
+    ),
+    'symfony/polyfill-ctype' => 
+    array (
+      'pretty_version' => 'v1.27.0',
+      'version' => '1.27.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '5bbc823adecdae860bb64756d639ecfec17b050a',
+    ),
     'symfony/polyfill-mbstring' => 
     array (
       'pretty_version' => 'v1.25.0',
@@ -116,6 +134,15 @@
       array (
       ),
       'reference' => '597f3fff8e3e91836bb0bd38f5718b56ddbde2f3',
+    ),
+    'symfony/yaml' => 
+    array (
+      'pretty_version' => 'v5.4.21',
+      'version' => '5.4.21.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '3713e20d93e46e681e51605d213027e48dab3469',
     ),
   ),
 );

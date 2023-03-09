@@ -18,7 +18,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     private MarkupPath $requestedMarkupPath;
     private string $requestedLayoutName;
-    private PageTemplate $pageLayout;
+    private PageTemplate $pageTemplate;
     private FetcherCache $fetcherCache;
 
 
@@ -111,98 +111,40 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $this->buildObjectIfNeeded();
 
         try {
-            $this->fetcherCache->addFileDependency($this->pageLayout->getCssPath());
+            $this->fetcherCache->addFileDependency($this->pageTemplate->getCssPath());
         } catch (ExceptionNotFound $e) {
             // no css file
         }
         try {
-            $this->fetcherCache->addFileDependency($this->pageLayout->getJsPath());
+            $this->fetcherCache->addFileDependency($this->pageTemplate->getJsPath());
         } catch (ExceptionNotFound $e) {
             // no js
         }
         // mandatory, should not throw
         try {
-            $cache = $this->fetcherCache->addFileDependency($this->pageLayout->getHtmlTemplatePath());
+            $cache = $this->fetcherCache->addFileDependency($this->pageTemplate->getHtmlTemplatePath());
         } catch (ExceptionNotFound $e) {
             throw ExceptionRuntimeInternal::withMessageAndError("The html template should be found", $e);
         }
 
 
         /**
-         * Run the main slot
-         * Get the HTML fragment
-         * The first one should be the main because it has the frontmatter
-         */
-        try {
-            $mainFetcher = $this->pageLayout->getMainElement();
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionBadSyntax("The main element was not found in the html template ({$this->getLayout()}");
-        }
-        try {
-            /**
-             * The {@link FetcherMarkup::processIfNeededAndGetFetchPath() Get fetch path}
-             * will start the rendering if there is no HTML path
-             * or the cache is not fresh
-             */
-            $fetcherMainPageFragment = $mainFetcher->getMarkupFetcher();
-            $path = $fetcherMainPageFragment->processIfNeededAndGetFetchPath();
-            $cache->addFileDependency($path);
-        } catch (ExceptionNotFound $e) {
-            // it should be found
-            throw new ExceptionNotFound("The main page markup document was not found. Error: {$e->getMessage()}", self::NAME);
-        } catch (\Exception $e) {
-            throw new ExceptionBadArgument("The main page markup document could be served as wiki path. Error: {$e->getMessage()}", self::NAME);
-        }
-
-        /**
-         * Run the secondary slots
-         */
-        $pageLayoutElements = $this->pageLayout->getPageLayoutElements();
-        foreach ($pageLayoutElements as $pageElement) {
-            if ($pageElement->isMain()) {
-                // already done
-                continue;
-            }
-            try {
-                $fetcherPageFragment = $pageElement->getMarkupFetcher();
-                $cache->addFileDependency($fetcherPageFragment->processIfNeededAndGetFetchPath());
-            } catch (ExceptionNotFound|ExceptionCompile $e) {
-                // no markup for this slot
-            }
-        }
-
-        /**
          * Public static cache
          * (Do we create the page or return the cache)
          */
-        if ($cache->isCacheUsable() && $this->isPublicStaticPage()) {
-            try {
-                return FileSystems::getContent($cache->getFile());
-            } catch (ExceptionNotFound $e) {
-                // the cache file should exists
-                LogUtility::internalError("The cache HTML fragment file was not found", self::NAME);
-            }
-        }
-
-        $mainFetcher = $this->pageLayout->getMainElement()->getMarkupFetcher();
-        $mainHtml = $mainFetcher->getFetchString();
-
-
-        /**
-         * Found in {@link tpl_content()}
-         * Used to add html such as {@link \action_plugin_combo_routermessage}
-         * Not sure if this is the right place to add it.
-         */
-        ob_start();
-        global $ACT;
-        \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT);
-        $tplActRenderOutput = ob_get_clean();
-        $mainHtml = $tplActRenderOutput . $mainHtml;
+//        if ($cache->isCacheUsable() && $this->isPublicStaticPage()) {
+//            try {
+//                return FileSystems::getContent($cache->getFile());
+//            } catch (ExceptionNotFound $e) {
+//                // the cache file should exists
+//                LogUtility::internalError("The cache HTML fragment file was not found", self::NAME);
+//            }
+//        }
 
         /**
          * Generate the whole html page via the layout
          */
-        $htmlDocumentString = $this->pageLayout->render($mainHtml);
+        $htmlDocumentString = $this->pageTemplate->render();
 
         /**
          * We store only the public pages
@@ -267,7 +209,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $title = PageTitle::createForMarkup($this->getRequestedPage())->getValueOrDefault();
         try {
             $layoutName = $this->getRequestedLayoutOrDefault();
-            $this->pageLayout = PageTemplate::create()
+            $this->pageTemplate = PageTemplate::create()
                 ->setLayoutName($layoutName)
                 ->setRequestedContextPath($this->getRequestedPath())
                 ->setRequestedLang($pageLang)
@@ -349,7 +291,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     private function isPublicStaticPage(): bool
     {
-        return SiteConfig::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1 && !Identity::isLoggedIn();
+        return
+            SiteConfig::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1
+            && !Identity::isLoggedIn()
+            && !$this->pageTemplate->hasMessages();
     }
 
     private function getRequestedLayoutOrDefault(): string

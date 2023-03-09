@@ -3,8 +3,7 @@
 namespace ComboStrap;
 
 
-use Handlebars\Handlebars;
-use setasign\Fpdi\PdfReader\Page;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * A page template is the object
@@ -17,6 +16,7 @@ use setasign\Fpdi\PdfReader\Page;
 class PageTemplate
 {
 
+    private array $templateDefinition;
     const CANONICAL = "layout";
     public const MAIN_FOOTER_ELEMENT = "main-footer";
     public const PAGE_SIDE_ELEMENT = "page-side";
@@ -46,7 +46,7 @@ class PageTemplate
     public const DATA_LAYOUT_CONTAINER_ATTRIBUTE = "data-layout-container";
     public const DATA_EMPTY_ACTION_ATTRIBUTE = "data-empty-action";
     public const UTF_8_CHARSET_VALUE = "utf-8";
-    public const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
+    public const VIEWPORT_RESPONSIVE_VALUE = "width=device-width, initial-scale=1";
     public const TASK_RUNNER_ID = "task-runner";
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
 
@@ -76,6 +76,7 @@ class PageTemplate
     private string $mainContent;
     private string $templateString;
     private array $model;
+    private bool $hadMessages = false;
 
 
     public static function create(): PageTemplate
@@ -171,11 +172,17 @@ class PageTemplate
     }
 
     /**
-     * @return PageTemplateElement[]
+     * @return string[]
      */
     public function getPageLayoutElements(): array
     {
-        return $this->pageElements;
+        $definition = $this->getDefinition();
+        $slots = $definition['slots'];
+        if($slots==null){
+            return [];
+        }
+        return $slots;
+
     }
 
 
@@ -209,17 +216,6 @@ class PageTemplate
     }
 
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    private function getPageElement(string $elementId): PageTemplateElement
-    {
-        $element = $this->pageElements[$elementId];
-        if ($element === null) {
-            throw new ExceptionNotFound("No element ($elementId) found for the layout ($this)");
-        }
-        return $element;
-    }
 
     public function __toString()
     {
@@ -244,6 +240,11 @@ class PageTemplate
             throw new ExceptionNotFound("No js file");
         }
         return $jsPath;
+    }
+
+    public function hasMessages(): bool
+    {
+        return $this->hadMessages;
     }
 
 
@@ -430,15 +431,20 @@ class PageTemplate
 
 
         /**
-         * Body
+         * Body class
          * {@link tpl_classes} will add the dokuwiki class.
          * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
          * dokuwiki__top ID is needed for the "Back to top" utility
          * used also by some plugins
          */
-        $model["body-doku-classes"] = tpl_classes();
-
-        $model["theme-layout-name"] = StyleUtility::addComboStrapSuffix("layout-{$this->getLayoutName()}");
+        $bodyDokuwikiClass = tpl_classes();
+        try {
+            $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("{$this->getTheme()}-{$this->getLayoutName()}");
+        } catch (\Exception $e) {
+            $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("template-string");
+        }
+        // position relative is for the toast and messages that are in the corner
+        $model['body-classes'] ="$bodyDokuwikiClass position-relative $bodyTemplateIdentifierClass";
 
         /**
          * Data coupled to a page
@@ -471,8 +477,23 @@ class PageTemplate
             if (isset($this->mainContent)) {
                 $model["main-content-html"] = $this->mainContent;
             } else {
-                $model["main-content-html"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
+                $model["main-content-html"] = $mainHtml = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();;
             }
+
+            /**
+             * Found in {@link tpl_content()}
+             * Used to add html such as {@link \action_plugin_combo_routermessage}
+             * Not sure if this is the right place to add it.
+             */
+            ob_start();
+            global $ACT;
+            \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT);
+            $tplActRenderOutput = ob_get_clean();
+            if(!empty($tplActRenderOutput)) {
+                $model["main-content-afterbegin-html"] = $tplActRenderOutput;
+                $this->hadMessages = true;
+            }
+
         } catch (ExceptionNotFound $e) {
             // no context path
         }
@@ -511,9 +532,10 @@ class PageTemplate
              * We process the messages at the end
              * It means that the needed script needs to be added manually
              */
-            $model['head-html'] .= Snippet::getOrCreateFromComponentId("toast", Snippet::EXTENSION_JS)
-                ->toTagAttributes()
-                ->toHtmlEmptyTag("script");
+            // output <script class="snippet-toast-cs"/>, not good because the body will then be empty
+//            $model['head-html'] .= Snippet::getOrCreateFromComponentId("toast", Snippet::EXTENSION_JS)
+//                ->toTagAttributes()
+//                ->toHtmlEmptyTag("script");
         } catch (ExceptionNotFound $e) {
             // no messages
         } catch (ExceptionBadState $e) {
@@ -602,13 +624,6 @@ class PageTemplate
     }
 
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    public function getMainElement(): PageTemplateElement
-    {
-        return $this->getPageElement(PageTemplate::MAIN_CONTENT_ELEMENT);
-    }
 
 
     /**
@@ -709,7 +724,6 @@ class PageTemplate
             throw new ExceptionNotFound("No messages");
         }
 
-
         $shown = array();
 
         $toasts = "";
@@ -749,6 +763,7 @@ EOF;
         if ($toasts === "") {
             throw new ExceptionNotFound("No messages");
         }
+        $this->hadMessages = true;
 
         // position fixed to not participate into the grid
         return <<<EOF
@@ -945,6 +960,24 @@ EOF;
         } else {
             $theme = $this->getTheme();
             return PageTemplateEngine::createForTheme($theme);
+        }
+    }
+
+    private function getDefinition(): array
+    {
+        try {
+            if(isset($this->templateDefinition)){
+                return $this->templateDefinition;
+            }
+            $file = $this->getEngine()->getTemplatesDirectory()->resolve("$this->layoutName.yml");
+            if(!FileSystems::exists($file)){
+                return [];
+            }
+            $this->templateDefinition = Yaml::parseFile($file->toAbsoluteString());
+            return $this->templateDefinition;
+        } catch (ExceptionNotFound $e) {
+            // no template directory, not a theme run
+            return [];
         }
     }
 

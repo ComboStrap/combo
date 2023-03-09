@@ -11,7 +11,8 @@
         "ext-gd": "*",
         "antlr/antlr4-php-runtime": "0.5.1",
         "php-webdriver/webdriver": "^1.12",
-        "salesforce/handlebars-php": "^3.0"
+        "salesforce/handlebars-php": "^3.0",
+        "symfony/yaml": "^5.4"
     },
     "autoload": {
         "psr-4": {

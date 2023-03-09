@@ -1,28 +1,13 @@
 <!doctype html>
 <html lang="{{ lang }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
-    {{{ head-html }}}
-    {{#if rem-size}}
-        <style>
-            body {
-                font-size: {{rem-size}}px
-            }
-        </style>
-    {{/if}}
-</head>
-{{!-- position relative is for the toast and messages that are in the corner --}}
-<body class="{{body-doku-classes}} position-relative">
+{{> head-partial }}
+<body class="{{body-classes}}">
 <div id="page-core" class="{{ layout-container-class }}">
     <main id="main-content">
+        {{!-- redirection messages --}}
+        {{{ main-content-afterbegin-html }}}
         <h1>{{h1}}</h1>
-        {{#if toc-html}}
-            <nav id="main-toc" class="{{toc-class}}">
-                {{{toc-html}}}
-            </nav>
-        {{/if}}
+        {{> toc-partial}}
         {{{ main-content-html }}}
     </main>
 </div>

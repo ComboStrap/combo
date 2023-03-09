@@ -1,11 +1,12 @@
+<!doctype html>
 <html lang="{{lang}}">
-<head>
-    <title>Holy</title>
-</head>
-<body>
+{{> head-partial }}
+<body class="{{body-classes}}">
 <header id="page-header" class="d-print-none"></header>
 <div id="page-core">
-    <main id="main-content"></main>
+    <main id="main-content">
+        {{{ main-content-html }}}
+    </main>
     <div id="page-tool" class="d-print-none" data-layout="offcanvas"></div>
 </div>
 <footer id="page-footer" class="d-print-none"></footer>

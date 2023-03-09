@@ -1,21 +1,22 @@
-<html lang="en">
-<head>
-    <title>Holy</title>
-</head>
-<body>
+<html lang="{{lang}}">
+{{> head-partial }}
+<body class="{{body-classes}}">
 <header id="page-header" class="d-print-none"></header>
-<div id="page-core" data-layout-container>
+<div id="page-core" class="{{ layout-container-class }}">
     <aside id="page-side" class="d-print-none"></aside>
     <main id="page-main">
         <header id="main-header"></header>
-        <div id="main-toc"></div>
-        <div id="main-content"></div>
+        {{> toc-partial}}
+        <div id="main-content">
+            {{{ main-content-html }}}
+        </div>
         <div id="main-side" class="d-print-none"></div>
         <footer id="main-footer" class="d-print-none"></footer>
     </main>
     <div id="page-tool" class="d-print-none"></div>
 </div>
 <footer id="page-footer" class="d-print-none"></footer>
+{{>body-beforeend-partial}}
 </body>
 </html>
 

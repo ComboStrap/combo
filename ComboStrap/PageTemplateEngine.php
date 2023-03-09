@@ -115,22 +115,10 @@ class PageTemplateEngine
         );
     }
 
-    public function setThemeName(string $themeName): PageTemplateEngine
+
+    public function render(string $template, array $model): string
     {
-        $this->themeName = $themeName;
-        return $this;
-    }
-
-
-    public function build(): PageTemplateEngine
-    {
-
-        return $this;
-    }
-
-    public function getHandlebars(): Handlebars
-    {
-        return $this->handleBars;
+        return $this->handleBars->render($template, $model);
     }
 
 

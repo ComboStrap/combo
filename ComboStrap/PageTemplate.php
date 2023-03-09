@@ -57,12 +57,11 @@ class PageTemplate
     const CONF_PAGE_HEADER_NAME_DEFAULT = "slot_header";
     const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
     const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = Site::SLOT_MAIN_SIDE_NAME;
-    public Handlebars $handleBars;
+
     private string $layoutName;
-    public WikiPath $cssPath;
-    public WikiPath $jsPath;
+
     public WikiPath $htmlTemplatePath;
-    private XmlDocument $templateDomDocument;
+
 
     private string $requestedTitle;
 
@@ -77,6 +76,8 @@ class PageTemplate
     private Toc $toc;
     private bool $deleteSocialHeads = false;
     private string $mainContent;
+    private string $templateString;
+    private array $model;
 
 
     public static function create(): PageTemplate
@@ -100,19 +101,21 @@ class PageTemplate
     }
 
 
-    public function getCssPath(): WikiPath
-    {
-        return $this->cssPath;
-    }
-
-    public function getJsPath(): WikiPath
-    {
-        return $this->jsPath;
-    }
-
     public function getHtmlTemplatePath(): WikiPath
     {
         return $this->htmlTemplatePath;
+    }
+
+    public function setTemplateString(string $templateString): PageTemplate
+    {
+        $this->templateString = $templateString;
+        return $this;
+    }
+
+    public function setModel(array $model)
+    {
+        $this->model = $model;
+        return $this;
     }
 
     /**
@@ -128,305 +131,36 @@ class PageTemplate
     }
 
     /**
-     * @param $layoutName - the html in the main area
+     *
      * @return string - the page as html string (not dom because that's not how works dokuwiki)
-     * @throws ExceptionNotFound|ExceptionBadArgument
+     *
      */
     public function render(): string
     {
 
         $executionContext = (ExecutionContext::getActualOrCreateFromEnv())
             ->setExecutingPageTemplate($this);
-
-
-        $layoutDirectory = WikiPath::createWikiPath(":theme:{$themeName}:$this->layoutName:", WikiPath::COMBO_DRIVE);
-
-        $pageTemplate->cssPath = $layoutDirectory->resolve("$this->layoutName.css");
-        $pageTemplate->jsPath = $layoutDirectory->resolve("$this->layoutName.js");
-        $pageTemplate->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.hbs");
-
         try {
 
-            $htmlFragmentByVariables = [];
-            try {
-                $mainElement = $this->getMainElement();
-                $layoutVariable = $mainElement->getVariableName();
-                $htmlFragmentByVariables[$layoutVariable] = $mainHtml;
-                $mainElement->getDomElement()->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
-            } catch (ExceptionNotFound $e) {
-                // main element is mandatory, an error should have been thrown at build time
-                throw new ExceptionRuntimeInternal("Main element was not found", self::CANONICAL, 1, $e);
+            $model = $this->getModel();
+            if ($this->isTemplateStringExecutionMode()) {
+                $pageTemplateEngine = PageTemplateEngine::createForString();
+                $template = $this->templateString;
+            } else {
+                $theme = $this->getTheme();
+                $pageTemplateEngine = PageTemplateEngine::createForTheme($theme);
+                $template = $this->getLayoutName() . "/" . $this->getLayoutName();
             }
 
             /**
-             * Creating the HTML document
-             */
-            $pageLayoutElements = $this->getPageLayoutElements();
-            foreach ($pageLayoutElements as $pageElement) {
-
-                $domElement = $pageElement->getDomElement();
-
-                /**
-                 * Layout Container
-                 * Page Header and Footer have a bar that permits to set the layout container value
-                 *
-                 * The page core does not have any
-                 * It's by default contained for all layout
-                 * generally applied on the page-core element ie
-                 * <div id="page-core" data-layout-container="true">
-                 */
-                if ($domElement->hasAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE)) {
-                    $domElement->removeAttribute(PageTemplate::DATA_LAYOUT_CONTAINER_ATTRIBUTE);
-                    $container = SiteConfig::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
-                    $domElement->addClass(ContainerTag::getClassName($container));
-                }
-
-
-                /**
-                 * Rendering
-                 */
-                if (!$pageElement->isSlot() || $pageElement->isMain()) {
-                    /**
-                     * No rendering for container area
-                     * or for the main (passed as argument)
-                     */
-                    continue;
-                }
-
-
-                try {
-
-                    $fetcher = $pageElement->getMarkupFetcher();
-                    try {
-                        $fetcherHtmlString = $fetcher->getFetchString();
-                    } catch (\Exception $e) {
-                        throw new ExceptionRuntimeInternal($e->getMessage(), self::CANONICAL, 1, $e);
-                    }
-
-                    /**
-                     * We don't load / add the HTML string in the actual DOM document
-                     * to no add by-effect, corrections during loading and writing
-                     *
-                     * We add a template variable, we save the HTML in a array
-                     * And replace them after the loop
-                     */
-                    $layoutVariable = $pageElement->getVariableName();
-                    $htmlFragmentByVariables[$layoutVariable] = $fetcherHtmlString;
-                    $domElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $layoutVariable);
-
-                } catch (ExceptionNotFound|ExceptionBadArgument $e) {
-
-                    if ($e instanceof ExceptionBadArgument) {
-                        if (PluginUtility::isDevOrTest()) {
-                            /**
-                             * The slot {@link Path} for now should be all {@link WikiPath}
-                             */
-                            throw new ExceptionRuntimeInternal("Internal Error: the path could not be transformed as Wiki Path, while trying to get the fetcher. Error:{$e->getMessage()}", self::CANONICAL);
-                        }
-                    }
-
-                    /**
-                     * no fetcher fragment (page side for instance)
-                     * remove or empty ?
-                     *   * remove allows to not have any empty node but it may break css rules
-                     *   * empty permits not break any css rules (grid may be broken for instance)
-                     */
-                    $action = $domElement->getAttributeOrDefault(PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE, "none");
-                    switch ($action) {
-                        case "remove":
-                            $domElement->remove();
-                            break;
-                        case "none":
-                            // the empty node will stay in the page
-                            break;
-                        default:
-                            LogUtility::internalError("The value ($action) of the attribute (" . PageTemplate::DATA_EMPTY_ACTION_ATTRIBUTE . ") is unknown", self::CANONICAL);
-                    }
-                    continue;
-
-                }
-
-            }
-
-            /**
-             * Html
-             */
-            try {
-                $htmlXmlElement = $this->getTemplateDomDocument()->querySelector("html");
-            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a html element");
-            }
-
-            try {
-                $lang = $this->getRequestedLang();
-                $langValue = $lang->getValueOrDefault();
-                $langDirection = $lang->getDirection();
-            } catch (ExceptionNotFound $e) {
-                // Site value
-                $langValue = Site::getLang();
-                $langDirection = Site::getLangDirection();
-            }
-            $htmlXmlElement
-                ->setAttribute("lang", $langValue)
-                ->setAttribute("dir", $langDirection);
-            /**
-             * Not Xhtml bedcause it does not support boolean attribute without any value
-             *  ->setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
-             *  ->setAttribute("xml:lang", $langValue)
-             */
-
-            try {
-                $remSizeInt = $this->getRemFontSize();
-                $htmlXmlElement->addStyle("font-size", "{$remSizeInt}px");
-            } catch (ExceptionNotFound $e) {
-                //
-            }
-
-
-            /**
-             * Body
-             * {@link tpl_classes} will add the dokuwiki class.
-             * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
-             * dokuwiki__top ID is needed for the "Back to top" utility
-             * used also by some plugins
-             */
-            $tplClasses = tpl_classes();
-            try {
-                $layoutClass = StyleUtility::addComboStrapSuffix("layout-{$this->getLayoutName()}");
-                $bodyElement = $this->getTemplateDomDocument()->querySelector("body")
-                    ->addClass($tplClasses)
-                    ->addClass(PageTemplate::POSITION_RELATIVE_CLASS)
-                    ->addClass($layoutClass);
-            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a body element");
-            }
-
-            $this->addTaskRunnerImageIfRequested($bodyElement);
-
-            if (sizeof($htmlFragmentByVariables) === 0) {
-                LogUtility::internalError("No slot was rendered");
-            }
-
-
-            /**
-             * Toc
-             */
-            try {
-
-                $tocId = PageTemplate::MAIN_TOC_ELEMENT;
-                $tocElement = $this->getPageElement($tocId)->getDomElement();
-                $tocElement->addClass(Toc::getClass());
-
-                $toc = $this->getTocOrDefault();
-                $tocVariable = Template::toValidVariableName($tocId);
-                $htmlFragmentByVariables[$tocVariable] = $toc->toXhtml();
-                $tocElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $tocVariable);
-
-            } catch (ExceptionNotFound $e) {
-                // no toc
-            }
-
-            /**
-             * Page Tool
-             */
-            try {
-                /**
-                 * Page tool is located relatively to its parent
-                 */
-                $pageToolElement = $this->getPageElement(PageTemplate::PAGE_TOOL_ELEMENT)->getDomElement();
-                try {
-                    $pageToolParent = $pageToolElement->getParent();
-                } catch (ExceptionNotFound $e) {
-                    throw new ExceptionRuntimeInternal("The page tool element has no parent in the template ($this->htmlTemplatePath)");
-                }
-                $pageToolParent->addClass(PageTemplate::POSITION_RELATIVE_CLASS);
-
-                /**
-                 * The railbar
-                 */
-                $attributeName = "data-layout";
-                $railBar = FetcherRailBar::createRailBar()
-                    ->setRequestedPath($this->getRequestedContextPath());
-                $railBarLayout = $pageToolElement->getAttribute($attributeName);
-                if ($railBarLayout !== "") {
-                    $pageToolElement->removeAttribute($attributeName);
-                    if ($railBarLayout === "offcanvas") {
-                        try {
-                            $railBar = $railBar->setRequestedLayout($railBarLayout);
-                        } catch (ExceptionBadArgument $e) {
-                            LogUtility::internalError("The layout ($this) has railbar node that has a layout value of ($railBarLayout) that is unknown. Error:{$e->getMessage()}", self::CANONICAL);
-                        }
-                    }
-                }
-                $railBarVariable = Template::toValidVariableName(FetcherRailBar::NAME);
-                $htmlFragmentByVariables[$railBarVariable] = $railBar->getFetchString();
-                $pageToolElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $railBarVariable);
-
-            } catch (ExceptionNotFound $e) {
-                // no page tool or no requested context path
-            }
-
-            /**
-             * Head
-             * (At the end of all processing, please)
-             */
-            try {
-                $head = $this->getTemplateDomDocument()->querySelector("head");
-            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("The template ($this->htmlTemplatePath) does not have a head element");
-            }
-            $this->checkCharSetMeta($head);
-            $this->checkViewPortMeta($head);
-            $this->addPageIconMeta($head);
-            $this->addTitleMeta($head);
-
-            /**
-             * Snippet (in header)
-             * Css and Js from the layout if any
-             *
-             * Note that Header may be added during rendering and must be
-             * then called after rendering and toc
-             * At last then
-             */
-            $this->addHeadElements($head, $htmlFragmentByVariables);
-
-
-            /**
-             * Preloaded Css
-             * Not really useful
-             * We add it just before the end of the body tag
-             */
-            try {
-                $preloadHtml = $this->getHtmlForPreloadedStyleSheets();
-                $preloadVariable = Template::toValidVariableName(self::PRELOAD_TAG);
-                $htmlFragmentByVariables[$preloadVariable] = $preloadHtml;
-                $bodyElement->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $preloadVariable, "beforeend");
-            } catch (ExceptionNotFound $e) {
-                // no preloaded stylesheet resources
-            } catch (ExceptionBadArgument $e) {
-                // if the insert position is not good, should not happen as it's hard coded by us
-                throw new ExceptionRuntimeInternal("Inserting the preloaded HTML returns an error. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
-            }
-
-            /**
-             * Messages
-             * (Should come just before the page creation
-             * due to the $MSG_shown mechanism in {@link html_msgarea()}
-             */
-            $this->addMessages($bodyElement);
-
-            /**
-             * We save as XML because we strive to be XML compliant (ie XHTML)
-             * And we want to load it as XML to check the XHTML namespace (ie xmlns)
-             */
-            $htmlBodyDocumentString = $this->getTemplateDomDocument()->toHtml();
-            $finalHtmlBodyString = Template::create($htmlBodyDocumentString)->setProperties($htmlFragmentByVariables)->render();
-
-            /**
+             * Checks ???
              * DocType is required by bootstrap
              * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+             * <!doctype html>
              */
-            return "<!doctype html>\n$finalHtmlBodyString";
+            return $pageTemplateEngine->render($template, $model);
+
+
         } finally {
             $executionContext
                 ->closeExecutingPageTemplate();
@@ -440,11 +174,6 @@ class PageTemplate
     public function getPageLayoutElements(): array
     {
         return $this->pageElements;
-    }
-
-    private function getTemplateDomDocument(): XmlDocument
-    {
-        return $this->templateDomDocument;
     }
 
 
@@ -483,7 +212,19 @@ class PageTemplate
 
     private function getLayoutName(): string
     {
-        return $this->layoutName;
+        if (isset($this->layoutName)) {
+            return $this->layoutName;
+        }
+        try {
+            $requestedPath = $this->getRequestedContextPath();
+            return PageLayoutName::createFromPage(MarkupPath::createPageFromPathObject($requestedPath))
+                ->getValueOrDefault();
+        } catch (ExceptionNotFound $e) {
+            // no requested path
+        }
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getDefaultLayoutName();
     }
 
     /**
@@ -554,19 +295,19 @@ class PageTemplate
      * @return void
      * Adapted from {@link TplUtility::renderFaviconMetaLinks()}
      */
-    private function addPageIconMeta(XmlElement $head)
+    private function getPageIconHeadLinkHtml(): string
     {
-        $this->addShortcutFavIconInHead($head);
-        $this->addIconInHead($head);
-        $this->addAppleTouchIconInHead($head);
+        $html = $this->getShortcutFavIconHtmlLink();
+        $html .= $this->getIconHtmlLink();
+        $html .= $this->getAppleTouchIconHtmlLink();
+        return $html;
     }
 
     /**
      * Add a favIcon.ico
-     * @param XmlElement $head
-     * @return void
+     *
      */
-    private function addShortcutFavIconInHead(XmlElement $head)
+    private function getShortcutFavIconHtmlLink(): string
     {
 
         $internalFavIcon = WikiPath::createComboResource('images:favicon.ico');
@@ -582,31 +323,24 @@ class PageTemplate
             $icoWikiPath = FileSystems::getFirstExistingPath($iconPaths);
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError("The internal fav icon ($internalFavIcon) should be at minimal found", self::CANONICAL);
-            return;
+            return "";
         }
 
-        try {
-            $head->appendChild(
-                $head->getDocument()
-                    ->createElement("link")
-                    ->setAttribute("rel", "shortcut icon")
-                    ->setAttribute("href", FetcherRawLocalPath::createFromPath($icoWikiPath)->getFetchUrl()->toAbsoluteUrl()->toString())
-            );
-        } catch (\DOMException $e) {
-            LogUtility::internalError("The file should be found and the local name should be good. Error: {$e->getMessage()}");
-        }
+        return TagAttributes::createEmpty()
+            ->addOutputAttributeValue("rel", "shortcut icon")
+            ->addOutputAttributeValue("href", FetcherRawLocalPath::createFromPath($icoWikiPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+            ->toHtmlEmptyTag("link");
 
     }
 
     /**
      * Add Icon Png (16x16 and 32x32)
-     * @param XmlElement $head
-     * @return void
+     * @return string
      */
-    private function addIconInHead(XmlElement $head)
+    private function getIconHtmlLink(): string
     {
 
-
+        $html = "";
         $sizeValues = ["32x32", "16x16"];
         foreach ($sizeValues as $sizeValue) {
 
@@ -625,28 +359,22 @@ class PageTemplate
                 LogUtility::internalError("The internal icon ($internalIcon) should be at minimal found", self::CANONICAL);
                 continue;
             }
-            try {
-                $head->appendChild(
-                    $head->getDocument()
-                        ->createElement("link")
-                        ->setAttribute("rel", "icon")
-                        ->setAttribute("sizes", $sizeValue)
-                        ->setAttribute("type", Mime::PNG)
-                        ->setAttribute("href", FetcherRawLocalPath::createFromPath($iconPath)->getFetchUrl()->toAbsoluteUrl()->toString())
-                );
-            } catch (\DOMException $e) {
-                LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
-            }
+            $html .= TagAttributes::createEmpty()
+                ->addOutputAttributeValue("rel", "icon")
+                ->addOutputAttributeValue("sizes", $sizeValue)
+                ->addOutputAttributeValue("type", Mime::PNG)
+                ->addOutputAttributeValue("href", FetcherRawLocalPath::createFromPath($iconPath)->getFetchUrl()->toAbsoluteUrl()->toString())
+                ->toHtmlEmptyTag("link");
         }
-
+        return $html;
     }
 
     /**
      * Add Apple touch icon
-     * @param XmlElement $head
-     * @return void
+     *
+     * @return string
      */
-    private function addAppleTouchIconInHead(XmlElement $head)
+    private function getAppleTouchIconHtmlLink(): string
     {
 
         $internalIcon = WikiPath::createComboResource(":images:apple-touch-icon.png");
@@ -662,27 +390,31 @@ class PageTemplate
             $iconPath = FileSystems::getFirstExistingPath($iconPaths);
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError("The internal apple icon ($internalIcon) should be at minimal found", self::CANONICAL);
-            return;
+            return "";
         }
         try {
             $fetcherLocalPath = FetcherRaster::createImageRasterFetchFromPath($iconPath);
             $sizesValue = "{$fetcherLocalPath->getIntrinsicWidth()}x{$fetcherLocalPath->getIntrinsicHeight()}";
-            $head->appendChild(
-                $head->getDocument()
-                    ->createElement("link")
-                    ->setAttribute("rel", self::APPLE_TOUCH_ICON_REL_VALUE)
-                    ->setAttribute("sizes", $sizesValue)
-                    ->setAttribute("type", Mime::PNG)
-                    ->setAttribute("href", $fetcherLocalPath->getFetchUrl()->toAbsoluteUrl()->toString())
-            );
+
+            return TagAttributes::createEmpty()
+                ->addOutputAttributeValue("rel", self::APPLE_TOUCH_ICON_REL_VALUE)
+                ->addOutputAttributeValue("sizes", $sizesValue)
+                ->addOutputAttributeValue("type", Mime::PNG)
+                ->addOutputAttributeValue("href", $fetcherLocalPath->getFetchUrl()->toAbsoluteUrl()->toString())
+                ->toHtmlEmptyTag("link");
         } catch (\Exception $e) {
             LogUtility::internalError("The file ($iconPath) should be found and the local name should be good. Error: {$e->getMessage()}");
+            return "";
         }
-
     }
 
-    public function getModel(): array
+    public
+    function getModel(): array
     {
+
+        /**
+         * Mandatory HTML attributes
+         */
         $model =
             [
                 PageTitle::PROPERTY_NAME => $this->getRequestedTitleOrDefault(),
@@ -691,6 +423,10 @@ class PageTemplate
                 // dokuwiki has a direction config also ...
                 // "dir" => $this->getRequestedLangOrDefault()->getDirection()
             ];
+
+        if (isset($this->model)) {
+            return array_merge($model, $this->model);
+        }
 
         /**
          * The width of the layout
@@ -749,7 +485,7 @@ class PageTemplate
             /**
              * Slot
              */
-            if(isset($this->mainContent)){
+            if (isset($this->mainContent)) {
                 $model["html-main-content"] = $this->mainContent;
             } else {
                 $model["html-main-content"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
@@ -758,13 +494,40 @@ class PageTemplate
             // no context path
         }
 
+        /**
+         * Preloaded Css
+         * (Not really useful but legacy)
+         * We add it just before the end of the body tag
+         */
+        try {
+            $model['preloaded-stylesheet-html'] = $this->getHtmlForPreloadedStyleSheets();
+        } catch (ExceptionNotFound $e) {
+            // no preloaded stylesheet resources
+        }
+
+        /**
+         * Head Html
+         * Snippet, Css and Js from the layout if any
+         *
+         * Note that head tag may be added during rendering and must be then called after rendering and toc
+         * (ie at last then)
+         */
         $model['head-html'] = $this->getHeadHtml();
         $model['powered-by'] = self::getPoweredBy();
+
+        /**
+         * Messages
+         * (Should come just before the page creation
+         * due to the $MSG_shown mechanism in {@link html_msgarea()}
+         * We may also get messages in the head
+         */
+        $model['messages-html'] = $this->addMessages();
 
         return $model;
     }
 
-    private function addTitleMeta(XmlElement $head)
+    private
+    function addTitleMeta(XmlElement $head)
     {
 
         try {
@@ -784,16 +547,22 @@ class PageTemplate
     }
 
 
-    private function getRequestedTitleOrDefault(): string
+    private
+    function getRequestedTitleOrDefault(): string
     {
 
         if (isset($this->requestedTitle)) {
             return $this->requestedTitle;
         }
 
-        $path = $this->getRequestedContextPath();
-        $markupPath = MarkupPath::createPageFromPathObject($path);
-        return PageTitle::createForMarkup($markupPath)->getValueOrDefault();
+        try {
+            $path = $this->getRequestedContextPath();
+            $markupPath = MarkupPath::createPageFromPathObject($path);
+            return PageTitle::createForMarkup($markupPath)->getValueOrDefault();
+        } catch (ExceptionNotFound $e) {
+            //
+        }
+        throw new ExceptionBadSyntaxRuntime("A title is mandatory");
 
 
     }
@@ -805,7 +574,8 @@ class PageTemplate
      *
      * Responsive meta tag
      */
-    private function checkViewPortMeta(XmlElement $head)
+    private
+    function checkViewPortMeta(XmlElement $head)
     {
         $expectedResponsiveContent = PageTemplate::VIEWPORT_RESPONSIVE_VALUE;
         try {
@@ -828,26 +598,13 @@ class PageTemplate
         }
     }
 
-    private function addHeadElements(XmlElement $head, &$htmlFragmentByVariables)
-    {
-
-        $htmlHeaders = $this->getHeadHtml();
-        $variableName = "headElements";
-        $htmlFragmentByVariables[$variableName] = $htmlHeaders;
-        try {
-            $head->insertAdjacentTextNode(Template::VARIABLE_PREFIX . $variableName);
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::internalError("Unable to add the head variable (should not happen)", self::CANONICAL, $e);
-        }
-
-
-    }
 
     /**
      * Delete all social heads (export or iframe case)
      * @param $event
      */
-    public function deleteSocialHeadTags(&$event)
+    public
+    function deleteSocialHeadTags(&$event)
     {
 
         $data = &$event->data;
@@ -891,7 +648,8 @@ class PageTemplate
         }
     }
 
-    public function getSlotElements(): array
+    public
+    function getSlotElements(): array
     {
         $slotElements = [];
         foreach ($this->getPageLayoutElements() as $element) {
@@ -906,13 +664,15 @@ class PageTemplate
     /**
      * @throws ExceptionNotFound
      */
-    public function getMainElement(): PageTemplateElement
+    public
+    function getMainElement(): PageTemplateElement
     {
         return $this->getPageElement(PageTemplate::MAIN_CONTENT_ELEMENT);
     }
 
 
-    public function hasContentHeader(): bool
+    public
+    function hasContentHeader(): bool
     {
         try {
             $element = $this->getPageElement(PageTemplate::MAIN_HEADER_ELEMENT);
@@ -932,10 +692,11 @@ class PageTemplate
     /**
      * @throws ExceptionNotFound
      */
-    private function getTocOrDefault(): Toc
+    private
+    function getTocOrDefault(): Toc
     {
 
-        if(isset($this->toc)){
+        if (isset($this->toc)) {
             /**
              * The {@link FetcherPageBundler}
              * bundle pages and create a toc
@@ -952,7 +713,8 @@ class PageTemplate
 
     }
 
-    public function setMainContent(string $mainContent): PageTemplate
+    public
+    function setMainContent(string $mainContent): PageTemplate
     {
         $this->mainContent = $mainContent;
         return $this;
@@ -964,7 +726,8 @@ class PageTemplate
      * @throws ExceptionBadSyntax
      * @throws ExceptionNotFound
      */
-    public function renderAsDom(): XmlDocument
+    public
+    function renderAsDom(): XmlDocument
     {
         return XmlDocument::createHtmlDocFromMarkup($this->render());
     }
@@ -974,7 +737,8 @@ class PageTemplate
      * at the end
      * @throws ExceptionNotFound
      */
-    private function getHtmlForPreloadedStyleSheets(): string
+    private
+    function getHtmlForPreloadedStyleSheets(): string
     {
 
         // For the preload if any
@@ -1011,7 +775,8 @@ class PageTemplate
     /**
      * Variation of {@link html_msgarea()}
      */
-    public function addMessages(XmlElement $bodyElement): void
+    public
+    function addMessages(): string
     {
 
         global $MSG, $MSG_shown;
@@ -1019,7 +784,7 @@ class PageTemplate
         // store if the global $MSG has already been shown and thus HTML output has been started
         $MSG_shown = true;
 
-        if (!isset($MSG)) return;
+        if (!isset($MSG)) return "";
 
 
         $shown = array();
@@ -1059,7 +824,7 @@ EOF;
         unset($GLOBALS['MSG']);
 
         if ($toasts === "") {
-            return;
+            return "";
         }
 
         // position fixed to not participate into the grid
@@ -1068,19 +833,22 @@ EOF;
 $toasts
 </div>
 EOF;
-        try {
-            $bodyElement->insertAdjacentHTML('beforeend', $toastsHtml);
-        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
-            // should not happen
-            LogUtility::error($e);
-        }
-
         ExecutionContext::getActualOrCreateFromEnv()
             ->getSnippetSystem()
             ->attachJavascriptFromComponentId("toast");
+
+        return $toastsHtml;
+
     }
 
-    private function getTaskRunnerImg(): string
+    private function canBeCached(): bool
+    {
+        // no if message
+        return true;
+    }
+
+    private
+    function getTaskRunnerImg(): string
     {
 
         try {
@@ -1103,7 +871,8 @@ EOF;
             ->toHtmlEmptyTag("img");
     }
 
-    private function getRequestedLangOrDefault(): Lang
+    private
+    function getRequestedLangOrDefault(): Lang
     {
         try {
             return $this->getRequestedLang();
@@ -1112,22 +881,34 @@ EOF;
         }
     }
 
-    private function getHeadHtml()
+    private function getTheme()
     {
-        /**
-         * Add the layout js and css first
-         */
-        $snippetManager = PluginUtility::getSnippetManager();
-        try {
-            $content = FileSystems::getContent($this->getCssPath());
-            $snippetManager->attachCssInternalStylesheet(self::CANONICAL, $content);
-        } catch (ExceptionNotFound $e) {
-            // no css found, not a problem
-        }
-        if (FileSystems::exists($this->getJsPath())) {
-            $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $this->getJsPath());
-        }
+        return $this->theme ?? ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getTheme();
+    }
 
+    private function getHeadHtml(): string
+    {
+        if (!$this->isTemplateStringExecutionMode()) {
+
+            $themeName = $this->getTheme();
+            $layoutDirectory = WikiPath::createWikiPath(":theme:{$themeName}:$this->layoutName:", WikiPath::COMBO_DRIVE);
+            /**
+             * Add the layout js and css first
+             */
+            $snippetManager = PluginUtility::getSnippetManager();
+            try {
+                $cssPath = $layoutDirectory->resolve("$this->layoutName.css");
+                $content = FileSystems::getContent($cssPath);
+                $snippetManager->attachCssInternalStylesheet(self::CANONICAL, $content);
+            } catch (ExceptionNotFound $e) {
+                // no css found, not a problem
+            }
+            $jsPath = $layoutDirectory->resolve("$this->layoutName.js");
+            if (FileSystems::exists($jsPath)) {
+                $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $jsPath);
+            }
+
+        }
         /**
          * Start the meta headers
          */
@@ -1143,7 +924,8 @@ EOF;
         ob_start();
         try {
             tpl_metaheaders();
-            return ob_get_contents();
+            $headIcon = $this->getPageIconHeadLinkHtml();
+            return $headIcon . ob_get_contents();
         } finally {
             ob_end_clean();
         }
@@ -1151,7 +933,8 @@ EOF;
     }
 
 
-    public function setLayoutName(string $layoutName): PageTemplate
+    public
+    function setLayoutName(string $layoutName): PageTemplate
     {
         $this->layoutName = $layoutName;
         return $this;
@@ -1162,7 +945,8 @@ EOF;
      * @param bool $b
      * @return PageTemplate
      */
-    public function setRequestedEnableTaskRunner(bool $b): PageTemplateEngine
+    public
+    function setRequestedEnableTaskRunner(bool $b): PageTemplate
     {
         $this->requestedEnableTaskRunner = $b;
         return $this;
@@ -1173,7 +957,8 @@ EOF;
      * @param Lang $requestedLang
      * @return PageTemplate
      */
-    public function setRequestedLang(Lang $requestedLang): PageTemplate
+    public
+    function setRequestedLang(Lang $requestedLang): PageTemplate
     {
         $this->requestedLang = $requestedLang;
         return $this;
@@ -1183,7 +968,8 @@ EOF;
      * @param string $requestedTitle
      * @return PageTemplate
      */
-    public function setRequestedTitle(string $requestedTitle): PageTemplate
+    public
+    function setRequestedTitle(string $requestedTitle): PageTemplate
     {
         $this->requestedTitle = $requestedTitle;
         return $this;
@@ -1194,22 +980,37 @@ EOF;
      * @param bool $deleteSocialHeads
      * @return PageTemplate
      */
-    public function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageTemplate
+    public
+    function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageTemplate
     {
         $this->deleteSocialHeads = $deleteSocialHeads;
         return $this;
     }
 
-    public function setRequestedContextPath(WikiPath $contextPath): PageTemplate
+    public
+    function setRequestedContextPath(WikiPath $contextPath): PageTemplate
     {
         $this->requestedContextPath = $contextPath;
         return $this;
     }
 
-    public function setToc(Toc $toc): PageTemplate
+    public
+    function setToc(Toc $toc): PageTemplate
     {
         $this->toc = $toc;
         return $this;
+    }
+
+    /**
+     * There is two mode of execution, via:
+     * * a file template (theme)
+     * * or a string template (string)
+     *
+     * @return bool - true if this a string template executions
+     */
+    private function isTemplateStringExecutionMode(): bool
+    {
+        return isset($this->templateString);
     }
 
 }

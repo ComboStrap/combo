@@ -303,7 +303,7 @@ class SiteConfig
 
     public function setUseHeadingAsTitle(): SiteConfig
     {
-        return $this->setConf('useheading',1,self::GLOBAL_SCOPE);
+        return $this->setConf('useheading', 1, self::GLOBAL_SCOPE);
     }
 
     public function setEnableSectionEditing(): SiteConfig
@@ -318,7 +318,7 @@ class SiteConfig
 
     public function getTocMaxLevel(): int
     {
-        $value = $this->getValue('maxseclevel', null,self::GLOBAL_SCOPE);
+        $value = $this->getValue('maxseclevel', null, self::GLOBAL_SCOPE);
         try {
             return DataType::toInteger($value);
         } catch (ExceptionBadArgument $e) {
@@ -329,17 +329,17 @@ class SiteConfig
 
     public function setTocMinHeading(int $int): SiteConfig
     {
-        return $this->setConf('tocminheads',$int, self::GLOBAL_SCOPE);
+        return $this->setConf('tocminheads', $int, self::GLOBAL_SCOPE);
     }
 
     public function getIndexPageName()
     {
-        return $this->getValue("start", self::CONF_DEFAULT_INDEX_NAME,self::GLOBAL_SCOPE);
+        return $this->getValue("start", self::CONF_DEFAULT_INDEX_NAME, self::GLOBAL_SCOPE);
     }
 
     public function getAuthorizedUrlSchemes(): ?array
     {
-        if(isset($this->authorizedUrlSchemes)){
+        if (isset($this->authorizedUrlSchemes)) {
             return $this->authorizedUrlSchemes;
         }
         $this->authorizedUrlSchemes = getSchemes();
@@ -357,13 +357,13 @@ class SiteConfig
     public function addInterWiki(string $name, string $value): SiteConfig
     {
         $this->loadInterWikiIfNeeded();
-        $this->interWikis[$name]=$value;
+        $this->interWikis[$name] = $value;
         return $this;
     }
 
     private function loadInterWikiIfNeeded(): void
     {
-        if(isset($this->interWikis)){
+        if (isset($this->interWikis)) {
             return;
         }
         $this->interWikis = getInterwiki();
@@ -371,12 +371,12 @@ class SiteConfig
 
     public function setTocTopLevel(int $int): SiteConfig
     {
-        return $this->setConf('toptoclevel',$int, self::GLOBAL_SCOPE);
+        return $this->setConf('toptoclevel', $int, self::GLOBAL_SCOPE);
     }
 
     public function getMetaDataDirectory(): LocalPath
     {
-        $metadataDirectory = $this->getValue('metadir', null,self::GLOBAL_SCOPE);
+        $metadataDirectory = $this->getValue('metadir', null, self::GLOBAL_SCOPE);
         if ($metadataDirectory === null) {
             throw new ExceptionRuntime("The meta directory configuration value ('metadir') is null");
         }
@@ -392,6 +392,20 @@ class SiteConfig
     {
         $this->setConf(SiteConfig::CONF_ENABLE_THEME_SYSTEM, 1);
         return $this;
+    }
+
+    public function getTheme(): string
+    {
+        return PageTemplateEngine::DEFAULT_THEME;
+    }
+
+    /**
+     * Note: in test to speed the test execution,
+     * the default is set to {@link PageLayoutName::BLANK_LAYOUT}
+     */
+    public function getDefaultLayoutName()
+    {
+        return $this->getValue(PageLayoutName::CONF_DEFAULT_NAME, PageLayoutName::HOLY_LAYOUT_VALUE);
     }
 
 

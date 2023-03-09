@@ -25,12 +25,14 @@ class Theme
 
     public static function withString(): Theme
     {
-        return (new ThemeBuilder())->build();
+        $handlebars = PageTemplateEngine::createForString()->getHandlebars();
+        return new Theme($handlebars);
     }
 
     public static function withTheme(string $name): Theme
     {
-        return (new ThemeBuilder())->setThemeName($name)->build();
+        $handlebars = PageTemplateEngine::createForTheme($name)->getHandlebars();
+        return new Theme($handlebars);
     }
 
     public static function withDefaultTheme(): Theme

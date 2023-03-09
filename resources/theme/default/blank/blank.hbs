@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }}</title>
-    {{{ html-head }}}
+    {{{ head-html }}}
     {{#if html-rem-size}}
         <style>html {
             font-size: {{html-rem-size}}px
@@ -21,7 +21,7 @@
                 {{{toc-html}}}
             </nav>
         {{/if}}
-        {{{ main-content }}}
+        {{{ main-content-html }}}
     </main>
 </div>
 </body>

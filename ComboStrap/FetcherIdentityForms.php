@@ -63,7 +63,8 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
             $title = $this->getLabel();
 
             try {
-                $this->pageLayout = PageTemplate::createFromLayoutName($this->getRequestedLayoutOrDefault())
+                $this->pageLayout = PageTemplate::create()
+                    ->setLayoutName($this->getRequestedLayoutOrDefault())
                     ->setRequestedLang($pageLang)
                     ->setRequestedEnableTaskRunner(false) // no page id
                     ->setRequestedTitle($title)
@@ -115,7 +116,9 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
         /**
          * Generate the whole html page via the layout
          */
-        return $this->pageLayout->render($mainHtml);
+        return $this->pageLayout
+            ->setMainContent($mainHtml)
+            ->render();
 
     }
 

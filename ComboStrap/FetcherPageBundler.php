@@ -98,14 +98,16 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             throw new ExceptionRuntimeInternal("The toc could not be created. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
         }
         try {
-            return PageTemplate::createFromLayoutName($layoutName)
+            return PageTemplate::create()
+                ->setLayoutName($layoutName)
                 ->setRequestedContextPath($startMarkupWikiPath)
                 ->setRequestedTitle($title)
                 ->setRequestedLang($lang)
                 ->setToc($toc)
                 ->setDeleteSocialHeadTags(true)
                 ->setRequestedEnableTaskRunner(false)
-                ->render($mainContent);
+                ->setMainContent($mainContent)
+                ->render();
         } catch (ExceptionBadSyntax|ExceptionNotFound|ExceptionBadArgument $e) {
             // layout should be good
             throw new ExceptionRuntimeInternal("The $layoutName template returns an error", self::CANONICAL, 1, $e);

@@ -3,6 +3,9 @@
 namespace ComboStrap;
 
 
+use Handlebars\Handlebars;
+use setasign\Fpdi\PdfReader\Page;
+
 /**
  * A page template is the object
  * that generates a HTML page
@@ -54,10 +57,11 @@ class PageTemplate
     const CONF_PAGE_HEADER_NAME_DEFAULT = "slot_header";
     const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
     const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = Site::SLOT_MAIN_SIDE_NAME;
+    public Handlebars $handleBars;
     private string $layoutName;
-    private WikiPath $cssPath;
-    private WikiPath $jsPath;
-    private WikiPath $htmlTemplatePath;
+    public WikiPath $cssPath;
+    public WikiPath $jsPath;
+    public WikiPath $htmlTemplatePath;
     private XmlDocument $templateDomDocument;
 
     private string $requestedTitle;
@@ -72,75 +76,17 @@ class PageTemplate
     private Lang $requestedLang;
     private Toc $toc;
     private bool $deleteSocialHeads = false;
+    private string $mainContent;
 
 
-    /**
-     * @param string $layoutName
-     * @throws ExceptionNotFound - if the layout does not exist
-     * @throws ExceptionBadSyntax - if the layout html template is not valid
-     */
-    public function __construct(string $layoutName)
+    public static function create(): PageTemplate
     {
-
-        $this->layoutName = $layoutName;
-
-        $themeName = "default";
-        $layoutDirectory = WikiPath::createWikiPath(":theme:{$themeName}:$this->layoutName:", WikiPath::COMBO_DRIVE);
-
-        $this->cssPath = $layoutDirectory->resolve("$this->layoutName.css");
-        $this->jsPath = $layoutDirectory->resolve("$this->layoutName.js");
-        $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.html");
-        if (!FileSystems::exists($this->htmlTemplatePath)) {
-            $this->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.hbs");
-        }
-        $this->templateDomDocument = $this->htmlTemplatePathToHtmlDom($this->htmlTemplatePath);
-
-        foreach (PageTemplate::LAYOUT_ELEMENTS as $elementId) {
-
-            /**
-             * If the id is not in the html template we don't show it
-             */
-            try {
-                $domElement = $this->templateDomDocument->querySelector("#$elementId");
-            } catch (ExceptionBadSyntax $e) {
-                LogUtility::internalError("The selector should not have a bad syntax");
-                continue;
-            } catch (ExceptionNotFound $e) {
-                continue;
-            }
-
-            $this->pageElements[$elementId] = new PageTemplateElement($this, $domElement);
-
-        }
-
+        return new PageTemplate();
     }
 
-    /**
-     * @throws ExceptionNotFound - if the layout does not exist
-     * @throws ExceptionBadSyntax - if the layout html template is not valid
-     */
-    private function htmlTemplatePathToHtmlDom(WikiPath $layoutHtmlPath): XmlDocument
+    public static function config(): PageTemplate
     {
-        try {
-            $htmlStringLayout = FileSystems::getContent($layoutHtmlPath);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("The layout file ($layoutHtmlPath) does not exist at $layoutHtmlPath", self::CANONICAL);
-        }
-        try {
-            return XmlDocument::createHtmlDocFromMarkup($htmlStringLayout);
-        } catch (ExceptionBadSyntax $e) {
-            throw new ExceptionBadSyntax("The html template file ($layoutHtmlPath) is not valid. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
-        }
-    }
-
-
-    /**
-     * @throws ExceptionBadSyntax - bad html template
-     * @throws ExceptionNotFound - layout not found
-     */
-    public static function createFromLayoutName(string $layoutName): PageTemplate
-    {
-        return new PageTemplate($layoutName);
+        return new PageTemplate();
     }
 
     public static function getPoweredBy(): string
@@ -153,17 +99,6 @@ class PageTemplate
         return $poweredBy;
     }
 
-
-    /**
-     * Add or not the task runner / web bug call
-     * @param bool $b
-     * @return PageTemplate
-     */
-    public function setRequestedEnableTaskRunner(bool $b): PageTemplate
-    {
-        $this->requestedEnableTaskRunner = $b;
-        return $this;
-    }
 
     public function getCssPath(): WikiPath
     {
@@ -193,15 +128,23 @@ class PageTemplate
     }
 
     /**
-     * @param $mainHtml - the html in the main area
+     * @param $layoutName - the html in the main area
      * @return string - the page as html string (not dom because that's not how works dokuwiki)
      * @throws ExceptionNotFound|ExceptionBadArgument
      */
-    public function render(string $mainHtml): string
+    public function render(): string
     {
 
         $executionContext = (ExecutionContext::getActualOrCreateFromEnv())
             ->setExecutingPageTemplate($this);
+
+
+        $layoutDirectory = WikiPath::createWikiPath(":theme:{$themeName}:$this->layoutName:", WikiPath::COMBO_DRIVE);
+
+        $pageTemplate->cssPath = $layoutDirectory->resolve("$this->layoutName.css");
+        $pageTemplate->jsPath = $layoutDirectory->resolve("$this->layoutName.js");
+        $pageTemplate->htmlTemplatePath = $layoutDirectory->resolve("$this->layoutName.hbs");
+
         try {
 
             $htmlFragmentByVariables = [];
@@ -504,11 +447,6 @@ class PageTemplate
         return $this->templateDomDocument;
     }
 
-    public function setRequestedContextPath(WikiPath $wikiPath): PageTemplate
-    {
-        $this->requestedContextPath = $wikiPath;
-        return $this;
-    }
 
     /**
      * @throws ExceptionNotFound
@@ -521,15 +459,6 @@ class PageTemplate
         return $this->requestedLang;
     }
 
-    /**
-     * @param Lang $requestedLang
-     * @return PageTemplate
-     */
-    public function setRequestedLang(Lang $requestedLang): PageTemplate
-    {
-        $this->requestedLang = $requestedLang;
-        return $this;
-    }
 
     /**
      * @throws ExceptionNotFound
@@ -820,12 +749,17 @@ class PageTemplate
             /**
              * Slot
              */
-            $model["main-content"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
+            if(isset($this->mainContent)){
+                $model["html-main-content"] = $this->mainContent;
+            } else {
+                $model["html-main-content"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
+            }
         } catch (ExceptionNotFound $e) {
             // no context path
         }
 
-        $model['html-head']= $this->getHeadHtml();
+        $model['head-html'] = $this->getHeadHtml();
+        $model['powered-by'] = self::getPoweredBy();
 
         return $model;
     }
@@ -864,15 +798,6 @@ class PageTemplate
 
     }
 
-    /**
-     * @param string $requestedTitle
-     * @return PageTemplate
-     */
-    public function setRequestedTitle(string $requestedTitle): PageTemplate
-    {
-        $this->requestedTitle = $requestedTitle;
-        return $this;
-    }
 
     /**
      * @param XmlElement $head
@@ -1003,20 +928,21 @@ class PageTemplate
 
     }
 
-    public function setToc(Toc $toc): PageTemplate
-    {
-        $this->toc = $toc;
-        return $this;
-    }
 
     /**
      * @throws ExceptionNotFound
      */
     private function getTocOrDefault(): Toc
     {
-        if (isset($this->toc)) {
+
+        if(isset($this->toc)){
+            /**
+             * The {@link FetcherPageBundler}
+             * bundle pages and create a toc
+             */
             return $this->toc;
         }
+
         $wikiPath = $this->getRequestedContextPath();
         if (FileSystems::isDirectory($wikiPath)) {
             LogUtility::error("We have a found an inconsistency. The context path is not a markup directory and does have therefore no toc but the template ($this) has a toc.");
@@ -1026,23 +952,21 @@ class PageTemplate
 
     }
 
-    /**
-     * Delete the social head tags
-     * @param bool $deleteSocialHeads
-     * @return PageTemplate
-     */
-    public function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageTemplate
+    public function setMainContent(string $mainContent): PageTemplate
     {
-        $this->deleteSocialHeads = $deleteSocialHeads;
+        $this->mainContent = $mainContent;
         return $this;
     }
 
+
     /**
+     * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
      */
-    public function generateAndGetPageHtmlAsDom(string $mainHtml): XmlDocument
+    public function renderAsDom(): XmlDocument
     {
-        return XmlDocument::createHtmlDocFromMarkup($this->render($mainHtml));
+        return XmlDocument::createHtmlDocFromMarkup($this->render());
     }
 
     /**
@@ -1224,6 +1148,68 @@ EOF;
             ob_end_clean();
         }
 
+    }
+
+
+    public function setLayoutName(string $layoutName): PageTemplate
+    {
+        $this->layoutName = $layoutName;
+        return $this;
+    }
+
+    /**
+     * Add or not the task runner / web bug call
+     * @param bool $b
+     * @return PageTemplate
+     */
+    public function setRequestedEnableTaskRunner(bool $b): PageTemplateEngine
+    {
+        $this->requestedEnableTaskRunner = $b;
+        return $this;
+    }
+
+
+    /**
+     * @param Lang $requestedLang
+     * @return PageTemplate
+     */
+    public function setRequestedLang(Lang $requestedLang): PageTemplate
+    {
+        $this->requestedLang = $requestedLang;
+        return $this;
+    }
+
+    /**
+     * @param string $requestedTitle
+     * @return PageTemplate
+     */
+    public function setRequestedTitle(string $requestedTitle): PageTemplate
+    {
+        $this->requestedTitle = $requestedTitle;
+        return $this;
+    }
+
+    /**
+     * Delete the social head tags
+     * @param bool $deleteSocialHeads
+     * @return PageTemplate
+     */
+    public function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageTemplate
+    {
+        $this->deleteSocialHeads = $deleteSocialHeads;
+        return $this;
+    }
+
+    public function setRequestedContextPath(WikiPath $contextPath): PageTemplate
+    {
+        $this->requestedContextPath = $contextPath;
+        return $this;
+    }
+
+    public function setToc(Toc $toc): PageTemplate
+    {
+        $this->toc = $toc;
+        return $this;
     }
 
 }

@@ -18,6 +18,7 @@ class PageTemplateEngine
 
 
     private Handlebars $handleBars;
+    private LocalPath $templateDirectory;
 
     static public function createForTheme(string $themeName): PageTemplateEngine
     {
@@ -33,15 +34,17 @@ class PageTemplateEngine
 
 
         try {
-            $partialsDirectory = WikiPath::createComboResource(":theme:$themeName")->toLocalPath()->toAbsoluteString();
+            $templatesDirectory = WikiPath::createComboResource(":theme:$themeName:templates")->toLocalPath();
+            $partialDirectory = WikiPath::createComboResource(":theme:$themeName:partials")->toLocalPath();
 
             /**
              * Handlebars Files
              */
-            $partialsLoader = new FilesystemLoader($partialsDirectory, ["extension" => self::EXTENSION_HBS]);
+            $templatesLoader = new FilesystemLoader($templatesDirectory->toAbsoluteString(), ["extension" => self::EXTENSION_HBS]);
+            $partialLoader = new FilesystemLoader($partialDirectory->toAbsoluteString(), ["extension" => self::EXTENSION_HBS]);
             $handleBars = new Handlebars([
-                "loader" => $partialsLoader,
-                "partials_loader" => $partialsLoader
+                "loader" => $templatesLoader,
+                "partials_loader" => $partialLoader
             ]);
 
         } catch (ExceptionCast $e) {
@@ -52,6 +55,7 @@ class PageTemplateEngine
 
         $newPageTemplateEngine = new PageTemplateEngine();
         $newPageTemplateEngine->handleBars = $handleBars;
+        $newPageTemplateEngine->templateDirectory = $templatesDirectory;
         $executionContext->setRuntimeObject($handleBarsObjectId, $newPageTemplateEngine);
         return $newPageTemplateEngine;
 
@@ -119,6 +123,18 @@ class PageTemplateEngine
     public function render(string $template, array $model): string
     {
         return $this->handleBars->render($template, $model);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getTemplatesDirectory(): LocalPath
+    {
+        if(isset($this->templateDirectory)){
+            return $this->templateDirectory;
+        }
+        throw new ExceptionNotFound("No template directory");
+
     }
 
 

@@ -49,7 +49,7 @@ class PageTemplate
     public const VIEWPORT_RESPONSIVE_VALUE = "width=device-width,initial-scale=1";
     public const TASK_RUNNER_ID = "task-runner";
     public const APPLE_TOUCH_ICON_REL_VALUE = "apple-touch-icon";
-    public const CONF_REM_SIZE = "remSize";
+
     public const PRELOAD_TAG = "preload";
     const CONF_PAGE_FOOTER_NAME = "footerSlotPageName";
     const CONF_PAGE_FOOTER_NAME_DEFAULT = "slot_footer";
@@ -59,8 +59,6 @@ class PageTemplate
     const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = Site::SLOT_MAIN_SIDE_NAME;
 
     private string $layoutName;
-
-    public WikiPath $htmlTemplatePath;
 
 
     private string $requestedTitle;
@@ -101,9 +99,12 @@ class PageTemplate
     }
 
 
-    public function getHtmlTemplatePath(): WikiPath
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getHtmlTemplatePath(): LocalPath
     {
-        return $this->htmlTemplatePath;
+        return $this->getEngine()->getTemplatesDirectory()->resolve($this->layoutName . "." . PageTemplateEngine::EXTENSION_HBS);
     }
 
     public function setTemplateString(string $templateString): PageTemplate
@@ -143,13 +144,14 @@ class PageTemplate
         try {
 
             $model = $this->getModel();
+            $pageTemplateEngine = $this->getEngine();
             if ($this->isTemplateStringExecutionMode()) {
-                $pageTemplateEngine = PageTemplateEngine::createForString();
+
                 $template = $this->templateString;
             } else {
                 $theme = $this->getTheme();
                 $pageTemplateEngine = PageTemplateEngine::createForTheme($theme);
-                $template = $this->getLayoutName() . "/" . $this->getLayoutName();
+                $template = $this->getLayoutName();
             }
 
             /**
@@ -189,27 +191,6 @@ class PageTemplate
     }
 
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    private function getRemFontSize()
-    {
-        /**
-         * Same as {@link self::CONF_REM_SIZE}
-         */
-        $remSize = tpl_getConf("remSize", null);
-        if ($remSize === null) {
-            throw new ExceptionNotFound("No rem size");
-        }
-        try {
-            return DataType::toInteger($remSize);
-        } catch (ExceptionBadArgument $e) {
-            LogUtility::error("The rem size configuration value ($remSize) is not an integer. Error:{$e->getMessage()}", self::CANONICAL);
-            throw new ExceptionNotFound("No valid rem size");
-        }
-    }
-
-
     private function getLayoutName(): string
     {
         if (isset($this->layoutName)) {
@@ -227,24 +208,6 @@ class PageTemplate
             ->getDefaultLayoutName();
     }
 
-    /**
-     * Adapted from {@link tpl_indexerWebBug()}
-     * @throws ExceptionNotFound
-     */
-    private function addTaskRunnerImageIfRequested(XmlElement $bodyElement): void
-    {
-
-        if ($this->requestedEnableTaskRunner === false) {
-            return;
-        }
-        $taskRunnerImg = $this->getTaskRunnerImg();
-        try {
-            $bodyElement->insertAdjacentHTML('beforeend', $taskRunnerImg);
-        } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
-            LogUtility::internalError("This is written code, should not happen", self::CANONICAL, $e);
-        }
-
-    }
 
     /**
      * @throws ExceptionNotFound
@@ -261,6 +224,26 @@ class PageTemplate
     public function __toString()
     {
         return $this->layoutName;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getCssPath(): LocalPath
+    {
+        return $this->getEngine()->getTemplatesDirectory()->resolve("$this->layoutName.css");
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getJsPath(): LocalPath
+    {
+        $jsPath = $this->getEngine()->getTemplatesDirectory()->resolve("$this->layoutName.js");
+        if (!FileSystems::exists($jsPath)) {
+            throw new ExceptionNotFound("No js file");
+        }
+        return $jsPath;
     }
 
 
@@ -440,7 +423,7 @@ class PageTemplate
          * The rem
          */
         try {
-            $model["html-rem-size"] = $this->getRemFontSize();
+            $model["rem-size"] = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getRemFontSize();
         } catch (ExceptionNotFound $e) {
             // ok none
         }
@@ -486,9 +469,9 @@ class PageTemplate
              * Slot
              */
             if (isset($this->mainContent)) {
-                $model["html-main-content"] = $this->mainContent;
+                $model["main-content-html"] = $this->mainContent;
             } else {
-                $model["html-main-content"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
+                $model["main-content-html"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
             }
         } catch (ExceptionNotFound $e) {
             // no context path
@@ -521,29 +504,30 @@ class PageTemplate
          * due to the $MSG_shown mechanism in {@link html_msgarea()}
          * We may also get messages in the head
          */
-        $model['messages-html'] = $this->addMessages();
-
-        return $model;
-    }
-
-    private
-    function addTitleMeta(XmlElement $head)
-    {
-
         try {
-            $titleMeta = $head->querySelector("title");
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            try {
-                $titleMeta = $head->getDocument()->createElement("title");
-                $head->appendChild($titleMeta);
-            } catch (\DOMException $e) {
-                throw new ExceptionRuntimeInternal("Bad local name title, should not occur", self::CANONICAL, 1, $e);
-            }
+            $model['messages-html'] = $this->getMessages();
+            /**
+             * Because they must be problem and message with the {@link self::getHeadHtml()}
+             * We process the messages at the end
+             * It means that the needed script needs to be added manually
+             */
+            $model['head-html'] .= Snippet::getOrCreateFromComponentId("toast", Snippet::EXTENSION_JS)
+                ->toTagAttributes()
+                ->toHtmlEmptyTag("script");
+        } catch (ExceptionNotFound $e) {
+            // no messages
+        } catch (ExceptionBadState $e) {
+            throw ExceptionRuntimeInternal::withMessageAndError("The toast snippet should have been found", $e);
         }
 
-        $title = $this->getRequestedTitleOrDefault();
-        $titleMeta->setNodeValue($title);
+        /**
+         * Task runner needs the id
+         */
+        if ($this->requestedEnableTaskRunner && isset($this->requestedContextPath)) {
+            $model['task-runner-html'] = $this->getTaskRunnerImg();
+        }
 
+        return $model;
     }
 
 
@@ -565,37 +549,6 @@ class PageTemplate
         throw new ExceptionBadSyntaxRuntime("A title is mandatory");
 
 
-    }
-
-
-    /**
-     * @param XmlElement $head
-     * @return void
-     *
-     * Responsive meta tag
-     */
-    private
-    function checkViewPortMeta(XmlElement $head)
-    {
-        $expectedResponsiveContent = PageTemplate::VIEWPORT_RESPONSIVE_VALUE;
-        try {
-            $responsiveMeta = $head->querySelector('meta[name="viewport"]');
-            $responsiveActualValue = $responsiveMeta->getAttribute("content");
-            if ($responsiveActualValue !== $expectedResponsiveContent) {
-                LogUtility::warning("The actual viewport meta ($responsiveActualValue) should be $expectedResponsiveContent");
-            }
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            try {
-                $head->appendChild(
-                    $head->getDocument()
-                        ->createElement("meta")
-                        ->setAttribute("name", "viewport")
-                        ->setAttribute("content", $expectedResponsiveContent)
-                );
-            } catch (\DOMException $e) {
-                throw new ExceptionRuntimeInternal("Bad responsive name meta, should not occur", self::CANONICAL, 1, $e);
-            }
-        }
     }
 
 
@@ -648,44 +601,13 @@ class PageTemplate
         }
     }
 
-    public
-    function getSlotElements(): array
-    {
-        $slotElements = [];
-        foreach ($this->getPageLayoutElements() as $element) {
-            if ($element->isSlot()) {
-                $slotElements[] = $element;
-            }
-        }
-        return $slotElements;
-    }
-
 
     /**
      * @throws ExceptionNotFound
      */
-    public
-    function getMainElement(): PageTemplateElement
+    public function getMainElement(): PageTemplateElement
     {
         return $this->getPageElement(PageTemplate::MAIN_CONTENT_ELEMENT);
-    }
-
-
-    public
-    function hasContentHeader(): bool
-    {
-        try {
-            $element = $this->getPageElement(PageTemplate::MAIN_HEADER_ELEMENT);
-        } catch (ExceptionNotFound $e) {
-            return false;
-        }
-        try {
-            $element->getMarkupFetcher();
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-
     }
 
 
@@ -699,7 +621,7 @@ class PageTemplate
         if (isset($this->toc)) {
             /**
              * The {@link FetcherPageBundler}
-             * bundle pages and create a toc
+             * bundle pages can create a toc for multiples pages
              */
             return $this->toc;
         }
@@ -722,9 +644,7 @@ class PageTemplate
 
 
     /**
-     * @throws ExceptionBadArgument
      * @throws ExceptionBadSyntax
-     * @throws ExceptionNotFound
      */
     public
     function renderAsDom(): XmlDocument
@@ -774,9 +694,10 @@ class PageTemplate
 
     /**
      * Variation of {@link html_msgarea()}
+     * @throws ExceptionNotFound
      */
     public
-    function addMessages(): string
+    function getMessages(): string
     {
 
         global $MSG, $MSG_shown;
@@ -784,7 +705,9 @@ class PageTemplate
         // store if the global $MSG has already been shown and thus HTML output has been started
         $MSG_shown = true;
 
-        if (!isset($MSG)) return "";
+        if (!isset($MSG)) {
+            throw new ExceptionNotFound("No messages");
+        }
 
 
         $shown = array();
@@ -824,20 +747,15 @@ EOF;
         unset($GLOBALS['MSG']);
 
         if ($toasts === "") {
-            return "";
+            throw new ExceptionNotFound("No messages");
         }
 
         // position fixed to not participate into the grid
-        $toastsHtml = <<<EOF
+        return <<<EOF
 <div class="toast-container position-fixed mb-3 me-3 bottom-0 end-0" id="toastPlacement" style="z-index:1060">
 $toasts
 </div>
 EOF;
-        ExecutionContext::getActualOrCreateFromEnv()
-            ->getSnippetSystem()
-            ->attachJavascriptFromComponentId("toast");
-
-        return $toastsHtml;
 
     }
 
@@ -847,6 +765,10 @@ EOF;
         return true;
     }
 
+    /**
+     * Adapted from {@link tpl_indexerWebBug()}
+     * @return string
+     */
     private
     function getTaskRunnerImg(): string
     {
@@ -891,22 +813,24 @@ EOF;
         if (!$this->isTemplateStringExecutionMode()) {
 
             $themeName = $this->getTheme();
-            $layoutDirectory = WikiPath::createWikiPath(":theme:{$themeName}:$this->layoutName:", WikiPath::COMBO_DRIVE);
             /**
              * Add the layout js and css first
              */
             $snippetManager = PluginUtility::getSnippetManager();
             try {
-                $cssPath = $layoutDirectory->resolve("$this->layoutName.css");
+                $cssPath = $this->getCssPath();
                 $content = FileSystems::getContent($cssPath);
                 $snippetManager->attachCssInternalStylesheet(self::CANONICAL, $content);
             } catch (ExceptionNotFound $e) {
                 // no css found, not a problem
             }
-            $jsPath = $layoutDirectory->resolve("$this->layoutName.js");
-            if (FileSystems::exists($jsPath)) {
+            try {
+                $jsPath = $this->getJsPath();
                 $snippetManager->attachInternalJavascriptFromPathForRequest(self::CANONICAL, $jsPath);
+            } catch (ExceptionNotFound $e) {
+                // not found
             }
+
 
         }
         /**
@@ -1011,6 +935,17 @@ EOF;
     private function isTemplateStringExecutionMode(): bool
     {
         return isset($this->templateString);
+    }
+
+    private function getEngine(): PageTemplateEngine
+    {
+        if ($this->isTemplateStringExecutionMode()) {
+            return PageTemplateEngine::createForString();
+
+        } else {
+            $theme = $this->getTheme();
+            return PageTemplateEngine::createForTheme($theme);
+        }
     }
 
 }

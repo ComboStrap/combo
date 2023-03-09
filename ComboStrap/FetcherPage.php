@@ -22,7 +22,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     private FetcherCache $fetcherCache;
 
 
-
     public static function createPageFetcherFromPath(Path $path): FetcherPage
     {
         $fetcherPage = new FetcherPage();
@@ -87,7 +86,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
         $layout = $tagAttributes->getValueAndRemoveIfPresent(PageLayoutName::PROPERTY_NAME);
-        if($layout!==null){
+        if ($layout !== null) {
             $this->setRequestedLayout($layout);
         }
         return $this;
@@ -111,10 +110,22 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         $this->buildObjectIfNeeded();
 
-        $cache = $this->fetcherCache
-            ->addFileDependency($this->pageLayout->getCssPath())
-            ->addFileDependency($this->pageLayout->getJsPath())
-            ->addFileDependency($this->pageLayout->getHtmlTemplatePath());
+        try {
+            $this->fetcherCache->addFileDependency($this->pageLayout->getCssPath());
+        } catch (ExceptionNotFound $e) {
+            // no css file
+        }
+        try {
+            $this->fetcherCache->addFileDependency($this->pageLayout->getJsPath());
+        } catch (ExceptionNotFound $e) {
+            // no js
+        }
+        // mandatory, should not throw
+        try {
+            $cache = $this->fetcherCache->addFileDependency($this->pageLayout->getHtmlTemplatePath());
+        } catch (ExceptionNotFound $e) {
+            throw ExceptionRuntimeInternal::withMessageAndError("The html template should be found", $e);
+        }
 
 
         /**

@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }}</title>
     {{{ head-html }}}
-    {{#if html-rem-size}}
-        <style>html {
-            font-size: {{html-rem-size}}px
-        }</style>
+    {{#if rem-size}}
+        <style>
+            body {
+                font-size: {{rem-size}}px
+            }
+        </style>
     {{/if}}
 </head>
-{{!-- position relative is for the toast and messages that are in a corner --}}
+{{!-- position relative is for the toast and messages that are in the corner --}}
 <body class="{{body-doku-classes}} position-relative">
 <div id="page-core" class="{{ layout-container-class }}">
     <main id="main-content">
@@ -24,5 +26,6 @@
         {{{ main-content-html }}}
     </main>
 </div>
+{{> body-beforeend-partial }}
 </body>
 </html>

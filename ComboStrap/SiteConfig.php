@@ -17,7 +17,6 @@ class SiteConfig
      * The default font-size for the pages
      */
     const REM_CONF = "combo-conf-002";
-    const REM_CONF_DEFAULT = 16;
     const REM_CANONICAL = "rfs";
 
     /**
@@ -209,15 +208,22 @@ class SiteConfig
         return $this->getValue(self::LOG_EXCEPTION_LEVEL, LogUtility::DEFAULT_THROW_LEVEL);
     }
 
-    public function getRem(): int
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getRemFontSize(): int
     {
 
-        $value = $this->getValue(self::REM_CONF, self::REM_CONF_DEFAULT);
+        $value = $this->getValue(self::REM_CONF);
+        if($value==null){
+            throw new ExceptionNotFound("No rem sized defined");
+        }
         try {
             return DataType::toInteger($value);
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}");
-            return self::REM_CONF_DEFAULT;
+            $message = "The rem configuration value ($value) is not a integer. Error: {$e->getMessage()}";
+            LogUtility::msg($message);
+            throw new ExceptionNotFound($message);
         }
 
     }

@@ -114,7 +114,7 @@ class ConditionalLength
 
         switch ($this->unitInLength) {
             case "rem":
-                $remValue = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getRem();
+                $remValue = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getRemFontSize();
                 $targetValue = $this->numerator * $remValue;
                 break;
             case "px":

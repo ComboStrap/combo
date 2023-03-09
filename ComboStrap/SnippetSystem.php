@@ -211,7 +211,7 @@ class SnippetSystem
 
 
     public
-    function attachInternalJavascriptFromPathForRequest($componentId, WikiPath $path): Snippet
+    function attachInternalJavascriptFromPathForRequest($componentId, Path $path): Snippet
     {
         return Snippet::getOrCreateFromContext($path)
             ->addSlot(Snippet::REQUEST_SCOPE)

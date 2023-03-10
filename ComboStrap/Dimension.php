@@ -315,6 +315,8 @@ EOF;
                 default:
                     try {
                         $attributes->addStyleDeclarationIfNotSet('max-width', $conditionalWidthLength->toCssLength());
+                        // to overcome the setting 'fit-content' set by auto ...
+                        $attributes->setStyleDeclaration('width', 'auto');
                     } catch (ExceptionBadArgument $e) {
                         LogUtility::error("The conditional length ($conditionalWidthLength) could not be transformed as CSS value. Error", self::CANONICAL);
                         $attributes->addStyleDeclarationIfNotSet('max-width', $conditionalWidthLength->getLength());

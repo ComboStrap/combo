@@ -875,6 +875,13 @@ class TagAttributes
         ArrayUtility::addIfNotSet($this->styleDeclaration, $property, $value);
     }
 
+    public
+    function setStyleDeclaration($property, $value): TagAttributes
+    {
+        $this->styleDeclaration[$property] = $value;
+        return $this;
+    }
+
 
     public
     function hasStyleDeclaration($styleDeclaration): bool
@@ -882,13 +889,14 @@ class TagAttributes
         return isset($this->styleDeclaration[$styleDeclaration]);
     }
 
-    public
-    function getAndRemoveStyleDeclaration($styleDeclaration)
+    public function getAndRemoveStyleDeclaration($styleDeclaration)
     {
         $styleValue = $this->styleDeclaration[$styleDeclaration];
         unset($this->styleDeclaration[$styleDeclaration]);
         return $styleValue;
     }
+
+
 
 
     public

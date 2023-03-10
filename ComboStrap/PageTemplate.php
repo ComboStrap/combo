@@ -445,6 +445,12 @@ class PageTemplate
             }
 
             /**
+             * Colors ?
+             */
+            $model['primary-color'] = Site::getPrimaryColor();
+            $model['secondary-color'] = Site::getSecondaryColor();
+
+            /**
              * Main
              */
             if (isset($this->mainContent)) {

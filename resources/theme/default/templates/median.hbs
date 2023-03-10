@@ -1,18 +1,23 @@
-<html lang="en">
+<html lang="{{lang}}">
 <head>
-    <title>Median</title>
+    <title>{{title}}</title>
+    {{>head-partial}}
 </head>
-<body>
-<header id="page-header" class="d-print-none"></header>
-
-<div id="page-core" class="justify-content-md-center mt-3" data-layout-container>
+<body class="{{body-classes}}">
+{{>page-header-partial}}
+<div id="page-core" class="justify-content-md-center mt-3 position-relative">
     <main class="col-md-8 mx-auto">
-        <div id="main-toc"></div>
-        <div id="main-content"></div>
+        {{> toc-partial }}
+        <div id="main-content">
+            {{{ main-content-html }}}
+        </div>
+        <footer id="main-footer" class="d-print-none">
+            {{{ main-footer-html }}}
+        </footer>
     </main>
-    <div id="page-tool" class="d-print-none"></div>
+    {{>railbar-partial}}
 </div>
-
-<footer id="page-footer" class="d-print-none"></footer>
+{{>page-footer-partial}}
+{{>body-beforeend-partial}}
 </body>
 </html>

@@ -1,19 +1,28 @@
 <html lang="{{lang}}">
-{{> head-partial }}
+<head>
+    <title>{{title}}</title>
+    {{> head-partial }}
+</head>
 <body class="{{body-classes}}">
 {{> page-header-partial }}
-<div id="page-core" class="{{ layout-container-class }}">
-    <aside id="page-side" class="d-print-none"></aside>
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <aside id="page-side" class="d-print-none">
+        {{> page-side-md-collapsable }}
+    </aside>
     <main id="page-main">
         <header id="main-header"></header>
-        {{> toc-partial}}
+        {{> toc-partial }}
         <div id="main-content">
             {{{ main-content-html }}}
         </div>
-        <div id="main-side" class="d-print-none"></div>
-        <footer id="main-footer" class="d-print-none"></footer>
+        <div id="main-side" class="d-print-none">
+            {{{ main-side-html }}}
+        </div>
+        <footer id="main-footer" class="d-print-none">
+            {{{ main-footer-html }}}
+        </footer>
     </main>
-    <div id="page-tool" class="d-print-none"></div>
+    {{> railbar-partial }}
 </div>
 {{>page-footer-partial}}
 {{>body-beforeend-partial}}

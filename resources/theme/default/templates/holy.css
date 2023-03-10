@@ -2,6 +2,7 @@ main > *, #page-core {
     min-width: 0; /** not auto */
 }
 
+
 @media (min-width: 768px) {
 
     #page-core {

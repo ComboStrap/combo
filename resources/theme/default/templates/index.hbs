@@ -1,19 +1,21 @@
 <!doctype html>
 <html lang="{{lang}}">
-{{> head-partial }}
+<head>
+    <title>{{ title }}</title>
+    {{> head-partial }}
+</head>
 <body>
 {{>page-header-partial}}
-
-<div id="page-core" class="d-flex justify-content-md-center" data-layout-container>
-    <div class="row">
-        <aside id="page-side" class="col-md-3 order-last order-md-first"></aside>
-        <main id="page-main" class="col-md-9 order-first">
-            <div id="main-content">
-                {{{ main-content-html }}}
-            </div>
-        </main>
-    </div>
-    <div id="page-tool" class="d-print-none"></div>
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <aside id="page-side" class="d-print-none">
+        {{>page-side-md-collapsable }}
+    </aside>
+    <main id="page-main">
+        <div id="main-content">
+            {{{ main-content-html }}}
+        </div>
+    </main>
+    {{> railbar-partial }}
 </div>
 
 {{>page-footer-partial}}

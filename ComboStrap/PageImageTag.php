@@ -17,12 +17,12 @@ class PageImageTag
     public const DEFAULT_ORDER = [
         PageImageTag::META_TYPE,
         PageImageTag::FIRST_TYPE,
-        PageImageTag::DESCENDANT_TYPE,
+        PageImageTag::ANCESTOR_TYPE,
         PageImageTag::VIGNETTE_TYPE,
         PageImageTag::LOGO_TYPE
     ];
     public const ORDER_OF_PREFERENCE = "order";
-    public const DESCENDANT_TYPE = "descendant";
+    public const ANCESTOR_TYPE = "ancestor";
     public const TAG = "pageimage";
     public const META_TYPE = "meta";
     public const NONE_TYPE = "none";
@@ -32,7 +32,7 @@ class PageImageTag
         PageImageTag::META_TYPE,
         PageImageTag::FIRST_TYPE,
         PageImageTag::VIGNETTE_TYPE,
-        PageImageTag::DESCENDANT_TYPE,
+        PageImageTag::ANCESTOR_TYPE,
         PageImageTag::LOGO_TYPE
     ];
     const PATH_ATTRIBUTE = "path";
@@ -57,11 +57,11 @@ class PageImageTag
         // then the default one
         $default = $tagAttributes->getValueAndRemoveIfPresent(PageImageTag::DEFAULT_ATTRIBUTE);
         if ($default === null) {
-            $defaultOrderOfPrecedence = PageImageTag::DEFAULT_ORDER;
+            $defaultOrderOfPreference = PageImageTag::DEFAULT_ORDER;
         } else {
-            $defaultOrderOfPrecedence = explode("|", $default);
+            $defaultOrderOfPreference = explode("|", $default);
         }
-        foreach ($defaultOrderOfPrecedence as $defaultImageOrder) {
+        foreach ($defaultOrderOfPreference as $defaultImageOrder) {
             if ($defaultImageOrder === $type) {
                 continue;
             }
@@ -94,11 +94,18 @@ class PageImageTag
          * Image selection
          */
         $pathString = $tagAttributes->getComponentAttributeValueAndRemoveIfPresent(self::PATH_ATTRIBUTE);
+        $path = null;
         if ($pathString != null) {
-            $path = WikiPath::createMarkupPathFromPath($pathString);
-        } else {
+            try {
+                $path = WikiPath::createMarkupPathFromPath($pathString);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::warning("Error while creating the path for the page image with the path value ($pathString)",self::CANONICAL,$e);
+            }
+        }
+        if ($path === null) {
             $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
         }
+
         $contextPage = MarkupPath::createPageFromPathObject($path);
 
         /**
@@ -115,7 +122,7 @@ class PageImageTag
                         // ok
                     }
                     break;
-                case PageImageTag::DESCENDANT_TYPE:
+                case PageImageTag::ANCESTOR_TYPE:
                 case "parent": // old
                     $parent = $contextPage;
                     while (true) {

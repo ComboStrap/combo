@@ -292,6 +292,7 @@ class XmlDocument
     /**
      * @param $name
      * @return string null if not found
+     * @deprecated uses {@link XmlElement::getAttribute()} of {@link self::getElement()}
      */
     public function getRootAttributeValue($name): ?string
     {

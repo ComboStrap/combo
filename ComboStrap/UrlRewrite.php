@@ -25,7 +25,7 @@ class UrlRewrite
 
     const EXPORT_PREFIX = "export_";
     const CANONICAL = "url_rewrite";
-
+    const MEDIA_PREFIX = "/_media";
 
 
     /**
@@ -91,7 +91,7 @@ class UrlRewrite
                             return;
                         }
                         $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                        $url->setPath("/_media/$idPath");
+                        $url->setPath(self::MEDIA_PREFIX. "/$idPath");
                         break;
                     case UrlEndpoint::LIB_EXE_DETAIL_PHP:
                         try {

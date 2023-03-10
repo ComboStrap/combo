@@ -421,5 +421,28 @@ class SiteConfig
         return $this;
     }
 
+    /**
+     * DokuRewrite
+     * `doku.php/id/...`
+     * https://www.dokuwiki.org/config:userewrite
+     * @return $this
+     */
+    public function setUrlRewriteToDoku(): SiteConfig
+    {
+        $this->setConf('userewrite','2', self::GLOBAL_SCOPE);
+        return $this;
+    }
+
+    /**
+     * Web server rewrite (Apache rewrite (htaccess), Nginx)
+     * https://www.dokuwiki.org/config:userewrite
+     * @return $this
+     */
+    public function setUrlRewriteToWebServer(): SiteConfig
+    {
+        $this->setConf('userewrite','1', self::GLOBAL_SCOPE);
+        return $this;
+    }
+
 
 }

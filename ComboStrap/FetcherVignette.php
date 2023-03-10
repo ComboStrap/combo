@@ -23,13 +23,19 @@ class FetcherVignette extends FetcherImage
 {
 
 
-    const CANONICAL = self::VIGNETTE_NAME;
+    const CANONICAL = self::VIGNETTE_FETCHER_NAME;
 
-    const VIGNETTE_NAME = "vignette";
+    /**
+     * For {@link UrlRewrite}, the property id
+     * should be called media
+     */
+    const MEDIA_NAME_URL_ATTRIBUTE = "media";
     const PNG_EXTENSION = "png";
     const JPG_EXTENSION = "jpg";
     const JPEG_EXTENSION = "jpeg";
     const WEBP_EXTENSION = "webp";
+
+    const VIGNETTE_FETCHER_NAME = "vignette";
 
 
     private ?MarkupPath $page = null;
@@ -294,7 +300,7 @@ class FetcherVignette extends FetcherImage
 
         $vignetteNameValue = $this->pagePath->getWikiId() . "." . $this->mime->getExtension();
         return parent::getFetchUrl($url)
-            ->addQueryParameter(self::VIGNETTE_NAME, $vignetteNameValue);
+            ->addQueryParameter(self::MEDIA_NAME_URL_ATTRIBUTE, $vignetteNameValue);
 
     }
 
@@ -317,7 +323,7 @@ class FetcherVignette extends FetcherImage
     public function buildFromTagAttributes(TagAttributes $tagAttributes): FetcherVignette
     {
 
-        $vignette = $tagAttributes->getValueAndRemove(self::VIGNETTE_NAME);
+        $vignette = $tagAttributes->getValueAndRemove(self::MEDIA_NAME_URL_ATTRIBUTE);
         if ($vignette === null && $this->page === null) {
             throw new ExceptionBadArgument("The vignette query property is mandatory when the vignette was created without page.");
         }
@@ -345,7 +351,7 @@ class FetcherVignette extends FetcherImage
 
     public function getFetcherName(): string
     {
-        return self::VIGNETTE_NAME;
+        return self::VIGNETTE_FETCHER_NAME;
     }
 
     /**

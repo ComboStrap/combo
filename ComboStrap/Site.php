@@ -83,22 +83,22 @@ class Site
     }
 
     /**
-     * @return void https://www.dokuwiki.org/config:userewrite
+     * @deprecated see {@link SiteConfig::setUrlRewriteToDoku()}
      */
     public static function setUrlRewriteToDoku()
     {
-        global $conf;
-        $conf['userewrite'] = '2';
+        ExecutionContext::getActualOrCreateFromEnv()->getConfig()
+            ->setUrlRewriteToDoku();
     }
 
     /**
      * Web server rewrite (Apache rewrite (htaccess), Nginx)
-     * @return void
+     * @deprecated see {@link SiteConfig::setUrlRewriteToWebServer()}
      */
-    public static function setWebServerUrlRewrite()
+    public static function setUrlRewriteToWebServer()
     {
-        global $conf;
-        $conf['userewrite'] = '1';
+        ExecutionContext::getActualOrCreateFromEnv()->getConfig()
+            ->setUrlRewriteToWebServer();
     }
 
     /**
@@ -140,7 +140,7 @@ class Site
      * https://www.dokuwiki.org/config:useslash
      * @return void
      */
-    public static function setUrlRewriteToDefault()
+    public static function setUrlRewriteSeparatorToColon()
     {
         global $conf;
         $conf['useslash'] = 0;

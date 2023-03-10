@@ -1,3 +1,5 @@
 slots:
     - 'page-header'
     - 'page-footer'
+railbar:
+    layout: 'off-canvas'

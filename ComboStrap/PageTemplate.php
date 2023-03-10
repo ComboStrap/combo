@@ -430,10 +430,19 @@ class PageTemplate
 
 
             /**
-             * Railbar is a helper
-             * as the layout may be different
-             * by page
+             * Railbar
+             * You can define the layout type by page
+             * This is not a handelbars helper because it needs some css snippet.
              */
+            $railBarLayout = $this->getRailbarLayout();
+            try {
+                $model["railbar-html"] = FetcherRailBar::createRailBar()
+                    ->setRequestedLayout($railBarLayout)
+                    ->setRequestedPath($contextPath)
+                    ->getFetchString();
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::error("Error while creating the railbar layout");
+            }
 
             /**
              * Main
@@ -964,6 +973,15 @@ EOF;
             // no template directory, not a theme run
             return [];
         }
+    }
+
+    private function getRailbarLayout(): string
+    {
+        $definition = $this->getDefinition();
+        if (isset($definition['railbar']['layout'])) {
+            return $definition['railbar']['layout'];
+        }
+        return FetcherRailBar::BOTH_LAYOUT;
     }
 
 }

@@ -1,13 +1,11 @@
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
-    {{{ head-html }}}
-    {{#if rem-size}}
-        <style>
-            body {
-                font-size: {{rem-size}}px
-            }
-        </style>
-    {{/if}}
-</head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{{ head-html }}}
+{{#if rem-size}}
+    <style>
+        body {
+            font-size: {{rem-size}}px
+        }
+    </style>
+{{/if}}
+

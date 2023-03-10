@@ -1,14 +1,17 @@
 <!doctype html>
 <html lang="{{lang}}">
-{{> head-partial }}
+<head>
+    <title>{{ title }}</title>
+    {{> head-partial }}
+</head>
 <body class="{{body-classes}}">
 {{>page-header-partial}}
-<div id="page-core">
+<div id="page-core" class="{{ layout-container-class }} position-relative">
     <main id="main-content">
         {{{ main-content-html }}}
     </main>
     <div id="page-tool" class="d-print-none">
-        {{#railbar "off-canvas"}}{{/railbar}}
+        {{{ railbar-html }}}
     </div>
 </div>
 {{>page-footer-partial}}

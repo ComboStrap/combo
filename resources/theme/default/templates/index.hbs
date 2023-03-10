@@ -11,10 +11,10 @@
         {{>page-side-md-collapsable }}
     </aside>
     <main id="page-main">
-        <header id="main-header">
-            {{{ main-header-html }}}
-        </header>
         <div id="main-content">
+            {{!--No main-header as the index generally contains a cover image
+            If we add the main-header, we will then ends up with 2 images--}}
+            <h1>{{title}}</h1>
             {{{ main-content-html }}}
         </div>
     </main>

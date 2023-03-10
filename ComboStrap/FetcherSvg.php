@@ -869,6 +869,13 @@ class FetcherSvg extends IFetcherLocalImage
             $requestedWidth = null;
         }
 
+        // Height requested
+        try {
+            $requestedHeight = $this->getRequestedHeight();
+        } catch (ExceptionNotFound $e) {
+            $requestedHeight = null;
+        }
+
 
         try {
             $requestedType = $this->getRequestedType();
@@ -1038,6 +1045,31 @@ class FetcherSvg extends IFetcherLocalImage
                     $documentElement->setAttribute("width", $widthInPixel);
 
                 }
+
+                if ($requestedHeight!==null) {
+                    /**
+                     * If a dimension was set, it's seen by default as a max-width
+                     * If it should not such as in a card, this property is already set
+                     * and is not overwritten
+                     */
+                    try {
+                        $heightInPixel = ConditionalLength::createFromString($requestedHeight)->toPixelNumber();
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::msg("The requested height $requestedHeight could not be converted to pixel. It returns the following error ({$e->getMessage()}). Processing was stopped");
+                        return $this;
+                    }
+                    $extraAttributes->addStyleDeclarationIfNotSet("max-height", "{$heightInPixel}px");
+
+                    /**
+                     * To have an internal height
+                     * and not shrink on the css property `height: auto !important;`
+                     * of a table
+                     */
+                    $documentElement->setAttribute("height", $heightInPixel);
+
+                }
+
+
 
                 break;
         }

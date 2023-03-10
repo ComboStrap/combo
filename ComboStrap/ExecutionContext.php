@@ -574,11 +574,11 @@ class ExecutionContext
 
     /**
      * @return $this
-     * @deprecated use {@link SiteConfig::setDisableTemplating()}
+     * @deprecated use {@link SiteConfig::setDisableThemeSystem()}
      */
     public function setDisableTemplating(): ExecutionContext
     {
-        $this->getApp()->getConfig()->setDisableTemplating();
+        $this->getApp()->getConfig()->setDisableThemeSystem();
         return $this;
     }
 
@@ -612,7 +612,7 @@ class ExecutionContext
     /**
      * @return SnippetSystem
      * It's not attached to the {@link FetcherMarkup}
-     * because the user may choose to not use it (ie {@link SiteConfig::isTemplatingEnabled()}
+     * because the user may choose to not use it (ie {@link SiteConfig::isThemeSystemEnabled()}
      */
     public function getSnippetSystem(): SnippetSystem
     {

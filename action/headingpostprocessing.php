@@ -90,8 +90,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             }
         } catch (ExceptionNotFound $e) {
             /**
-             * What fucked up is fucked up
-             * {@link pageinfo()} in common may starts before an handler is created
+             * What fucked up is fucked up !
+             * {@link pageinfo()} in common may starts before the {@link action_plugin_combo_docustom handler } is called
              * {@link action_plugin_combo_docustom}
              */
             $requestedPath = $executionContext->getRequestedPath();
@@ -99,8 +99,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $executingPath = null;
             try {
                 $executingId = $executionContext->getExecutingWikiId();
-                if ($executingId === $requestedPath->getWikiId()) {
-                    $isFragment = false;
+                $isFragment = MarkupPath::createPageFromPathObject($requestedPath)->isKnownFragmentMarkup();
+                if ($isFragment === false) {
+                    if ($executingId !== $requestedPath->getWikiId()) {
+                        $isFragment = true;
+                    }
                 }
                 $executingPath = WikiPath::createMarkupPathFromId($executingId);
             } catch (ExceptionNotFound $e) {
@@ -127,7 +130,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $callStack = CallStack::createFromHandler($handler);
         $executingMarkupPath = MarkupPath::createPageFromPathObject($executingPath);
         $outline = Outline::createFromCallStack($callStack, $executingMarkupPath);
-        if (!$executionContext->getConfig()->isTemplatingEnabled()) {
+        if (!$executionContext->getConfig()->isThemeSystemEnabled()) {
             $handler->calls = $outline->toDokuWikiTemplateInstructionCalls();
         } else {
             $handler->calls = $outline->toHtmlSectionOutlineCalls();

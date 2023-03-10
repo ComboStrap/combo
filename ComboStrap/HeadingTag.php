@@ -214,6 +214,7 @@ class HeadingTag
      * @param TagAttributes $tagAttributes
      * @param Doku_Renderer_xhtml $renderer
      * @param integer $pos
+     * @return string|void
      */
     public
     static function processRenderEnterXhtml(string $context, TagAttributes $tagAttributes, Doku_Renderer_xhtml &$renderer, int $pos)
@@ -277,6 +278,8 @@ class HeadingTag
             $tagAttributes->addClassName("card-title");
         }
 
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
         /**
          * Add an outline class to be able to style them at once
          *
@@ -291,7 +294,10 @@ class HeadingTag
 
             // numbering
             try {
-                $enable = ExecutionContext::getActualOrCreateFromEnv()->getConfValue(Outline::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
+
+                $enable = $executionContext
+                    ->getConfig()
+                    ->getValue(Outline::CONF_OUTLINE_NUMBERING_ENABLE, Outline::CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT);
                 if ($enable) {
                     $snippet = $snippetManager->attachCssInternalStyleSheet(Outline::OUTLINE_HEADING_NUMBERING);
                     if (!$snippet->hasInlineContent()) {

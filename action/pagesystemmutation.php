@@ -74,7 +74,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
         /**
          * Modification to the secondary slot are not processed
          */
-        if (in_array($pageName, Site::getSecondarySlotNames())) return;
+        if (in_array($pageName, Site::getFragmentNames())) return;
 
 
         /**

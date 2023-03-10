@@ -317,7 +317,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         /**
          * No management for slot page
          */
-        if ($page->isSecondarySlot()) {
+        if ($page->isKnownFragmentMarkup()) {
             return;
         }
 

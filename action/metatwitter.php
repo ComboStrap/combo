@@ -108,7 +108,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * No social for bars
          */
-        if ($page->isSecondarySlot()) {
+        if ($page->isKnownFragmentMarkup()) {
             return;
         }
 

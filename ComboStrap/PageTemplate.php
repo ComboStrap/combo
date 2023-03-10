@@ -445,7 +445,7 @@ class PageTemplate
             }
 
             /**
-             * Colors ?
+             * Colors
              */
             $model['primary-color'] = Site::getPrimaryColor();
             $model['secondary-color'] = Site::getSecondaryColor();
@@ -458,7 +458,7 @@ class PageTemplate
             } else {
                 try {
                     $model["main-content-html"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
-                } catch (ExceptionCast|ExceptionNotExists|ExceptionNotExists $e) {
+                } catch (ExceptionCompile|ExceptionCast|ExceptionNotExists|ExceptionNotExists $e) {
                     LogUtility::error("Error while rendering the page content.", self::CANONICAL, $e);
                     $model["main-content-html"] = "An error has occured. " . $e->getMessage();
                 }

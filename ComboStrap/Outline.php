@@ -618,7 +618,7 @@ EOF;
 
     }
 
-    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId, bool $contentHeaderDisplayToNone): void
+    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId, bool $noH1Display): void
     {
 
         $totalComboCalls[] = Call::createComboCall(
@@ -633,42 +633,55 @@ EOF;
         );
         $contentCalls = $outlineSection->getContentCalls();
         if ($outlineSection->hasChildren()) {
+
             /**
+             * Section Header Creation
              * If it has children and content, wrap the heading and the content
              * in a header tag
              * The header tag helps also to get the edit button to stay in place
              */
-            $isContentHeader = in_array($outlineSection->getLevel(), [0, 1]);
-            if (!($contentHeaderDisplayToNone && $isContentHeader)) {
+            $openHeader = Call::createComboCall(
+                \syntax_plugin_combo_header::TAG,
+                DOKU_LEXER_ENTER,
+                array(
+                    TagAttributes::CLASS_KEY => StyleUtility::addComboStrapSuffix("outline-header"),
+                ),
+                self::CONTEXT
+            );
+            $closeHeader = Call::createComboCall(
+                \syntax_plugin_combo_header::TAG,
+                DOKU_LEXER_EXIT,
+                [],
+                self::CONTEXT
+            );
 
-                $openHeader = Call::createComboCall(
-                    \syntax_plugin_combo_header::TAG,
-                    DOKU_LEXER_ENTER,
-                    array(
-                        TagAttributes::CLASS_KEY => StyleUtility::addComboStrapSuffix("outline-header"),
-                    ),
-                    self::CONTEXT
-                );
-                $closeHeader = Call::createComboCall(
-                    \syntax_plugin_combo_header::TAG,
-                    DOKU_LEXER_EXIT,
-                    [],
-                    self::CONTEXT
-
-                );
-                $totalComboCalls = array_merge(
-                    $totalComboCalls,
-                    [$openHeader],
-                    $outlineSection->getHeadingCalls(),
-                    $contentCalls,
-                );
-                $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
-                $totalComboCalls[] = $closeHeader;
-
+            $actualChildren = $outlineSection->getChildren();
+            /**
+             * With theming, the h1, is not displayed
+             */
+            if ($noH1Display && $outlineSection->getLevel() === 0) {
+                // should be only one 1
+                if (count($actualChildren) === 1) {
+                    $h1Section = $actualChildren[array_key_first($actualChildren)];
+                    if ($h1Section->getLevel() === 1) {
+                        $h1ContentCalls = $h1Section->getContentCalls();
+                        $contentCalls = array_merge($contentCalls,$h1ContentCalls);
+                        $actualChildren = $h1Section->getChildren();
+                    }
+                }
             }
+            $totalComboCalls = array_merge(
+                $totalComboCalls,
+                [$openHeader],
+                $outlineSection->getHeadingCalls(),
+                $contentCalls,
+            );
+            $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
+            $totalComboCalls[] = $closeHeader;
 
-            foreach ($outlineSection->getChildren() as $child) {
-                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $contentHeaderDisplayToNone);
+
+            foreach ($actualChildren as $child) {
+                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $noH1Display);
             }
 
         } else {
@@ -697,13 +710,15 @@ EOF;
     {
         $totalCalls = [];
         $sectionSequenceId = 0;
-        $headerDisplayToNone = false;
+        $noH1Display = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->isThemeSystemEnabled();
 
         /**
          * Transform and collect the calls in Instructions calls
          */
 
-        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $headerDisplayToNone);
+        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $noH1Display);
 
         return array_map(function (Call $element) {
             return $element->getInstructionCall();

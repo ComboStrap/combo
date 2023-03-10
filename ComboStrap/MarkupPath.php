@@ -259,17 +259,13 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
-    public function isPrimarySlot(): bool
-    {
-        return !$this->isSecondarySlot();
-    }
 
     /**
-     * @return bool true if this is not the main slot.
+     * @return bool true if this is a fragment markup
      */
-    public function isSecondarySlot(): bool
+    public function isKnownFragmentMarkup(): bool
     {
-        $slotNames = Site::getSecondarySlotNames();
+        $slotNames = Site::getFragmentNames();
         try {
             $name = $this->getPathObject()->getLastNameWithoutExtension();
         } catch (ExceptionNotFound $e) {
@@ -2003,7 +1999,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
          * Only primary slot have a side slot
          * Root Home page does not have one either
          */
-        if ($this->isSecondarySlot() || $this->isRootHomePage()) {
+        if ($this->isKnownFragmentMarkup() || $this->isRootHomePage()) {
             return null;
         }
 

@@ -36,7 +36,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
         /**
          * No metadata for slot page
          */
-        if ($page->isSecondarySlot()) {
+        if ($page->isKnownFragmentMarkup()) {
             throw new ExceptionNotFound("Secondary slot");
         }
 

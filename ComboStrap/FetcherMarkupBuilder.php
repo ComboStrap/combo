@@ -406,14 +406,27 @@ class FetcherMarkupBuilder
         }
 
         try {
+
+            /**
+             * What fucked up is fucked up
+             * Fragment such as sidebar may run in their own context (ie when editing for instance)
+             * but are not a document
+             */
+            $executingWikiPath = $this->builderMarkupSourcePath->toWikiPath();
+            $isFragmentMarkup = MarkupPath::createPageFromPathObject($executingWikiPath)->isKnownFragmentMarkup();
+            if ($isFragmentMarkup) {
+                return false;
+            }
+
             /**
              * If the context and executing path are:
              * * the same, this is a document run
              * * not the same, this is a fragment run
              */
-            if ($this->requestedContextPath->toUriString() !== $this->builderMarkupSourcePath->toWikiPath()->toUriString()) {
+            if ($this->requestedContextPath->toUriString() !== $executingWikiPath->toUriString()) {
                 return false;
             }
+
         } catch (ExceptionCast $e) {
             // no executing path, not a wiki path
         }

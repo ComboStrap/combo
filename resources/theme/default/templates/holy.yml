@@ -1,5 +1,6 @@
 slots:
     - 'page-header'
     - 'page-footer'
+    - 'main-header'
     - 'main-footer'
     - 'page-side'

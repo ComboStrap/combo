@@ -789,7 +789,7 @@ class Site
     }
 
 
-    public static function getSecondarySlotNames(): array
+    public static function getFragmentNames(): array
     {
 
         try {

@@ -123,13 +123,13 @@ class SiteConfig
         }
     }
 
-    public function setDisableTemplating(): SiteConfig
+    public function setDisableThemeSystem(): SiteConfig
     {
         $this->setConf(self::CONF_ENABLE_THEME_SYSTEM, 0);
         return $this;
     }
 
-    public function isTemplatingEnabled(): bool
+    public function isThemeSystemEnabled(): bool
     {
         return $this->getBooleanValue(self::CONF_ENABLE_THEME_SYSTEM, self::CONF_ENABLE_THEME_SYSTEM_DEFAULT);
     }
@@ -412,6 +412,13 @@ class SiteConfig
     public function getDefaultLayoutName()
     {
         return $this->getValue(PageLayoutName::CONF_DEFAULT_NAME, PageLayoutName::HOLY_LAYOUT_VALUE);
+    }
+
+    public function setEnableThemeSystem(): SiteConfig
+    {
+        // this is the default but yeah
+        $this->setConf(self::CONF_ENABLE_THEME_SYSTEM, 1);
+        return $this;
     }
 
 

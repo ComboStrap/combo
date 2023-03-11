@@ -93,19 +93,7 @@ class PageImageTag
         /**
          * Image selection
          */
-        $pathString = $tagAttributes->getComponentAttributeValueAndRemoveIfPresent(self::PATH_ATTRIBUTE);
-        $path = null;
-        if ($pathString != null) {
-            try {
-                $path = WikiPath::createMarkupPathFromPath($pathString);
-            } catch (ExceptionBadArgument $e) {
-                LogUtility::warning("Error while creating the path for the page image with the path value ($pathString)",self::CANONICAL,$e);
-            }
-        }
-        if ($path === null) {
-            $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
-        }
-
+        $path = self::getContextPath($tagAttributes);
         $contextPage = MarkupPath::createPageFromPathObject($path);
 
         /**
@@ -310,5 +298,38 @@ class PageImageTag
     public static function getDefaultAttributes(): array
     {
         return [MediaMarkup::LINKING_KEY => MediaMarkup::LINKING_NOLINK_VALUE];
+    }
+
+    private static function getContextPath(TagAttributes $tagAttributes): WikiPath
+    {
+        $pathString = $tagAttributes->getComponentAttributeValueAndRemoveIfPresent(self::PATH_ATTRIBUTE);
+        if ($pathString != null) {
+            try {
+                return WikiPath::createMarkupPathFromPath($pathString);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::warning("Error while creating the path for the page image with the path value ($pathString)", self::CANONICAL, $e);
+            }
+        }
+
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        try {
+            $markupHandler = $executionContext->getExecutingMarkupHandler();
+            $contextData = $markupHandler
+                ->getContextData();
+            $path = $contextData[PagePath::PROPERTY_NAME];
+            if ($path !== null) {
+                try {
+                    return WikiPath::createMarkupPathFromPath($path);
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::internalError("The path string should be absolute, we should not get this error", self::CANONICAL, $e);
+                }
+            }
+            return $markupHandler->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            // no markup handler
+        }
+        return $executionContext->getContextPath();
+
     }
 }

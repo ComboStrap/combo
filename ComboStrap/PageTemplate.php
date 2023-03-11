@@ -721,10 +721,7 @@ class PageTemplate
     function getMessages(): string
     {
 
-        global $MSG, $MSG_shown;
-        /** @var array $MSG */
-        // store if the global $MSG has already been shown and thus HTML output has been started
-        $MSG_shown = true;
+        global $MSG;
 
         if (!isset($MSG)) {
             throw new ExceptionNotFound("No messages");
@@ -732,36 +729,51 @@ class PageTemplate
 
         $shown = array();
 
-        $toasts = "";
+        // deduplicate and auth
+        $uniqueMessages = [];
         foreach ($MSG as $msg) {
+            if (!info_msg_allowed($msg)) {
+                continue;
+            }
             $hash = md5($msg['msg']);
-            if (isset($shown[$hash])) continue; // skip double messages
-            if (info_msg_allowed($msg)) {
-                $level = ucfirst($msg['lvl']);
-                switch ($level) {
-                    case "Error":
-                        $class = "text-danger";
-                        $autoHide = "false";
-                        break;
-                    default:
-                        $class = "text-primary";
-                        $autoHide = "true";
-                        break;
-                }
-                $toasts .= <<<EOF
+            $uniqueMessages[$hash] = $msg;
+        }
+
+        $messagesByLevel = [];
+        foreach ($uniqueMessages as $message) {
+            $level = $message['lvl'];
+            $messagesByLevel[$level][] = $message;
+        }
+
+        $toasts = "";
+        foreach ($messagesByLevel as $level => $messagesForLevel) {
+            $level = ucfirst($level);
+            switch ($level) {
+                case "Error":
+                    $class = "text-danger";
+                    break;
+                default:
+                    $class = "text-primary";
+                    break;
+            }
+            $autoHide = "false"; // auto-hidding is really bad ui
+            $toastMessage = "";
+            foreach ($messagesForLevel as $messageForLevel) {
+                $toastMessage .= "<p>{$messageForLevel['msg']}</p>";
+            }
+
+
+            $toasts .= <<<EOF
 <div role="alert" aria-live="assertive" aria-atomic="true" class="toast fade" data-bs-autohide="$autoHide">
   <div class="toast-header">
     <strong class="me-auto $class">{$level}</strong>
     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
   </div>
   <div class="toast-body">
-        <p>{$msg['msg']}</p>
+        $toastMessage
   </div>
 </div>
 EOF;
-
-            }
-            $shown[$hash] = 1;
         }
 
         unset($GLOBALS['MSG']);
@@ -769,6 +781,7 @@ EOF;
         if ($toasts === "") {
             throw new ExceptionNotFound("No messages");
         }
+
         $this->hadMessages = true;
 
         // position fixed to not participate into the grid
@@ -780,7 +793,8 @@ EOF;
 
     }
 
-    private function canBeCached(): bool
+    private
+    function canBeCached(): bool
     {
         // no if message
         return true;
@@ -824,12 +838,14 @@ EOF;
         }
     }
 
-    private function getTheme()
+    private
+    function getTheme()
     {
         return $this->theme ?? ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getTheme();
     }
 
-    private function getHeadHtml(): string
+    private
+    function getHeadHtml(): string
     {
         if (!$this->isTemplateStringExecutionMode()) {
 
@@ -953,12 +969,14 @@ EOF;
      *
      * @return bool - true if this a string template executions
      */
-    private function isTemplateStringExecutionMode(): bool
+    private
+    function isTemplateStringExecutionMode(): bool
     {
         return isset($this->templateString);
     }
 
-    private function getEngine(): PageTemplateEngine
+    private
+    function getEngine(): PageTemplateEngine
     {
         if ($this->isTemplateStringExecutionMode()) {
             return PageTemplateEngine::createForString();
@@ -969,7 +987,8 @@ EOF;
         }
     }
 
-    private function getDefinition(): array
+    private
+    function getDefinition(): array
     {
         try {
             if (isset($this->templateDefinition)) {
@@ -987,7 +1006,8 @@ EOF;
         }
     }
 
-    private function getRailbarLayout(): string
+    private
+    function getRailbarLayout(): string
     {
         $definition = $this->getDefinition();
         if (isset($definition['railbar']['layout'])) {

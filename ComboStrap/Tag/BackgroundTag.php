@@ -1,8 +1,15 @@
 <?php
 
-namespace ComboStrap;
+namespace ComboStrap\Tag;
 
-use syntax_plugin_combo_background;
+use ComboStrap\BackgroundAttribute;
+use ComboStrap\CallStack;
+use ComboStrap\ColorRgb;
+use ComboStrap\LinkMarkup;
+use ComboStrap\PluginUtility;
+use ComboStrap\Position;
+use ComboStrap\TagAttributes;
+
 
 /**
  * The {@link BackgroundTag background tag} does not render as HTML tag

@@ -2,6 +2,7 @@
 
 
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionSqliteNotAvailable;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherMarkup;
 use ComboStrap\FragmentTag;
@@ -319,12 +320,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Sqlite available ?
                      */
-                    $sqlite = Sqlite::createOrGetSqlite();
-                    if ($sqlite === null) {
+                    try {
+                        $sqlite = Sqlite::createOrGetSqlite();
+                    } catch (ExceptionSqliteNotAvailable $e) {
                         $renderer->doc .= "The iterator component needs Sqlite to be able to work";
                         return false;
                     }
-
 
                     /**
                      * Create the SQL

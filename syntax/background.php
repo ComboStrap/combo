@@ -3,20 +3,14 @@
 
 // must be run within Dokuwiki
 use ComboStrap\BackgroundAttribute;
-use ComboStrap\BackgroundTag;
+use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\FetcherSvg;
+use ComboStrap\IFetcherAbs;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
-use ComboStrap\IFetcherAbs;
-use ComboStrap\FetcherCache;
-use ComboStrap\CallStack;
-use ComboStrap\ColorRgb;
-use ComboStrap\Dimension;
-use ComboStrap\LinkMarkup;
-use ComboStrap\MediaLink;
-use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
-use ComboStrap\Position;
+use ComboStrap\Tag\BackgroundTag;
 use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 

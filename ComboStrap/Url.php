@@ -68,7 +68,7 @@ class Url extends PathAbs
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      */
-    public function __construct($url = null)
+    public function __construct(string $url = null)
     {
 
         $this->url = $url;
@@ -670,7 +670,7 @@ class Url extends PathAbs
 
 
         switch ($scheme) {
-            case LocalPath::SCHEME:
+            case LocalFileSystem::SCHEME:
                 /**
                  * file://host/path
                  */
@@ -895,4 +895,12 @@ class Url extends PathAbs
     }
 
 
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     */
+    public static function createFromUri(string $uri): Path
+    {
+        return new Url($uri);
+    }
 }

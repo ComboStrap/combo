@@ -1465,7 +1465,7 @@ class TagAttributes
     public function getInnerText(): string
     {
         if (!isset($this->innerText)) {
-            throw new ExceptionNotFound("No inner text set");
+            throw new ExceptionNotFound("No inner text is set");
         }
         return $this->innerText;
     }

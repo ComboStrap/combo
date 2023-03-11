@@ -438,7 +438,7 @@ class WikiPath extends PathAbs
      * @throws ExceptionBadArgument
      */
     public
-    static function createFromUri(string $uri)
+    static function createFromUri(string $uri): WikiPath
     {
 
         $schemeQualified = WikiFileSystem::SCHEME . "://";

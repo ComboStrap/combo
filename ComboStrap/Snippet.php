@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 use action_plugin_combo_docustom;
 use JsonSerializable;
+use splitbrain\slika\Exception;
 
 /**
  * Class Snippet
@@ -49,9 +50,8 @@ class Snippet implements JsonSerializable
      * Properties of the JSON array
      */
     const JSON_COMPONENT_PROPERTY = "component"; // mandatory
-    const JSON_DRIVE_PROPERTY = "drive";
-    const JSON_PATH_PROPERTY = "path";
-    const JSON_URL_PROPERTY = "url"; // mandatory if external
+    const JSON_URI_PROPERTY = "uri"; // internal uri
+    const JSON_URL_PROPERTY = "url"; // external url
     const JSON_CRITICAL_PROPERTY = "critical";
     const JSON_ASYNC_PROPERTY = "async";
     const JSON_CONTENT_PROPERTY = "content";
@@ -287,13 +287,11 @@ class Snippet implements JsonSerializable
                 // string/dynamic run
             }
         } catch (ExceptionNotFound $e) {
-            // admin page or templating not on
-            try {
-                $wikiId = $executionContext->getExecutingWikiId();
-                $snippet->addSlot($wikiId);
-            } catch (ExceptionNotFound $e) {
-                $snippet->addSlot(Snippet::REQUEST_SCOPE);
-            }
+            /**
+             * admin page or page scope
+             * This snippets are not due to the markup
+             */
+            $snippet->addSlot(Snippet::REQUEST_SCOPE);
         }
 
         return $snippet;
@@ -532,18 +530,12 @@ class Snippet implements JsonSerializable
     public static function createFromJson($array): Snippet
     {
 
-
-        $path = $array[self::JSON_PATH_PROPERTY];
-        if ($path === null) {
-            throw new ExceptionCompile("The snippet path property was not found in the json array");
+        $uri = $array[self::JSON_URI_PROPERTY];
+        if ($uri === null) {
+            throw new ExceptionCompile("The snippet uri property was not found in the json array");
         }
 
-        $drive = $array[self::JSON_DRIVE_PROPERTY];
-        if ($drive === null) {
-            throw new ExceptionCompile("The snippet drive property was not found in the json array");
-        }
-
-        $wikiPath = WikiPath::createFromPath($path, $drive);
+        $wikiPath = FileSystems::createPathFromUri($uri);
         $snippet = Snippet::getOrCreateFromContext($wikiPath);
 
         $componentName = $array[self::JSON_COMPONENT_PROPERTY];
@@ -654,12 +646,17 @@ class Snippet implements JsonSerializable
     }
 
     /**
-     * @throws ExceptionBadArgument - if the path cannot be served (ie transformed as wiki path)
+     *
      */
     public function getLocalUrl(): Url
     {
-        $path = WikiPath::createFromPathObject($this->path);
-        return FetcherRawLocalPath::createFromPath($path)->getFetchUrl();
+        try {
+            $path = WikiPath::createFromPathObject($this->path);
+            return FetcherRawLocalPath::createFromPath($path)->getFetchUrl();
+        } catch (ExceptionBadArgument $e) {
+            throw new ExceptionRuntimeInternal("The local url should ne asked. use (hasLocalUrl) before calling this function", self::CANONICAL,$e);
+        }
+
     }
 
 
@@ -725,8 +722,7 @@ class Snippet implements JsonSerializable
     {
 
         $dataToSerialize = [
-            self::JSON_PATH_PROPERTY => $this->getPath()->toAbsoluteString(),
-            self::JSON_DRIVE_PROPERTY => $this->getPath()->getDrive()
+            self::JSON_URI_PROPERTY => $this->getPath()->toUriString(),
         ];
 
         try {
@@ -786,7 +782,8 @@ class Snippet implements JsonSerializable
         }
 
         /**
-         * If the file does not exist and that there is a remote url
+         * If the file does not exist
+         * and that there is a remote url
          */
         $internalPath = $this->getPath();
         if (!FileSystems::exists($internalPath)) {
@@ -801,8 +798,19 @@ class Snippet implements JsonSerializable
         }
 
         /**
-         * The local file
-         * If javascript and always inline
+         * The file exists
+         * If we can't serve it locally, it should be inlined
+         */
+        if (!$this->hasLocalUrl()) {
+            return true;
+        }
+
+        /**
+         * File exists and can be served
+         */
+
+        /**
+         * Local Javascript Library ?
          */
         if ($this->getExtension() === Snippet::EXTENSION_JS) {
 
@@ -843,10 +851,11 @@ class Snippet implements JsonSerializable
         }
 
         return true;
+
     }
 
     /**
-     * @throws ExceptionBadState - an error where for instance an inline script doe snot have any content
+     * @throws ExceptionBadState - an error where for instance an inline script does not have any content
      * @throws ExceptionNotFound - an error where the source was not found
      */
     public function toDokuWikiArray(): array
@@ -899,7 +908,10 @@ class Snippet implements JsonSerializable
     }
 
     /**
+     * @return TagAttributes
+     * @throws ExceptionBadArgument
      * @throws ExceptionBadState - if no content was found
+     * @throws ExceptionCast
      * @throws ExceptionNotFound - if the file was not found
      */
     public function toTagAttributes(): TagAttributes
@@ -934,8 +946,7 @@ class Snippet implements JsonSerializable
                     if ($this->useRemoteUrl()) {
                         $fetchUrl = $this->getRemoteUrl();
                     } else {
-                        $wikiPath = $this->getPath();
-                        $fetchUrl = FetcherRawLocalPath::createFromPath($wikiPath)->getFetchUrl();
+                        $fetchUrl = $this->getLocalUrl();
                     }
 
                     /**
@@ -976,7 +987,7 @@ class Snippet implements JsonSerializable
                     if ($this->useRemoteUrl()) {
                         $fetchUrl = $this->getRemoteUrl();
                     } else {
-                        $fetchUrl = FetcherRawLocalPath::createFromPath($this->getPath())->getFetchUrl();
+                        $fetchUrl = $this->getLocalUrl();
                     }
 
                     /**
@@ -1031,6 +1042,61 @@ class Snippet implements JsonSerializable
             $this->getRemoteUrl();
             return true;
         } catch (ExceptionNotFound $e) {
+            return false;
+        }
+    }
+
+    public function toXhtml(): string
+    {
+        try {
+            $tagAttributes = $this->toTagAttributes();
+        } catch (ExceptionBadState|ExceptionNotFound $e) {
+            throw new ExceptionRuntimeInternal("We couldn't output the snippet ($this). Error: {$e->getMessage()}", self::CANONICAL, $e);
+        }
+        $htmlElement = $this->getHtmlTag();
+        /**
+         * This code runs in editing mode
+         * or if the template is not strap
+         * No preload is then supported
+         */
+        if ($htmlElement === "link") {
+            try {
+                $relValue = $tagAttributes->getOutputAttribute("rel");
+                $relAs = $tagAttributes->getOutputAttribute("as");
+                if ($relValue === "preload") {
+                    if ($relAs === "style") {
+                        $tagAttributes->removeOutputAttributeIfPresent("rel");
+                        $tagAttributes->addOutputAttributeValue("rel", "stylesheet");
+                        $tagAttributes->removeOutputAttributeIfPresent("as");
+                    }
+                }
+            } catch (ExceptionNotFound $e) {
+                // rel or as was not found
+            }
+        }
+        $xhtmlContent = $tagAttributes->toHtmlEnterTag($htmlElement);
+
+        try {
+            $xhtmlContent .= $tagAttributes->getInnerText();
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        $xhtmlContent .= "</$htmlElement>";
+        return $xhtmlContent;
+    }
+
+    /**
+     * If is not a wiki path
+     * It can't be served
+     *
+     * Example from theming, ...
+     */
+    private function hasLocalUrl(): bool
+    {
+        try {
+            $this->getLocalUrl();
+            return true;
+        } catch (\Exception $e) {
             return false;
         }
     }

@@ -476,7 +476,9 @@ class PageTemplate
             foreach ($this->getSlotIds() as $slotId) {
                 try {
                     $model["$slotId-html"] = PageTemplateSlot::createFor($slotId, $this)->getMarkupFetcher()->getFetchString();
-                } catch (ExceptionNotFound|ExceptionCompile $e) {
+                } catch (ExceptionNotFound $e) {
+                    // no slot found
+                } catch (ExceptionCompile $e) {
                     LogUtility::error("Error while rendering the slot $slotId for the template ($this)", self::CANONICAL, $e);
                     $model["$slotId-html"] = LogUtility::wrapInRedForHtml("Error: " . $e->getMessage());
                 }
@@ -500,8 +502,19 @@ class PageTemplate
             // no context path
         }
 
+
+        /**
+         * Head Html
+         * Snippet, Css and Js from the layout if any
+         *
+         * Note that head tag may be added during rendering and must be then called after rendering and toc
+         * (ie at last then)
+         */
+        $model['head-html'] = $this->getHeadHtml();
+
         /**
          * Preloaded Css
+         * (It must come after the head processing as this is where the preloaded script are defined)
          * (Not really useful but legacy)
          * We add it just before the end of the body tag
          */
@@ -512,13 +525,8 @@ class PageTemplate
         }
 
         /**
-         * Head Html
-         * Snippet, Css and Js from the layout if any
-         *
-         * Note that head tag may be added during rendering and must be then called after rendering and toc
-         * (ie at last then)
+         * Powered by
          */
-        $model['head-html'] = $this->getHeadHtml();
         $model['powered-by'] = self::getPoweredBy();
 
         /**
@@ -534,10 +542,7 @@ class PageTemplate
              * We process the messages at the end
              * It means that the needed script needs to be added manually
              */
-            // output <script class="snippet-toast-cs"/>, not good because the body will then be empty
-//            $model['head-html'] .= Snippet::getOrCreateFromComponentId("toast", Snippet::EXTENSION_JS)
-//                ->toTagAttributes()
-//                ->toHtmlEmptyTag("script");
+            $model['head-html'] .= Snippet::getOrCreateFromComponentId("toast", Snippet::EXTENSION_JS)->toXhtml();
         } catch (ExceptionNotFound $e) {
             // no messages
         } catch (ExceptionBadState $e) {
@@ -678,7 +683,8 @@ class PageTemplate
 
         // For the preload if any
         try {
-            $preloadedCss = ExecutionContext::getActualOrCreateFromEnv()->getRuntimeObject(self::PRELOAD_TAG);
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+            $preloadedCss = $executionContext->getRuntimeObject(self::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {
             throw new ExceptionNotFound("No preloaded resources found");
         }

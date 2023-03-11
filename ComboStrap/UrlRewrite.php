@@ -22,10 +22,10 @@ class UrlRewrite
     public const VALUE_DOKU_REWRITE = "doku_rewrite";
 
 
-
-    const EXPORT_PREFIX = "export_";
+    const EXPORT_DO_PREFIX = "export_";
     const CANONICAL = "url_rewrite";
     const MEDIA_PREFIX = "/_media";
+    const EXPORT_PATH_PREFIX = "/_export";
 
 
     /**
@@ -91,7 +91,7 @@ class UrlRewrite
                             return;
                         }
                         $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                        $url->setPath(self::MEDIA_PREFIX. "/$idPath");
+                        $url->setPath(self::MEDIA_PREFIX . "/$idPath");
                         break;
                     case UrlEndpoint::LIB_EXE_DETAIL_PHP:
                         try {
@@ -106,11 +106,11 @@ class UrlRewrite
                     case UrlEndpoint::DOKU_PHP:
                         try {
                             $do = $url->getQueryPropertyValueAndRemoveIfPresent("do");
-                            if (strpos($do, self::EXPORT_PREFIX) === 0) {
-                                $exportFormat = substr($do, strlen(self::EXPORT_PREFIX));
+                            if (strpos($do, self::EXPORT_DO_PREFIX) === 0) {
+                                $exportFormat = substr($do, strlen(self::EXPORT_DO_PREFIX));
                                 $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
                                 $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                                $url->setPath("_export/$exportFormat/$idPath");
+                                $url->setPath(self::EXPORT_PATH_PREFIX . "/$exportFormat/$idPath");
                                 return;
                             }
                         } catch (ExceptionNotFound $e) {
@@ -133,7 +133,7 @@ class UrlRewrite
                         $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
                         $url->setPath("$path/$id");
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::internalError("The id should be present for a doku script. No Dokuwiki Url rewrite could be done.",self::CANONICAL);
+                        LogUtility::internalError("The id should be present for a doku script. No Dokuwiki Url rewrite could be done.", self::CANONICAL);
                     }
                 }
                 break;

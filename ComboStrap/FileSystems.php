@@ -321,7 +321,7 @@ class FileSystems
      */
     public static function printModificationTimeToConsole(Path $mediaFile, string $log)
     {
-        fputs(STDOUT, "ModificationTime of {$mediaFile->toAbsoluteString()}".PHP_EOL);
+        fputs(STDOUT, "ModificationTime of {$mediaFile->toAbsoluteString()}" . PHP_EOL);
         $filename = $mediaFile->toAbsolutePath()->toAbsoluteString();
         fputs(STDOUT, "ModificationTime of $filename at $log ");
         $timestamp = filemtime($filename);
@@ -332,9 +332,32 @@ class FileSystems
     {
         try {
             $pathString = $path->toLocalPath()->toCanonicalPath()->toAbsoluteString();
-            clearstatcache(true,$pathString);
+            clearstatcache(true, $pathString);
         } catch (ExceptionCast $e) {
             throw new ExceptionRuntimeInternal("The cache can be clear only for local path");
+        }
+
+    }
+
+
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     */
+    public static function createPathFromUri($uri): Path
+    {
+        $firstColon = strpos($uri, ":");
+        if ($firstColon === false) {
+            throw new ExceptionBadSyntax("$uri is not a valid uri");
+        }
+        $scheme = substr($uri, 0, $firstColon);
+        switch ($scheme) {
+            case WikiFileSystem::SCHEME:
+                return WikiPath::createFromUri($uri);
+            case LocalFileSystem::SCHEME:
+                return LocalPath::createFromUri($uri);
+            default:
+                throw new ExceptionRuntimeInternal("The scheme ($scheme) is not yet supported");
         }
 
     }

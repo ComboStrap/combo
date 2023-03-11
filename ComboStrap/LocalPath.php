@@ -26,8 +26,18 @@ class LocalPath extends PathAbs
     const RELATIVE_PARENT = "..";
     const LINUX_SEPARATOR = "/";
     const WINDOWS_SEPARATOR = '\\';
-    const SCHEME = "file";
     const CANONICAL = "support";
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createFromUri($uri): LocalPath
+    {
+        if (strpos($uri, LocalFileSystem::SCHEME) !== 0) {
+            throw new ExceptionBadArgument("$uri is not a local path uri");
+        }
+        return new LocalPath($uri);
+    }
 
     /**
      * @throws ExceptionBadArgument
@@ -79,7 +89,7 @@ class LocalPath extends PathAbs
          * if we pass a {@link LocalPath}, no error,
          * it just pass the {@link PathAbs::__toString()}
          */
-        if (strpos($path, self::SCHEME) === 0) {
+        if (strpos($path, LocalFileSystem::SCHEME) === 0) {
             try {
                 $path = Url::createFromString($path)->getPath();
                 LogUtility::errorIfDevOrTest("The path given as constructor should not be an uri or a path object");
@@ -369,7 +379,7 @@ class LocalPath extends PathAbs
         /**
          * file://host/path
          */
-        $uri = self::SCHEME . '://';
+        $uri = LocalFileSystem::SCHEME . '://';
         try {
             // Windows share host
             $uri = "$uri{$this->getHost()}";

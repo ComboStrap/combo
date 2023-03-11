@@ -8,6 +8,7 @@ abstract class PathAbs implements Path
 {
 
 
+
     /**
      * @throws ExceptionNotFound
      */

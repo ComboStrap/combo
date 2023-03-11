@@ -2251,4 +2251,14 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return "$this->path";
     }
 
+    /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     */
+    public static function createFromUri(string $uri): MarkupPath
+    {
+        $path = FileSystems::createPathFromUri($uri);
+        return new MarkupPath($path);
+    }
+
 }

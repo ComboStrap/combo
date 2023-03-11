@@ -18,6 +18,11 @@ namespace ComboStrap;
 interface Path
 {
 
+    /**
+     * @param string $uri
+     * @return Path
+     */
+    public static function createFromUri(string $uri): Path;
 
     /**
      * @return string

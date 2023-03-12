@@ -134,7 +134,7 @@ class HeadingTag
          * this is a outline
          */
         $parent = $callStack->moveToParent();
-        if ($parent && $parent->getTagName() === syntax_plugin_combo_webcode::TAG) {
+        if ($parent && $parent->getTagName() === Tag\WebCodeTag::TAG) {
             $parent = $callStack->moveToParent();
         }
         if ($parent && $parent->getComponentName() !== "section_open") {

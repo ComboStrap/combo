@@ -4,6 +4,8 @@ namespace ComboStrap;
 
 
 use ComboStrap\Tag\BackgroundTag;
+use ComboStrap\Tag\MermaidTag;
+use ComboStrap\Tag\WebCodeTag;
 use Doku_Handler;
 use Doku_Renderer;
 use Doku_Renderer_metadata;
@@ -62,6 +64,7 @@ class XmlTagProcessing
             case PageExplorerTag::LOGICAL_TAG:
             case PermalinkTag::TAG:
             case IconTag::TAG:
+            case MermaidTag::LOGICAL_TAG:
                 return true;
             case DropDownTag::TAG:
                 $renderer->doc .= DropDownTag::renderExitXhtml();
@@ -86,6 +89,12 @@ class XmlTagProcessing
                 return true;
             case PanelTag::PANEL_LOGICAL_MARKUP:
                 $renderer->doc .= PanelTag::renderExitXhtml($data);
+                return true;
+            case BackgroundTag::LOGICAL_TAG:
+                $renderer->doc .= BackgroundTag::renderExitSpecialHtml($data);
+                return true;
+            case WebCodeTag::TAG:
+                $renderer->doc .= WebCodeTag::renderExit($tagAttributes, $data);
                 return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -216,6 +225,14 @@ class XmlTagProcessing
             case IconTag::TAG:
                 $renderer->doc .= IconTag::renderEnterTag($tagAttributes);
                 return true;
+            case BackgroundTag::LOGICAL_TAG:
+                $renderer->doc .= BackgroundTag::renderEnterTag();
+                return true;
+            case MermaidTag::LOGICAL_TAG:
+                $renderer->doc .= MermaidTag::renderEnter($tagAttributes);
+                return true;
+            case WebCodeTag::TAG:
+                return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                 return false;
@@ -332,6 +349,25 @@ class XmlTagProcessing
                 $knownTypes = PermalinkTag::getKnownTypes();
                 $defaultAttributes = [TagAttributes::TYPE_KEY => PermalinkTag::GENERATED_TYPE];
                 break;
+            case BackgroundTag::MARKUP_LONG:
+            case BackgroundTag::MARKUP_SHORT:
+                $logicalTag = BackgroundTag::LOGICAL_TAG;
+                break;
+            case MermaidTag::MARKUP_MERMAID:
+            case WebCodeTag::TAG:
+                $logicalTag = Tag\WebCodeTag::TAG;
+                $defaultAttributes = WebCodeTag::getDefaultAttributes();
+                break;
+            case MermaidTag::MARKUP_SEQUENCE_DIAGRAM:
+            case MermaidTag::MARKUP_CLASS_DIAGRAM:
+            case MermaidTag::MARKUP_FLOWCHART:
+            case MermaidTag::MARKUP_GANTT:
+            case MermaidTag::MARKUP_ERD:
+            case MermaidTag::MARKUP_JOURNEY:
+            case MermaidTag::MARKUP_PIECHART:
+            case MermaidTag::MARKUP_STATE_DIAGRAM:
+                $logicalTag = MermaidTag::LOGICAL_TAG;
+                break;
         }
 
         /**
@@ -389,6 +425,9 @@ class XmlTagProcessing
             case IconTag::TAG:
                 $returnedArray = IconTag::handleEnter($tagAttributes, $handler);
                 break;
+            case BackgroundTag::LOGICAL_TAG:
+                BackgroundTag::handleEnterAndSpecial($tagAttributes);
+                break;
         }
 
         /**
@@ -430,10 +469,10 @@ class XmlTagProcessing
                 break;
             case 'metadata':
                 /** @var Doku_Renderer_metadata $renderer */
-                if ($state !== DOKU_LEXER_ENTER) {
+                if (!in_array($state, [DOKU_LEXER_ENTER, DOKU_LEXER_SPECIAL])) {
                     return true;
                 }
-                return XmlTagProcessing::renderStaticEnterMetadata($tagAttributes, $renderer, $data, $plugin);
+                return XmlTagProcessing::renderStaticEnterSpecialMetadata($tagAttributes, $renderer, $data, $plugin);
             case 'xml':
                 /** @var renderer_plugin_combo_xml $renderer */
                 switch ($state) {
@@ -564,6 +603,27 @@ class XmlTagProcessing
             case IconTag::TAG:
                 $returnedArray = IconTag::handleExit($handler);
                 break;
+            case BackgroundTag::MARKUP_SHORT:
+            case BackgroundTag::MARKUP_LONG:
+                $logicalTag = BackgroundTag::LOGICAL_TAG;
+                $returnedArray = BackgroundTag::handleExit($handler);
+                break;
+            case MermaidTag::MARKUP_SEQUENCE_DIAGRAM:
+            case MermaidTag::MARKUP_CLASS_DIAGRAM:
+            case MermaidTag::MARKUP_FLOWCHART:
+            case MermaidTag::MARKUP_GANTT:
+            case MermaidTag::MARKUP_ERD:
+            case MermaidTag::MARKUP_JOURNEY:
+            case MermaidTag::MARKUP_PIECHART:
+            case MermaidTag::MARKUP_STATE_DIAGRAM:
+                $logicalTag = MermaidTag::LOGICAL_TAG;
+                MermaidTag::handleExit($handler);
+                break;
+            case MermaidTag::MARKUP_MERMAID: // bug
+            case WebCodeTag::TAG:
+                $logicalTag = WebCodeTag::TAG;
+                $returnedArray = WebCodeTag::handleExit($handler);
+                break;
         }
         /**
          * Common exit attributes
@@ -653,7 +713,7 @@ class XmlTagProcessing
                 break;
             case BackgroundTag::MARKUP_SHORT:
             case BackgroundTag::MARKUP_LONG:
-                BackgroundTag::modifyColorAttributes($tagAttributes);
+                BackgroundTag::handleEnterAndSpecial($tagAttributes);
                 $callStack = CallStack::createFromHandler($handler);
                 $returnedArray = BackgroundTag::setAttributesToParentAndReturnData($callStack, $tagAttributes, $state);
                 break;
@@ -715,7 +775,7 @@ class XmlTagProcessing
                         break;
                     case BackgroundTag::MARKUP_LONG:
                     case BackgroundTag::MARKUP_SHORT:
-                        $renderer->doc .= BackgroundTag::renderHtml($data);
+                        $renderer->doc .= BackgroundTag::renderExitSpecialHtml($data);
                         break;
                     case DateTag::TAG:
                         $renderer->doc .= DateTag::renderHtml($tagAttributes);
@@ -745,7 +805,7 @@ class XmlTagProcessing
         return false;
     }
 
-    private static function renderStaticEnterMetadata(TagAttributes $tagAttributes, Doku_Renderer_metadata $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
+    private static function renderStaticEnterSpecialMetadata(TagAttributes $tagAttributes, Doku_Renderer_metadata $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
     {
         $logicalTag = $tagAttributes->getLogicalTag();
         switch ($logicalTag) {
@@ -754,6 +814,9 @@ class XmlTagProcessing
                 return true;
             case IconTag::TAG:
                 IconTag::metadata($renderer, $tagAttributes);
+                return true;
+            case BackgroundTag::LOGICAL_TAG:
+                BackgroundTag::renderMeta($data, $renderer);
                 return true;
         }
         return false;

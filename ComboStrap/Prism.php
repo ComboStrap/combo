@@ -234,7 +234,7 @@ EOD;
             Prism::addAutoloaderSnippet();
         }
 
-        if (in_array($language, \syntax_plugin_combo_webcode::MARKIS)) {
+        if (in_array($language, Tag\WebCodeTag::MARKIS)) {
             // Marki is not fully markdown
             // because it accepts space in super set html container and
             // prism will highlight them as indented code

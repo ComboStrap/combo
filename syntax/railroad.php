@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag\WebCodeTag;
 use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 
@@ -121,7 +122,7 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                 $bnfCode = "";
                 $bnfCodeFound = false;
                 while ($actual = $callStack->next()) {
-                    if (in_array($actual->getTagName(), syntax_plugin_combo_webcode::CODE_TAGS)) {
+                    if (in_array($actual->getTagName(), WebCodeTag::CODE_TAGS)) {
                         switch ($actual->getState()) {
                             case DOKU_LEXER_ENTER:
                                 $actualCodeType = strtolower($actual->getType());

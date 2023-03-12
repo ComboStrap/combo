@@ -68,6 +68,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * Svg Rendering error
      */
     const SVG_RENDERING_ERROR_CLASS = "combo-svg-rendering-error";
+    const CANONICAL = "media";
 
 
     public static function registerFirstImage(Doku_Renderer_metadata $renderer, Path $path)
@@ -385,12 +386,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     /**
      * Update the index for the move plugin
      * and {@link Metadata::FIRST_IMAGE_META_RELATION}
-     *
      * @param array $attributes
      * @param Doku_Renderer_metadata $renderer
-     * @throws ExceptionBadArgument
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionNotFound|ExceptionNotExists
      */
     static public function registerImageMeta(array $attributes, Doku_Renderer_metadata $renderer)
     {
@@ -398,7 +395,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             $mediaMarkup = MediaMarkup::createFromCallStackArray($attributes);
         } catch (ExceptionNotFound|ExceptionBadArgument|ExceptionBadSyntax $e) {
             LogUtility::internalError("We can't register the media metadata. Error: {$e->getMessage()}");
-            throw $e;
+            return;
+        } catch (ExceptionNotExists $e) {
+            return;
         }
         try {
             $label = $mediaMarkup->getLabel();
@@ -406,6 +405,12 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             $label = "";
         }
         $internalExternalType = $mediaMarkup->getInternalExternalType();
+        try {
+            $src = $mediaMarkup->getSrc();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("No src found, we couldn't register the media in the index. Error: {$e->getMessage()}", self::CANONICAL, $e);
+            return;
+        }
         switch ($internalExternalType) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
                 try {
@@ -415,10 +420,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     return;
                 }
                 self::registerFirstImage($renderer, $path);
-                $renderer->internalmedia($mediaMarkup->getSrc(), $label);
+                $renderer->internalmedia($src, $label);
                 break;
             case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:
-                $renderer->externalmedia($mediaMarkup->getSrc(), $label);
+                $renderer->externalmedia($src, $label);
                 break;
             default:
                 LogUtility::msg("The dokuwiki media type ($internalExternalType) for metadata registration is unknown");

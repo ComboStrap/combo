@@ -57,7 +57,7 @@ class TagAttributes
         TagAttributes::TYPE_KEY, // type is the component class
         MediaMarkup::LINKING_KEY, // internal to image
         IFetcherAbs::CACHE_KEY, // internal also
-        \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
+        Tag\WebCodeTag::RENDERING_MODE_ATTRIBUTE,
         Vertical::VERTICAL_ATTRIBUTE,
         self::OPEN_TAG,
         self::HTML_BEFORE,

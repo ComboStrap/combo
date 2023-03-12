@@ -5,6 +5,7 @@ use ComboStrap\DateTag;
 use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
 use ComboStrap\PrismTags;
+use ComboStrap\Tag\MermaidTag;
 use ComboStrap\XmlTagProcessing;
 
 
@@ -73,7 +74,15 @@ class syntax_plugin_combo_xmlprotectedtag extends DokuWiki_Syntax_Plugin
     const TAGS = [
         PrismTags::CONSOLE_TAG,
         PipelineTag::TAG, // protected inline deprecated
-        DateTag::TAG // protected inline deprecated
+        DateTag::TAG, // protected inline deprecated
+        MermaidTag::MARKUP_SEQUENCE_DIAGRAM,
+        MermaidTag::MARKUP_CLASS_DIAGRAM,
+        MermaidTag::MARKUP_FLOWCHART,
+        MermaidTag::MARKUP_GANTT,
+        MermaidTag::MARKUP_ERD,
+        MermaidTag::MARKUP_JOURNEY,
+        MermaidTag::MARKUP_PIECHART,
+        MermaidTag::MARKUP_STATE_DIAGRAM,
     ];
 
     function connectTo($mode)

@@ -405,6 +405,8 @@ class PageTemplate
          * See https://www.dokuwiki.org/devel:templates#dokuwiki_class
          * dokuwiki__top ID is needed for the "Back to top" utility
          * used also by some plugins
+         * dokwuiki as class is also needed as it's used by the linkwizard
+         * to locate where to add the node (ie .appendTo('.dokuwiki:first'))
          */
         $bodyDokuwikiClass = tpl_classes();
         try {

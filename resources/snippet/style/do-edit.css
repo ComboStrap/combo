@@ -102,3 +102,17 @@ div.preview {
     left: auto !important;
     right: -99999em !important;
 }
+
+/** From screen.css */
+#link__wiz {
+    position: absolute;
+    background-color: #fff;
+    color: #000;
+    z-index: 20;
+    overflow: hidden;
+}
+
+#link__wiz .ui-dialog-content {
+    padding-left: 0;
+    padding-right: 0;
+}

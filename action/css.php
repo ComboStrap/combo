@@ -264,6 +264,7 @@ class action_plugin_combo_css extends DokuWiki_Action_Plugin
                     // Jquery is here
                     if (($isThemeEnabled || $isMinimalFrontEnd) && $isAnonymous && strpos($fileDirectory, 'lib/scripts')) {
                         // Jquery is needed for admin (not anonymous)
+                        // scripts\jquery\jquery-ui-theme\smoothness.css
                         continue;
                     }
 

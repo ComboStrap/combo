@@ -99,31 +99,24 @@ class PageTemplateEngine
                 return ShareTag::render($tagAttributes, DOKU_LEXER_SPECIAL);
             }
         );
+        /**
+         * Used in test
+         */
         $handleBars->addHelper("echo",
             function ($template, $context, $args, $source) {
                 return "echo";
             }
         );
         /**
-         * Railbar is a helper
-         * as the layout may be different
-         * by page
+         * Hierachical breadcrumb
          */
-        $handleBars->addHelper("railbar",
+        $handleBars->addHelper("breadcrumb",
             function ($template, Context $context, $args, $source) {
-                try {
-                    $requestedPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
-                    $railbar = FetcherRailBar::createRailBar()
-                        ->setRequestedPath($requestedPath);
-                    if (!empty($args)) {
-                        $layoutName = trim($args, "\"'");
-                        $railbar->setRequestedLayout($layoutName);
-                    }
-                    return $railbar->getFetchString();
-                } catch (ExceptionBadArgument $e) {
-                    LogUtility::error("We were unable to create the railbar. Error: " . $e->getMessage(), self::CANONICAL, $e);
-                    return "";
-                }
+                $attributes = $context->get($args);
+                $knownType = BreadcrumbTag::TYPES;
+                $default = BreadcrumbTag::getDefaultAttributes();
+                $tagAttributes = TagAttributes::createFromTagMatch("<breadcrumb $attributes/>", $default, $knownType);
+                return BreadcrumbTag::toBreadCrumbHtml($tagAttributes);
             }
         );
     }

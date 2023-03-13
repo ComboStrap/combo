@@ -10,7 +10,7 @@ use dokuwiki\ActionRouter;
  * as if there is a cache problems,
  * We can't login anymore for instance
  */
-class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
+class FetcherAppPages extends IFetcherAbs implements IFetcherString
 {
 
     const NAME = "identity";
@@ -62,16 +62,12 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
             $pageLang = Site::getLangObject();
             $title = $this->getLabel();
 
-            try {
-                $this->pageLayout = PageTemplate::create()
-                    ->setLayoutName($this->getRequestedLayoutOrDefault())
-                    ->setRequestedLang($pageLang)
-                    ->setRequestedEnableTaskRunner(false) // no page id
-                    ->setRequestedTitle($title)
-                    ->setRequestedContextPath($this->getSourcePath());
-            } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("Layout error: {$e->getMessage()}", self::NAME, 1, $e);
-            }
+            $this->pageLayout = PageTemplate::create()
+                ->setLayoutName($this->getRequestedLayoutOrDefault())
+                ->setRequestedLang($pageLang)
+                ->setRequestedEnableTaskRunner(false) // no page id
+                ->setRequestedTitle($title)
+                ->setRequestedContextPath($this->getSourcePath());
 
         }
 
@@ -89,9 +85,21 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
          */
         ob_start();
         global $ACT;
-        $actionName = FetcherIdentityForms::class . "::tpl_content_core";
+        $actionName = FetcherAppPages::class . "::tpl_content_core";
         \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT, $actionName);
         $mainHtml = ob_get_clean();
+
+        /**
+         * Add css
+         */
+        global $ACT;
+        switch ($ACT) {
+            case ExecutionContext::PREVIEW_ACTION:
+            case ExecutionContext::EDIT_ACTION:
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->getSnippetSystem()
+                    ->attachCssInternalStyleSheet("do-edit");
+        }
 
 
         /**
@@ -161,7 +169,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
     /**
      *
      */
-    public function close(): FetcherIdentityForms
+    public function close(): FetcherAppPages
     {
         // nothing to do
         return $this;
@@ -173,7 +181,16 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
         try {
             return $this->getRequestedLayout();
         } catch (ExceptionNotFound $e) {
-            return PageLayoutName::MEDIAN_LAYOUT_VALUE;
+            global $ACT;
+            switch ($ACT) {
+                case ExecutionContext::SEARCH_ACTION:
+                case ExecutionContext::EDIT_ACTION:
+                case ExecutionContext::PREVIEW_ACTION:
+                    return PageLayoutName::HAMBURGER_LAYOUT_VALUE;
+                default:
+                    return PageLayoutName::MEDIAN_LAYOUT_VALUE;
+            }
+
         }
     }
 
@@ -181,7 +198,7 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
     public function getLabel(): string
     {
         global $ACT;
-        $label = "Identity forms";
+        $label = "App Pages";
         switch ($ACT) {
             case ExecutionContext::RESEND_PWD_ACTION:
                 $label = "Resend Password";
@@ -191,6 +208,10 @@ class FetcherIdentityForms extends IFetcherAbs implements IFetcherString
                 break;
             case ExecutionContext::REGISTER_ACTION:
                 $label = "Register";
+                break;
+            case ExecutionContext::EDIT_ACTION:
+            case ExecutionContext::PREVIEW_ACTION:
+                $label = "Editor";
                 break;
         }
         return $label;

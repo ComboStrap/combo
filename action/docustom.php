@@ -1,15 +1,13 @@
 <?php
 
-use ComboStrap\Console;
 use ComboStrap\ExceptionReporter;
 use ComboStrap\ExecutionContext;
-use ComboStrap\FetcherIdentityForms;
+use ComboStrap\FetcherAppPages;
 use ComboStrap\FetcherPage;
 use ComboStrap\HttpResponseStatus;
 use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\Url;
 
@@ -112,7 +110,10 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 case ExecutionContext::REGISTER_ACTION:
                 case ExecutionContext::RESEND_PWD_ACTION:
                 case ExecutionContext::PROFILE_ACTION:
-                    $action = self::getDoParameterValue(FetcherIdentityForms::NAME);
+                case ExecutionContext::EDIT_ACTION:
+                case ExecutionContext::PREVIEW_ACTION:
+                case ExecutionContext::SEARCH_ACTION:
+                    $action = self::getDoParameterValue(FetcherAppPages::NAME);
                     break;
             }
         }
@@ -131,7 +132,6 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 ->addQueryParameter(IFetcher::FETCHER_KEY, $fetcherName);
             $fetcher = $executionContext->createStringMainFetcherFromRequestedUrl($url);
             $body = $fetcher->getFetchString();
-            $this->doCustomActuallyExecuting = false;
             $mime = $fetcher->getMime();
             $executionContext->response()
                 ->setStatus(HttpResponseStatus::ALL_GOOD)
@@ -146,6 +146,8 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 ->setBody($html, Mime::getHtml())
                 ->end();
 
+        } finally {
+            $this->doCustomActuallyExecuting = false;
         }
 
     }

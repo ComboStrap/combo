@@ -5,30 +5,28 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
-use ComboStrap\ExecutionContext;
-use ComboStrap\FetcherPage;
-use ComboStrap\FileSystem;
-use ComboStrap\FileSystems;
-use ComboStrap\HttpResponseStatus;
-use ComboStrap\SiteConfig;
-use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionSqliteNotAvailable;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FileSystems;
 use ComboStrap\HttpResponse;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
-use ComboStrap\Mime;
 use ComboStrap\MarkupPath;
+use ComboStrap\Mime;
 use ComboStrap\PageId;
 use ComboStrap\PageRules;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
-use ComboStrap\PluginUtility;
+use ComboStrap\RouterBestEndPage;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\Sqlite;
 use ComboStrap\Url;
-use ComboStrap\RouterBestEndPage;
+use ComboStrap\WikiPath;
 
 
 /**
@@ -308,8 +306,9 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Without SQLite, this module does not work further
          */
-        $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite == null) {
+        try {
+            Sqlite::createOrGetSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
             return;
         }
 

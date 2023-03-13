@@ -164,7 +164,9 @@ class TagAttributes
         TagAttributes::ID_KEY,
         TagAttributes::TITLE_KEY,
         "href",
-        "rel" // anchor
+        "rel", // anchor
+        "name", // iframe
+        "frameborder" // iframe
     ];
 
     /**
@@ -633,8 +635,7 @@ class TagAttributes
                 if (!in_array($key, [
                     TagAttributes::TYPE_KEY,
                     TagAttributes::GENERATED_ID_KEY,
-                    TagAttributes::OPEN_TAG,
-                    "name" // used in webcode iframe
+                    TagAttributes::OPEN_TAG
                 ])) {
 
                     /**

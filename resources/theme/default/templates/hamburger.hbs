@@ -3,9 +3,11 @@
 {{> head-partial }}
 <body>
 {{>page-header-partial}}
-<div id="page-core">
-    <main id="main-content"></main>
-    <div id="page-tool" class="d-print-none"></div>
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <main id="main-content">
+        {{{ main-content-html }}}
+    </main>
+    {{> railbar-partial }}
 </div>
 {{>page-footer-partial}}
 {{>body-beforeend-partial}}

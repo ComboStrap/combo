@@ -83,3 +83,22 @@ div.preview {
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
 }
+
+/**
+ The icon in the menu are tagged with a11
+ Are hidden in overflow, that's how it works
+ (taken from screen.css)
+*/
+.a11y {
+    position: absolute !important;
+    left: -99999em !important;
+    top: auto !important;
+    width: 1px !important;
+    height: 1px !important;
+    /** hidden **/
+    overflow: hidden !important;
+}
+[dir=rtl] .a11y {
+    left: auto !important;
+    right: -99999em !important;
+}

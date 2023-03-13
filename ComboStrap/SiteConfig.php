@@ -73,11 +73,12 @@ class SiteConfig
     }
 
     /**
-     * TODO: Note that the config of plugin are loaded
+     * TODO: Default: Note that the config of plugin are loaded
      *   via {@link PluginTrait::loadConfig()}
      *   when {@link PluginTrait::getConf()} is used
      *   Therefore whenever possible, for now {@link PluginTrait::getConf()}
      *   should be used otherwise, there is no default
+     *   Or best, the default should be also in the code
      *
      */
     public static function getConfValue($confName, $defaultValue = null, ?string $namespace = PluginUtility::PLUGIN_BASE_NAME)

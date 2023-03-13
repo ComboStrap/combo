@@ -197,10 +197,12 @@ $conf['twitterSiteHandle'] = "";
 $conf['twitterSiteId'] = "";
 $conf['twitter:dnt'] = "on";
 /**
- *
- * {@link \ComboStrap\BlockquoteTag::CONF_TWEET_WIDGETS_THEME}
+ * {@link \ComboStrap\BlockquoteTag::CONF_TWEET_WIDGETS_THEME_DEFAULT}
  */
 $conf['twitter:widgets:theme'] = "light";
+/**
+ * {@link \ComboStrap\BlockquoteTag::CONF_TWEET_WIDGETS_BORDER_DEFAULT}
+ */
 $conf['twitter:widgets:border-color'] = "#55acee";
 
 

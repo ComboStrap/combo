@@ -38,6 +38,7 @@ class BlockquoteTag
     const CONF_TWEET_WIDGETS_BORDER = "twitter:widgets:border-color";
     const TYPO_TYPE = "typo";
     const CARD_TYPE = "card";
+    const CONF_TWEET_WIDGETS_BORDER_DEFAULT = "#55acee";
 
 
     /**

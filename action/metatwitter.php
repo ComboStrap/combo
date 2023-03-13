@@ -172,12 +172,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
         if (!empty($twitterImages)) {
             foreach ($twitterImages as $twitterImageFetcher) {
-                try {
-                  $twitterImagePath =   $twitterImageFetcher->getSourcePath();
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::internalError("Twitter Image Path should exist in this fetcher. Error: {$e->getMessage()}", self::CANONICAL);
-                    continue;
-                }
+                $twitterImagePath =   $twitterImageFetcher->getSourcePath();
 
                 if(!FileSystems::exists($twitterImagePath)){
                     continue;
@@ -197,15 +192,15 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
          * https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
          */
         // don't track
-        $twitterMeta[self::META_DNT] = SiteConfig::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK, self::CONF_ON);
+        $twitterMeta[self::META_DNT] = $this->getConf(self::CONF_TWITTER_DONT_NOT_TRACK, self::CONF_ON);
         // turn off csp warning
         $twitterMeta[self::META_WIDGET_CSP] = "on";
 
         /**
          * Embedded Tweet Theme
          */
-        $twitterMeta[self::META_WIDGETS_THEME] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_THEME);
-        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER);
+        $twitterMeta[self::META_WIDGETS_THEME] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_THEME, BlockquoteTag::CONF_TWEET_WIDGETS_THEME_DEFAULT);
+        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER, BlockquoteTag::CONF_TWEET_WIDGETS_BORDER_DEFAULT);
 
         /**
          * Add the properties

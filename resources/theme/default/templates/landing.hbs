@@ -6,7 +6,8 @@
 </head>
 <body class="{{body-classes}}">
 {{>page-header-partial}}
-<div id="page-core" class="{{ layout-container-class }} position-relative">
+{{!-- no layout-container-class, the bar component takes care of it --}}
+<div id="page-core" class="position-relative">
     <main id="main-content">
         {{{ main-content-html }}}
     </main>

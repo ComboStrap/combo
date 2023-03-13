@@ -34,6 +34,7 @@ class BlockquoteTag
     const TWEET = "tweet";
     const TWEET_SUPPORTED_LANG = array("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw");
     const CONF_TWEET_WIDGETS_THEME = "twitter:widgets:theme";
+    const CONF_TWEET_WIDGETS_THEME_DEFAULT = "light";
     const CONF_TWEET_WIDGETS_BORDER = "twitter:widgets:border-color";
     const TYPO_TYPE = "typo";
     const CARD_TYPE = "card";

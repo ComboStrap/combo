@@ -204,9 +204,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Embedded Tweet Theme
          */
-
-        $twitterMeta[self::META_WIDGETS_THEME] = SiteConfig::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_THEME);
-        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = SiteConfig::getConfValue(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER);
+        $twitterMeta[self::META_WIDGETS_THEME] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_THEME);
+        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER);
 
         /**
          * Add the properties

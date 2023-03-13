@@ -22,18 +22,14 @@
 
 use ComboStrap\Canonical;
 use ComboStrap\ContainerTag;
-use ComboStrap\FetcherSvg;
-use ComboStrap\MediaMarkup;
 use ComboStrap\IconDownloader;
-use ComboStrap\Metadata;
 use ComboStrap\Outline;
 use ComboStrap\PageType;
-use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
+use ComboStrap\Prism;
 use ComboStrap\Region;
 use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
-use ComboStrap\SnippetSystem;
 
 
 /**
@@ -200,6 +196,10 @@ $conf['defaultTwitterImage'] = ":apple-touch-icon.png";
 $conf['twitterSiteHandle'] = "";
 $conf['twitterSiteId'] = "";
 $conf['twitter:dnt'] = "on";
+/**
+ *
+ * {@link \ComboStrap\BlockquoteTag::CONF_TWEET_WIDGETS_THEME}
+ */
 $conf['twitter:widgets:theme'] = "light";
 $conf['twitter:widgets:border-color'] = "#55acee";
 

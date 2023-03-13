@@ -3,6 +3,9 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\Plugin;
+use dokuwiki\Extension\PluginTrait;
+
 class SiteConfig
 {
     const LOG_EXCEPTION_LEVEL = 'log-exception-level';
@@ -69,10 +72,19 @@ class SiteConfig
         $this->executionContext = $executionContext;
     }
 
+    /**
+     * TODO: Note that the config of plugin are loaded
+     *   via {@link PluginTrait::loadConfig()}
+     *   when {@link PluginTrait::getConf()} is used
+     *   Therefore whenever possible, for now {@link PluginTrait::getConf()}
+     *   should be used otherwise, there is no default
+     *
+     */
     public static function getConfValue($confName, $defaultValue = null, ?string $namespace = PluginUtility::PLUGIN_BASE_NAME)
     {
         global $conf;
         if ($namespace !== null) {
+
             $value = $conf['plugin'][$namespace][$confName];
         } else {
             $value = $conf[$confName];
@@ -215,7 +227,7 @@ class SiteConfig
     {
 
         $value = $this->getValue(self::REM_CONF);
-        if($value==null){
+        if ($value === null) {
             throw new ExceptionNotFound("No rem sized defined");
         }
         try {
@@ -429,7 +441,7 @@ class SiteConfig
      */
     public function setUrlRewriteToDoku(): SiteConfig
     {
-        $this->setConf('userewrite','2', self::GLOBAL_SCOPE);
+        $this->setConf('userewrite', '2', self::GLOBAL_SCOPE);
         return $this;
     }
 
@@ -440,8 +452,17 @@ class SiteConfig
      */
     public function setUrlRewriteToWebServer(): SiteConfig
     {
-        $this->setConf('userewrite','1', self::GLOBAL_SCOPE);
+        $this->setConf('userewrite', '1', self::GLOBAL_SCOPE);
         return $this;
+    }
+
+    public function getRemFontSizeOrDefault(): int
+    {
+        try {
+            return $this->getRemFontSize();
+        } catch (ExceptionNotFound $e) {
+            return 16;
+        }
     }
 
 

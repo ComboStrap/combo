@@ -427,7 +427,7 @@ class MediaMarkup
      */
     public function getLabel(): string
     {
-        if ($this->label === null) {
+        if (empty($this->label)) {
             throw new ExceptionNotFound("No label specified");
         }
         return $this->label;
@@ -725,9 +725,6 @@ class MediaMarkup
 
     /**
      * @return IFetcher
-     * @throws ExceptionBadArgument
-     * @throws ExceptionInternal
-     * @throws ExceptionNotFound
      */
     public function getFetcher(): IFetcher
     {
@@ -746,9 +743,13 @@ class MediaMarkup
             try {
                 $this->fetcher = FetcherSystem::createPathFetcherFromUrl($this->fetchUrl);
             } catch (ExceptionBadArgument|ExceptionInternal|ExceptionNotFound $e) {
-                // we don't support http fetch
-                if (!($this->getMarkupRef()->getSchemeType() === MarkupRef::WEB_URI)) {
-                    throw $e;
+                try {
+                    // we don't support http fetch
+                    if (!($this->getMarkupRef()->getSchemeType() === MarkupRef::WEB_URI)) {
+                        throw ExceptionRuntimeInternal::withMessageAndError("we don't support http fetch", $e);
+                    }
+                } catch (ExceptionNotFound $e) {
+                    // ok no markup ref
                 }
             }
         }

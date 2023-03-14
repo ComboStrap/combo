@@ -103,7 +103,7 @@ class PanelTag
                             $descendantName == syntax_plugin_combo_tab::TAG
                             && $descendantPanel === $id
                             && $descendantSelected === "true") {
-                            $tagAttributes->setComponentAttributeValue(PanelTag::SELECTED,true);
+                            $tagAttributes->setComponentAttributeValue(PanelTag::SELECTED, true);
                             break;
                         }
                     }
@@ -123,8 +123,13 @@ class PanelTag
 
     public static function handleExit(Doku_Handler $handler, int $pos, string $markupTag, string $match): array
     {
+
         $callStack = CallStack::createFromHandler($handler);
         $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+        if ($openingTag === false) {
+            LogUtility::error("An exit panel tag does not have any opening tag and was discarded");
+            return [PluginUtility::CONTEXT => "root"];
+        }
 
         /**
          * Label is Mandatory in the new syntax. We check it

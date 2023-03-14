@@ -259,7 +259,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
-
     /**
      * @return bool true if this is a fragment markup
      */
@@ -2115,6 +2114,19 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             ->setRequestedContextPath($executionContext->getRequestedPath())
             ->setRequestedExecutingPath($executingPath)
             ->build();
+    }
+
+    public function isRootItemPage(): bool
+    {
+        try {
+            $parent = $this->getParent();
+            if ($parent->isRootHomePage()) {
+                return true;
+            }
+            return false;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
     }
 
     private function getPrimaryFooterPage(): ?MarkupPath

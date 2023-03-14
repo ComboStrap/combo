@@ -1,4 +1,4 @@
-.breadcrumb-typography-item+.breadcrumb-typography-item::before {
+.breadcrumb-typo-item+.breadcrumb-typo-item::before {
     padding-left: .5rem;
     padding-right: .5rem;
     color: #6c757d;

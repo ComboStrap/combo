@@ -1,6 +1,20 @@
 <?php
 
-namespace ComboStrap;
+namespace ComboStrap\Tag;
+
+use ComboStrap\Brand;
+use ComboStrap\BrandButton;
+use ComboStrap\BrandTag;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionRuntime;
+use ComboStrap\ExecutionContext;
+use ComboStrap\Icon;
+use ComboStrap\LogUtility;
+use ComboStrap\MarkupCacheDependencies;
+use ComboStrap\MarkupPath;
+use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 class ShareTag
 {
@@ -13,7 +27,7 @@ class ShareTag
      * @param $state
      * @return string
      */
-    public static function render(TagAttributes $shareAttributes, $state): string
+    public static function renderSpecialEnter(TagAttributes $shareAttributes, $state): string
     {
 
         /**
@@ -106,6 +120,11 @@ class ShareTag
     public static function getKnownTypes(): array
     {
         return Brand::getBrandNamesForButtonType(BrandButton::TYPE_BUTTON_SHARE);
+    }
+
+    public static function renderExit(): string
+    {
+        return "</a>";
     }
 
 }

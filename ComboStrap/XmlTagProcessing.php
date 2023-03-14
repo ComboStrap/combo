@@ -4,7 +4,9 @@ namespace ComboStrap;
 
 
 use ComboStrap\Tag\BackgroundTag;
+use ComboStrap\Tag\FollowTag;
 use ComboStrap\Tag\MermaidTag;
+use ComboStrap\Tag\ShareTag;
 use ComboStrap\Tag\WebCodeTag;
 use Doku_Handler;
 use Doku_Renderer;
@@ -95,6 +97,12 @@ class XmlTagProcessing
                 return true;
             case WebCodeTag::TAG:
                 $renderer->doc .= WebCodeTag::renderExit($tagAttributes, $data);
+                return true;
+            case ShareTag::MARKUP:
+                $renderer->doc .= ShareTag::renderExit();
+                return true;
+            case FollowTag::MARKUP:
+                $renderer->doc .= FollowTag::renderExit();
                 return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -233,6 +241,12 @@ class XmlTagProcessing
                 return true;
             case WebCodeTag::TAG:
                 return true;
+            case ShareTag::MARKUP:
+                $renderer->doc .= ShareTag::renderSpecialEnter($tagAttributes, DOKU_LEXER_ENTER);
+                return true;
+            case FollowTag::MARKUP:
+                $renderer->doc .= FollowTag::renderSpecialEnterNode($tagAttributes, DOKU_LEXER_ENTER);
+                return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
                 return false;
@@ -367,6 +381,12 @@ class XmlTagProcessing
             case MermaidTag::MARKUP_PIECHART:
             case MermaidTag::MARKUP_STATE_DIAGRAM:
                 $logicalTag = MermaidTag::LOGICAL_TAG;
+                break;
+            case ShareTag::MARKUP:
+                $knownTypes = ShareTag::getKnownTypes();
+                break;
+            case FollowTag::MARKUP:
+                $knownTypes = FollowTag::getKnownTypes();
                 break;
         }
 
@@ -674,6 +694,9 @@ class XmlTagProcessing
             case ShareTag::MARKUP:
                 $knownTypes = ShareTag::getKnownTypes();
                 break;
+            case FollowTag::MARKUP:
+                $knownTypes = FollowTag::getKnownTypes();
+                break;
             case BrandListTag::MARKUP:
                 $knownTypes = BrandButton::TYPE_BUTTONS;
                 $defaultAttributes = [TagAttributes::TYPE_KEY => BrandButton::TYPE_BUTTON_BRAND];
@@ -768,7 +791,7 @@ class XmlTagProcessing
                         $renderer->doc .= PageImageTag::render($tagAttributes, $data);
                         break;
                     case ShareTag::MARKUP:
-                        $renderer->doc .= ShareTag::render($tagAttributes, $state);
+                        $renderer->doc .= ShareTag::renderSpecialEnter($tagAttributes, $state);
                         break;
                     case BrandListTag::MARKUP:
                         $renderer->doc .= BrandListTag::render($tagAttributes);

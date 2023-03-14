@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metatwitter;
-use syntax_plugin_combo_follow;
 
 /**
  *
@@ -256,7 +255,7 @@ class BrandButton
                 if ($this->handle === null) {
                     return $urlTemplate;
                 }
-                $templateData[syntax_plugin_combo_follow::HANDLE_ATTRIBUTE] = $this->handle;
+                $templateData[Tag\FollowTag::HANDLE_ATTRIBUTE] = $this->handle;
                 return Template::create($urlTemplate)->setProperties($templateData)->render();
             default:
                 // The type is mandatory and checked at creation,

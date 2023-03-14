@@ -610,6 +610,10 @@ class Site
         return SiteConfig::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
     }
 
+    /**
+     * @return string
+     * @deprecated
+     */
     public static function getIndexPageName()
     {
         return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getIndexPageName();

@@ -316,7 +316,7 @@ class Call
                 case "close":
                     return DOKU_LEXER_EXIT;
                 default:
-                    return null;
+                    return DOKU_LEXER_UNMATCHED;
             }
 
         } else {
@@ -595,6 +595,7 @@ class Call
             $name .= " - ";
         }
         $name .= $this->getTagName();
+        $name .= " - {$this->getStateName()}";
         return $name;
     }
 
@@ -925,6 +926,23 @@ class Call
         $value = $this->getAttribute($key);
         $this->removeAttribute($key);
         return $value;
+    }
+
+    private function getStateName(): string
+    {
+        $state = $this->getState();
+        switch ($state){
+            case DOKU_LEXER_ENTER:
+                return "enter";
+            case DOKU_LEXER_EXIT:
+                return "exit";
+            case DOKU_LEXER_SPECIAL:
+                return "empty";
+            case DOKU_LEXER_UNMATCHED:
+                return "text";
+            default:
+                return "unknown ".$state;
+        }
     }
 
 

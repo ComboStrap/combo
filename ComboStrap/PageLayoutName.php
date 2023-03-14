@@ -21,6 +21,7 @@ class PageLayoutName extends MetadataText
      * to speed up test
      */
     const CONF_DEFAULT_NAME = "defaultLayoutName";
+    const ROOT_ITEM_LAYOUT = "root-item";
 
     public static function createFromPage(MarkupPath $page): PageLayoutName
     {
@@ -51,7 +52,8 @@ class PageLayoutName extends MetadataText
             self::LANDING_LAYOUT_VALUE,
             self::INDEX_LAYOUT_VALUE,
             self::HAMBURGER_LAYOUT_VALUE,
-            self::BLANK_LAYOUT
+            self::BLANK_LAYOUT,
+            self::ROOT_ITEM_LAYOUT
         ];
     }
 
@@ -82,6 +84,9 @@ class PageLayoutName extends MetadataText
         $page = $this->getResource();
         if ($page->isRootHomePage()) {
             return self::HAMBURGER_LAYOUT_VALUE;
+        }
+        if($page->isRootItemPage()){
+            return self::ROOT_ITEM_LAYOUT;
         }
         try {
             switch ($page->getPathObject()->getLastNameWithoutExtension()) {

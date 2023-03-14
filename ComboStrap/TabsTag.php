@@ -253,6 +253,13 @@ class TabsTag
     {
         $callStack = CallStack::createFromHandler($handler);
         $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+        if ($openingTag === false) {
+            LogUtility::error("A tabs tag had no opening tag and was discarded");
+            return array(
+                PluginUtility::CONTEXT => "root",
+                PluginUtility::ATTRIBUTES => []
+            );
+        }
         $previousOpeningTag = $callStack->previous();
         $callStack->next();
         $firstChild = $callStack->moveToFirstChildTag();

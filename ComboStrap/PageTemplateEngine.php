@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Tag\ShareTag;
 use Handlebars\Context;
 use Handlebars\Handlebars;
 use Handlebars\Loader\FilesystemLoader;
@@ -96,7 +97,7 @@ class PageTemplateEngine
                 $attributes = $context->get($args);
                 $knownType = ShareTag::getKnownTypes();
                 $tagAttributes = TagAttributes::createFromTagMatch("<share $attributes/>", [], $knownType);
-                return ShareTag::render($tagAttributes, DOKU_LEXER_SPECIAL);
+                return ShareTag::renderSpecialEnter($tagAttributes, DOKU_LEXER_SPECIAL);
             }
         );
         /**

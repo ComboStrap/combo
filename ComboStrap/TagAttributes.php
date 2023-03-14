@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
-use syntax_plugin_combo_follow;
 
 /**
  * An helper to create manipulate component and html attributes
@@ -71,7 +70,7 @@ class TagAttributes
         ColorRgb::PRIMARY_VALUE,
         ColorRgb::SECONDARY_VALUE,
         Dimension::ZOOM_ATTRIBUTE,
-        syntax_plugin_combo_follow::HANDLE_ATTRIBUTE,
+        Tag\FollowTag::HANDLE_ATTRIBUTE,
         \syntax_plugin_combo_menubar::BREAKPOINT_ATTRIBUTE,
         ContainerTag::CONTAINER_ATTRIBUTE,
         HeadingTag::HEADING_TEXT_ATTRIBUTE,

@@ -198,10 +198,6 @@ class Brand
 
     }
 
-    private static function getBrandAbbrFromDictionary()
-    {
-
-    }
 
     /**
      * If the brand name is unknown (ie custom)

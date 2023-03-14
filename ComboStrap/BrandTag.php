@@ -2,8 +2,6 @@
 
 namespace ComboStrap;
 
-use syntax_plugin_combo_brand;
-use syntax_plugin_combo_follow;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_menubar;
 
@@ -215,7 +213,7 @@ BrandTag
         if ($secondaryColor !== null) {
             $brandButton->setSecondaryColor($secondaryColor);
         }
-        $handle = $brandAttributes->getValueAndRemoveIfPresent(syntax_plugin_combo_follow::HANDLE_ATTRIBUTE);
+        $handle = $brandAttributes->getValueAndRemoveIfPresent(Tag\FollowTag::HANDLE_ATTRIBUTE);
         if ($handle !== null) {
             $brandButton->setHandle($handle);
         }

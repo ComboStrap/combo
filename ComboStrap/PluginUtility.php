@@ -263,7 +263,9 @@ class PluginUtility
             return array();
         }
 
-        // Do we have a type as first argument ?
+        /**
+         * Do we have a type as first argument ?
+         */
         $attributes = array();
         $spacePosition = strpos($match, " ");
         if ($spacePosition) {
@@ -275,22 +277,29 @@ class PluginUtility
         $isBooleanAttribute = !strpos($nextArgument, "=");
         $isType = false;
         if ($isBooleanAttribute) {
+            $possibleTypeLowercase = strtolower($nextArgument);
             if ($allowFirstBooleanAttributesAsType) {
                 $isType = true;
+                $nextArgument = $possibleTypeLowercase;
             } else {
-                if (!empty($knownTypes) && in_array($nextArgument, $knownTypes)) {
+                if (!empty($knownTypes) && in_array($possibleTypeLowercase, $knownTypes)) {
                     $isType = true;
+                    $nextArgument = $possibleTypeLowercase;
                 }
             }
         }
         if ($isType) {
 
-            $attributes["type"] = $nextArgument;
-// Suppress the type
+            $attributes[TagAttributes::TYPE_KEY] = $nextArgument;
+            /**
+             * Suppress the type
+             */
             $match = substr($match, strlen($nextArgument));
             $match = trim($match);
 
-// Do we have a value as first argument ?
+            /**
+             * Do we have a value as first argument ?
+             */
             if (!empty($hasThirdValue)) {
                 $spacePosition = strpos($match, " ");
                 if ($spacePosition) {
@@ -300,17 +309,23 @@ class PluginUtility
                 }
                 if (!strpos($nextArgument, "=") && !empty($nextArgument)) {
                     $attributes[$keyThirdArgument] = $nextArgument;
-// Suppress the third argument
+                    /**
+                     * Suppress the third argument
+                     */
                     $match = substr($match, strlen($nextArgument));
                     $match = trim($match);
                 }
             }
         }
 
-// Parse the remaining attributes
+        /**
+         * Parse the remaining attributes
+         */
         $parsedAttributes = self::parseAttributes($match);
 
-// Merge
+        /**
+         * Merge
+         */
         $attributes = array_merge($attributes, $parsedAttributes);;
 
         return $attributes;

@@ -361,4 +361,14 @@ class FileSystems
         }
 
     }
+
+    /**
+     * @throws ExceptionCompile
+     */
+    public static function createDirectoryIfNotExists(LocalPath $directoryPath)
+    {
+        if (!self::exists($directoryPath)){
+            self::createDirectory($directoryPath);
+        }
+    }
 }

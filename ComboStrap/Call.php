@@ -316,7 +316,12 @@ class Call
                 case "close":
                     return DOKU_LEXER_EXIT;
                 default:
-                    return DOKU_LEXER_UNMATCHED;
+                    /**
+                     * Let op null, is used
+                     * in {@link CallStack::processEolToEndStack()}
+                     * and things can break
+                     */
+                    return null;
             }
 
         } else {

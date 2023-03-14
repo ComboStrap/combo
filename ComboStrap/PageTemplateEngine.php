@@ -21,7 +21,7 @@ class PageTemplateEngine
 
 
     private Handlebars $handleBars;
-    private LocalPath $templateDirectory;
+    private LocalPath $templateDirectoryForJsAndCss;
 
     static public function createForTheme(string $themeName): PageTemplateEngine
     {
@@ -37,14 +37,54 @@ class PageTemplateEngine
 
 
         try {
-            $templatesDirectory = WikiPath::createComboResource(":theme:$themeName:templates")->toLocalPath();
-            $partialDirectory = WikiPath::createComboResource(":theme:$themeName:partials")->toLocalPath();
 
+            /**
+             * Default
+             */
+            $default = self::DEFAULT_THEME;
+            $templatesSearchDirectories = array(); // a list of directories where to search the template
+            $partialSearchDirectories = array(); // a list of directories where to search the partials
+            if ($themeName !== $default) {
+                $themeDirectory = $executionContext->getConfig()->getDataDirectory()->resolve("combo")->resolve("theme")->resolve($themeName);
+                $themeTemplateDirectory = $themeDirectory->resolve("templates");
+                $themePartialsDirectory = $themeDirectory->resolve("partials");
+                if (PluginUtility::isTest()) {
+                    try {
+                        FileSystems::createDirectoryIfNotExists($themeTemplateDirectory);
+                        FileSystems::createDirectoryIfNotExists($themePartialsDirectory);
+                    } catch (ExceptionCompile $e) {
+                        throw new ExceptionRuntimeInternal($e);
+                    }
+                }
+
+                if (FileSystems::exists($themeTemplateDirectory)) {
+                    $templatesSearchDirectories[] = $themeTemplateDirectory->toAbsoluteString();
+                    $themeTemplateDirectoryForJsAndCss = $themeTemplateDirectory;
+                } else {
+                    LogUtility::warning("The template theme directory ($themeDirectory) does not exists and was not taken into account");
+                }
+                if (FileSystems::exists($themePartialsDirectory)) {
+                    $partialSearchDirectories[] = $themePartialsDirectory->toAbsoluteString();
+                } else {
+                    LogUtility::warning("The partials theme directory ($themeDirectory) does not exists");
+                }
+
+            }
+
+            /**
+             * Default as last directory to search
+             */
+            $defaultTemplateDirectory = WikiPath::createComboResource(":theme:$default:templates")->toLocalPath();
+            $templatesSearchDirectories[] = $defaultTemplateDirectory->toAbsoluteString();
+            $partialSearchDirectories[] = WikiPath::createComboResource(":theme:$default:partials")->toLocalPath()->toAbsoluteString();
+            if (!isset($themeTemplateDirectoryForJsAndCss)) {
+                $themeTemplateDirectoryForJsAndCss = $defaultTemplateDirectory;
+            }
             /**
              * Handlebars Files
              */
-            $templatesLoader = new FilesystemLoader($templatesDirectory->toAbsoluteString(), ["extension" => self::EXTENSION_HBS]);
-            $partialLoader = new FilesystemLoader($partialDirectory->toAbsoluteString(), ["extension" => self::EXTENSION_HBS]);
+            $templatesLoader = new FilesystemLoader($templatesSearchDirectories, ["extension" => self::EXTENSION_HBS]);
+            $partialLoader = new FilesystemLoader($partialSearchDirectories, ["extension" => self::EXTENSION_HBS]);
             $handleBars = new Handlebars([
                 "loader" => $templatesLoader,
                 "partials_loader" => $partialLoader
@@ -58,7 +98,7 @@ class PageTemplateEngine
 
         $newPageTemplateEngine = new PageTemplateEngine();
         $newPageTemplateEngine->handleBars = $handleBars;
-        $newPageTemplateEngine->templateDirectory = $templatesDirectory;
+        $newPageTemplateEngine->templateDirectoryForJsAndCss = $themeTemplateDirectoryForJsAndCss;
         $executionContext->setRuntimeObject($handleBarsObjectId, $newPageTemplateEngine);
         return $newPageTemplateEngine;
 
@@ -122,6 +162,11 @@ class PageTemplateEngine
         );
     }
 
+    public static function createForDefaultTheme(): PageTemplateEngine
+    {
+        return self::createForTheme(self::DEFAULT_THEME);
+    }
+
 
     public function render(string $template, array $model): string
     {
@@ -133,10 +178,21 @@ class PageTemplateEngine
      */
     public function getTemplatesDirectory(): LocalPath
     {
-        if (isset($this->templateDirectory)) {
-            return $this->templateDirectory;
+        if (isset($this->templateDirectoryForJsAndCss)) {
+            return $this->templateDirectoryForJsAndCss;
         }
         throw new ExceptionNotFound("No template directory");
+
+    }
+
+    public function templateExists(string $templateName): bool
+    {
+        try {
+            $this->handleBars->getLoader()->load($templateName);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
 
     }
 

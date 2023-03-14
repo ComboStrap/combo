@@ -12,6 +12,8 @@ use ComboStrap\NoteTag;
 use ComboStrap\PermalinkTag;
 use ComboStrap\PipelineTag;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag\FollowTag;
+use ComboStrap\Tag\ShareTag;
 use ComboStrap\XmlTagProcessing;
 
 
@@ -46,6 +48,8 @@ class syntax_plugin_combo_xmlinlinetag extends DokuWiki_Syntax_Plugin
         $array[] = DateTag::TAG;
         $array[] = IconTag::TAG;
         $array[] = PipelineTag::TAG;
+        $array[] = FollowTag::MARKUP;
+        $array[] = ShareTag::MARKUP;
         return $array;
     }
 

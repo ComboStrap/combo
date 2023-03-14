@@ -466,5 +466,15 @@ class SiteConfig
         }
     }
 
+    public function getDataDirectory(): LocalPath
+    {
+        global $conf;
+        $dataDirectory = $conf['savedir'];
+        if ($dataDirectory === null) {
+            throw new ExceptionRuntime("The data directory ($dataDirectory) is null");
+        }
+        return LocalPath::createFromPathString($dataDirectory);
+    }
+
 
 }

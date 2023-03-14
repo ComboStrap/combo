@@ -5,8 +5,8 @@
 </head>
 <body class="{{body-classes}}">
 {{>page-header-partial}}
-<div id="page-core" class="{{ layout-container-class }}">
-    <main class="col-md-8 mx-auto position-relative">
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <main class="col-md-8 mx-auto">
         <header id="main-header">
             {{{ main-header-html }}}
         </header>
@@ -17,8 +17,8 @@
         <footer id="main-footer" class="d-print-none">
             {{{ main-footer-html }}}
         </footer>
-        {{>railbar-partial}}
     </main>
+    {{>railbar-partial}}
 </div>
 {{>page-footer-partial}}
 {{>body-beforeend-partial}}

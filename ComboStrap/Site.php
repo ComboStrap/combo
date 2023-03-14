@@ -594,15 +594,11 @@ class Site
 
     /**
      * @return LocalPath
+     * @deprecated
      */
     public static function getDataDirectory(): LocalPath
     {
-        global $conf;
-        $dataDirectory = $conf['savedir'];
-        if ($dataDirectory === null) {
-            throw new ExceptionRuntime("The data directory ($dataDirectory) is null");
-        }
-        return LocalPath::createFromPathString($dataDirectory);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getDataDirectory();
     }
 
     public static function isLowQualityProtectionEnable(): bool

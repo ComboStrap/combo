@@ -171,6 +171,12 @@ class PanelTag
             $callStack->insertBefore($editButtonCall);
         }
 
+        /**
+         * Add p
+         */
+        $callStack->moveToEnd();
+        $callStack->moveToPreviousCorrespondingOpeningCall();
+        $callStack->processEolToEndStack();
         return array(PluginUtility::CONTEXT => $openingTag->getContext());
     }
 

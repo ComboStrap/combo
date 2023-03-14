@@ -2119,6 +2119,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function isRootItemPage(): bool
     {
         try {
+            if($this->isIndexPage()){
+                return false;
+            }
             $parent = $this->getParent();
             if ($parent->isRootHomePage()) {
                 return true;

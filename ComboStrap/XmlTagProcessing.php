@@ -667,10 +667,6 @@ class XmlTagProcessing
                     'autocomplete' => false
                 );
                 break;
-            case BreadcrumbTag::TAG:
-                $knownTypes = BreadcrumbTag::TYPES;
-                $defaultAttributes = BreadcrumbTag::getDefaultAttributes();
-                break;
             case PageImageTag::MARKUP:
                 $knownTypes = PageImageTag::TYPES;
                 $defaultAttributes = PageImageTag::getDefaultAttributes();
@@ -689,6 +685,16 @@ class XmlTagProcessing
             case PermalinkTag::TAG:
                 $knownTypes = PermalinkTag::getKnownTypes();
                 $defaultAttributes = [TagAttributes::TYPE_KEY => PermalinkTag::GENERATED_TYPE];
+                break;
+            case BreadcrumbTag::MARKUP_BLOCK:
+                $logicalTag = BreadcrumbTag::LOGICAL_TAG;
+                $knownTypes = BreadcrumbTag::TYPES;
+                $defaultAttributes = BreadcrumbTag::getDefaultBlockAttributes();
+                break;
+            case BreadcrumbTag::MARKUP_INLINE:
+                $logicalTag = BreadcrumbTag::LOGICAL_TAG;
+                $knownTypes = BreadcrumbTag::TYPES;
+                $defaultAttributes = BreadcrumbTag::getDefaultInlineAttributes();
                 break;
         }
         $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
@@ -755,7 +761,7 @@ class XmlTagProcessing
                     case IconTag::TAG:
                         $renderer->doc .= IconTag::renderEmptyTag($tagAttributes);
                         break;
-                    case BreadcrumbTag::TAG:
+                    case BreadcrumbTag::LOGICAL_TAG:
                         $renderer->doc .= BreadcrumbTag::render($tagAttributes);
                         break;
                     case PageImageTag::MARKUP:

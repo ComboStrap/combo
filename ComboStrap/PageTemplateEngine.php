@@ -114,7 +114,7 @@ class PageTemplateEngine
             function ($template, Context $context, $args, $source) {
                 $attributes = $context->get($args);
                 $knownType = BreadcrumbTag::TYPES;
-                $default = BreadcrumbTag::getDefaultAttributes();
+                $default = BreadcrumbTag::getDefaultBlockAttributes();
                 $tagAttributes = TagAttributes::createFromTagMatch("<breadcrumb $attributes/>", $default, $knownType);
                 return BreadcrumbTag::toBreadCrumbHtml($tagAttributes);
             }

@@ -87,7 +87,7 @@ class Call
         ButtonTag::MARKUP_LONG,
         \syntax_plugin_combo_tooltip::TAG,
         PipelineTag::TAG,
-        BreadcrumbTag::TAG, // only the typo is inline but yeah
+        BreadcrumbTag::MARKUP_BLOCK, // only the typo is inline but yeah
     );
 
 

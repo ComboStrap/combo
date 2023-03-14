@@ -24,10 +24,12 @@ class BreadcrumbTag
      * for instance as sub-title
      */
     public const TYPOGRAPHY_TYPE = "typo";
-    public const TAG = "breadcrumb";
+    public const MARKUP_BLOCK = "breadcrumb";
+    public const LOGICAL_TAG = "breadcrumb";
     public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
     public const DEPTH_ATTRIBUTE = "depth";
     const TYPES = [self::TYPOGRAPHY_TYPE, self::NAVIGATION_TYPE];
+    const MARKUP_INLINE = "ibreadcrumb";
 
     /**
      * Hierarchical breadcrumbs (you are here)
@@ -48,7 +50,7 @@ class BreadcrumbTag
     {
 
         if ($tagAttributes === null) {
-            $tagAttributes = TagAttributes::createEmpty(self::TAG);
+            $tagAttributes = TagAttributes::createEmpty(self::MARKUP_BLOCK);
         }
 
 
@@ -187,8 +189,13 @@ class BreadcrumbTag
 
     }
 
-    public static function getDefaultAttributes(): array
+    public static function getDefaultBlockAttributes(): array
     {
         return [TagAttributes::TYPE_KEY => BreadcrumbTag::NAVIGATION_TYPE];
+    }
+
+    public static function getDefaultInlineAttributes(): array
+    {
+        return [TagAttributes::TYPE_KEY => BreadcrumbTag::TYPOGRAPHY_TYPE];
     }
 }

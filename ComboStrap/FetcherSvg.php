@@ -1606,7 +1606,10 @@ class FetcherSvg extends IFetcherLocalImage
             $attributes = $this->getViewBoxAttributes($viewBox);
             $viewBoxHeight = $attributes[3];
             try {
-                $this->intrinsicHeight = DataType::toInteger($viewBoxHeight);
+                /**
+                 * Ceil because we want to see a border if there is one
+                 */
+                $this->intrinsicHeight = DataType::toIntegerCeil($viewBoxHeight);
                 return $this;
             } catch (ExceptionBadArgument $e) {
                 throw new ExceptionBadSyntax("The media height ($viewBoxHeight) of the svg image ($this) is not a valid integer value");
@@ -1638,7 +1641,10 @@ class FetcherSvg extends IFetcherLocalImage
             $attributes = $this->getViewBoxAttributes($viewBox);
             $viewBoxWidth = $attributes[2];
             try {
-                $this->intrinsicWidth = DataType::toInteger($viewBoxWidth);
+                /**
+                 * Ceil because we want to see a border if there is one
+                 */
+                $this->intrinsicWidth = DataType::toIntegerCeil($viewBoxWidth);
                 return $this;
             } catch (ExceptionCompile $e) {
                 throw new ExceptionBadSyntax("The media with ($viewBoxWidth) of the svg image ($this) is not a valid integer value");

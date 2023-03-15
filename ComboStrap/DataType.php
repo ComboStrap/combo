@@ -63,6 +63,8 @@ class DataType
         DataType::BOOLEAN_TYPE_VALUE,
         DataType::INTEGER_TYPE_VALUE,
     ];
+    const FLOOR = "floor";
+    const CEIL = "ceil";
 
 
     /**
@@ -78,9 +80,10 @@ class DataType
 
     /**
      *
+     * @var string $roundDirection - ceil or floor (by default floor)
      * @throws ExceptionBadArgument
      */
-    public static function toInteger($targetValue): int
+    public static function toInteger($targetValue,string $roundDirection = self::FLOOR): int
     {
 
 
@@ -94,7 +97,12 @@ class DataType
         /**
          * Float 12.845 will return 12
          */
-        $int = intval($targetValue);
+        $float = self::toFloat($targetValue);
+        if($roundDirection===self::FLOOR) {
+            $int = floor($float);
+        } else {
+            $int = ceil($float);
+        }
         if (
             $int === 0 &&
             "$targetValue" !== "0"
@@ -102,6 +110,16 @@ class DataType
             throw new ExceptionBadArgument("The value ($targetValue) can not be cast to an integer.");
         }
         return $int;
+    }
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function toIntegerCeil($targetValue): int
+    {
+
+        return self::toInteger($targetValue, self::CEIL);
+
     }
 
     public static function toBoolean($value, $ifNull = null)

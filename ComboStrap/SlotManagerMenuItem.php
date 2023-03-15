@@ -111,9 +111,6 @@ class SlotManagerMenuItem extends AbstractItem
                 case Site::getMainHeaderSlotName():
                     $label = "Main Header";
                     break;
-                case Site::getMainSideSlotName():
-                    $label = "Main Side";
-                    break;
                 case Site::getMainFooterSlotName():
                     $label = "Main Footer";
                     break;

@@ -133,7 +133,7 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
         }
         if ($requestedWidth !== null) {
             try {
-                $requestedWidthInt = DataType::toInteger($requestedWidth);
+                $requestedWidthInt = DataType::toInteger(ConditionalLength::createFromString($requestedWidth)->toPixelNumber());
             } catch (ExceptionBadArgument $e) {
                 throw new ExceptionBadArgument("The width value ($requestedWidth) is not a valid integer", FetcherImage::CANONICAL, 0, $e);
             }

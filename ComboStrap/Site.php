@@ -840,7 +840,7 @@ class Site
     }
 
     /**
-     *
+     * @deprecated
      */
     public static function getMainSideSlotName()
     {

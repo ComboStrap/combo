@@ -39,7 +39,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
          */
         $url = UrlEndpoint::createDokuUrl();
         try {
-            $url->addQueryParameter(PageLayoutName::PROPERTY_NAME, $this->getRequestedLayout());
+            $url->addQueryParameter(TemplateName::PROPERTY_NAME, $this->getRequestedLayout());
         } catch (ExceptionNotFound $e) {
             // no requested layout
         }
@@ -63,7 +63,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
             $title = $this->getLabel();
 
             $this->pageLayout = PageTemplate::create()
-                ->setLayoutName($this->getRequestedLayoutOrDefault())
+                ->setTemplateName($this->getRequestedLayoutOrDefault())
                 ->setRequestedLang($pageLang)
                 ->setRequestedEnableTaskRunner(false) // no page id
                 ->setRequestedTitle($title)
@@ -186,9 +186,9 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
                 case ExecutionContext::SEARCH_ACTION:
                 case ExecutionContext::EDIT_ACTION:
                 case ExecutionContext::PREVIEW_ACTION:
-                    return PageLayoutName::HAMBURGER_LAYOUT_VALUE;
+                    return TemplateName::HAMBURGER_TEMPLATE_VALUE;
                 default:
-                    return PageLayoutName::MEDIAN_LAYOUT_VALUE;
+                    return TemplateName::MEDIAN_TEMPLATE_VALUE;
             }
 
         }

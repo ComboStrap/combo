@@ -43,3 +43,7 @@
 .webcode-cs .editbutton {
     display: none!important;
 }
+
+.webcode-cs {
+    margin-bottom: 1rem;
+}

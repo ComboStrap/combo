@@ -78,7 +78,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     private $lowQualityIndicatorCalculated;
 
     /**
-     * @var PageLayoutName
+     * @var TemplateName
      */
     private $layout;
     /**
@@ -1032,7 +1032,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             ResourceName::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
             Slug::PROPERTY_NAME,
-            PageLayoutName::PROPERTY_NAME,
+            TemplateName::PROPERTY_NAME,
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, // Dokuwiki id is deprecated for path
             PageLevel::PROPERTY_NAME,
             PageKeywords::PROPERTY_NAME
@@ -1637,7 +1637,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
         $this->modifiedTime = ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
-        $this->layout = PageLayoutName::createFromPage($this);
+        $this->layout = TemplateName::createFromPage($this);
 
     }
 

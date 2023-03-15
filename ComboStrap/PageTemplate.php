@@ -28,7 +28,7 @@ class PageTemplate
 
     public const PRELOAD_TAG = "preload";
 
-    private string $layoutName;
+    private string $templateName;
 
 
     private string $requestedTitle;
@@ -75,7 +75,7 @@ class PageTemplate
      */
     public function getHtmlTemplatePath(): LocalPath
     {
-        return $this->getEngine()->getTemplatesDirectory()->resolve($this->layoutName . "." . PageTemplateEngine::EXTENSION_HBS);
+        return $this->getEngine()->search($this->templateName . "." . PageTemplateEngine::EXTENSION_HBS);
     }
 
     public function setTemplateString(string $templateString): PageTemplate
@@ -170,12 +170,12 @@ class PageTemplate
 
     private function getLayoutName(): string
     {
-        if (isset($this->layoutName)) {
-            return $this->layoutName;
+        if (isset($this->templateName)) {
+            return $this->templateName;
         }
         try {
             $requestedPath = $this->getRequestedContextPath();
-            return PageLayoutName::createFromPage(MarkupPath::createPageFromPathObject($requestedPath))
+            return TemplateName::createFromPage(MarkupPath::createPageFromPathObject($requestedPath))
                 ->getValueOrDefault();
         } catch (ExceptionNotFound $e) {
             // no requested path
@@ -188,7 +188,7 @@ class PageTemplate
 
     public function __toString()
     {
-        return $this->layoutName;
+        return $this->templateName;
     }
 
     /**
@@ -196,7 +196,7 @@ class PageTemplate
      */
     public function getCssPath(): LocalPath
     {
-        return $this->getEngine()->getTemplatesDirectory()->resolve("$this->layoutName.css");
+        return $this->getEngine()->search("$this->templateName.css");
     }
 
     /**
@@ -204,7 +204,7 @@ class PageTemplate
      */
     public function getJsPath(): LocalPath
     {
-        $jsPath = $this->getEngine()->getTemplatesDirectory()->resolve("$this->layoutName.js");
+        $jsPath = $this->getEngine()->search("$this->templateName.js");
         if (!FileSystems::exists($jsPath)) {
             throw new ExceptionNotFound("No js file");
         }
@@ -897,9 +897,9 @@ EOF;
 
 
     public
-    function setLayoutName(string $layoutName): PageTemplate
+    function setTemplateName(string $templateName): PageTemplate
     {
-        $this->layoutName = $layoutName;
+        $this->templateName = $templateName;
         return $this;
     }
 
@@ -996,7 +996,7 @@ EOF;
             if (isset($this->templateDefinition)) {
                 return $this->templateDefinition;
             }
-            $file = $this->getEngine()->getTemplatesDirectory()->resolve("$this->layoutName.yml");
+            $file = $this->getEngine()->search("$this->templateName.yml");
             if (!FileSystems::exists($file)) {
                 return [];
             }
@@ -1017,5 +1017,7 @@ EOF;
         }
         return FetcherRailBar::BOTH_LAYOUT;
     }
+
+
 
 }

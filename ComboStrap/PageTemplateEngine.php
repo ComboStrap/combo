@@ -18,11 +18,14 @@ class PageTemplateEngine
     const EXTENSION_HBS = "hbs";
     const CANONICAL = "theme";
     public const CONF_THEME_DEFAULT = "default";
-    public const CONF_THEME = "combo-conf-004";
+    public const CONF_THEME = "combo-conf-005";
 
 
     private Handlebars $handleBars;
-    private LocalPath $templateDirectoryForJsAndCss;
+    /**
+     * @var LocalPath[]
+     */
+    private array $templateSearchDirectories;
 
     static public function createForTheme(string $themeName): PageTemplateEngine
     {
@@ -59,13 +62,12 @@ class PageTemplateEngine
                 }
 
                 if (FileSystems::exists($themeTemplateDirectory)) {
-                    $templatesSearchDirectories[] = $themeTemplateDirectory->toAbsoluteString();
-                    $themeTemplateDirectoryForJsAndCss = $themeTemplateDirectory;
+                    $templatesSearchDirectories[] = $themeTemplateDirectory;
                 } else {
                     LogUtility::warning("The template theme directory ($themeDirectory) does not exists and was not taken into account");
                 }
                 if (FileSystems::exists($themePartialsDirectory)) {
-                    $partialSearchDirectories[] = $themePartialsDirectory->toAbsoluteString();
+                    $partialSearchDirectories[] = $themePartialsDirectory;
                 } else {
                     LogUtility::warning("The partials theme directory ($themeDirectory) does not exists");
                 }
@@ -76,16 +78,20 @@ class PageTemplateEngine
              * Default as last directory to search
              */
             $defaultTemplateDirectory = WikiPath::createComboResource(":theme:$default:templates")->toLocalPath();
-            $templatesSearchDirectories[] = $defaultTemplateDirectory->toAbsoluteString();
-            $partialSearchDirectories[] = WikiPath::createComboResource(":theme:$default:partials")->toLocalPath()->toAbsoluteString();
-            if (!isset($themeTemplateDirectoryForJsAndCss)) {
-                $themeTemplateDirectoryForJsAndCss = $defaultTemplateDirectory;
-            }
+            $templatesSearchDirectories[] = $defaultTemplateDirectory;
+            $partialSearchDirectories[] = WikiPath::createComboResource(":theme:$default:partials")->toLocalPath();
+
             /**
              * Handlebars Files
              */
-            $templatesLoader = new FilesystemLoader($templatesSearchDirectories, ["extension" => self::EXTENSION_HBS]);
-            $partialLoader = new FilesystemLoader($partialSearchDirectories, ["extension" => self::EXTENSION_HBS]);
+            $templatesSearchDirectoriesAsStringPath = array_map(function ($element) {
+                return $element->toAbsoluteString();
+            }, $templatesSearchDirectories);
+            $partialSearchDirectoriesAsStringPath = array_map(function ($element) {
+                return $element->toAbsoluteString();
+            }, $partialSearchDirectories);
+            $templatesLoader = new FilesystemLoader($templatesSearchDirectoriesAsStringPath, ["extension" => self::EXTENSION_HBS]);
+            $partialLoader = new FilesystemLoader($partialSearchDirectoriesAsStringPath, ["extension" => self::EXTENSION_HBS]);
             $handleBars = new Handlebars([
                 "loader" => $templatesLoader,
                 "partials_loader" => $partialLoader
@@ -99,7 +105,7 @@ class PageTemplateEngine
 
         $newPageTemplateEngine = new PageTemplateEngine();
         $newPageTemplateEngine->handleBars = $handleBars;
-        $newPageTemplateEngine->templateDirectoryForJsAndCss = $themeTemplateDirectoryForJsAndCss;
+        $newPageTemplateEngine->templateSearchDirectories = $templatesSearchDirectories;
         $executionContext->setRuntimeObject($handleBarsObjectId, $newPageTemplateEngine);
         return $newPageTemplateEngine;
 
@@ -184,7 +190,7 @@ class PageTemplateEngine
             try {
                 $theme[] = $directory->getLastName();
             } catch (ExceptionNotFound $e) {
-                LogUtility::internalError("The theme home is not the root file system", self::CANONICAL,$e);
+                LogUtility::internalError("The theme home is not the root file system", self::CANONICAL, $e);
             }
         }
         return $theme;
@@ -205,12 +211,13 @@ class PageTemplateEngine
     }
 
     /**
+     * @return LocalPath[]
      * @throws ExceptionNotFound
      */
-    public function getTemplatesDirectory(): LocalPath
+    public function getTemplateSearchDirectories(): array
     {
-        if (isset($this->templateDirectoryForJsAndCss)) {
-            return $this->templateDirectoryForJsAndCss;
+        if (isset($this->templateSearchDirectories)) {
+            return $this->templateSearchDirectories;
         }
         throw new ExceptionNotFound("No template directory as this is not a file engine");
 
@@ -231,11 +238,16 @@ class PageTemplateEngine
      * Create a file template (used mostly for test purpose)
      * @param string $templateName
      * @return $this
-     * @throws ExceptionNotFound - if there is no template directory (ie string template engine)
      */
     public function createTemplate(string $templateName): PageTemplateEngine
     {
-        $templateFile = $this->getTemplatesDirectory()->resolve($templateName . "." . self::EXTENSION_HBS);
+
+        if (count($this->templateSearchDirectories) !== 2) {
+            // only one, this is the default, we need two
+            throw new ExceptionRuntimeInternal("We can create a template only in a custom theme directory");
+        }
+        $theme = $this->templateSearchDirectories[0];
+        $templateFile = $theme->resolve($templateName . "." . self::EXTENSION_HBS);
         $html = <<<EOF
 <html lang="en">
 <head><title>Title</title></head>
@@ -247,6 +259,20 @@ EOF;
 
         FileSystems::setContent($templateFile, $html);
         return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function search(string $string): LocalPath
+    {
+        foreach ($this->templateSearchDirectories as $templateSearchDirectory) {
+            $file = $templateSearchDirectory->resolve($string);
+            if (FileSystems::exists($file)) {
+                return $file;
+            }
+        }
+        throw new ExceptionNotFound("No file named $string found");
     }
 
 

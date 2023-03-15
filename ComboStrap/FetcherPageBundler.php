@@ -89,7 +89,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             throw new ExceptionRuntimeInternal("We were unable to get the start markup wiki path. Error:{$e->getMessage()}", self::CANONICAL);
         }
 
-        $layoutName = PageLayoutName::BLANK_LAYOUT;
+        $layoutName = TemplateName::BLANK_TEMPLATE_VALUE;
         try {
             $toc = Toc::createEmpty()
                 ->setValue($this->getBundledOutline()->toTocDokuwikiFormat());
@@ -99,7 +99,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         }
         try {
             return PageTemplate::create()
-                ->setLayoutName($layoutName)
+                ->setTemplateName($layoutName)
                 ->setRequestedContextPath($startMarkupWikiPath)
                 ->setRequestedTitle($title)
                 ->setRequestedLang($lang)

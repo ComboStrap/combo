@@ -26,7 +26,7 @@ class MetaManagerForm
         Canonical::PROPERTY_NAME,
         Slug::PROPERTY_NAME,
         PageUrlPath::PROPERTY_NAME,
-        PageLayoutName::PROPERTY_NAME,
+        TemplateName::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
         PageImages::PROPERTY_NAME,

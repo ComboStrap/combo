@@ -268,8 +268,8 @@ class Site
      * Set a site configuration outside a {@link ExecutionContext}
      * It permits to configure the installation before execution
      *
-     * For instance, we set the {@link PageLayoutName::CONF_DEFAULT_NAME default page layout} as {@link PageLayoutName::BLANK_LAYOUT}
-     * in test by default to speed ud test. In a normal environment, the default is {@link PageLayoutName::HOLY_LAYOUT_VALUE}
+     * For instance, we set the {@link TemplateName::CONF_DEFAULT_NAME default page layout} as {@link TemplateName::BLANK_TEMPLATE_VALUE}
+     * in test by default to speed ud test. In a normal environment, the default is {@link TemplateName::HOLY_TEMPLATE_VALUE}
      *
      * @param $key
      * @param $value

@@ -12,7 +12,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MarkupDynamicRender;
 use ComboStrap\Outline;
 use ComboStrap\MarkupPath;
-use ComboStrap\PageLayoutName;
+use ComboStrap\TemplateName;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
 use ComboStrap\Toc;

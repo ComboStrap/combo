@@ -60,7 +60,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $url = UrlEndpoint::createDokuUrl();
         $url = parent::getFetchUrl($url);
         try {
-            $url->addQueryParameter(PageLayoutName::PROPERTY_NAME, $this->getRequestedLayout());
+            $url->addQueryParameter(TemplateName::PROPERTY_NAME, $this->getRequestedLayout());
         } catch (ExceptionNotFound $e) {
             // no requested layout
         }
@@ -85,7 +85,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
-        $layout = $tagAttributes->getValueAndRemoveIfPresent(PageLayoutName::PROPERTY_NAME);
+        $layout = $tagAttributes->getValueAndRemoveIfPresent(TemplateName::PROPERTY_NAME);
         if ($layout !== null) {
             $this->setRequestedLayout($layout);
         }
@@ -210,7 +210,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
             $layoutName = $this->getRequestedLayoutOrDefault();
             $this->pageTemplate = PageTemplate::create()
-                ->setLayoutName($layoutName)
+                ->setTemplateName($layoutName)
                 ->setRequestedContextPath($this->getRequestedPath())
                 ->setRequestedLang($pageLang)
                 ->setRequestedTitle($title);
@@ -302,7 +302,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
             return $this->getRequestedLayout();
         } catch (ExceptionNotFound $e) {
-            return PageLayoutName::createFromPage($this->getRequestedPage())->getValueOrDefault();
+            return TemplateName::createFromPage($this->getRequestedPage())->getValueOrDefault();
         }
     }
 

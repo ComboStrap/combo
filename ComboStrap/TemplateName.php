@@ -4,28 +4,29 @@
 namespace ComboStrap;
 
 
-class PageLayoutName extends MetadataText
+class TemplateName extends MetadataText
 {
 
 
-    public const PROPERTY_NAME = "layout";
-    public const HOLY_LAYOUT_VALUE = "holy";
-    public const MEDIAN_LAYOUT_VALUE = "median";
-    public const LANDING_LAYOUT_VALUE = "landing";
-    public const INDEX_LAYOUT_VALUE = "index";
-    public const HAMBURGER_LAYOUT_VALUE = "hamburger";
-    public const BLANK_LAYOUT = "blank";
+    public const PROPERTY_NAME = "template";
+    public const PROPERTY_NAME_OLD = "layout";
+    public const HOLY_TEMPLATE_VALUE = "holy";
+    public const MEDIAN_TEMPLATE_VALUE = "median";
+    public const LANDING_TEMPLATE_VALUE = "landing";
+    public const INDEX_TEMPLATE_VALUE = "index";
+    public const HAMBURGER_TEMPLATE_VALUE = "hamburger";
+    public const BLANK_TEMPLATE_VALUE = "blank";
 
     /**
-     * Not public, used in test to overwrite it to {@link PageLayoutName::BLANK_LAYOUT}
+     * Not public, used in test to overwrite it to {@link TemplateName::BLANK_TEMPLATE_VALUE}
      * to speed up test
      */
     const CONF_DEFAULT_NAME = "defaultLayoutName";
     const ROOT_ITEM_LAYOUT = "root-item";
 
-    public static function createFromPage(MarkupPath $page): PageLayoutName
+    public static function createFromPage(MarkupPath $page): TemplateName
     {
-        return (new PageLayoutName())
+        return (new TemplateName())
             ->setResource($page);
     }
 
@@ -36,23 +37,23 @@ class PageLayoutName extends MetadataText
 
     public function getDescription(): string
     {
-        return "A layout chooses the layout of your page (such as the slots and placement of the main content)";
+        return "A template applies a layout on your page";
     }
 
     public function getLabel(): string
     {
-        return "Page Layout";
+        return "Template";
     }
 
     public function getPossibleValues(): ?array
     {
         return [
-            self::HOLY_LAYOUT_VALUE,
-            self::MEDIAN_LAYOUT_VALUE,
-            self::LANDING_LAYOUT_VALUE,
-            self::INDEX_LAYOUT_VALUE,
-            self::HAMBURGER_LAYOUT_VALUE,
-            self::BLANK_LAYOUT,
+            self::HOLY_TEMPLATE_VALUE,
+            self::MEDIAN_TEMPLATE_VALUE,
+            self::LANDING_TEMPLATE_VALUE,
+            self::INDEX_TEMPLATE_VALUE,
+            self::HAMBURGER_TEMPLATE_VALUE,
+            self::BLANK_TEMPLATE_VALUE,
             self::ROOT_ITEM_LAYOUT
         ];
     }
@@ -83,7 +84,7 @@ class PageLayoutName extends MetadataText
          */
         $page = $this->getResource();
         if ($page->isRootHomePage()) {
-            return self::HAMBURGER_LAYOUT_VALUE;
+            return self::HAMBURGER_TEMPLATE_VALUE;
         }
         if ($page->isRootItemPage()) {
             return self::ROOT_ITEM_LAYOUT;
@@ -94,7 +95,7 @@ class PageLayoutName extends MetadataText
                 case Site::getMainHeaderSlotName():
                 case Site::getMainFooterSlotName():
                 case Site::getMainSideSlotName():
-                    return self::MEDIAN_LAYOUT_VALUE;
+                    return self::MEDIAN_TEMPLATE_VALUE;
                 case Site::getPageHeaderSlotName():
                 case Site::getPageFooterSlotName():
                     /**
@@ -104,7 +105,7 @@ class PageLayoutName extends MetadataText
                      * They therefore should not be constrained
                      * Landing page is perfect
                      */
-                    return self::LANDING_LAYOUT_VALUE;
+                    return self::LANDING_TEMPLATE_VALUE;
             }
         } catch (ExceptionNotFound $e) {
             // No last name not installed
@@ -145,7 +146,7 @@ class PageLayoutName extends MetadataText
                     return $templateName;
                 }
             }
-            return self::INDEX_LAYOUT_VALUE;
+            return self::INDEX_TEMPLATE_VALUE;
         }
 
         /**
@@ -185,6 +186,19 @@ class PageLayoutName extends MetadataText
         }
 
 
+    }
+
+    /** @noinspection PhpMissingReturnTypeInspection */
+    public function buildFromReadStore()
+    {
+
+        $metaDataStore = $this->getReadStore();
+        $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME);
+        if($value===null){
+            $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME_OLD);
+        }
+        parent::buildFromStoreValue($value);
+        return $this;
     }
 
 

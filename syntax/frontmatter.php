@@ -54,7 +54,7 @@ use ComboStrap\PageId;
 use ComboStrap\PageImagePath;
 use ComboStrap\PageImages;
 use ComboStrap\PageKeywords;
-use ComboStrap\PageLayoutName;
+use ComboStrap\TemplateName;
 use ComboStrap\PagePath;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PageTitle;

@@ -420,11 +420,11 @@ class SiteConfig
 
     /**
      * Note: in test to speed the test execution,
-     * the default is set to {@link PageLayoutName::BLANK_LAYOUT}
+     * the default is set to {@link TemplateName::BLANK_TEMPLATE_VALUE}
      */
     public function getDefaultLayoutName()
     {
-        return $this->getValue(PageLayoutName::CONF_DEFAULT_NAME, PageLayoutName::HOLY_LAYOUT_VALUE);
+        return $this->getValue(TemplateName::CONF_DEFAULT_NAME, TemplateName::HOLY_TEMPLATE_VALUE);
     }
 
     public function setEnableThemeSystem(): SiteConfig

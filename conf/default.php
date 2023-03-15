@@ -471,3 +471,9 @@ $conf['combo-conf-002'] = 16;
  * {@link SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT}
  */
 $conf['combo-conf-003'] = 4;
+
+/**
+ * {@link \ComboStrap\PageTemplateEngine::CONF_THEME}
+ * {@link \ComboStrap\PageTemplateEngine::CONF_THEME_DEFAULT}
+ */
+$conf['combo-conf-004'] = 'default';

@@ -25,6 +25,7 @@ use ComboStrap\MediaMarkup;
 use ComboStrap\Outline;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\PageTemplateEngine;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
 use ComboStrap\Prism;
@@ -404,3 +405,9 @@ $meta[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = 
  * Rem conf
  */
 $meta[SiteConfig::REM_CONF] = array('numeric');
+
+/**
+ * Theme
+ */
+$themes = PageTemplateEngine::getThemes();
+$meta[PageTemplateEngine::CONF_THEME] = array('multichoice', '_choices' => $themes);;

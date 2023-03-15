@@ -16,8 +16,9 @@ class PageTemplateEngine
      * to have syntax highlighting in idea
      */
     const EXTENSION_HBS = "hbs";
-    const DEFAULT_THEME = "default";
-    const CANONICAL = "handlebars";
+    const CANONICAL = "theme";
+    public const CONF_THEME_DEFAULT = "default";
+    public const CONF_THEME = "combo-conf-004";
 
 
     private Handlebars $handleBars;
@@ -41,11 +42,11 @@ class PageTemplateEngine
             /**
              * Default
              */
-            $default = self::DEFAULT_THEME;
+            $default = self::CONF_THEME_DEFAULT;
             $templatesSearchDirectories = array(); // a list of directories where to search the template
             $partialSearchDirectories = array(); // a list of directories where to search the partials
             if ($themeName !== $default) {
-                $themeDirectory = $executionContext->getConfig()->getDataDirectory()->resolve("combo")->resolve("theme")->resolve($themeName);
+                $themeDirectory = self::getThemeHome()->resolve($themeName);
                 $themeTemplateDirectory = $themeDirectory->resolve("templates");
                 $themePartialsDirectory = $themeDirectory->resolve("partials");
                 if (PluginUtility::isTest()) {
@@ -164,7 +165,37 @@ class PageTemplateEngine
 
     public static function createForDefaultTheme(): PageTemplateEngine
     {
-        return self::createForTheme(self::DEFAULT_THEME);
+        return self::createForTheme(self::CONF_THEME_DEFAULT);
+    }
+
+    public static function createFromContext(): PageTemplateEngine
+    {
+        $theme = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getTheme();
+        return self::createForTheme($theme);
+    }
+
+    public static function getThemes(): array
+    {
+        $theme = [self::CONF_THEME_DEFAULT];
+        $directories = FileSystems::getChildrenContainer(self::getThemeHome());
+        foreach ($directories as $directory) {
+            try {
+                $theme[] = $directory->getLastName();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The theme home is not the root file system", self::CANONICAL,$e);
+            }
+        }
+        return $theme;
+    }
+
+    /**
+     * @return LocalPath - where the theme should be stored
+     */
+    private static function getThemeHome(): LocalPath
+    {
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getDataDirectory()->resolve("combo")->resolve("theme");
     }
 
 
@@ -181,7 +212,7 @@ class PageTemplateEngine
         if (isset($this->templateDirectoryForJsAndCss)) {
             return $this->templateDirectoryForJsAndCss;
         }
-        throw new ExceptionNotFound("No template directory");
+        throw new ExceptionNotFound("No template directory as this is not a file engine");
 
     }
 
@@ -194,6 +225,28 @@ class PageTemplateEngine
             return false;
         }
 
+    }
+
+    /**
+     * Create a file template (used mostly for test purpose)
+     * @param string $templateName
+     * @return $this
+     * @throws ExceptionNotFound - if there is no template directory (ie string template engine)
+     */
+    public function createTemplate(string $templateName): PageTemplateEngine
+    {
+        $templateFile = $this->getTemplatesDirectory()->resolve($templateName . "." . self::EXTENSION_HBS);
+        $html = <<<EOF
+<html lang="en">
+<head><title>Title</title></head>
+<body>
+<p>Test template</p>
+</body>
+</html>
+EOF;
+
+        FileSystems::setContent($templateFile, $html);
+        return $this;
     }
 
 

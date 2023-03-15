@@ -415,7 +415,7 @@ class SiteConfig
 
     public function getTheme(): string
     {
-        return PageTemplateEngine::DEFAULT_THEME;
+        return $this->getValue(PageTemplateEngine::CONF_THEME, PageTemplateEngine::CONF_THEME_DEFAULT);
     }
 
     /**
@@ -474,6 +474,12 @@ class SiteConfig
             throw new ExceptionRuntime("The data directory ($dataDirectory) is null");
         }
         return LocalPath::createFromPathString($dataDirectory);
+    }
+
+    public function setTheme(string $themeName): SiteConfig
+    {
+        $this->setConf(PageTemplateEngine::CONF_THEME, $themeName);
+        return $this;
     }
 
 

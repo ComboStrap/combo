@@ -72,6 +72,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         $linkAttributes['href'] = "#";
         $dataAttributeNamespace = Bootstrap::getDataNamespace();
         $linkAttributes["data{$dataAttributeNamespace}-toggle"] = "popover";
+        $linkAttributes["data{$dataAttributeNamespace}-placement"] = "left";
         $linkAttributes["data{$dataAttributeNamespace}-html"] = "true";
         global $lang;
         $linkAttributes["data{$dataAttributeNamespace}-title"] = $lang['breadcrumb'];

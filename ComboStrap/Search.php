@@ -53,8 +53,9 @@ EOF;
         if (sizeOf($searchTermWords) === 0) {
             return [];
         }
-        $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite === null) {
+        try {
+            $sqlite = Sqlite::createOrGetSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
             return [];
         }
         [$searchTermSql, $sqlParameters] = self::getPageRowsSql($searchTermWords, $columns);

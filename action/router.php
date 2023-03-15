@@ -345,11 +345,21 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                  * TODO: When saving for the first time, the page is not stored in the database
                  *   but that's not the case actually
                  */
-                if ($requestedMarkupPath->getDatabasePage()->exists()) {
-                    $this->executePermanentRedirect(
-                        $requestedMarkupPath->getCanonicalUrl()->toAbsoluteUrlString(),
-                        self::TARGET_ORIGIN_PERMALINK_EXTENDED
-                    );
+                $databasePageRow = $requestedMarkupPath->getDatabasePage();
+                if ($databasePageRow->exists()) {
+                    /**
+                     * A move may leave the database in a bad state,
+                     * unfortunately (ie page is not in index, unable to update, ...)
+                     * We test therefore if the database page id exists
+                     */
+                    $targetPageId = $databasePageRow->getFromRow("id");
+                    $targetPath = WikiPath::createMarkupPathFromId($targetPageId);
+                    if(FileSystems::exists($targetPath)) {
+                        $this->executePermanentRedirect(
+                            $requestedMarkupPath->getCanonicalUrl()->toAbsoluteUrlString(),
+                            self::TARGET_ORIGIN_PERMALINK_EXTENDED
+                        );
+                    }
                 }
             }
             return;

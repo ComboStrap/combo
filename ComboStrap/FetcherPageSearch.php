@@ -29,13 +29,13 @@ class FetcherPageSearch extends IFetcherAbs implements IFetcherString
     }
 
     /**
-     * @throws ExceptionNotFound
+     * @throws ExceptionNotFound|ExceptionBadArgument
      */
     public function getFetchString(): string
     {
         $requestedSearchTerms = $this->getRequestedQuery();
 
-        if (empty($requestedSearchTerms)) return "";
+        if (empty($requestedSearchTerms)) return Json::createEmpty()->toPrettyJsonString();
 
 
         /**
@@ -68,16 +68,16 @@ class FetcherPageSearch extends IFetcherAbs implements IFetcherString
         }
         $count = count($data);
         if (!$count) {
-            throw new ExceptionNotFound("No pages found");
+            return Json::createEmpty()->toPrettyJsonString();
         }
-        return json_encode($data);
+        return Json::createFromArray($data)->toPrettyJsonString();
 
     }
 
     /**
      * @throws ExceptionNotFound
      */
-    private function getRequestedQuery()
+    private function getRequestedQuery(): string
     {
         if (!isset($this->requestedSearchTerms)) {
             throw new ExceptionNotFound("No search terms were requested");

@@ -151,7 +151,6 @@ class Url extends PathAbs
                         if ($key !== "config") {
                             // dokuwiki things
                             LogUtility::warning("The key ($key) is an array of an array and was not taken into account in the request url.");
-
                         }
                         continue;
                     }

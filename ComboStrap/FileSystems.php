@@ -174,12 +174,7 @@ class FileSystems
      */
     public static function getChildrenContainer(Path $namespacePath): array
     {
-        try {
-            return self::getChildren($namespacePath, FileSystems::CONTAINER);
-        } catch (ExceptionBadArgument $e) {
-            // as we path the type, it should not happen
-            throw new ExceptionRuntime("Error getting the children. Error: {$e->getMessage()}");
-        }
+        return self::getChildren($namespacePath, FileSystems::CONTAINER);
     }
 
     /**

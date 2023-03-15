@@ -814,7 +814,7 @@ EOF;
             $htmlUrl = UrlEndpoint::createTaskRunnerUrl()
                 ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getRequestedContextPath()->getWikiId())
                 ->addQueryParameter(time())
-                ->toHtmlString();
+                ->toString();
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntimeInternal("A request path is mandatory when adding a task runner. Disable it if you don't want one in the layout ($this).");
         }

@@ -85,7 +85,7 @@ class PageLayoutName extends MetadataText
         if ($page->isRootHomePage()) {
             return self::HAMBURGER_LAYOUT_VALUE;
         }
-        if($page->isRootItemPage()){
+        if ($page->isRootItemPage()) {
             return self::ROOT_ITEM_LAYOUT;
         }
         try {
@@ -109,10 +109,54 @@ class PageLayoutName extends MetadataText
         } catch (ExceptionNotFound $e) {
             // No last name not installed
         }
+
+        /**
+         * Calculate the possible template
+         * prefix in order
+         */
+        try {
+            $parentNames = $page->getPathObject()->getParent()->getNames();
+            $templatePrefixes = [];
+            $hierarchicalName = '';
+            foreach ($parentNames as $name) {
+                if (empty($hierarchicalName)) {
+                    $hierarchicalName .= $name;
+                } else {
+                    $hierarchicalName .= "-$name";
+                }
+                $templatePrefixes[] = $name;
+                if ($hierarchicalName !== $name) {
+                    $templatePrefixes[] = $hierarchicalName;
+                }
+            }
+            $templatePrefixes = array_reverse($templatePrefixes);
+        } catch (ExceptionNotFound $e) {
+            // no parent, root
+            $templatePrefixes = [];
+        }
+
+        $pageTemplateEngine = PageTemplateEngine::createFromContext();
+
+
         if ($page->isIndexPage()) {
+            foreach ($templatePrefixes as $templatePrefix) {
+                $templateName = "$templatePrefix-index";
+                if ($pageTemplateEngine->templateExists($templateName)) {
+                    return $templateName;
+                }
+            }
             return self::INDEX_LAYOUT_VALUE;
         }
 
+        /**
+         * Item page
+         */
+        foreach ($templatePrefixes as $templatePrefix) {
+            $templateName = "$templatePrefix-item";
+            if ($pageTemplateEngine->templateExists($templateName)) {
+                return $templateName;
+            }
+        }
 
         return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getDefaultLayoutName();
 

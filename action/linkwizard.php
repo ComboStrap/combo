@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
@@ -102,7 +103,12 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         $html = "";
         $lowerSearchTerm = strtolower($searchTerm);
         foreach ($pages as $page) {
-            $id = $page->getWikiId();
+            try {
+                $id = $page->getWikiId();
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("The selection should return wiki path", self::CANONICAL, $e);
+                continue;
+            }
             $path = $page->getPathObject()->toAbsoluteString();
             /**
              * The name is the label that is put

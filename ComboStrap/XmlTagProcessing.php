@@ -815,6 +815,9 @@ class XmlTagProcessing
                     case QualityTag::MARKUP_TAG:
                         $renderer->doc .= QualityTag::renderXhtml($tagAttributes);
                         return true;
+                    case FollowTag::MARKUP:
+                        $renderer->doc .= FollowTag::renderSpecialEnterNode($tagAttributes, DOKU_LEXER_SPECIAL);
+                        return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
                 }

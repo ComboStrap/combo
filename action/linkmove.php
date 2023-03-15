@@ -36,6 +36,17 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
     const CANONICAL = "move";
     const FILE_MOVE_OPERATION = "move";
 
+    public static function isMoveOperation(): bool
+    {
+        try {
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+            $executionContext->getRuntimeObject(action_plugin_combo_linkmove::FILE_MOVE_OPERATION);
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+    }
+
     private static function checkAndSendAMessageIfLockFilePresent(): bool
     {
         $lockFile = Site::getDataDirectory()->resolve("locks_plugin_move.lock");
@@ -200,7 +211,10 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
                     ->setValue($databasePageIdValue)
                     ->persist();
             } else {
-                // should not happen in dev
+                /**
+                 * {@link helper_plugin_move_op::movePage()}
+                 * delete and save the file with log
+                 */
                 $targetPageId
                     ->setValueForce($databasePageIdValue)
                     ->persist();

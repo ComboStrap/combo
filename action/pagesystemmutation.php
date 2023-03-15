@@ -174,6 +174,12 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                  *
                  * This is mandatory to allow permanent url redirection {@link PageUrlType})
                  */
+                if (action_plugin_combo_linkmove::isMoveOperation()) {
+                    /**
+                     * Is this a creation from a move ?
+                     */
+                    return;
+                }
                 try {
                     PageId::createForPage($markup)
                         ->getValue();
@@ -185,15 +191,8 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
                 /**
                  * Is this a delete from a move ?
                  */
-                try {
-                    $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-                    $sourceId = $executionContext
-                        ->getRuntimeObject(action_plugin_combo_linkmove::FILE_MOVE_OPERATION);
-                    if (":$sourceId" === $markup->toAbsoluteString()) {
-                        return;
-                    }
-                } catch (ExceptionNotFound $e) {
-                    // not a move
+                if (action_plugin_combo_linkmove::isMoveOperation()) {
+                    return;
                 }
                 ComboFs::delete($markup);
                 return;

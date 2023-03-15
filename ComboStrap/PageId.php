@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_linkmove;
+use action_plugin_combo_pagesystemmutation;
 use Hidehalo\Nanoid\Client;
 
 
@@ -300,8 +302,13 @@ class PageId extends MetadataText
                 throw new ExceptionCompile("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId})", $this->getCanonical());
             }
         } else {
-            if (PluginUtility::isDevOrTest()) {
-                // this should never happened (exception in test/dev)
+
+            /**
+             * This should never happened (exception in test/dev)
+             * Unfortunately, it does not happen in test
+             * but in real life
+             */
+            if (!(action_plugin_combo_linkmove::isMoveOperation())) {
                 LogUtility::internalError("Forcing of the page id should not happen in dev/test", $this->getCanonical());
             }
         }

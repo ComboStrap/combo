@@ -48,6 +48,7 @@ class PageTemplate
     private string $templateString;
     private array $model;
     private bool $hadMessages = false;
+    private string $requestedTheme;
 
 
     public static function create(): PageTemplate
@@ -85,7 +86,7 @@ class PageTemplate
         return $this;
     }
 
-    public function setModel(array $model)
+    public function setModel(array $model): PageTemplate
     {
         $this->model = $model;
         return $this;
@@ -115,16 +116,27 @@ class PageTemplate
             ->setExecutingPageTemplate($this);
         try {
 
-            $model = $this->getModel();
+
             $pageTemplateEngine = $this->getEngine();
             if ($this->isTemplateStringExecutionMode()) {
-
                 $template = $this->templateString;
             } else {
-                $theme = $this->getTheme();
-                $pageTemplateEngine = PageTemplateEngine::createForTheme($theme);
-                $template = $this->getLayoutName();
+                $pageTemplateEngine = $this->getEngine();
+                $template = $this->getTemplateName();
+                if(!$pageTemplateEngine->templateExists($template)){
+                    $defaultTemplate = PageTemplateName::HOLY_TEMPLATE_VALUE;
+                    LogUtility::warning("The template ($template) was not found, the default template ($defaultTemplate) was used instead.");
+                    $template = $defaultTemplate;
+                    $this->setRequestedTemplateName($template);
+                }
             }
+
+            /**
+             * Get model should came after template validation
+             * as the template definition is named dependent
+             * (Create a builder, nom de dieu)
+             */
+            $model = $this->getModel();
 
             /**
              * Checks ???
@@ -169,7 +181,7 @@ class PageTemplate
     }
 
 
-    private function getLayoutName(): string
+    private function getTemplateName(): string
     {
         if (isset($this->templateName)) {
             return $this->templateName;
@@ -215,6 +227,12 @@ class PageTemplate
     public function hasMessages(): bool
     {
         return $this->hadMessages;
+    }
+
+    public function setRequestedTheme(string $themeName): PageTemplate
+    {
+        $this->requestedTheme = $themeName;
+        return $this;
     }
 
 
@@ -411,7 +429,7 @@ class PageTemplate
          */
         $bodyDokuwikiClass = tpl_classes();
         try {
-            $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("{$this->getTheme()}-{$this->getLayoutName()}");
+            $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("{$this->getTheme()}-{$this->getTemplateName()}");
         } catch (\Exception $e) {
             $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("template-string");
         }
@@ -754,8 +772,14 @@ class PageTemplate
             switch ($level) {
                 case "Error":
                     $class = "text-danger";
+                    $levelName = "Error";
+                    break;
+                case "Notify":
+                    $class = "text-warning";
+                    $levelName = "Warning";
                     break;
                 default:
+                    $levelName = $level;
                     $class = "text-primary";
                     break;
             }
@@ -769,7 +793,7 @@ class PageTemplate
             $toasts .= <<<EOF
 <div role="alert" aria-live="assertive" aria-atomic="true" class="toast fade" data-bs-autohide="$autoHide">
   <div class="toast-header">
-    <strong class="me-auto $class">{$level}</strong>
+    <strong class="me-auto $class">{$levelName}</strong>
     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
   </div>
   <div class="toast-body">
@@ -842,9 +866,9 @@ EOF;
     }
 
     private
-    function getTheme()
+    function getTheme(): string
     {
-        return $this->theme ?? ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getTheme();
+        return $this->requestedTheme ?? ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getTheme();
     }
 
     private
@@ -898,7 +922,7 @@ EOF;
 
 
     public
-    function setTemplateName(string $templateName): PageTemplate
+    function setRequestedTemplateName(string $templateName): PageTemplate
     {
         $this->templateName = $templateName;
         return $this;

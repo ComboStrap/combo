@@ -64,7 +64,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
             $title = $this->getLabel();
 
             $this->pageLayout = PageTemplate::create()
-                ->setTemplateName($this->getRequestedLayoutOrDefault())
+                ->setRequestedTemplateName($this->getRequestedLayoutOrDefault())
                 ->setRequestedLang($pageLang)
                 ->setRequestedEnableTaskRunner(false) // no page id
                 ->setRequestedTitle($title)

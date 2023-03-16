@@ -133,7 +133,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
         try {
             $html = PageTemplate::create()
                 ->setRequestedTitle($title)
-                ->setTemplateName(PageTemplateName::BLANK_TEMPLATE_VALUE)
+                ->setRequestedTemplateName(PageTemplateName::BLANK_TEMPLATE_VALUE)
                 ->setRequestedEnableTaskRunner(false)
                 ->setMainContent($mainContent)
                 ->render();

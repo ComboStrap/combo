@@ -126,7 +126,8 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
             $cache = $this->fetcherCache->addFileDependency($this->pageTemplate->getHtmlTemplatePath());
         } catch (ExceptionNotFound $e) {
-            throw ExceptionRuntimeInternal::withMessageAndError("The html template should be found", $e);
+            //throw ExceptionRuntimeInternal::withMessageAndError("The html template should be found", $e);
+            $cache = null;
         }
 
 
@@ -151,7 +152,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         /**
          * We store only the public pages
          */
-        if ($this->isPublicStaticPage()) {
+        if ($this->isPublicStaticPage() && $cache !== null) {
             $cache->storeCache($htmlDocumentString);
         }
 
@@ -212,7 +213,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
             $layoutName = $this->getRequestedLayoutOrDefault();
             $this->pageTemplate = PageTemplate::create()
-                ->setTemplateName($layoutName)
+                ->setRequestedTemplateName($layoutName)
                 ->setRequestedContextPath($this->getRequestedPath())
                 ->setRequestedLang($pageLang)
                 ->setRequestedTitle($title);

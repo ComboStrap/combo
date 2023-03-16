@@ -101,7 +101,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         }
         try {
             return PageTemplate::create()
-                ->setTemplateName($layoutName)
+                ->setRequestedTemplateName($layoutName)
                 ->setRequestedContextPath($startMarkupWikiPath)
                 ->setRequestedTitle($title)
                 ->setRequestedLang($lang)

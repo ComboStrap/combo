@@ -482,5 +482,10 @@ class SiteConfig
         return $this;
     }
 
+    public function getPageHeaderSlotName()
+    {
+        return $this->getValue(PageTemplateSlot::CONF_PAGE_HEADER_NAME, PageTemplateSlot::CONF_PAGE_HEADER_NAME_DEFAULT);
+    }
+
 
 }

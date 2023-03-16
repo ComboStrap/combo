@@ -833,11 +833,11 @@ class Site
     }
 
     /**
-     *
+     * @deprecated
      */
     public static function getPageHeaderSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplateSlot::CONF_PAGE_HEADER_NAME, PageTemplateSlot::CONF_PAGE_HEADER_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getPageHeaderSlotName();
     }
 
     /**

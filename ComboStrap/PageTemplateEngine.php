@@ -236,10 +236,11 @@ class PageTemplateEngine
 
     /**
      * Create a file template (used mostly for test purpose)
-     * @param string $templateName
+     * @param string $templateName - the name (without extension)
+     * @param string|null $templateContent - the content
      * @return $this
      */
-    public function createTemplate(string $templateName): PageTemplateEngine
+    public function createTemplate(string $templateName, string $templateContent = null): PageTemplateEngine
     {
 
         if (count($this->templateSearchDirectories) !== 2) {
@@ -248,16 +249,17 @@ class PageTemplateEngine
         }
         $theme = $this->templateSearchDirectories[0];
         $templateFile = $theme->resolve($templateName . "." . self::EXTENSION_HBS);
-        $html = <<<EOF
+        if ($templateContent === null) {
+            $templateContent = <<<EOF
 <html lang="en">
-<head><title>Title</title></head>
+<head><title>{{ title }}</title></head>
 <body>
 <p>Test template</p>
 </body>
 </html>
 EOF;
-
-        FileSystems::setContent($templateFile, $html);
+        }
+        FileSystems::setContent($templateFile, $templateContent);
         return $this;
     }
 

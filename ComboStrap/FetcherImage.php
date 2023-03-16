@@ -52,11 +52,35 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
         $url = parent::getFetchUrl($url);
 
         try {
+            $ratio = $this->getRequestedAspectRatio();
+            $url->addQueryParameterIfNotPresent(Dimension::RATIO_ATTRIBUTE, $ratio);
+            /**
+             * Because {@link FetcherRaster} does not create the image itself
+             * but dokuwiki does, we need to add the with and height dimension
+             * Before all other requirement ({@link FetcherImage::getTok()} uses them
+             */
+            if($this->getFetcherName()===FetcherRaster::CANONICAL) {
+                /**
+                 * We takes the target value
+                 * before setting them
+                 * otherwise it will affect the calculcation
+                 * if we set the height and then taking the target width
+                 * TODO: Create a builder ?
+                 */
+                $targetHeight = $this->getTargetHeight();
+                $targetWidth = $this->getTargetWidth();
+                $this->setRequestedWidth($targetWidth);
+                $this->setRequestedHeight($targetHeight);
+            }
+        } catch (ExceptionNotFound $e) {
+            // no width ok
+        }
+
+        try {
             $requestedWidth = $this->getRequestedWidth();
             $url->addQueryParameterIfNotPresent(Dimension::WIDTH_KEY_SHORT, $requestedWidth);
         } catch (ExceptionNotFound $e) {
             // no width ok
-            $requestedWidth = null;
         }
 
         try {
@@ -64,15 +88,8 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
             $url->addQueryParameterIfNotPresent(Dimension::HEIGHT_KEY_SHORT, $requestedHeight);
         } catch (ExceptionNotFound $e) {
             // no height ok
-            $requestedHeight = null;
         }
 
-        try {
-            $ratio = $this->getRequestedAspectRatio();
-            $url->addQueryParameterIfNotPresent(Dimension::RATIO_ATTRIBUTE, $ratio);
-        } catch (ExceptionNotFound $e) {
-            // no width ok
-        }
 
         /**
          * Dokuwiki Conformance
@@ -114,7 +131,12 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
         }
         if ($requestedWidth !== null || $requestedHeight !== null) {
 
-            $id = $this->getSourcePath()->getWikiId();
+            try {
+                $id = $this->getSourcePath()->toWikiPath()->getWikiId();
+            } catch (ExceptionCast $e) {
+                LogUtility::error("Unable to calculate the image tok. The source path is not a web/wiki path", self::CANONICAL, $e);
+                throw new ExceptionNotNeeded("No tok added, error ".$e->getMessage());
+            }
             return media_get_token($id, $requestedWidth, $requestedHeight);
 
         }

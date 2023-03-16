@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\PageTemplateName;
+
 /**
  * Bundle page from the same namespace
  * with {@link FetcherPageBundler::getBundledOutline() corrected outline}
@@ -89,7 +91,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             throw new ExceptionRuntimeInternal("We were unable to get the start markup wiki path. Error:{$e->getMessage()}", self::CANONICAL);
         }
 
-        $layoutName = TemplateName::BLANK_TEMPLATE_VALUE;
+        $layoutName = PageTemplateName::BLANK_TEMPLATE_VALUE;
         try {
             $toc = Toc::createEmpty()
                 ->setValue($this->getBundledOutline()->toTocDokuwikiFormat());

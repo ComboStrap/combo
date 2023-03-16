@@ -5,8 +5,8 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metadescription;
-use action_plugin_combo_metaprocessing;
-use dokuwiki\Extension\Event;
+use ComboStrap\Meta\PageH1;
+use ComboStrap\Meta\PageTemplateName;
 
 abstract class Metadata
 {
@@ -133,9 +133,9 @@ abstract class Metadata
             case LdJson::OLD_ORGANIZATION_PROPERTY:
             case LdJson::PROPERTY_NAME:
                 return new LdJson();
-            case TemplateName::PROPERTY_NAME:
-            case TemplateName::PROPERTY_NAME_OLD:
-                return new TemplateName();
+            case PageTemplateName::PROPERTY_NAME:
+            case PageTemplateName::PROPERTY_NAME_OLD:
+                return new PageTemplateName();
             case StartDate::PROPERTY_NAME:
                 return new StartDate();
             case EndDate::PROPERTY_NAME:
@@ -569,7 +569,7 @@ abstract class Metadata
         PagePublicationDate::PROPERTY_NAME,
         ResourceName::PROPERTY_NAME,
         LdJson::PROPERTY_NAME,
-        TemplateName::PROPERTY_NAME,
+        PageTemplateName::PROPERTY_NAME,
         StartDate::PROPERTY_NAME,
         EndDate::PROPERTY_NAME,
         PageDescription::PROPERTY_NAME,

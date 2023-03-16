@@ -22,6 +22,7 @@ use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Outline;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\PageTemplateEngine;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
@@ -310,3 +311,5 @@ $lang[SiteConfig::CONF_ENABLE_THEME_SYSTEM] = PluginUtility::getDocumentationHyp
 
 
 $lang[SiteConfig::REM_CONF] = PluginUtility::getDocumentationHyperLink(SiteConfig::REM_CANONICAL, "Responsive Font Sizes") . ' The default font size for your HTML pages';
+
+$lang[PageTemplateEngine::CONF_THEME] = PluginUtility::getDocumentationHyperLink(PageTemplateEngine::CANONICAL, "Theme") . ' Choose the theme applied to your app';

@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\PageTemplateName;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -175,7 +176,7 @@ class PageTemplate
         }
         try {
             $requestedPath = $this->getRequestedContextPath();
-            return TemplateName::createFromPage(MarkupPath::createPageFromPathObject($requestedPath))
+            return PageTemplateName::createFromPage(MarkupPath::createPageFromPathObject($requestedPath))
                 ->getValueOrDefault();
         } catch (ExceptionNotFound $e) {
             // no requested path

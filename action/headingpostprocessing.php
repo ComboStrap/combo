@@ -2,22 +2,12 @@
 
 
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\ExceptionRuntime;
-use ComboStrap\FetcherMarkup;
-use ComboStrap\FetcherPage;
-use ComboStrap\HeadingTag;
-use ComboStrap\LogUtility;
-use ComboStrap\MarkupDynamicRender;
-use ComboStrap\Outline;
-use ComboStrap\MarkupPath;
-use ComboStrap\TemplateName;
-use ComboStrap\Site;
-use ComboStrap\StringUtility;
-use ComboStrap\Toc;
-use ComboStrap\WikiPath;
 use ComboStrap\ExecutionContext;
+use ComboStrap\HeadingTag;
+use ComboStrap\MarkupPath;
+use ComboStrap\Outline;
+use ComboStrap\WikiPath;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {

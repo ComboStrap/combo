@@ -1,12 +1,10 @@
 <?php /** @noinspection SpellCheckingInspection */
 
-use ComboStrap\MarkupCacheDependencies;
-use ComboStrap\DokuwikiId;
 use ComboStrap\Event;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\MarkupCacheDependencies;
+use ComboStrap\Meta\PageH1;
 use ComboStrap\MetadataMutation;
 use ComboStrap\PageDescription;
-use ComboStrap\PageH1;
 use ComboStrap\PagePath;
 use ComboStrap\PageTitle;
 use ComboStrap\ResourceName;

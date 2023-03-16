@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\PageTemplateName;
 use Exception;
 
 class Site
@@ -268,8 +269,8 @@ class Site
      * Set a site configuration outside a {@link ExecutionContext}
      * It permits to configure the installation before execution
      *
-     * For instance, we set the {@link TemplateName::CONF_DEFAULT_NAME default page layout} as {@link TemplateName::BLANK_TEMPLATE_VALUE}
-     * in test by default to speed ud test. In a normal environment, the default is {@link TemplateName::HOLY_TEMPLATE_VALUE}
+     * For instance, we set the {@link PageTemplateName::CONF_DEFAULT_NAME default page layout} as {@link PageTemplateName::BLANK_TEMPLATE_VALUE}
+     * in test by default to speed ud test. In a normal environment, the default is {@link PageTemplateName::HOLY_TEMPLATE_VALUE}
      *
      * @param $key
      * @param $value

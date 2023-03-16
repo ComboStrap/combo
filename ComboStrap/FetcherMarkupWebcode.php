@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 use action_plugin_combo_css;
 use ComboStrap\Api\ApiRouter;
+use ComboStrap\Meta\PageTemplateName;
 
 /**
  *
@@ -132,7 +133,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
         try {
             $html = PageTemplate::create()
                 ->setRequestedTitle($title)
-                ->setTemplateName(TemplateName::BLANK_TEMPLATE_VALUE)
+                ->setTemplateName(PageTemplateName::BLANK_TEMPLATE_VALUE)
                 ->setRequestedEnableTaskRunner(false)
                 ->setMainContent($mainContent)
                 ->render();

@@ -1,10 +1,21 @@
 <?php
 
 
-namespace ComboStrap;
+namespace ComboStrap\Meta;
 
 
-class TemplateName extends MetadataText
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FileSystems;
+use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
+use ComboStrap\Metadata;
+use ComboStrap\MetadataText;
+use ComboStrap\MetaManagerForm;
+use ComboStrap\PageTemplateEngine;
+use ComboStrap\Site;
+
+class PageTemplateName extends MetadataText
 {
 
 
@@ -18,15 +29,15 @@ class TemplateName extends MetadataText
     public const BLANK_TEMPLATE_VALUE = "blank";
 
     /**
-     * Not public, used in test to overwrite it to {@link TemplateName::BLANK_TEMPLATE_VALUE}
+     * Not public, used in test to overwrite it to {@link PageTemplateName::BLANK_TEMPLATE_VALUE}
      * to speed up test
      */
     const CONF_DEFAULT_NAME = "defaultLayoutName";
     const ROOT_ITEM_LAYOUT = "root-item";
 
-    public static function createFromPage(MarkupPath $page): TemplateName
+    public static function createFromPage(MarkupPath $page): PageTemplateName
     {
-        return (new TemplateName())
+        return (new PageTemplateName())
             ->setResource($page);
     }
 
@@ -47,15 +58,24 @@ class TemplateName extends MetadataText
 
     public function getPossibleValues(): ?array
     {
-        return [
-            self::HOLY_TEMPLATE_VALUE,
-            self::MEDIAN_TEMPLATE_VALUE,
-            self::LANDING_TEMPLATE_VALUE,
-            self::INDEX_TEMPLATE_VALUE,
-            self::HAMBURGER_TEMPLATE_VALUE,
-            self::BLANK_TEMPLATE_VALUE,
-            self::ROOT_ITEM_LAYOUT
-        ];
+        try {
+            $templateNames = [];
+            $directories = PageTemplateEngine::createFromContext()
+                ->getTemplateSearchDirectories();
+            foreach ($directories as $directory) {
+                $files = FileSystems::getChildrenLeaf($directory);
+                foreach ($files as $file) {
+                    if ($file->getExtension() === PageTemplateEngine::EXTENSION_HBS) {
+                        $templateNames[] = $file->getLastNameWithoutExtension();
+                    }
+                }
+            }
+            sort($templateNames);
+            return $templateNames;
+        } catch (ExceptionNotFound $e) {
+            LogUtility::error("No template could be found", self::CANONICAL, $e);
+            return [];
+        }
     }
 
 
@@ -194,7 +214,7 @@ class TemplateName extends MetadataText
 
         $metaDataStore = $this->getReadStore();
         $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME);
-        if($value===null){
+        if ($value === null) {
             $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME_OLD);
         }
         parent::buildFromStoreValue($value);

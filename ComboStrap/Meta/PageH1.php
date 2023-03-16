@@ -1,8 +1,16 @@
 <?php
 
 
-namespace ComboStrap;
+namespace ComboStrap\Meta;
 
+
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\Metadata;
+use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\MetadataText;
+use ComboStrap\MetaManagerForm;
+use ComboStrap\PageTitle;
+use ComboStrap\ResourceName;
 
 class PageH1 extends MetadataText
 {

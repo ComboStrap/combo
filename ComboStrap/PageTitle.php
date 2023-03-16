@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metaprocessing;
+use ComboStrap\Meta\PageH1;
 
 class PageTitle extends MetadataText
 {

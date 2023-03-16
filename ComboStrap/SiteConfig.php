@@ -3,7 +3,7 @@
 namespace ComboStrap;
 
 
-use dokuwiki\Extension\Plugin;
+use ComboStrap\Meta\PageTemplateName;
 use dokuwiki\Extension\PluginTrait;
 
 class SiteConfig
@@ -420,11 +420,11 @@ class SiteConfig
 
     /**
      * Note: in test to speed the test execution,
-     * the default is set to {@link TemplateName::BLANK_TEMPLATE_VALUE}
+     * the default is set to {@link PageTemplateName::BLANK_TEMPLATE_VALUE}
      */
     public function getDefaultLayoutName()
     {
-        return $this->getValue(TemplateName::CONF_DEFAULT_NAME, TemplateName::HOLY_TEMPLATE_VALUE);
+        return $this->getValue(PageTemplateName::CONF_DEFAULT_NAME, PageTemplateName::HOLY_TEMPLATE_VALUE);
     }
 
     public function setEnableThemeSystem(): SiteConfig

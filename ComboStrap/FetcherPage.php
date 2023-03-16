@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\PageTemplateName;
+
 class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 {
 
@@ -60,7 +62,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $url = UrlEndpoint::createDokuUrl();
         $url = parent::getFetchUrl($url);
         try {
-            $url->addQueryParameter(TemplateName::PROPERTY_NAME, $this->getRequestedLayout());
+            $url->addQueryParameter(PageTemplateName::PROPERTY_NAME, $this->getRequestedLayout());
         } catch (ExceptionNotFound $e) {
             // no requested layout
         }
@@ -85,7 +87,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     {
         parent::buildFromTagAttributes($tagAttributes);
         $this->buildOriginalPathFromTagAttributes($tagAttributes);
-        $layout = $tagAttributes->getValueAndRemoveIfPresent(TemplateName::PROPERTY_NAME);
+        $layout = $tagAttributes->getValueAndRemoveIfPresent(PageTemplateName::PROPERTY_NAME);
         if ($layout !== null) {
             $this->setRequestedLayout($layout);
         }
@@ -302,7 +304,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         try {
             return $this->getRequestedLayout();
         } catch (ExceptionNotFound $e) {
-            return TemplateName::createFromPage($this->getRequestedPage())->getValueOrDefault();
+            return PageTemplateName::createFromPage($this->getRequestedPage())->getValueOrDefault();
         }
     }
 

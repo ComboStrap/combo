@@ -84,7 +84,6 @@ $meta[action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW] = array('o
 /**
  * Icon namespace where the downloaded icon are stored
  */
-require_once(__DIR__ . '/../syntax/icon.php');
 $meta[IconDownloader::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
 $meta[IconDownloader::CONF_DEFAULT_ICON_LIBRARY] = array('multichoice', '_choices' => array_keys(IconDownloader::PUBLIC_LIBRARY_ACRONYM));
 

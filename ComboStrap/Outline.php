@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\PageH1;
 use syntax_plugin_combo_header;
 use syntax_plugin_combo_headingatx;
 use syntax_plugin_combo_headingwiki;

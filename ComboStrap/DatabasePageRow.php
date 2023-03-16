@@ -3,6 +3,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\PageH1;
 use DateTime;
 use renderer_plugin_combo_analytics;
 

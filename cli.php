@@ -18,9 +18,9 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MarkupPath;
-use ComboStrap\PageH1;
+use ComboStrap\Meta\PageH1;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
 

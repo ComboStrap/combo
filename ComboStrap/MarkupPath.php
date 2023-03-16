@@ -4,6 +4,8 @@ namespace ComboStrap;
 
 
 use ComboStrap\Api\QualityMessageHandler;
+use ComboStrap\Meta\PageH1;
+use ComboStrap\Meta\PageTemplateName;
 use DateTime;
 use dokuwiki\ChangeLog\ChangeLog;
 use Exception;
@@ -78,7 +80,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     private $lowQualityIndicatorCalculated;
 
     /**
-     * @var TemplateName
+     * @var PageTemplateName
      */
     private $layout;
     /**
@@ -1032,7 +1034,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             ResourceName::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
             Slug::PROPERTY_NAME,
-            TemplateName::PROPERTY_NAME,
+            PageTemplateName::PROPERTY_NAME,
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, // Dokuwiki id is deprecated for path
             PageLevel::PROPERTY_NAME,
             PageKeywords::PROPERTY_NAME
@@ -1637,7 +1639,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
         $this->modifiedTime = ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
-        $this->layout = TemplateName::createFromPage($this);
+        $this->layout = PageTemplateName::createFromPage($this);
 
     }
 

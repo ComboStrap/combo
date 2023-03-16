@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\PageH1;
+use ComboStrap\Meta\PageTemplateName;
+
 class MetaManagerForm
 {
 
@@ -26,7 +29,7 @@ class MetaManagerForm
         Canonical::PROPERTY_NAME,
         Slug::PROPERTY_NAME,
         PageUrlPath::PROPERTY_NAME,
-        TemplateName::PROPERTY_NAME,
+        PageTemplateName::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
         PageImages::PROPERTY_NAME,

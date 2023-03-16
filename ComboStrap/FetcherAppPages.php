@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\PageTemplateName;
 use dokuwiki\ActionRouter;
 
 /**
@@ -39,7 +40,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
          */
         $url = UrlEndpoint::createDokuUrl();
         try {
-            $url->addQueryParameter(TemplateName::PROPERTY_NAME, $this->getRequestedLayout());
+            $url->addQueryParameter(PageTemplateName::PROPERTY_NAME, $this->getRequestedLayout());
         } catch (ExceptionNotFound $e) {
             // no requested layout
         }
@@ -186,9 +187,9 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
                 case ExecutionContext::SEARCH_ACTION:
                 case ExecutionContext::EDIT_ACTION:
                 case ExecutionContext::PREVIEW_ACTION:
-                    return TemplateName::HAMBURGER_TEMPLATE_VALUE;
+                    return PageTemplateName::HAMBURGER_TEMPLATE_VALUE;
                 default:
-                    return TemplateName::MEDIAN_TEMPLATE_VALUE;
+                    return PageTemplateName::MEDIAN_TEMPLATE_VALUE;
             }
 
         }

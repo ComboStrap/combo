@@ -1,29 +1,14 @@
 <?php
 
-use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
-use ComboStrap\ExecutionContext;
-use ComboStrap\FetcherCache;
 use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
-use ComboStrap\Cron;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\IFetcher;
-use ComboStrap\File;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Http;
 use ComboStrap\Identity;
-use ComboStrap\Iso8601Date;
-use ComboStrap\LogUtility;
-use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\MarkupPath;
-use ComboStrap\PageDescription;
-use ComboStrap\PageH1;
-use ComboStrap\PageTitle;
+use ComboStrap\IFetcher;
 use ComboStrap\PluginUtility;
-use ComboStrap\ResourceName;
-use ComboStrap\Site;
 use ComboStrap\SiteConfig;
-use dokuwiki\Cache\CacheRenderer;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 

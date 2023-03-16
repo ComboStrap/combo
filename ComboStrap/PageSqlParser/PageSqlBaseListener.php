@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.2
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.3
  */
 
 namespace ComboStrap\PageSqlParser;

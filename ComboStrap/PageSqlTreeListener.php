@@ -87,7 +87,7 @@ final class PageSqlTreeListener implements ParseTreeListener
      * @param PageSqlLexer $lexer
      * @param PageSqlParser $parser
      * @param string $sql
-     * @param MarkupPath $pageContext
+     * @param MarkupPath|null $pageContext
      */
     public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql, MarkupPath $pageContext = null)
     {
@@ -95,7 +95,11 @@ final class PageSqlTreeListener implements ParseTreeListener
         $this->parser = $parser;
         $this->pageSqlString = $sql;
         if ($pageContext == null) {
-            $this->requestedPage = MarkupPath::createFromRequestedPage();
+            try {
+                $this->requestedPage = MarkupPath::createFromRequestedPage();
+            } catch (ExceptionNotFound $e) {
+                throw ExceptionRuntimeInternal::withMessageAndError("The markup context path is mandatory and was not found", $e);
+            }
         } else {
             $this->requestedPage = $pageContext;
         }
@@ -183,6 +187,9 @@ final class PageSqlTreeListener implements ParseTreeListener
                     case PageSqlParser::RULE_predicates:
                         $this->physicalSql .= "{$text} ";
                 }
+                break;
+            case PageSqlParser::RANDOM:
+                $this->physicalSql .= "\trandom()";
                 break;
             case PageSqlParser::StringLiteral:
                 switch ($this->ruleState) {

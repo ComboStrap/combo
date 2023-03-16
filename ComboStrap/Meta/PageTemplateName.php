@@ -221,5 +221,19 @@ class PageTemplateName extends MetadataText
         return $this;
     }
 
+    public function sendToWriteStore(): Metadata
+    {
+
+        parent::sendToWriteStore();
+        $writeStore = $this->getWriteStore();
+        $value = $writeStore->getFromPersistentName(self::PROPERTY_NAME_OLD);
+        if ($value !== null) {
+            // delete the old value
+            $writeStore->setFromPersistentName(self::PROPERTY_NAME_OLD, null);
+        }
+
+        return $this;
+    }
+
 
 }

@@ -229,7 +229,7 @@ tables: FROM tableNames;
 */
 limit: LIMIT Number;
 
-orderBys: ORDER BY orderByDef (COMMA orderByDef)* ;
+orderBys: ORDER (RANDOM|BY orderByDef (COMMA orderByDef)*) ;
 
 orderByDef: SqlName (ASC | DESC)? ;
 

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.2
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.3
  */
 
 namespace ComboStrap\PageSqlParser {
@@ -612,7 +612,7 @@ namespace ComboStrap\PageSqlParser {
 				return;
 			}
 
-			RuntimeMetaData::checkVersion('4.9.2', RuntimeMetaData::VERSION);
+			RuntimeMetaData::checkVersion('4.9.3', RuntimeMetaData::VERSION);
 
 			$atn = (new ATNDeserializer())->deserialize(self::SERIALIZED_ATN);
 

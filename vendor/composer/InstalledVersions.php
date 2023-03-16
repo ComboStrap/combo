@@ -32,7 +32,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '7db93969e68c1dffb7de2ad7298050df787c55dc',
+    'reference' => 'e1d6dd02e975fb270ebff01372a934b172dfefbd',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -62,7 +62,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '7db93969e68c1dffb7de2ad7298050df787c55dc',
+      'reference' => 'e1d6dd02e975fb270ebff01372a934b172dfefbd',
     ),
     'dragonmantank/cron-expression' => 
     array (

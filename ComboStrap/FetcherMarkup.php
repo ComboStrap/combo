@@ -317,6 +317,26 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * the event coupled to the cache (ie PARSER_CACHE_USE)
          */
         $depends['age'] = $this->getCacheAge();
+        if ($this->isFragment()) {
+            /**
+             * Fragment may use variables of the requested page
+             * We have dependency on {@link MarkupCacheDependencies::PAGE_PRIMARY_META_DEPENDENCY}
+             * but as they may be derived such as the {@link PageTitle}
+             * comes from the H1 or the feature image comes from the first image in the section 1
+             * We can't really use this event.
+             */
+            try {
+                $depends['files'][] = FetcherMarkup::getBuilder()
+                    ->setRequestedContextPath($this->getRequestedContextPath())
+                    ->setRequestedExecutingPath($this->getRequestedContextPath())
+                    ->setRequestedMimeToMetadata()
+                    ->build()
+                    ->getMetadataPath()
+                    ->toAbsoluteString();
+            } catch (ExceptionNotExists|ExceptionNotFound $e) {
+                LogUtility::error("The metadata path should be known", self::CANONICAL, $e);
+            }
+        }
         /**
          * Edge Case
          * (as dokuwiki starts the rendering process here
@@ -341,7 +361,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         /**
          * Snippet
          */
-
         $snippets = $this->getSnippets();
         $jsonDecodeSnippets = SnippetSystem::toJsonArrayFromSlotSnippets($snippets);
 
@@ -542,7 +561,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         if (!$this->isPathExecution() || $this->mime->getExtension() === MarkupRenderer::METADATA_EXTENSION) {
             return $this;
         }
-
 
 
         /**
@@ -1203,8 +1221,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     /**
      * @throws ExceptionNotFound
      */
-    private
-    function getMetaPath(): LocalPath
+    public function getMetadataPath(): LocalPath
     {
         if (isset($this->metaPath)) {
             return $this->metaPath;
@@ -1238,7 +1255,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     function getMetaPathOrFail()
     {
         try {
-            return $this->getMetaPath();
+            return $this->getMetadataPath();
         } catch (ExceptionNotFound $e) {
             throw new ExceptionRuntime($e);
         }
@@ -1278,11 +1295,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $cache = $this->getSnippetCacheStore()->cache;
         return LocalPath::createFromPathString($cache);
 
-    }
-
-    public function getMetadataPath(): LocalPath
-    {
-        return $this->metaPath;
     }
 
 

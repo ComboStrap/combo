@@ -92,26 +92,25 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * For each processed slot in the execution, retrieve the snippets
          */
         $cacheReporters = CacheManager::getFromContextExecution()->getCacheResults();
-        if ($cacheReporters !== null) {
-            foreach ($cacheReporters as $cacheReporter) {
+        foreach ($cacheReporters as $cacheReporter) {
 
-                foreach ($cacheReporter->getResults() as $report) {
+            foreach ($cacheReporter->getResults() as $report) {
 
-                    if ($report->getMode() !== FetcherMarkup::XHTML_MODE) {
-                        continue;
-                    }
-                    $markupPath = $report->getMarkupPath();
-                    try {
-                        $fetcherMarkupForMarkup = $markupPath->createHtmlFetcherWithRequestedPathAsContextPath();
-                    } catch (ExceptionNotExists $e) {
-                        LogUtility::internalError("The executing markup path ($markupPath) should exists because it was executed.");
-                        continue;
-                    }
-                    $fetcherMarkupForMarkup->loadSnippets();
+                if ($report->getMode() !== FetcherMarkup::XHTML_MODE) {
+                    continue;
                 }
-
+                $markupPath = $report->getMarkupPath();
+                try {
+                    $fetcherMarkupForMarkup = $markupPath->createHtmlFetcherWithRequestedPathAsContextPath();
+                } catch (ExceptionNotExists $e) {
+                    LogUtility::internalError("The executing markup path ($markupPath) should exists because it was executed.");
+                    continue;
+                }
+                $fetcherMarkupForMarkup->loadSnippets();
             }
+
         }
+
 
         $snippetSystem = SnippetSystem::getFromContext();
         $snippets = $snippetSystem->getSnippets();

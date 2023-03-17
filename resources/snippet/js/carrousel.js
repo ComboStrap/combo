@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     carrousels.forEach(carrousel => {
 
         let elementMinimalWidth = carrousel.dataset.elementWidth;
-        let glideCarrousel = carrouselGlideType;
+        let carrouselType = carrouselGlideType;
         let elementChildNodes = [...carrousel.childNodes].filter(child => {
             if (child.nodeType === Node.ELEMENT_NODE) {
                 return child;
@@ -24,12 +24,13 @@ document.addEventListener('DOMContentLoaded', function () {
         let isGallery = false; // more than one element is visible
         if (elementMinimalWidth !== undefined) {
             if (childrenCount < elementsMin) {
-                glideCarrousel = carrouselGridType;
+                carrouselType = carrouselGridType;
             }
         } else {
             isGallery = true;
         }
-        switch (glideCarrousel) {
+        carrousel.classList.add(`carrousel-${carrouselType}-cs`);
+        switch (carrouselType) {
             case carrouselGridType:
                 // we can't set the height of the container to have same height component
                 // because this is a grid and in small mobile screen, the height would be double

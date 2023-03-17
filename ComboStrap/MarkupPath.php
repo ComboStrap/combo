@@ -741,7 +741,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
         try {
             $wikiPath = $this->getPathObject()->toWikiPath();
-            FetcherMarkup::getBuilder()
+            FetcherMarkup::confRoot()
                 ->setRequestedContextPath($wikiPath)
                 ->setRequestedExecutingPath($wikiPath)
                 ->setRequestedMimeToMetadata()
@@ -1900,7 +1900,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             $contextPath = ExecutionContext::getActualOrCreateFromEnv()
                 ->getDefaultContextPath();
         }
-        return FetcherMarkup::getBuilder()
+        return FetcherMarkup::confRoot()
             ->setRequestedExecutingPath($path)
             ->setRequestedContextPath($contextPath)
             ->setRequestedMimeToInstructions()
@@ -2112,9 +2112,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         $executingPath = $this->getPathObject();
-        return FetcherMarkup::getBuilder()
+        $contextPath = $executionContext->getRequestedPath();
+        return FetcherMarkup::confRoot()
             ->setRequestedMimeToXhtml()
-            ->setRequestedContextPath($executionContext->getRequestedPath())
+            ->setRequestedContextPath($contextPath)
             ->setRequestedExecutingPath($executingPath)
             ->build();
     }

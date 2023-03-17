@@ -489,7 +489,7 @@ class PageTemplate
                             $requestedContextPathForMain = $this->getRequestedContextPath();
                         }
                     }
-                    $model["main-content-html"] = FetcherMarkup::getBuilder()
+                    $model["main-content-html"] = FetcherMarkup::confRoot()
                             ->setRequestedMimeToXhtml()
                             ->setRequestedContextPath($requestedContextPathForMain)
                             ->setRequestedExecutingPath($this->getRequestedContextPath())
@@ -512,7 +512,9 @@ class PageTemplate
              */
             foreach ($this->getSlotIds() as $slotId) {
                 try {
-                    $model["$slotId-html"] = PageTemplateSlot::createFor($slotId, $this)->getMarkupFetcher()->getFetchString();
+                    $slotFetcherMarkup = PageTemplateSlot::createFor($slotId, $this)
+                        ->getMarkupFetcher();
+                    $model["$slotId-html"] = $slotFetcherMarkup->getFetchString();
                 } catch (ExceptionNotFound $e) {
                     // no slot found
                 } catch (ExceptionCompile $e) {

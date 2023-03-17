@@ -313,7 +313,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
             return $this;
         }
         try {
-            FetcherMarkup::getBuilder()
+            FetcherMarkup::confRoot()
                 ->setRequestedExecutingPath($wikiPage)
                 ->setRequestedContextPath($wikiPage)
                 ->setRequestedMimeToMetadata()

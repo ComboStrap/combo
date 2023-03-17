@@ -91,7 +91,7 @@ class CarrouselTag
         return array(PluginUtility::ATTRIBUTES => $openingCall->getAttributes());
     }
 
-    public static function renderEnterXhtml(TagAttributes $tagAttributes, array $data)
+    public static function renderEnterXhtml(TagAttributes $tagAttributes, array $data): string
     {
         /**
          * Control

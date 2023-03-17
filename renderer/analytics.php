@@ -169,7 +169,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if (!($path instanceof WikiPath)) {
             throw new ExceptionRuntimeInternal("The path ($path) is not a wiki path");
         }
-        return FetcherMarkup::getBuilder()
+        return FetcherMarkup::confRoot()
             ->setRequestedExecutingPath($path)
             ->setRequestedContextPath($path)
             ->setRequestedMime(Mime::getJson())

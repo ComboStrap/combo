@@ -117,7 +117,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
         $requestedMarkup = $this->getRequestedMarkup();
 
         try {
-            $mainContent = FetcherMarkup::getBuilder()
+            $mainContent = FetcherMarkup::confRoot()
                 ->setRequestedMarkupString($requestedMarkup)
                 ->setDeleteRootBlockElement(true)
                 ->setRequestedMimeToXhtml()

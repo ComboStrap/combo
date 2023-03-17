@@ -276,15 +276,27 @@ class Snippet implements JsonSerializable
                 /**
                  * Old way
                  * @deprecated
+                 * but still used to store the snippets
                  */
                 $wikiId = $executingFetcher->getSourcePath()->toWikiPath()->getWikiId();
                 $snippet->addSlot($wikiId);
             } catch (ExceptionCast $e) {
                 // not a wiki path
-                $wikiId = $executingFetcher->getSourcePath()->toAbsoluteString();
-                $snippet->addSlot($wikiId);
             } catch (ExceptionNotFound $e) {
-                // string/dynamic run
+                /**
+                 * String/dynamic run
+                 * (Example via an {@link \syntax_plugin_combo_iterator})
+                 * The fetcher should have then a parent
+                 */
+                try {
+                    $wikiId = $executionContext->getExecutingParentMarkupHandler()->getSourcePath()->toWikiPath()->getWikiId();
+                    $snippet->addSlot($wikiId);
+                } catch (ExceptionCast $e) {
+                    // not a wiki path
+                } catch (ExceptionNotFound $e) {
+                    // no parent found
+                }
+
             }
         } catch (ExceptionNotFound $e) {
             /**
@@ -654,7 +666,7 @@ class Snippet implements JsonSerializable
             $path = WikiPath::createFromPathObject($this->path);
             return FetcherRawLocalPath::createFromPath($path)->getFetchUrl();
         } catch (ExceptionBadArgument $e) {
-            throw new ExceptionRuntimeInternal("The local url should ne asked. use (hasLocalUrl) before calling this function", self::CANONICAL,$e);
+            throw new ExceptionRuntimeInternal("The local url should ne asked. use (hasLocalUrl) before calling this function", self::CANONICAL, $e);
         }
 
     }

@@ -393,7 +393,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         foreach ($rowsInDb as $sourceRow) {
 
                             /**
-                             * @deprecated
                              * We use id until path is full in the database
                              */
                             $id = $sourceRow["ID"];
@@ -504,7 +503,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             }
                         }
                         try {
-                            $renderDoc .= FetcherMarkup::getBuilder()
+                            $renderDoc .= FetcherMarkup::confChild()
                                 ->setBuilderRequestedInstructions($iteratorHeaderInstructions)
                                 ->setRequestedContextPath($contextPath)
                                 ->setRequestedMimeToXhtml()
@@ -512,7 +511,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                 ->build()
                                 ->getFetchString();
                         } catch (ExceptionCompile $e) {
-                            LogUtility::error("Error while rendering the iterator header. Error: {$e->getMessage()}", self::CANONICAL);
+                            LogUtility::error("Error while rendering the iterator header. Error: {$e->getMessage()}", self::CANONICAL, $e);
                             return false;
                         }
                     }
@@ -521,7 +520,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      * Template
                      */
                     try {
-                        $renderDoc .= FetcherMarkup::getBuilder()
+                        $renderDoc .= FetcherMarkup::confChild()
                             ->setBuilderRequestedInstructions($templateHeader)
                             ->setRequestedContextPath($contextPath)
                             ->setRequestedMimeToXhtml()
@@ -534,7 +533,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     }
                     foreach ($rows as $row) {
                         try {
-                            $renderDoc .= FetcherMarkup::getBuilder()
+                            $renderDoc .= FetcherMarkup::confChild()
                                 ->setBuilderRequestedInstructions($templateMain)
                                 ->setContextData($row)
                                 ->setRequestedContextPath($contextPath)
@@ -548,7 +547,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         }
                     }
                     try {
-                        $renderDoc .= FetcherMarkup::getBuilder()
+                        $renderDoc .= FetcherMarkup::confChild()
                             ->setBuilderRequestedInstructions($templateFooter)
                             ->setRequestedContextPath($contextPath)
                             ->setRequestedMimeToXhtml()
@@ -567,7 +566,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $callStackFooterInstructions = $data[self::AFTER_TEMPLATE_CALLSTACK];
                     if (!empty($callStackFooterInstructions)) {
                         try {
-                            $renderDoc .= FetcherMarkup::getBuilder()
+                            $renderDoc .= FetcherMarkup::confChild()
                                 ->setBuilderRequestedInstructions($callStackFooterInstructions)
                                 ->setRequestedContextPath($contextPath)
                                 ->setRequestedMimeToXhtml()

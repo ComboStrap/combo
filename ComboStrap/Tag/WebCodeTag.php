@@ -229,7 +229,7 @@ class WebCodeTag
                 try {
                     $contextPath = ExecutionContext::getActualOrCreateFromEnv()
                         ->getContextPath();
-                    $html .= FetcherMarkup::getBuilder()
+                    $html .= FetcherMarkup::confChild()
                         ->setRequestedMarkupString($markupCode)
                         ->setDeleteRootBlockElement(false)
                         ->setIsDocument(false)

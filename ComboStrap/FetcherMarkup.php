@@ -80,6 +80,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public CacheParser $snippetCache;
 
     /**
+     * @var FetcherMarkup - the parent (a instructions run may run inside a path run, ie {@link \syntax_plugin_combo_iterator)
+     */
+    public FetcherMarkup $parentMarkupHandler;
+
+    /**
      * @var bool threat the markup as a document (not as a fragment)
      */
     public bool $isDoc;
@@ -135,6 +140,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     private array $processedInstructions;
 
+    /**
+     * @var bool - when a execution is not a {@link self::isPathExecution()}, the snippet will not be stored automatically.
+     * To avoid this problem, a warning is send if the calling code does not set explicitly that this is specifically a
+     * standalone execution
+     */
+    public bool $isNonPathStandaloneExecution = false;
+
 
     /**
      * @param Path $executingPath - the path where we can find the markup
@@ -154,7 +166,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 $contextPath = ExecutionContext::getActualOrCreateFromEnv()->getDefaultContextPath();
             }
         }
-        return FetcherMarkup::getBuilder()
+        return FetcherMarkup::confRoot()
             ->setRequestedExecutingPath($executingPath)
             ->setRequestedContextPath($contextPath)
             ->setRequestedMimeToXhtml()
@@ -162,19 +174,33 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     }
 
 
-    public static function getBuilder(): FetcherMarkupBuilder
+    public static function confRoot(): FetcherMarkupBuilder
     {
         return new FetcherMarkupBuilder();
     }
 
     public static function createFromStringMarkupToXhtml(string $markup): FetcherMarkup
     {
-        return self::getBuilder()
+        return self::confRoot()
             ->setRequestedMarkupString($markup)
             ->setDeleteRootBlockElement(true)
             ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
             ->build();
+    }
+
+    public static function confChild(): FetcherMarkupBuilder
+    {
+        try {
+            $executing = ExecutionContext::getActualOrCreateFromEnv()->getExecutingMarkupHandler();
+        } catch (ExceptionNotFound $e) {
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::warning("A markup handler is not running, we couldn't create a child.");
+            }
+            return self::confRoot();
+        }
+        return self::confRoot()
+            ->setParentMarkupHandler($executing);
     }
 
     /**
@@ -326,7 +352,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
              * We can't really use this event.
              */
             try {
-                $depends['files'][] = FetcherMarkup::getBuilder()
+                $depends['files'][] = FetcherMarkup::confRoot()
                     ->setRequestedContextPath($this->getRequestedContextPath())
                     ->setRequestedExecutingPath($this->getRequestedContextPath())
                     ->setRequestedMimeToMetadata()
@@ -706,8 +732,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
         /**
          * Source path execution
+         * The cache path may have change due to the cache key rerouting
+         * We should there always use the {@link FetcherMarkup::getContentCachePath()}
+         * as fetch path
          */
-        $path = $this->processIfNeededAndGetFetchPath();
+        $path = $this->getContentCachePath();
         try {
             $text = FileSystems::getContent($path);
         } catch (ExceptionNotFound $e) {
@@ -862,9 +891,30 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function addSnippet(Snippet $snippet): FetcherMarkup
     {
+        /**
+         * Snippet should be added only when they can be store
+         * (ie when this is path execution)
+         * If this is not a path execution, the snippet cannot be
+         * stored in a cache and are therefore lost if not used
+         */
+
+        /**
+         * If there is a parent markup handler
+         * Store the snippets there
+         */
+        if (isset($this->parentMarkupHandler)) {
+            $this->parentMarkupHandler->addSnippet($snippet);
+            return $this;
+        }
+
+        if (!$this->isPathExecution() && !$this->isNonPathStandaloneExecution) {
+            LogUtility::warning("The execution ($this) is not a path execution. The snippet $snippet will not be preserved after initial rendering. Set the execution as standalone or set a parent markup handler.");
+        }
+
         $snippetGuid = $snippet->getPath()->toUriString();
         $this->localSnippets[$snippetGuid] = $snippet;
         return $this;
+
 
     }
 

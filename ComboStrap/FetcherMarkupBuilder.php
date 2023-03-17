@@ -34,6 +34,11 @@ class FetcherMarkupBuilder
 
     protected bool $isDoc;
     protected array $builderContextData;
+    private bool $isCodeStandAloneExecution = false;
+    /**
+     * @var FetcherMarkup - a parent if any
+     */
+    private FetcherMarkup $parentMarkupHandler;
 
 
     public function __construct()
@@ -209,7 +214,8 @@ class FetcherMarkupBuilder
             if (!empty($foundInput)) {
                 throw new ExceptionRuntimeInternal("Only one input should be given, we have found 2 inputs ($foundInput and markup string)");
             }
-            $foundInput = "markup path";
+            $foundInput = "markup string";
+
         }
         if ($this->builderRequestedInstructions !== null) {
             if (!empty($foundInput)) {
@@ -256,6 +262,11 @@ class FetcherMarkupBuilder
         if (isset($this->builderContextData)) {
             $newFetcherMarkup->contextData = $this->builderContextData;
         }
+
+        if(isset($this->parentMarkupHandler)){
+            $newFetcherMarkup->parentMarkupHandler = $this->parentMarkupHandler;
+        }
+        $newFetcherMarkup->isNonPathStandaloneExecution = $this->isCodeStandAloneExecution;
 
 
         /**
@@ -382,6 +393,20 @@ class FetcherMarkupBuilder
         return $this;
     }
 
+    /**
+     * @param bool $isStandAlone
+     * @return $this
+     *
+     * when a execution is not a {@link FetcherMarkup::isPathExecution()}, the snippet will not be stored automatically.
+     * To avoid this problem, a warning is send if the calling code does not set explicitly that this is specifically a
+     * standalone execution
+     */
+    public function setIsCodeStandAloneExecution(bool $isStandAlone): FetcherMarkupBuilder
+    {
+        $this->isCodeStandAloneExecution = $isStandAlone;
+        return $this;
+    }
+
     private function getIsDocumentExecution(): bool
     {
 
@@ -433,6 +458,12 @@ class FetcherMarkupBuilder
 
         return true;
 
+    }
+
+    public function setParentMarkupHandler(FetcherMarkup $parentMarkupHandler): FetcherMarkupBuilder
+    {
+        $this->parentMarkupHandler = $parentMarkupHandler;
+        return $this;
     }
 
 

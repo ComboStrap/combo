@@ -861,6 +861,18 @@ class ExecutionContext
     }
 
     /**
+     * @throws ExceptionNotFound - if there is no markup handler execution running
+     */
+    public function getExecutingParentMarkupHandler(): FetcherMarkup
+    {
+        $count = count($this->executingMarkupHandlerStack);
+        if ($count >= 2) {
+            return $this->executingMarkupHandlerStack[$count - 2][0];
+        }
+        throw new ExceptionNotFound("No parent markup handler running");
+    }
+
+    /**
      * This function sets the default context path.
      *
      * Mostly used in test, to determine relative path

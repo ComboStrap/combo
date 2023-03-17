@@ -886,21 +886,48 @@ class ExecutionContext
      */
     public function getContextPath(): WikiPath
     {
+
         try {
+
             /**
-             * Do we have a template page executing ?
+             * Do we a fetcher markup running ?
+             * (It's first as we may change it
+             * for a slot for instance)
              */
-            return $this->getExecutingPageTemplate()
+            return $this
+                ->getExecutingMarkupHandler()
                 ->getRequestedContextPath();
+
         } catch (ExceptionNotFound $e) {
             try {
+
                 /**
-                 * Do we a fetcher markup running ?
+                 * Do we have a template page executing ?
                  */
-                return $this
-                    ->getExecutingMarkupHandler()
+                return $this->getExecutingPageTemplate()
                     ->getRequestedContextPath();
+
             } catch (ExceptionNotFound $e) {
+
+                /**
+                 * Hack, hack, hack
+                 * In  preview mode, the context path is the last visited page
+                 * for a slot
+                 */
+                global $ACT;
+                if ($ACT === ExecutionContext::PREVIEW_ACTION) {
+                    global $ID;
+                    if (!empty($ID)) {
+                        try {
+                            $markupPath = MarkupPath::createMarkupFromId($ID);
+                            if($markupPath->isSlot()) {
+                                return SlotSystem::getContextPath()->toWikiPath();
+                            }
+                        } catch (ExceptionCast|ExceptionNotFound $e) {
+                            // ok
+                        }
+                    }
+                }
 
                 /**
                  * Nope ? This is a dokuwiki run (admin page, ...)
@@ -1068,8 +1095,6 @@ class ExecutionContext
             return false;
         }
     }
-
-
 
 
 }

@@ -101,23 +101,23 @@ class SlotManagerMenuItem extends AbstractItem
         $requestedPath = WikiPath::getContextPath();
         $url = UrlEndpoint::createComboStrapUrl()->setPath("/" . self::TAG);
         $html = "<p>Edit and/or create the <a href=\"{$url->toHtmlString()}\">slots</a> of the page</p>";
-        foreach (Site::getFragmentNames() as $secondarySlot) {
+        foreach (SlotSystem::getSlotNames() as $secondarySlot) {
 
             $label = $secondarySlot;
             switch ($secondarySlot) {
                 case Site::getSidebarName():
                     $label = "Page Sidebar";
                     break;
-                case Site::getMainHeaderSlotName():
+                case SlotSystem::getMainHeaderSlotName():
                     $label = "Main Header";
                     break;
-                case Site::getMainFooterSlotName():
+                case SlotSystem::getMainFooterSlotName():
                     $label = "Main Footer";
                     break;
-                case Site::getPageFooterSlotName():
+                case SlotSystem::getPageFooterSlotName():
                     $label = "Page Footer";
                     break;
-                case Site::getPageHeaderSlotName():
+                case SlotSystem::getPageHeaderSlotName():
                     $label = "Page Header";
                     break;
             }

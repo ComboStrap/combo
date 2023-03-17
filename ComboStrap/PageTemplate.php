@@ -123,7 +123,7 @@ class PageTemplate
             } else {
                 $pageTemplateEngine = $this->getEngine();
                 $template = $this->getTemplateName();
-                if(!$pageTemplateEngine->templateExists($template)){
+                if (!$pageTemplateEngine->templateExists($template)) {
                     $defaultTemplate = PageTemplateName::HOLY_TEMPLATE_VALUE;
                     LogUtility::warning("The template ($template) was not found, the default template ($defaultTemplate) was used instead.");
                     $template = $defaultTemplate;
@@ -478,8 +478,24 @@ class PageTemplate
                 $model["main-content-html"] = $this->mainContent;
             } else {
                 try {
-                    $model["main-content-html"] = $markupPath->createHtmlFetcherWithItselfAsContextPath()->getFetchString();
-                } catch (ExceptionCompile|ExceptionCast|ExceptionNotExists|ExceptionNotExists $e) {
+                    if (!$markupPath->isSlot()) {
+                        $requestedContextPathForMain = $this->getRequestedContextPath();
+                    } else {
+                        try {
+                            $markupContextPath = SlotSystem::getContextPath();
+                            SlotSystem::sendContextPathMessage($markupContextPath);
+                            $requestedContextPathForMain = $markupContextPath->toWikiPath();
+                        } catch (ExceptionNotFound|ExceptionCast $e) {
+                            $requestedContextPathForMain = $this->getRequestedContextPath();
+                        }
+                    }
+                    $model["main-content-html"] = FetcherMarkup::getBuilder()
+                            ->setRequestedMimeToXhtml()
+                            ->setRequestedContextPath($requestedContextPathForMain)
+                            ->setRequestedExecutingPath($this->getRequestedContextPath())
+                            ->build()
+                            ->getFetchString();
+                } catch (ExceptionCompile|ExceptionNotExists|ExceptionNotExists $e) {
                     LogUtility::error("Error while rendering the page content.", self::CANONICAL, $e);
                     $model["main-content-html"] = "An error has occured. " . $e->getMessage();
                 }
@@ -1042,7 +1058,6 @@ EOF;
         }
         return FetcherRailBar::BOTH_LAYOUT;
     }
-
 
 
 }

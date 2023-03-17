@@ -70,15 +70,15 @@ class PageTemplateSlot
     {
         switch ($slotId) {
             case self::PAGE_HEADER_ID:
-                return Site::getPageHeaderSlotName();
+                return SlotSystem::getPageHeaderSlotName();
             case self::PAGE_FOOTER_ID:
-                return Site::getPageFooterSlotName();
+                return SlotSystem::getPageFooterSlotName();
             case self::MAIN_CONTENT_ID:
                 throw new ExceptionRuntimeInternal("Main content area is not a slot and does not have any last slot name");
             case self::PAGE_SIDE_ID:
                 return Site::getSidebarName();
             case self::MAIN_SIDE_ID:
-                return Site::getMainSideSlotName();
+                return SlotSystem::getMainSideSlotName();
             case self::MAIN_HEADER_ID:
                 return "slot_main_header";
             case self::MAIN_FOOTER_ID:

@@ -14,6 +14,7 @@ use ComboStrap\MetadataText;
 use ComboStrap\MetaManagerForm;
 use ComboStrap\PageTemplateEngine;
 use ComboStrap\Site;
+use ComboStrap\SlotSystem;
 
 class PageTemplateName extends MetadataText
 {
@@ -99,10 +100,14 @@ class PageTemplateName extends MetadataText
      */
     public function getDefaultValue(): string
     {
+
         /**
          * @var MarkupPath $page
          */
         $page = $this->getResource();
+        if($page->isSlot()){
+            return self::HAMBURGER_TEMPLATE_VALUE;
+        }
         if ($page->isRootHomePage()) {
             return self::HAMBURGER_TEMPLATE_VALUE;
         }
@@ -112,12 +117,12 @@ class PageTemplateName extends MetadataText
         try {
             switch ($page->getPathObject()->getLastNameWithoutExtension()) {
                 case Site::getSidebarName():
-                case Site::getMainHeaderSlotName():
-                case Site::getMainFooterSlotName():
-                case Site::getMainSideSlotName():
+                case SlotSystem::getMainHeaderSlotName():
+                case SlotSystem::getMainFooterSlotName():
+                case SlotSystem::getMainSideSlotName():
                     return self::MEDIAN_TEMPLATE_VALUE;
-                case Site::getPageHeaderSlotName():
-                case Site::getPageFooterSlotName():
+                case SlotSystem::getPageHeaderSlotName():
+                case SlotSystem::getPageFooterSlotName():
                     /**
                      * Header and footer contains bar
                      * {@link \syntax_plugin_combo_menubar menubar} or

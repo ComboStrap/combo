@@ -210,16 +210,13 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         $pageLang = Lang::createForMarkup($this->getRequestedPage());
         $title = PageTitle::createForMarkup($this->getRequestedPage())->getValueOrDefault();
-        try {
-            $layoutName = $this->getRequestedLayoutOrDefault();
-            $this->pageTemplate = PageTemplate::create()
-                ->setRequestedTemplateName($layoutName)
-                ->setRequestedContextPath($this->getRequestedPath())
-                ->setRequestedLang($pageLang)
-                ->setRequestedTitle($title);
-        } catch (ExceptionBadSyntax|ExceptionNotFound $e) {
-            throw new ExceptionRuntimeInternal("Layout error while trying to create the page: {$e->getMessage()}", self::NAME, 1, $e);
-        }
+
+        $layoutName = $this->getRequestedTemplateOrDefault();
+        $this->pageTemplate = PageTemplate::create()
+            ->setRequestedTemplateName($layoutName)
+            ->setRequestedContextPath($this->getRequestedPath())
+            ->setRequestedLang($pageLang)
+            ->setRequestedTitle($title);
 
 
     }
@@ -300,7 +297,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             && !$this->pageTemplate->hasMessages();
     }
 
-    private function getRequestedLayoutOrDefault(): string
+    private function getRequestedTemplateOrDefault(): string
     {
         try {
             return $this->getRequestedLayout();

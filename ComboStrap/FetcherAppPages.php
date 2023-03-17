@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use ComboStrap\Meta\PageTemplateName;
+use dokuwiki\Action\Exception\FatalException;
 use dokuwiki\ActionRouter;
 
 /**
@@ -64,7 +65,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
             $title = $this->getLabel();
 
             $this->pageLayout = PageTemplate::create()
-                ->setRequestedTemplateName($this->getRequestedLayoutOrDefault())
+                ->setRequestedTemplateName($this->getRequestedTemplateOrDefault())
                 ->setRequestedLang($pageLang)
                 ->setRequestedEnableTaskRunner(false) // no page id
                 ->setRequestedTitle($title)
@@ -84,22 +85,25 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
          * Because all admin action are using the php buffer
          * We can then have an overflow
          */
-        ob_start();
         global $ACT;
+        ob_start();
         $actionName = FetcherAppPages::class . "::tpl_content_core";
         \dokuwiki\Extension\Event::createAndTrigger('TPL_ACT_RENDER', $ACT, $actionName);
         $mainHtml = ob_get_clean();
 
+
         /**
          * Add css
          */
-        global $ACT;
         switch ($ACT) {
             case ExecutionContext::PREVIEW_ACTION:
             case ExecutionContext::EDIT_ACTION:
                 ExecutionContext::getActualOrCreateFromEnv()
                     ->getSnippetSystem()
                     ->attachCssInternalStyleSheet("do-edit");
+                if ($ACT === ExecutionContext::PREVIEW_ACTION) {
+                    SlotSystem::sendContextPathMessage(SlotSystem::getContextPath());
+                }
         }
 
 
@@ -147,7 +151,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
         $router = ActionRouter::getInstance(true);
         try {
             $router->getAction()->tplContent();
-        } catch (\dokuwiki\Action\Exception\FatalException $e) {
+        } catch (FatalException $e) {
             // there was no content for the action
             msg(hsc($e->getMessage()), -1);
             return false;
@@ -177,7 +181,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
     }
 
 
-    private function getRequestedLayoutOrDefault(): string
+    private function getRequestedTemplateOrDefault(): string
     {
         try {
             return $this->getRequestedLayout();

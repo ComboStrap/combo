@@ -2,6 +2,7 @@
 
 use ComboStrap\PageTemplate;
 use ComboStrap\PluginUtility;
+use ComboStrap\SlotSystem;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
@@ -43,7 +44,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
         /**
          * Header
          */
-        $pageHeaderSlotName = Site::getPageHeaderSlotName();
+        $pageHeaderSlotName = SlotSystem::getPageHeaderSlotName();
         $toQualifiedId = $page->getPathObject()->toAbsoluteString();
         if ($toQualifiedId === ":$pageHeaderSlotName") {
             $pageHeaderPath = PageTemplateSlot::getDefaultElementContentPath(PageTemplateSlot::PAGE_HEADER_ID);
@@ -62,7 +63,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
          * Footer
          */
 
-        $pageFooterSlotName = Site::getPageFooterSlotName();
+        $pageFooterSlotName = SlotSystem::getPageFooterSlotName();
         if ($toQualifiedId === ":$pageFooterSlotName") {
             $pageFooterPath = PageTemplateSlot::getDefaultElementContentPath(PageTemplateSlot::PAGE_FOOTER_ID);
             try {

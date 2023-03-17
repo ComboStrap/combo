@@ -413,7 +413,7 @@ class FetcherMarkupBuilder
              * but are not a document
              */
             $executingWikiPath = $this->builderMarkupSourcePath->toWikiPath();
-            $isFragmentMarkup = MarkupPath::createPageFromPathObject($executingWikiPath)->isKnownFragmentMarkup();
+            $isFragmentMarkup = MarkupPath::createPageFromPathObject($executingWikiPath)->isSlot();
             if ($isFragmentMarkup) {
                 return false;
             }

@@ -587,7 +587,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         } else {
             $quality["message"] = "No mandatory rules broken";
         }
-        if ($this->page->isKnownFragmentMarkup()) {
+        if ($this->page->isSlot()) {
             $lowLevel = false;
         }
         try {

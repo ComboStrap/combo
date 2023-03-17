@@ -32,5 +32,11 @@ class ExceptionCompile  extends \Exception
         return $this->canonical;
     }
 
+    public static function withMessageAndError(string $message, Throwable $previous)
+    {
+        $calledClass = get_called_class();
+        return new $calledClass($message, "support", 1, $previous);
+    }
+
 
 }

@@ -54,24 +54,6 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
         try {
             $ratio = $this->getRequestedAspectRatio();
             $url->addQueryParameterIfNotPresent(Dimension::RATIO_ATTRIBUTE, $ratio);
-            /**
-             * Because {@link FetcherRaster} does not create the image itself
-             * but dokuwiki does, we need to add the with and height dimension
-             * Before all other requirement ({@link FetcherImage::getTok()} uses them
-             */
-            if($this->getFetcherName()===FetcherRaster::CANONICAL) {
-                /**
-                 * We takes the target value
-                 * before setting them
-                 * otherwise it will affect the calculcation
-                 * if we set the height and then taking the target width
-                 * TODO: Create a builder ?
-                 */
-                $targetHeight = $this->getTargetHeight();
-                $targetWidth = $this->getTargetWidth();
-                $this->setRequestedWidth($targetWidth);
-                $this->setRequestedHeight($targetHeight);
-            }
         } catch (ExceptionNotFound $e) {
             // no width ok
         }

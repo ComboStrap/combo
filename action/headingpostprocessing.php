@@ -89,7 +89,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $executingPath = null;
             try {
                 $executingId = $executionContext->getExecutingWikiId();
-                $isFragment = MarkupPath::createPageFromPathObject($requestedPath)->isKnownFragmentMarkup();
+                $isFragment = MarkupPath::createPageFromPathObject($requestedPath)->isSlot();
                 if ($isFragment === false) {
                     if ($executingId !== $requestedPath->getWikiId()) {
                         $isFragment = true;

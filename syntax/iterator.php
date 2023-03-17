@@ -327,6 +327,8 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         return false;
                     }
 
+                    $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
                     /**
                      * Create the SQL
                      */
@@ -336,7 +338,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         if ($path !== null) {
                             $contextualPage = MarkupPath::createPageFromQualifiedId($path);
                         } else {
-                            $contextualPage = MarkupPath::createFromRequestedPage();
+                            $contextualPage = MarkupPath::createPageFromPathObject($executionContext->getContextPath());
                         }
                         $pageSql = PageSql::create($pageSql, $contextualPage);
                     } catch (Exception $e) {
@@ -345,8 +347,9 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     }
 
                     $table = $pageSql->getTable();
+
                     try {
-                        $cacheDependencies = ExecutionContext::getActualOrCreateFromEnv()
+                        $cacheDependencies = $executionContext
                             ->getExecutingMarkupHandler()
                             ->getOutputCacheDependencies();
 
@@ -471,7 +474,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         $templateFooter = $actualStack;
                     }
 
-                    $contextPath = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+                    $contextPath = $executionContext->getContextPath();
 
                     /**
                      * Rendering

@@ -119,6 +119,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
 
         $linkAttributes["data{$dataAttributeNamespace}-custom-class"] = "historical-breadcrumb";
         return $linkAttributes;
+
     }
 
     public function getTitle(): string

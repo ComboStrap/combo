@@ -24,7 +24,7 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
-     * TODO: Duplicate of {@link MarkupPath::isKnownFragmentMarkup()}
+     * TODO: Duplicate of {@link MarkupPath::isSlot()} ?
      */
     public static function isSideBar(): bool
     {

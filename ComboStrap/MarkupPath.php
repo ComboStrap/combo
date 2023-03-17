@@ -191,6 +191,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return self::createPageFromPathObject($wikiPath);
     }
 
+
+
     public static function createMarkupFromId($id): MarkupPath
     {
         return new MarkupPath(WikiPath::createMarkupPathFromId($id));
@@ -264,9 +266,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     /**
      * @return bool true if this is a fragment markup
      */
-    public function isKnownFragmentMarkup(): bool
+    public function isSlot(): bool
     {
-        $slotNames = Site::getFragmentNames();
+        $slotNames = SlotSystem::getSlotNames();
         try {
             $name = $this->getPathObject()->getLastNameWithoutExtension();
         } catch (ExceptionNotFound $e) {
@@ -282,8 +284,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function isSideSlot(): bool
     {
         $slotNames = Site::getSidebarName();
-        $name = $this->getPathObject()->getLastNameWithoutExtension();
-        if ($name === null) {
+        try {
+            $name = $this->getPathObject()->getLastNameWithoutExtension();
+        } catch (ExceptionNotFound $e) {
             // root case
             return false;
         }
@@ -296,16 +299,14 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function isMainHeaderFooterSlot(): bool
     {
 
+        $slotNames = [SlotSystem::getMainHeaderSlotName(), SlotSystem::getMainFooterSlotName()];
         try {
-            $slotNames = [Site::getMainHeaderSlotName(), Site::getMainFooterSlotName()];
-        } catch (ExceptionCompile $e) {
-            return false;
-        }
-        $name = $this->getPathObject()->getLastNameWithoutExtension();
-        if ($name === null) {
+            $name = $this->getPathObject()->getLastNameWithoutExtension();
+        } catch (ExceptionNotFound $e) {
             // root case
             return false;
         }
+
         return in_array($name, $slotNames, true);
     }
 
@@ -2000,7 +2001,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
          * Only primary slot have a side slot
          * Root Home page does not have one either
          */
-        if ($this->isKnownFragmentMarkup() || $this->isRootHomePage()) {
+        if ($this->isSlot() || $this->isRootHomePage()) {
             return null;
         }
 
@@ -2055,7 +2056,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     public function getPrimaryHeaderPage(): ?MarkupPath
     {
-        $nearest = page_findnearest(Site::getMainHeaderSlotName());
+        $nearest = page_findnearest(SlotSystem::getMainHeaderSlotName());
         if ($nearest === false) {
             return null;
         }
@@ -2121,7 +2122,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function isRootItemPage(): bool
     {
         try {
-            if($this->isIndexPage()){
+            if ($this->isIndexPage()) {
                 return false;
             }
             $parent = $this->getParent();
@@ -2136,7 +2137,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     private function getPrimaryFooterPage(): ?MarkupPath
     {
-        $nearest = page_findnearest(Site::getMainFooterSlotName());
+        $nearest = page_findnearest(SlotSystem::getMainFooterSlotName());
         if ($nearest === false) {
             return null;
         }

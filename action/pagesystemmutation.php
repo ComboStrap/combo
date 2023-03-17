@@ -14,6 +14,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\PageId;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
+use ComboStrap\SlotSystem;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -74,7 +75,7 @@ class action_plugin_combo_pagesystemmutation extends DokuWiki_Action_Plugin
         /**
          * Modification to the secondary slot are not processed
          */
-        if (in_array($pageName, Site::getFragmentNames())) return;
+        if (in_array($pageName, SlotSystem::getSlotNames())) return;
 
 
         /**

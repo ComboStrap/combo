@@ -4,6 +4,7 @@
 use ComboStrap\ExceptionCompile;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SlotSystem;
 use ComboStrap\TplUtility;
 
 /**
@@ -35,11 +36,11 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
          * Caching the slot and private namespace
          */
         $pattern = "(" . Site::getSidebarName() . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
-        $pattern .= "|" . Site::getPageHeaderSlotName();
-        $pattern .= "|" . Site::getPageFooterSlotName();
-        $pattern .= "|" . Site::getMainSideSlotName();
-        $pattern .= "|" . Site::getMainFooterSlotName();
-        $pattern .= "|" . Site::getMainHeaderSlotName();
+        $pattern .= "|" . SlotSystem::getPageHeaderSlotName();
+        $pattern .= "|" . SlotSystem::getPageFooterSlotName();
+        $pattern .= "|" . SlotSystem::getMainSideSlotName();
+        $pattern .= "|" . SlotSystem::getMainFooterSlotName();
+        $pattern .= "|" . SlotSystem::getMainHeaderSlotName();
         $pattern .= ")";
         if (preg_match('/' . $pattern . '/ui', ':' . $event->data['id'])) {
             $event->data['hidden'] = true;

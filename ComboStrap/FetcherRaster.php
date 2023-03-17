@@ -85,13 +85,37 @@ class FetcherRaster extends IFetcherLocalImage
 
     public function getFetchUrl(Url $url = null): Url
     {
+        /**
+         *
+         * Because {@link FetcherRaster} does not create the image itself
+         * but dokuwiki does, we need to add the with and height dimension
+         * if the ratio is asked
+         *
+         * Before all other parent requirement such as
+         * ({@link FetcherImage::getTok()} uses them
+         *
+         * Note that we takes the target value
+         * before setting them otherwise it will affect the calculcation
+         * ie if we set the height and then calculatiing the target width, we will get
+         * a mini difference
+         *
+         */
+        try {
+            $this->getRequestedAspectRatio();
+            $targetHeight = $this->getTargetHeight();
+            $targetWidth = $this->getTargetWidth();
+            $this->setRequestedWidth($targetWidth);
+            $this->setRequestedHeight($targetHeight);
+        } catch (ExceptionNotFound $e) {
+            //
+        }
 
         $url = parent::getFetchUrl($url);
 
         /**
          * Trait
          */
-        $this->addLocalPathParametersToFetchUrl($url,self::$MEDIA_QUERY_PARAMETER);
+        $this->addLocalPathParametersToFetchUrl($url, self::$MEDIA_QUERY_PARAMETER);
 
         return $url;
     }
@@ -170,7 +194,7 @@ class FetcherRaster extends IFetcherLocalImage
                 // There is a bug in the wiki syntax page
                 // {{wiki:dokuwiki-128.png?200x50}}
                 // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
-                LogUtility::warning("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)",  self::CANONICAL);
+                LogUtility::warning("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", self::CANONICAL);
             }
             return $mediaWidth;
         }

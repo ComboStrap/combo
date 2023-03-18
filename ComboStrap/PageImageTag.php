@@ -15,7 +15,7 @@ class PageImageTag
     public const MARKUP = "page-image";
     public const LOGO_TYPE = "logo";
     public const DEFAULT_ORDER = [
-        PageImageTag::META_TYPE,
+        PageImageTag::FEATURED,
         PageImageTag::FIRST_TYPE,
         PageImageTag::ANCESTOR_TYPE,
         PageImageTag::VIGNETTE_TYPE,
@@ -24,18 +24,19 @@ class PageImageTag
     public const ORDER_OF_PREFERENCE = "order";
     public const ANCESTOR_TYPE = "ancestor";
     public const TAG = "pageimage";
-    public const META_TYPE = "meta";
+    public const FEATURED = "featured";
     public const NONE_TYPE = "none";
     public const FIRST_TYPE = "first";
 
     public const TYPES = [
-        PageImageTag::META_TYPE,
+        PageImageTag::FEATURED,
         PageImageTag::FIRST_TYPE,
         PageImageTag::VIGNETTE_TYPE,
         PageImageTag::ANCESTOR_TYPE,
         PageImageTag::LOGO_TYPE
     ];
     const PATH_ATTRIBUTE = "path";
+    const FEATURED_TYPE = "featured";
 
 
     /**
@@ -51,7 +52,7 @@ class PageImageTag
         /**
          * Page Image Order Calculation
          */
-        $type = $tagAttributes->getComponentAttributeValue(TagAttributes::TYPE_KEY, PageImageTag::META_TYPE);
+        $type = $tagAttributes->getComponentAttributeValue(TagAttributes::TYPE_KEY, PageImageTag::FEATURED);
         // the type is first
         $orderOfPreference[] = $type;
         // then the default one
@@ -103,7 +104,7 @@ class PageImageTag
         $imageFetcher = null;
         foreach ($order as $pageImageProcessing) {
             switch ($pageImageProcessing) {
-                case PageImageTag::META_TYPE:
+                case PageImageTag::FEATURED:
                     try {
                         $imageFetcher = self::selectAndGetBestMetadataPageImageFetcherForRatio($contextPage, $tagAttributes);
                     } catch (ExceptionNotFound $e) {

@@ -11,6 +11,9 @@ class SlotSystem
      * A slot should never run in its own path as context path
      * This function returns the context path in which see should run
      * (ie the last visited path)
+     *
+     * This context path is given globally via the {@link ExecutionContext::getContextPath()}
+     * when the {@link MarkupPath::isSlot() page is a slot}
      * @throws ExceptionNotFound
      */
     public static function getContextPath(): MarkupPath

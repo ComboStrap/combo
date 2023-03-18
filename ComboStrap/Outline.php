@@ -77,12 +77,20 @@ class Outline
     private Call $actualHeadingCall; // the heading that is parsed
     private int $actualHeadingParsingState = DOKU_LEXER_EXIT;  // the state of the heading parsed (enter, closed), enter if we have entered an heading, exit if not;
     private ?MarkupPath $markupPath = null;
+    private bool $isFragment;
 
-    public function __construct(CallStack $callStack, MarkupPath $markup = null)
+    /**
+     * @param CallStack $callStack
+     * @param MarkupPath|null $markup - needed to store the parsed toc, h1, ... (null if the markup is dynamic)
+     * @param bool $isFragment - needed to control the structure of the outline (if this is a preview, the first heading may be not h1)
+     * @return void
+     */
+    public function __construct(CallStack $callStack, MarkupPath $markup = null, bool $isFragment = false)
     {
         if ($markup !== null) {
             $this->markupPath = $markup;
         }
+        $this->isFragment = $isFragment;
         $this->buildOutline($callStack);
         $this->storeH1();
         $this->storeTocForMarkupIfAny();
@@ -91,11 +99,12 @@ class Outline
     /**
      * @param CallStack $callStack
      * @param MarkupPath|null $markupPath - needed to store the parsed toc, h1, ... (null if the markup is dynamic)
+     * @param bool $isFragment - needed to control the structure of the outline (if this is a preview, the first heading may be not h1)
      * @return Outline
      */
-    public static function createFromCallStack(CallStack $callStack, MarkupPath $markupPath = null): Outline
+    public static function createFromCallStack(CallStack $callStack, MarkupPath $markupPath = null, bool $isFragment = false): Outline
     {
-        return new Outline($callStack, $markupPath);
+        return new Outline($callStack, $markupPath, $isFragment);
     }
 
     private function buildOutline(CallStack $callStack)
@@ -203,11 +212,19 @@ class Outline
                     if ($sectionDiff > 1 & !($actualSectionLevel === 0 && $newSectionLevel === 2)) {
                         $expectedLevel = $actualSectionLevel + 1;
                         if ($actualSectionLevel === 0) {
-                            $message = "The first section heading should have the level 1 or 2 (not $newSectionLevel).";
+                            /**
+                             * In a fragment run (preview),
+                             * the first heading may not be the first one
+                             */
+                            if(!$this->isFragment) {
+                                $message = "The first section heading should have the level 1 or 2 (not $newSectionLevel).";
+                            }
                         } else {
                             $message = "The child section heading ($actualSectionLevel) has the level ($newSectionLevel) but is parent ({$this->actualSection->getLabel()}) has the level ($actualSectionLevel). The expected level is ($expectedLevel).";
                         }
-                        LogUtility::warning($message, self::CANONICAL);
+                        if(isset($message)) {
+                            LogUtility::warning($message, self::CANONICAL);
+                        }
                         $actualCall->setAttribute(HeadingTag::LEVEL, $newSectionLevel);
                     }
 

@@ -101,7 +101,9 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
                 ExecutionContext::getActualOrCreateFromEnv()
                     ->getSnippetSystem()
                     ->attachCssInternalStyleSheet("do-edit");
-                if ($ACT === ExecutionContext::PREVIEW_ACTION) {
+
+                $markupPath = MarkupPath::createPageFromPathObject($this->getSourcePath());
+                if ($ACT === ExecutionContext::PREVIEW_ACTION && $markupPath->isSlot()) {
                     SlotSystem::sendContextPathMessage(SlotSystem::getContextPath());
                 }
         }

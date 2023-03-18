@@ -18,7 +18,28 @@ class PipelineTag
         $openingCall = $callstack->moveToPreviousCorrespondingOpeningCall();
         $script = "";
         while ($actual = $callstack->next()) {
-            $script .= $actual->getCapturedContent();
+            /**
+             * Pipeline is the only inline tag that
+             * should be protected
+             * As it's deprecated we don't create a special
+             * syntax plugin for it
+             * We just do this hack where we capture the double quote opening
+             */
+            $actualName = $actual->getTagName();
+            switch ($actualName) {
+                case "doublequoteopening":
+                case "doublequoteclosing":
+                    $script .= '"';
+                    continue 2;
+                case "xmlinlinetag":
+                    $script .= $actual->getCapturedContent();
+                    continue 2;
+                default:
+                    LogUtility::warning("The content tag with the name ($actualName) is unknown, the captured content may be not good.",self::CANONICAL);
+                    $script .= $actual->getCapturedContent();
+
+            }
+
         }
         $openingCall->addAttribute(PluginUtility::PAYLOAD, $script);
         $callstack->deleteAllCallsAfter($openingCall);

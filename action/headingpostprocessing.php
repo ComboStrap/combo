@@ -85,15 +85,25 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
              * {@link action_plugin_combo_docustom}
              */
             $requestedPath = $executionContext->getRequestedPath();
-            $isFragment = true;
             $executingPath = null;
+            $isFragment = true;
             try {
                 $executingId = $executionContext->getExecutingWikiId();
-                $isFragment = MarkupPath::createPageFromPathObject($requestedPath)->isSlot();
-                if ($isFragment === false) {
-                    if ($executingId !== $requestedPath->getWikiId()) {
-                        $isFragment = true;
+
+                /**
+                 * In preview mode, this is always a `fragment run`
+                 * (otherwise we get warning on the outline because
+                 * the heading should start with heading 1 or 2, not 3)
+                 */
+                if ($executionContext->getExecutingAction() !== ExecutionContext::PREVIEW_ACTION) {
+
+                    $isSlot = MarkupPath::createPageFromPathObject($requestedPath)->isSlot();
+                    if ($isSlot === false) {
+                        if ($executingId === $requestedPath->getWikiId()) {
+                            $isFragment = false;
+                        }
                     }
+
                 }
                 $executingPath = WikiPath::createMarkupPathFromId($executingId);
             } catch (ExceptionNotFound $e) {
@@ -108,7 +118,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $callStack = CallStack::createFromHandler($handler);
             // no outline or edit button for dynamic rendering
             // but closing of atx heading
-            $handler->calls = Outline::createFromCallStack($callStack)
+            $handler->calls = Outline::createFromCallStack($callStack, null, $isFragment)
                 ->toFragmentInstructionCalls();
             return;
         }
@@ -123,7 +133,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         } else {
             $executingMarkupPath = null;
         }
-        $outline = Outline::createFromCallStack($callStack, $executingMarkupPath);
+        $outline = Outline::createFromCallStack($callStack, $executingMarkupPath, $isFragment);
         if (!$executionContext->getConfig()->isThemeSystemEnabled()) {
             $handler->calls = $outline->toDokuWikiTemplateInstructionCalls();
         } else {

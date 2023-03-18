@@ -33,6 +33,7 @@ class MarkupRenderUtility
             ->setDeleteRootBlockElement($strip)
             ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
+            ->setIsCodeStandAloneExecution(true)
             ->build()
             ->getFetchString();
 

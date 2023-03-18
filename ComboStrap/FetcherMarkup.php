@@ -191,10 +191,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public static function confChild(): FetcherMarkupBuilder
     {
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         try {
-            $executing = ExecutionContext::getActualOrCreateFromEnv()->getExecutingMarkupHandler();
+            $executing = $executionContext->getExecutingMarkupHandler();
         } catch (ExceptionNotFound $e) {
-            if (PluginUtility::isDevOrTest()) {
+            if (PluginUtility::isDevOrTest() && $executionContext->getExecutingAction() !== ExecutionContext::PREVIEW_ACTION) {
                 LogUtility::warning("A markup handler is not running, we couldn't create a child.");
             }
             return self::confRoot();
@@ -907,7 +908,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return $this;
         }
 
-        if (!$this->isPathExecution() && !$this->isNonPathStandaloneExecution) {
+        if (!$this->isPathExecution()
+            && !$this->isNonPathStandaloneExecution
+            // In preview, there is no parent handler because we didn't take over
+            && ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction() !== ExecutionContext::PREVIEW_ACTION
+        ) {
             LogUtility::warning("The execution ($this) is not a path execution. The snippet $snippet will not be preserved after initial rendering. Set the execution as standalone or set a parent markup handler.");
         }
 

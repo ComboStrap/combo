@@ -25,7 +25,7 @@ use IntlDateFormatter;
 class PipelineUtility
 {
     const QUOTES_CHARACTERS = ['"', '\''];
-    const SPACE = " ";
+    const SPACE_CHARACTER = " ";
 
 
     /**
@@ -107,6 +107,17 @@ class PipelineUtility
             $commandName = substr($command, 0, $leftParenthesis);
             $signature = substr($command, $leftParenthesis + 1);
             $commandArgs = preg_split("/\s*,\s*/", $signature);
+            /**
+             * Delete space characters
+             */
+            $commandArgs = array_map(
+                'trim',
+                $commandArgs,
+                array_fill(0, sizeof($commandArgs), self::SPACE_CHARACTER)
+            );
+            /**
+             * Delete quote characters
+             */
             $commandArgs = array_map(
                 'trim',
                 $commandArgs,

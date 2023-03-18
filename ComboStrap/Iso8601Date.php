@@ -269,6 +269,10 @@ class Iso8601Date
          * ICU User Guide: https://unicode-org.github.io/icu/userguide/
          * ICU Formatting Dates and Times: https://unicode-org.github.io/icu/userguide/format_parse/datetime/
          */
+        if (strpos($pattern, "%") !== false) {
+            LogUtility::warning("The date format ($pattern) is no more supported. Why ? Because Php has deprecated <a href=\"https://www.php.net/manual/en/function.strftime.php\">strftime</a>. You need to use the <a href=\"https://unicode-org.github.io/icu/userguide/format_parse/datetime/#datetime-format-syntax\">Unicode Date Time format</a>", self::CANONICAL);
+            return strftime($pattern, $this->dateTime->getTimestamp());
+        }
 
         /**
          * This parameters

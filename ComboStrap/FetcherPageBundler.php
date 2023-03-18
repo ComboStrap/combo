@@ -3,7 +3,8 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Web\Url;
 
 /**
  * Bundle page from the same namespace

@@ -1,12 +1,7 @@
 <?php
 
-use ComboStrap\Boldness;
-use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
-use ComboStrap\TagAttributes;
+use ComboStrap\TagAttribute\Boldness;
 
 
 /**

@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;

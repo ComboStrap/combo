@@ -10,13 +10,13 @@
  *
  */
 
-use ComboStrap\BoxTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\GridTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag\BoxTag;
 use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 
@@ -27,7 +27,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  *
  *
  *
- * @deprecated - flex item are created now with the {@link \ComboStrap\Align} attribute
+ * @deprecated - flex item are created now with the {@link \ComboStrap\TagAttribute\Align} attribute
  * and the col class is set now on the row class.
  */
 class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin

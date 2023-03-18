@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\Shadow;
 use DokuWiki_Syntax_Plugin;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_menubar;

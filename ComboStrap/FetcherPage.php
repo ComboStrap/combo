@@ -3,7 +3,10 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
+use ComboStrap\Xml\XmlDocument;
 
 class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 {

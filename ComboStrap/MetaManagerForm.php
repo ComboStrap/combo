@@ -4,8 +4,15 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageH1;
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Field\PageImages;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Meta\Field\Region;
+use ComboStrap\Meta\Form\FormMeta;
+use ComboStrap\Meta\Form\FormMetaTab;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 class MetaManagerForm
 {

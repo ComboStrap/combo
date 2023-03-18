@@ -85,7 +85,7 @@ class syntax_plugin_combo_xmlblocktag extends DokuWiki_Syntax_Plugin
          *
          * For box, not stack, otherwise it creates p
          * and as box is used mostly for layout purpose, it breaks the
-         * {@link \ComboStrap\Align} flex css attribute
+         * {@link \ComboStrap\TagAttribute\Align} flex css attribute
          *
          * For Cardbody, block value was !important! as
          * it will not create an extra paragraph after it encounters a block

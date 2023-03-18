@@ -5,6 +5,8 @@ namespace ComboStrap;
 
 
 use ComboStrap\Api\QualityMessageHandler;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataBoolean;
 
 class QualityDynamicMonitoringOverwrite extends MetadataBoolean
 {

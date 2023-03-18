@@ -3,6 +3,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+use ComboStrap\Xml\XmlDocument;
+use ComboStrap\Xml\XmlSystems;
 use DOMAttr;
 use DOMElement;
 use splitbrain\phpcli\Colors;

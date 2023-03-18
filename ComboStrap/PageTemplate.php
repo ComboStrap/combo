@@ -3,7 +3,10 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Web\UrlEndpoint;
+use ComboStrap\Xml\XmlDocument;
+use ComboStrap\Xml\XmlElement;
 use Symfony\Component\Yaml\Yaml;
 
 /**

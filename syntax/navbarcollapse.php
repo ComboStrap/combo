@@ -11,7 +11,7 @@
  */
 
 use ComboStrap\Bootstrap;
-use ComboStrap\XhtmlUtility;
+use ComboStrap\Xml\XhtmlUtility;
 use ComboStrap\LinkMarkup;
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;

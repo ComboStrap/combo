@@ -4,8 +4,21 @@ namespace ComboStrap;
 
 
 use ComboStrap\Api\QualityMessageHandler;
-use ComboStrap\Meta\PageH1;
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataBoolean;
+use ComboStrap\Meta\Api\MetadataStore;
+use ComboStrap\Meta\Api\MetadataStoreAbs;
+use ComboStrap\Meta\Field\Alias;
+use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\AliasType;
+use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Field\PageImage;
+use ComboStrap\Meta\Field\PageImages;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Meta\Field\Region;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
 use DateTime;
 use dokuwiki\ChangeLog\ChangeLog;
 use Exception;

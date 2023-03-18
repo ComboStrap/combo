@@ -2,6 +2,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\MetadataWikiPath;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+
 class FirstImage extends MetadataWikiPath
 {
 

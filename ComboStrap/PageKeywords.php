@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+
 class PageKeywords extends MetadataMultiple
 {
 

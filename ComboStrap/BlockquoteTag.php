@@ -8,6 +8,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Tag\BoxTag;
 use Doku_Handler;
 use Doku_Renderer_xhtml;
 use syntax_plugin_combo_cite;

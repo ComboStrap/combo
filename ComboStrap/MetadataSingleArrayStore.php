@@ -4,6 +4,10 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Meta\Api\MetadataStoreAbs;
+
 /**
  * Class MetadataArrayStore
  * @package ComboStrap

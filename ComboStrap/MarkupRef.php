@@ -2,6 +2,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
 use syntax_plugin_combo_variable;
 
 /**

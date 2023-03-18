@@ -3,7 +3,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\Toggle;
+use ComboStrap\TagAttribute\Toggle;
 use ComboStrap\XmlTagProcessing;
 
 class syntax_plugin_combo_toggleexpand extends DokuWiki_Syntax_Plugin

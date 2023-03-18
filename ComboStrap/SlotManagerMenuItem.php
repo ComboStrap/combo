@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\UrlEndpoint;
 use dokuwiki\Menu\Item\AbstractItem;
 
 /**

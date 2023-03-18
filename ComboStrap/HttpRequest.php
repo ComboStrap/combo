@@ -3,6 +3,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
+
 /**
  * A request to the application
  * It's now a wrapper around {@link \TestRequest}

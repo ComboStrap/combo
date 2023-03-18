@@ -2,11 +2,11 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\BackgroundAttribute;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttribute\BackgroundAttribute;
 use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 

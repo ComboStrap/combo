@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use syntax_plugin_combo_frontmatter;
 
 /**

@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
 use Doku_Renderer;
 use DokuWiki_Admin_Plugin;
 use syntax_plugin_combo_toc;

@@ -4,7 +4,9 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageH1;
+use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 class PageTitle extends MetadataText
 {

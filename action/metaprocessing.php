@@ -5,16 +5,12 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
-use ComboStrap\Metadata;
+use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\MetadataDokuWikiArrayStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataMutation;
-use ComboStrap\PageImages;
-use ComboStrap\PagePath;
-use ComboStrap\Path;
+use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\References;
-use ComboStrap\WikiPath;
-use dokuwiki\Extension\Event;
 
 /**
  *

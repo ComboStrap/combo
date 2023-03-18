@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataWikiPath;
+
 /**
  * Class PageUrlPath
  * @package ComboStrap

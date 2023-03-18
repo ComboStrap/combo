@@ -3,7 +3,8 @@
 
 namespace ComboStrap;
 
-use splitbrain\phpcli\Colors;
+use ComboStrap\TagAttribute\BackgroundAttribute;
+use ComboStrap\TagAttribute\Shadow;
 
 /**
  * Class Skin

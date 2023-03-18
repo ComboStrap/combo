@@ -3,8 +3,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Tag\BarTag;
+use ComboStrap\TagAttribute\Align;
 use syntax_plugin_combo_cell;
-use syntax_plugin_combo_fragment;
 use syntax_plugin_combo_iterator;
 
 /**

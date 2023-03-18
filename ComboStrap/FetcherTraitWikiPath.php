@@ -2,6 +2,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+
 /**
  * A trait to share between Fetcher
  * if they depends on a {@link WikiPath}

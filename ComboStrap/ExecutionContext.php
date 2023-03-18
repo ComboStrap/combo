@@ -3,6 +3,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Store\MetadataDbStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Web\Url;
 use dokuwiki\ActionRouter;
 use dokuwiki\Extension\EventHandler;
 use TestRequest;

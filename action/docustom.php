@@ -9,7 +9,7 @@ use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
 use ComboStrap\SiteConfig;
-use ComboStrap\Url;
+use ComboStrap\Web\Url;
 
 /**
  * Implementation of custom do (ie ACT) to output {@link \ComboStrap\IFetcherString}

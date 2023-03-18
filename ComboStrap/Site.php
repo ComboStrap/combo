@@ -13,7 +13,10 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Meta\Field\Region;
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlRewrite;
 use Exception;
 
 class Site

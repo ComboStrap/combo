@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+
 /**
  *
  * A Image Raster processing class that:

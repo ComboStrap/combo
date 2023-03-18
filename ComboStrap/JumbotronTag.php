@@ -3,7 +3,8 @@
 namespace ComboStrap;
 
 
-use Doku_Handler;
+use ComboStrap\TagAttribute\BackgroundAttribute;
+use ComboStrap\TagAttribute\Hero;
 
 
 class JumbotronTag

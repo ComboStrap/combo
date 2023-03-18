@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+
 /**
  * @package ComboStrap
  * An array, ie list of value metadata

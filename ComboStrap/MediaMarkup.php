@@ -4,6 +4,10 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\Align;
+use ComboStrap\TagAttribute\Animation;
+use ComboStrap\TagAttribute\Shadow;
+use ComboStrap\Web\Url;
 use syntax_plugin_combo_media;
 
 /**

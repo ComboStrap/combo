@@ -30,13 +30,13 @@ use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
-use ComboStrap\Metadata;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\PageDescription;
-use ComboStrap\PageImagePath;
-use ComboStrap\PageImages;
+use ComboStrap\Meta\Field\PageImagePath;
+use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\PluginUtility;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');

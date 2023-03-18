@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+
 class MetadataStoreTransfer
 {
     const CANONICAL = "meta-store-transfer";

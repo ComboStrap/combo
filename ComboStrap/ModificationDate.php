@@ -2,6 +2,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataDateTime;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use DateTime;
 
 class ModificationDate extends MetadataDateTime

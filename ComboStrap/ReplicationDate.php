@@ -2,6 +2,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataDateTime;
+
 /**
  * Class ReplicationDate
  * Modification date of the database row

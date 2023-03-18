@@ -10,7 +10,7 @@
  *
  */
 
-use ComboStrap\BacklinkCount;
+use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Event;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -19,7 +19,7 @@ use ComboStrap\ExceptionRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
-use ComboStrap\Meta\PageH1;
+use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;

@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Tag\BarTag;
+
 /**
  * @deprecated see :container:deprecated
  */

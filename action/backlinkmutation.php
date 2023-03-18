@@ -8,7 +8,7 @@ use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MarkupPath;
 use ComboStrap\MetadataMutation;
 use ComboStrap\PagePath;
@@ -76,7 +76,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
         try {
             /**
-             * This is only to recompute the {@link \ComboStrap\BacklinkCount backlinks metric} and
+             * This is only to recompute the {@link \ComboStrap\Meta\Field\BacklinkCount backlinks metric} and
              * {@link \ComboStrap\LowQualityPage low quality page metrics}
              * TODO: when the derived meta are in the meta array and not in the {@link renderer_plugin_combo_analytics document},
              *   we could just compute them there and modify it with a plus 1

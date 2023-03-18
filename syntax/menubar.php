@@ -4,12 +4,11 @@
  *
  */
 
-use ComboStrap\BackgroundAttribute;
 use ComboStrap\ContainerTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 use ComboStrap\SiteConfig;
+use ComboStrap\TagAttribute\BackgroundAttribute;
 use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 

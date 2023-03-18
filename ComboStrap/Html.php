@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Web\Url;
+use ComboStrap\Xml\XmlDocument;
+
 class Html
 {
 

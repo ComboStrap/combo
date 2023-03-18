@@ -9,7 +9,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Sanitizer;
+use ComboStrap\Web\Sanitizer;
 use ComboStrap\TagAttributes;
 
 class MermaidTag

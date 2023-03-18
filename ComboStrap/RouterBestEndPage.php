@@ -3,6 +3,9 @@
 namespace ComboStrap;
 
 use action_plugin_combo_router;
+use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\AliasType;
+use ComboStrap\Meta\Store\MetadataDbStore;
 
 
 /**

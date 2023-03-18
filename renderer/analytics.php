@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\BacklinkCount;
+use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotExists;
@@ -10,9 +10,9 @@ use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\FetcherMarkup;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
-use ComboStrap\Meta\PageH1;
-use ComboStrap\MetadataDbStore;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Store\MetadataDbStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\Mime;
 use ComboStrap\PageTitle;
 use ComboStrap\StringUtility;

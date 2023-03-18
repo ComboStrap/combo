@@ -3,7 +3,14 @@
 
 namespace ComboStrap;
 
-use ComboStrap\Meta\PageH1;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\BacklinkCount;
+use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Field\Region;
+use ComboStrap\Meta\Store\MetadataDbStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use DateTime;
 use renderer_plugin_combo_analytics;
 

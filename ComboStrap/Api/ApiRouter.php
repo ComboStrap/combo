@@ -11,7 +11,7 @@ use ComboStrap\HttpResponseStatus;
 use ComboStrap\IFetcher;
 use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
-use ComboStrap\Url;
+use ComboStrap\Web\Url;
 use dokuwiki\Extension\Event;
 
 class ApiRouter

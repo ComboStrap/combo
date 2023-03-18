@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Web\Url;
+
 /**
  * Class InternalMedia
  * Represent a HTML markup link

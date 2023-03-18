@@ -8,7 +8,7 @@ use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\Toggle;
+use ComboStrap\TagAttribute\Toggle;
 use ComboStrap\XmlTagProcessing;
 
 

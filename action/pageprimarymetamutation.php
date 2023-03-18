@@ -2,7 +2,7 @@
 
 use ComboStrap\Event;
 use ComboStrap\MarkupCacheDependencies;
-use ComboStrap\Meta\PageH1;
+use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\MetadataMutation;
 use ComboStrap\PageDescription;
 use ComboStrap\PagePath;

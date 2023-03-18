@@ -4,9 +4,9 @@
 namespace ComboStrap;
 
 
-use Collator;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
 use dokuwiki\Cache\Cache;
-use PHPUnit\Exception;
 
 class Lang extends MetadataText
 {

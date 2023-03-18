@@ -20,7 +20,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
-use ComboStrap\UrlEndpoint;
+use ComboStrap\Web\UrlEndpoint;
 
 if (!defined('DOKU_INC')) die();
 

@@ -3,6 +3,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataBoolean;
+
 /**
  * Class LowQualityPageIndicator
  * @package ComboStrap

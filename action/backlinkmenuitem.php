@@ -11,7 +11,7 @@ use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\LinkMarkup;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\Mime;
 use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;

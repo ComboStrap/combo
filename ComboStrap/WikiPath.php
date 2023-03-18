@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Web\Url;
+
 /**
  * Class DokuPath
  * @package ComboStrap

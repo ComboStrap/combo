@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataWikiPath;
 use DateTime;
 
 /**

@@ -1,8 +1,6 @@
 <?php
 
 
-use ComboStrap\Align;
-use ComboStrap\BoxTag;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DataType;
@@ -10,6 +8,8 @@ use ComboStrap\Dimension;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag\BoxTag;
+use ComboStrap\TagAttribute\Align;
 use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 

@@ -27,7 +27,7 @@ use ComboStrap\Mime;
 use ComboStrap\MarkupPath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\Url;
+use ComboStrap\Web\Url;
 use ComboStrap\FetcherVignette;
 use dokuwiki\Utf8\PhpString;
 

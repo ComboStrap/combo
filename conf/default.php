@@ -27,7 +27,7 @@ use ComboStrap\Outline;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
 use ComboStrap\Prism;
-use ComboStrap\Region;
+use ComboStrap\Meta\Field\Region;
 use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
 
@@ -234,7 +234,7 @@ $conf["defaultPageType"] = "article";
 
 /**
  * Default shadow elevation
- * {@link \ComboStrap\Shadow::CONF_DEFAULT_VALUE}
+ * {@link \ComboStrap\TagAttribute\Shadow::CONF_DEFAULT_VALUE}
  */
 $conf["defaultShadowLevel"] = "medium";
 

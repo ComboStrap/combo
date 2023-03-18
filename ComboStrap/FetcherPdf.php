@@ -2,6 +2,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+
 class FetcherPdf extends FetcherRawLocalPath
 {
 

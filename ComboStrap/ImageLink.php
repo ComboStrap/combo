@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Web\UrlEndpoint;
+
 /**
  * Class ImageLink
  * @package ComboStrap

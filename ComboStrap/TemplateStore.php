@@ -3,6 +3,10 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+use ComboStrap\Meta\Api\MetadataStoreAbs;
+
 /**
  * Class TemplateStore
  * @package ComboStrap

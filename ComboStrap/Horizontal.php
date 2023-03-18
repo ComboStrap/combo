@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\Vertical;
+
 class Horizontal
 {
 

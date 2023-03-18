@@ -2,7 +2,6 @@
 
 namespace ComboStrap\Tag;
 
-use ComboStrap\BackgroundAttribute;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
@@ -13,6 +12,7 @@ use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
+use ComboStrap\TagAttribute\BackgroundAttribute;
 use ComboStrap\TagAttributes;
 use Doku_Renderer_metadata;
 use syntax_plugin_combo_media;

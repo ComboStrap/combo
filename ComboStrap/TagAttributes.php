@@ -12,6 +12,20 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Tag\BoxTag;
+use ComboStrap\TagAttribute\Align;
+use ComboStrap\TagAttribute\Animation;
+use ComboStrap\TagAttribute\BackgroundAttribute;
+use ComboStrap\TagAttribute\Boldness;
+use ComboStrap\TagAttribute\Hero;
+use ComboStrap\TagAttribute\Shadow;
+use ComboStrap\TagAttribute\TextAlign;
+use ComboStrap\TagAttribute\Toggle;
+use ComboStrap\TagAttribute\Underline;
+use ComboStrap\TagAttribute\Vertical;
+use ComboStrap\Web\Url;
+use ComboStrap\Xml\XmlDocument;
+use ComboStrap\Xml\XmlElement;
 use dokuwiki\Extension\SyntaxPlugin;
 
 /**

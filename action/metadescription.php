@@ -1,8 +1,8 @@
 <?php
 
 use ComboStrap\LogUtility;
-use ComboStrap\Metadata;
 use ComboStrap\MarkupPath;
+use ComboStrap\Meta\Api\Metadata;
 
 
 /**

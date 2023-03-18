@@ -3,6 +3,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
+
 /**
  * Class Media
  * @package ComboStrap

@@ -3,7 +3,7 @@
 use ComboStrap\DisqusIdentifier;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 

@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\BackgroundAttribute;
+
 /**
  * This one support background loading
  * https://github.com/ApoorvSaxena/lozad.js

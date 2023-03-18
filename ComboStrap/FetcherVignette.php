@@ -2,6 +2,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlRewrite;
+
 /**
  *
  * Vignette:

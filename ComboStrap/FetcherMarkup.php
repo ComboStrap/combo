@@ -4,6 +4,10 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
+use ComboStrap\Xml\XmlDocument;
 use Doku_Renderer_metadata;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheParser;

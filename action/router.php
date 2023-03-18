@@ -3,7 +3,6 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
-use ComboStrap\AliasType;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
@@ -16,6 +15,7 @@ use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
+use ComboStrap\Meta\Field\AliasType;
 use ComboStrap\Mime;
 use ComboStrap\PageId;
 use ComboStrap\PageRules;
@@ -25,7 +25,7 @@ use ComboStrap\RouterBestEndPage;
 use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\Sqlite;
-use ComboStrap\Url;
+use ComboStrap\Web\Url;
 use ComboStrap\WikiPath;
 
 

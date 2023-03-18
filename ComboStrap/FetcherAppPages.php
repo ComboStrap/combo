@@ -3,7 +3,9 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
 use dokuwiki\Action\Exception\FatalException;
 use dokuwiki\ActionRouter;
 

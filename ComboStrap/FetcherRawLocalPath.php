@@ -2,6 +2,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+
 /**
  * Return raw files.
  * The mime is determined by the path.

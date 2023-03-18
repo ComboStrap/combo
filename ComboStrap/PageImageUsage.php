@@ -3,10 +3,15 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Field\PageImage;
+use ComboStrap\Meta\Field\PageImages;
+
 /**
  * Class PageImageUsage
  * @package ComboStrap
  * The usage for the image of a page
+ * @deprecated
  */
 class PageImageUsage extends MetadataMultiple
 {

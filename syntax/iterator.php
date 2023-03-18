@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionSqliteNotAvailable;
 use ComboStrap\ExecutionContext;
@@ -98,7 +99,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
         if ($pathString != null) {
             try {
                 return WikiPath::createMarkupPathFromPath($pathString);
-            } catch (\ComboStrap\ExceptionBadArgument $e) {
+            } catch (ExceptionBadArgument $e) {
                 LogUtility::warning("Error while creating the path for the page image with the path value ($pathString)", PageImageTag::CANONICAL, $e);
             }
         }
@@ -113,7 +114,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
             if ($path !== null) {
                 try {
                     return WikiPath::createMarkupPathFromPath($path);
-                } catch (\ComboStrap\ExceptionBadArgument $e) {
+                } catch (ExceptionBadArgument $e) {
                     LogUtility::internalError("The path string should be absolute, we should not get this error", PageImageTag::CANONICAL, $e);
                 }
             }

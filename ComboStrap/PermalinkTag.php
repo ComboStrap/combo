@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Web\UrlEndpoint;
 use Doku_Handler;
 use syntax_plugin_combo_link;
 

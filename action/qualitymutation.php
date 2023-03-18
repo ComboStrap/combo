@@ -10,7 +10,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;
 use ComboStrap\LowQualityPageOverwrite;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MarkupPath;
 use ComboStrap\MetadataMutation;
 use ComboStrap\PagePath;

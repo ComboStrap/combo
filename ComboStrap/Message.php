@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Xml\XmlSystems;
 use dokuwiki\Extension\Plugin;
 
 class Message

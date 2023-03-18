@@ -3,7 +3,7 @@
 use ComboStrap\AdsUtility;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\HeadingTag;
-use ComboStrap\XhtmlUtility;
+use ComboStrap\Xml\XhtmlUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TableUtility;
 use ComboStrap\Toc;

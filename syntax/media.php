@@ -4,24 +4,24 @@
 use ComboStrap\CallStack;
 use ComboStrap\CardTag;
 use ComboStrap\Dimension;
-use ComboStrap\WikiPath;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
-use ComboStrap\IFetcherAbs;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstImage;
+use ComboStrap\IFetcherAbs;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
-use ComboStrap\Metadata;
+use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\ThirdPartyPlugins;
+use ComboStrap\WikiPath;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');

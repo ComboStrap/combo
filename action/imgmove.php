@@ -1,16 +1,15 @@
 <?php
 
-use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MarkupPath;
-use ComboStrap\Metadata;
-use ComboStrap\PageImages;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\MetadataFrontmatterStore;
+use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
+use ComboStrap\WikiPath;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 

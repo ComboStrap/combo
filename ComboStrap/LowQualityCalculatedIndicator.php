@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataBoolean;
 use renderer_plugin_combo_analytics;
 
 class LowQualityCalculatedIndicator extends MetadataBoolean

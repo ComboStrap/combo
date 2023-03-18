@@ -4,10 +4,13 @@ namespace ComboStrap;
 
 
 use ComboStrap\Tag\BackgroundTag;
+use ComboStrap\Tag\BarTag;
+use ComboStrap\Tag\BoxTag;
 use ComboStrap\Tag\FollowTag;
 use ComboStrap\Tag\MermaidTag;
 use ComboStrap\Tag\ShareTag;
 use ComboStrap\Tag\WebCodeTag;
+use ComboStrap\TagAttribute\Hero;
 use Doku_Handler;
 use Doku_Renderer;
 use Doku_Renderer_metadata;

@@ -4,7 +4,9 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metaprocessing;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 class CacheExpirationFrequency extends MetadataText
 {

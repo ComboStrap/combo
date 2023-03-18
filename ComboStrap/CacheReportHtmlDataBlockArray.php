@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Xml\XmlDocument;
+
 class CacheReportHtmlDataBlockArray
 {
 

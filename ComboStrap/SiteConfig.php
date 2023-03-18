@@ -3,7 +3,7 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\PageTemplateName;
+use ComboStrap\Meta\Field\PageTemplateName;
 use dokuwiki\Extension\PluginTrait;
 
 class SiteConfig

@@ -2,6 +2,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\Align;
+
 /**
  * Represents a conditional length / value
  */

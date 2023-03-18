@@ -57,7 +57,7 @@ class BreadcrumbTag
         /**
          * Get the page
          */
-        $path = ExecutionContext::getActualOrCreateFromEnv()->getContextPath();
+        $path = \syntax_plugin_combo_iterator::getContextPathForComponentThatMayBeInFragment($tagAttributes);
         $actualPath = MarkupPath::createPageFromPathObject($path);
 
         $type = $tagAttributes->getType();

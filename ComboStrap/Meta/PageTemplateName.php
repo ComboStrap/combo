@@ -105,7 +105,7 @@ class PageTemplateName extends MetadataText
          * @var MarkupPath $page
          */
         $page = $this->getResource();
-        if($page->isSlot()){
+        if ($page->isSlot()) {
             return self::HAMBURGER_TEMPLATE_VALUE;
         }
         if ($page->isRootHomePage()) {
@@ -238,6 +238,11 @@ class PageTemplateName extends MetadataText
         }
 
         return $this;
+    }
+
+    public static function getOldPersistentNames(): array
+    {
+        return [self::PROPERTY_NAME_OLD];
     }
 
 

@@ -14,12 +14,14 @@ use ComboStrap\MarkupDynamicRender;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
+use ComboStrap\PageImageTag;
 use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\TagAttributes;
+use ComboStrap\WikiPath;
 use ComboStrap\XmlTagProcessing;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -84,6 +86,44 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     const BEFORE_TEMPLATE_CALLSTACK = "header-callstack";
     const AFTER_TEMPLATE_CALLSTACK = "footer-callstack";
     const TEMPLATE_CALLSTACK = "template-callstack";
+
+
+    /**
+     * @param TagAttributes $tagAttributes
+     * @return WikiPath the context path for element that are in a fragment
+     */
+    public static function getContextPathForComponentThatMayBeInFragment(TagAttributes $tagAttributes): WikiPath
+    {
+        $pathString = $tagAttributes->getComponentAttributeValueAndRemoveIfPresent(PagePath::PROPERTY_NAME);
+        if ($pathString != null) {
+            try {
+                return WikiPath::createMarkupPathFromPath($pathString);
+            } catch (\ComboStrap\ExceptionBadArgument $e) {
+                LogUtility::warning("Error while creating the path for the page image with the path value ($pathString)", PageImageTag::CANONICAL, $e);
+            }
+        }
+
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        try {
+            $markupHandler = $executionContext->getExecutingMarkupHandler();
+            $contextData = $markupHandler
+                ->getContextData();
+            $path = $contextData[PagePath::PROPERTY_NAME];
+            if ($path !== null) {
+                try {
+                    return WikiPath::createMarkupPathFromPath($path);
+                } catch (\ComboStrap\ExceptionBadArgument $e) {
+                    LogUtility::internalError("The path string should be absolute, we should not get this error", PageImageTag::CANONICAL, $e);
+                }
+            }
+            return $markupHandler->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            // no markup handler
+        }
+        return $executionContext->getContextPath();
+
+    }
 
 
     /**

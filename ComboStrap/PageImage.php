@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 /**
  * Represents the image of a page
+ * @deprecated
  */
 class PageImage
 {

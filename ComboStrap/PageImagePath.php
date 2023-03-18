@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+/**
+ * @deprecated
+ */
 class PageImagePath extends MetadataWikiPath
 {
 

@@ -712,10 +712,10 @@ class FetcherSvg extends IFetcherLocalImage
     public
     function __toString()
     {
-        if(isset($this->name)){
+        if (isset($this->name)) {
             return $this->name;
         }
-        if(isset($this->path)){
+        if (isset($this->path)) {
             try {
                 return $this->path->getLastNameWithoutExtension();
             } catch (ExceptionNotFound $e) {
@@ -724,7 +724,6 @@ class FetcherSvg extends IFetcherLocalImage
             }
         }
         return "Anonymous";
-
 
 
     }
@@ -896,30 +895,9 @@ class FetcherSvg extends IFetcherLocalImage
         $mediaWidth = $this->getIntrinsicWidth();
         $mediaHeight = $this->getIntrinsicHeight();
 
-        if (
-            $mediaWidth == $mediaHeight
-            && $mediaWidth < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
-        {
-            $svgStructureType = FetcherSvg::ICON_TYPE;
-        } else {
-            $svgStructureType = FetcherSvg::ILLUSTRATION_TYPE;
 
-            // some icon may be bigger
-            // in size than 400. example 1024 for ant-design:table-outlined
-            // https://github.com/ant-design/ant-design-icons/blob/master/packages/icons-svg/svg/outlined/table.svg
-            // or not squared
-            // if the usage is determined or the svg is in the icon directory, it just takes over.
-            try {
-                $isInIconDirectory = IconDownloader::isInIconDirectory($this->getSourcePath());
-            } catch (ExceptionNotFound $e) {
-                // not a svg from a path
-                $isInIconDirectory = false;
-            }
-            if ($requestedType === FetcherSvg::ICON_TYPE || $isInIconDirectory) {
-                $svgStructureType = FetcherSvg::ICON_TYPE;
-            }
+        $svgStructureType = $this->getInternalStructureType();
 
-        }
 
         /**
          * Svg type
@@ -1046,7 +1024,7 @@ class FetcherSvg extends IFetcherLocalImage
 
                 }
 
-                if ($requestedHeight!==null) {
+                if ($requestedHeight !== null) {
                     /**
                      * If a dimension was set, it's seen by default as a max-width
                      * If it should not such as in a card, this property is already set
@@ -1068,7 +1046,6 @@ class FetcherSvg extends IFetcherLocalImage
                     $documentElement->setAttribute("height", $heightInPixel);
 
                 }
-
 
 
                 break;
@@ -1693,7 +1670,7 @@ class FetcherSvg extends IFetcherLocalImage
         if ($markup !== null) {
             $this->xmlDocument = XmlDocument::createXmlDocFromMarkup($markup);
             $localName = $this->xmlDocument->getElement()->getLocalName();
-            if($localName !== "svg"){
+            if ($localName !== "svg") {
                 throw new ExceptionBadSyntax("This is not a svg but a $localName element.");
             }
             $this->setIntrinsicDimensions();
@@ -1722,6 +1699,58 @@ class FetcherSvg extends IFetcherLocalImage
         // dimension
         return $this;
 
+    }
+
+    /**
+     * @return bool - true if the svg is an icon
+     */
+    public function isIconStructure(): bool
+    {
+        return $this->getInternalStructureType()===self::ICON_TYPE;
+    }
+
+    /**
+     * @return string - the internal structure of the svg
+     * of {@link self::ICON_TYPE} or {@link self::ILLUSTRATION_TYPE}
+     */
+    private function getInternalStructureType(): string
+    {
+
+        $mediaWidth = $this->getIntrinsicWidth();
+        $mediaHeight = $this->getIntrinsicHeight();
+
+        if (
+            $mediaWidth == $mediaHeight
+            && $mediaWidth < 400) // 356 for logos telegram are the size of the twitter emoji but tile may be bigger ?
+        {
+            return FetcherSvg::ICON_TYPE;
+        } else {
+            $svgStructureType = FetcherSvg::ILLUSTRATION_TYPE;
+
+            // some icon may be bigger
+            // in size than 400. example 1024 for ant-design:table-outlined
+            // https://github.com/ant-design/ant-design-icons/blob/master/packages/icons-svg/svg/outlined/table.svg
+            // or not squared
+            // if the usage is determined or the svg is in the icon directory, it just takes over.
+            try {
+                $isInIconDirectory = IconDownloader::isInIconDirectory($this->getSourcePath());
+            } catch (ExceptionNotFound $e) {
+                // not a svg from a path
+                $isInIconDirectory = false;
+            }
+            try {
+                $requestType = $this->getRequestedType();
+            } catch (ExceptionNotFound $e) {
+                $requestType = false;
+            }
+
+            if ($requestType === FetcherSvg::ICON_TYPE || $isInIconDirectory) {
+                $svgStructureType = FetcherSvg::ICON_TYPE;
+            }
+
+            return $svgStructureType;
+
+        }
     }
 
 

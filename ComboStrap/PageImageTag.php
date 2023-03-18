@@ -193,7 +193,7 @@ class PageImageTag
             /**
              * Zoom applies only to icon not to illustration
              */
-            $isIcon = IconDownloader::isInIconDirectory($imageFetcher->getSourcePath());
+            $isIcon = $imageFetcher->isIconStructure();
             if (!$isIcon) {
                 $imageFetcher->setRequestedZoom(1);
             } else {
@@ -218,7 +218,6 @@ class PageImageTag
                 } catch (ExceptionNotFound $e) {
                     // no width
                 }
-
 
             }
         }

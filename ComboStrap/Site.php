@@ -140,15 +140,6 @@ class Site
         }
     }
 
-    /**
-     * https://www.dokuwiki.org/config:useslash
-     * @return void
-     */
-    public static function setUrlRewriteSeparatorToColon()
-    {
-        global $conf;
-        $conf['useslash'] = 0;
-    }
 
     public static function getTocMinHeadings(): int
     {
@@ -360,7 +351,9 @@ class Site
             try {
                 $image = FetcherRaster::createImageRasterFetchFromId($pngLogo);
             } catch (ExceptionCompile $e) {
-                LogUtility::msg("The png Logo ($pngLogo) returns an error. {$e->getMessage()}");
+                if (!($e instanceof ExceptionNotExists)) {
+                    LogUtility::error("Error while getting the log as raster image: The png logo ($pngLogo) returns an error. {$e->getMessage()}", self::CANONICAL,$e);
+                }
                 continue;
             }
             if (FileSystems::exists($image->getSourcePath())) {

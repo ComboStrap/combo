@@ -22,6 +22,7 @@ use ComboStrap\LazyLoad;
 use ComboStrap\LinkMarkup;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaMarkup;
+use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\Outline;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
@@ -166,7 +167,6 @@ $meta[syntax_plugin_combo_link::CONF_DISABLE_LINK] = array('onoff');
  */
 $meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = array('string');
 $meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = array('string');
-$meta[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = array('string');
 $meta[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = array('multichoice', '_choices' => array(
     action_plugin_combo_metatwitter::CONF_ON,
     action_plugin_combo_metatwitter::CONF_OFF

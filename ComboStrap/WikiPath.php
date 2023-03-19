@@ -331,11 +331,7 @@ class WikiPath extends PathAbs
     public
     static function createMediaPathFromPath($path, $rev = null): WikiPath
     {
-        try {
-            return new WikiPath($path, WikiPath::MEDIA_DRIVE, $rev);
-        } catch (ExceptionNotFound $e) {
-            throw new ExceptionRuntime("Internal Error: The drive should be known. Error: {$e->getMessage()}");
-        }
+        return new WikiPath($path, WikiPath::MEDIA_DRIVE, $rev);
     }
 
     /**

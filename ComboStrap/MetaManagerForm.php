@@ -6,10 +6,12 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\Meta\Field\PageTemplateName;
 use ComboStrap\Meta\Field\Region;
+use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\Meta\Form\FormMeta;
 use ComboStrap\Meta\Form\FormMetaTab;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
@@ -39,7 +41,8 @@ class MetaManagerForm
         PageTemplateName::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
-        PageImages::PROPERTY_NAME,
+        FeaturedRasterImage::PROPERTY_NAME,
+        TwitterImage::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
         PageType::PROPERTY_NAME,
         PagePublicationDate::PROPERTY_NAME,
@@ -106,8 +109,9 @@ class MetaManagerForm
         $dokuwikiFsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
         foreach (self::FORM_METADATA_LIST as $formsMetaDatum) {
 
-            $metadata = Metadata::getForName($formsMetaDatum);
-            if ($metadata === null) {
+            try {
+                $metadata = Metadata::getForName($formsMetaDatum);
+            } catch (ExceptionNotFound $e) {
                 LogUtility::msg("The metadata ($formsMetaDatum} was not found");
                 continue;
             }

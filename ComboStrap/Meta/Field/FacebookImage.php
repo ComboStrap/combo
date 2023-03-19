@@ -2,21 +2,31 @@
 
 namespace ComboStrap\Meta\Field;
 
+use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataImage;
 use ComboStrap\Meta\Api\MetadataWikiPath;
+use ComboStrap\PageImageUsage;
+use ComboStrap\SiteConfig;
 
 
-class FacebookImage extends MetadataWikiPath
+class FacebookImage extends MetadataImage
 {
+
+
+    public static function createFromResource(MarkupPath $page)
+    {
+        return (new FacebookImage())->setResource($page);
+    }
 
     public function getDescription(): string
     {
-        return "The facebook image used in facebook card";
+        return "The Facebook/OpenGraph image used in Facebook and OpenGraph card (Signal, ...)";
     }
 
     public function getLabel(): string
     {
-        return "Facebook Image";
+        return "Facebook/OpenGraph Image";
     }
 
     public static function getName(): string
@@ -33,5 +43,31 @@ class FacebookImage extends MetadataWikiPath
     {
         return true;
     }
+
+    public function buildFromStoreValue($value): Metadata
+    {
+
+        if ($value === null) {
+            $pageImages = PageImages::createForPage($this->getResource())
+                ->setReadStore($this->getReadStore())
+                ->getValueAsPageImages();
+            foreach ($pageImages as $pageImage) {
+                if (in_array(PageImageUsage::FACEBOOK, $pageImage->getUsages())) {
+                    return parent::buildFromStoreValue($pageImage->getImagePath()->toAbsoluteString());
+                }
+            }
+        }
+        return parent::buildFromStoreValue($value);
+
+    }
+
+    public function getDefaultValue()
+    {
+
+        return FeaturedRasterImage::createFromResourcePage($this->getResource())
+            ->getValueOrDefault();
+
+    }
+
 
 }

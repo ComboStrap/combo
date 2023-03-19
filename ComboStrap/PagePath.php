@@ -28,14 +28,19 @@ class PagePath extends MetadataWikiPath
             ->setResource($page);
     }
 
-    public function getDefaultValue(): ?DateTime
-    {
-        return null;
-    }
 
-    public function getValue(): string
+
+
+    public function buildFromStoreValue($value): Metadata
     {
-        return $this->getResource()->getPathObject()->toAbsoluteString();
+        try {
+            $value = $this->getResource()->getPathObject()->toWikiPath();
+        } catch (ExceptionCast $e) {
+            $message = "This error should not happen as this is a wiki path";
+            LogUtility::internalError($message);
+            $value = null;
+        }
+        return parent::buildFromStoreValue($value);
     }
 
 
@@ -75,6 +80,7 @@ class PagePath extends MetadataWikiPath
     {
         return self::PROPERTY_NAME;
     }
+
 
 
 }

@@ -5,10 +5,13 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metaprocessing;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
 use ComboStrap\Meta\Api\MetadataWikiPath;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
-class Canonical extends MetadataWikiPath
+
+class Canonical extends MetadataText
 {
 
     public const PROPERTY_NAME = "canonical";
@@ -58,6 +61,15 @@ class Canonical extends MetadataWikiPath
     {
         return true;
     }
+
+    public function buildFromStoreValue($value): Metadata
+    {
+        if($value!==null){
+            WikiPath::addRootSeparatorIfNotPresent($value);
+        }
+        return parent::buildFromStoreValue($value);
+    }
+
 
     public function getDefaultValue(): string
     {

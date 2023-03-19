@@ -3,51 +3,121 @@
 
 namespace ComboStrap\Meta\Api;
 
+use ComboStrap\DataType;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\Meta\Api\Metadata;
-use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\LogUtility;
 use ComboStrap\WikiPath;
 
 /**
  * Class MetadataWikiPath
  * @package ComboStrap
  * A wiki path value where the separator is a {@link WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT}
+ *
+
  */
-abstract class MetadataWikiPath extends MetadataText
+abstract class MetadataWikiPath extends Metadata
 {
+
+    /**
+     * @return string
+     *
+     * We don't extend text because the default wiki path
+     * can be an image that is not a simple path but an image
+     * in the resources
+     *
+     * We store still the image path in the store as text
+     */
+    public function getDataType(): string
+    {
+        return DataType::TEXT_TYPE_VALUE;
+    }
+
+
+    /**
+     * @var WikiPath
+     */
+    protected WikiPath $value;
 
     /**
      * @param string|null $value
      * @return Metadata
-     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
         if ($value === null) {
-            parent::setValue($value);
             return $this;
         }
+
+        if ($value instanceof WikiPath) {
+            $this->value = $value;
+            return $this;
+        }
+
         if ($value === "" || $value === ":") {
             // form send empty string
             // for the root `:`, non canonical
             return $this;
         }
-
         $value = WikiPath::toValidAbsolutePath($value);
-        parent::setValue($value);
+        $this->value = WikiPath::createMediaPathFromPath($value);
         return $this;
     }
 
-    /**
-     */
+
+    public function toStoreValue()
+    {
+        if(!isset($this->value)){
+            return null;
+        }
+        return $this->value->getAbsolutePath();
+    }
+
+    public function toStoreDefaultValue()
+    {
+        try {
+            $defaultValue = $this->getDefaultValue();
+            if(!($defaultValue instanceof WikiPath)){
+                LogUtility::internalError("The value ($defaultValue) is not a wiki path");
+                return $defaultValue;
+            }
+            return $defaultValue->getAbsolutePath();
+        } catch (ExceptionNotFound $e) {
+            return null;
+        }
+    }
+
+
     public function buildFromStoreValue($value): Metadata
     {
-        if ($value !== null && $value !== "") {
+        if ($value === null) {
+            return $this;
+        }
+        if ($value !== "") {
             $value = WikiPath::toValidAbsolutePath($value);
         }
-        parent::buildFromStoreValue($value);
+        $this->value = WikiPath::createMediaPathFromPath($value);
         return $this;
     }
 
+
+    public function getValue(): WikiPath
+    {
+        if (isset($this->value)) {
+            return $this->value;
+        }
+        throw new ExceptionNotFound("No value found");
+    }
+
+    public function valueIsNotNull(): bool
+    {
+        return isset($this->value);
+    }
+
+
+    public function getDefaultValue()
+    {
+        throw new ExceptionNotFound("No default value");
+    }
 
 }

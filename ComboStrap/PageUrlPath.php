@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
 use ComboStrap\Meta\Api\MetadataWikiPath;
 
 /**
@@ -30,7 +31,7 @@ use ComboStrap\Meta\Api\MetadataWikiPath;
  *
  * This is not the URL of the page but of the generated HTML web page (Ie {@link MarkupPath}) with all pages (slots)
  */
-class PageUrlPath extends MetadataWikiPath
+class PageUrlPath extends MetadataText
 {
 
     /**

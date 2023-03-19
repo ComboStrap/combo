@@ -188,11 +188,7 @@ $conf['useDokuwikiLinkClassName'] = 0;
 $conf['disableLink'] = 0;
 $conf['previewLink'] = 0;
 
-/**
- * Twitter
- * {@link action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE}
- */
-$conf['defaultTwitterImage'] = ":apple-touch-icon.png";
+
 $conf['twitterSiteHandle'] = "";
 $conf['twitterSiteId'] = "";
 $conf['twitter:dnt'] = "on";

@@ -3,9 +3,10 @@
 namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
 use ComboStrap\Meta\Api\MetadataWikiPath;
 
-class Slug extends MetadataWikiPath
+class Slug extends MetadataText
 {
 
     public const PROPERTY_NAME = "slug";

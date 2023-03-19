@@ -50,8 +50,8 @@ class RasterImageLink extends ImageLink
     {
         $fetcher = $mediaMarkup->getFetcher();
         $mime = $fetcher->getMime();
-        if (!in_array($mime, Mime::RASTER_MIMES)) {
-            throw new ExceptionBadArgument("The mime value ($mime) is not a raster.", self::CANONICAL);
+        if ($mime->isSupportedRasterImage()) {
+            throw new ExceptionBadArgument("The mime value ($mime) is not a supported raster image.", self::CANONICAL);
         }
         if (!($fetcher instanceof FetcherImage)) {
             throw new ExceptionBadArgument("The fetcher is not a fetcher image but is a " . get_class($fetcher));

@@ -12,6 +12,7 @@ use syntax_plugin_combo_frontmatter;
 
 class PageDescription extends MetadataText
 {
+
     /**
      * The description sub key in the dokuwiki meta
      * that has the description text
@@ -84,10 +85,30 @@ class PageDescription extends MetadataText
         return true;
     }
 
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+
+        try {
+            $value = $this->getValue();
+            if (empty($value)) {
+                return $this->getDefaultValue();
+            }
+            return $value;
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+
+
+    }
+
+
     /**
      * @return string - the dokuwiki calculated description
      * or the resource name if none (case when there is no text at all for instance with only a icon)
-     * @throws ExceptionNotFound
      */
     public function getDefaultValue(): string
     {

@@ -1,6 +1,12 @@
 <?php
 
 use ComboStrap\BlockquoteTag;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotExists;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherRaster;
+use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\WikiPath;
@@ -37,10 +43,6 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
      * The handle id
      */
     const CONF_TWITTER_SITE_ID = "twitterSiteId";
-    /**
-     * The image
-     */
-    const CONF_DEFAULT_TWITTER_IMAGE = "defaultTwitterImage";
 
     /**
      * Don't track
@@ -92,16 +94,17 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
     function metaTwitterProcessing($event)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $ID is null for media
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        try {
+            $page = MarkupPath::createPageFromPathObject($executionContext->getExecutingPageTemplate()
+                ->getRequestedContextPath());
+        } catch (ExceptionNotFound $e) {
             return;
         }
 
 
-        $page = MarkupPath::createMarkupFromId($ID);
-
-        if (!$page->exists()) {
+        if (!FileSystems::exists($page)) {
             return;
         }
 
@@ -134,8 +137,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Twitter site
          */
-        $siteTwitterHandle = SiteConfig::getConfValue(self::CONF_TWITTER_SITE_HANDLE);
-        $siteTwitterId = SiteConfig::getConfValue(self::CONF_TWITTER_SITE_ID);
+        $siteTwitterHandle = $this->getConf(self::CONF_TWITTER_SITE_HANDLE);
+        $siteTwitterId = $this->getConf(self::CONF_TWITTER_SITE_ID);
         if (!empty($siteTwitterHandle)) {
             $twitterMeta[self::META_SITE] = $siteTwitterHandle;
 
@@ -151,41 +154,28 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Card image
          */
-        $twitterImages = $page->getImagesForTheFollowingUsages([PageImageUsage::TWITTER, PageImageUsage::ALL, PageImageUsage::SOCIAL]);
-        if (empty($twitterImages)) {
-            $defaultImageIdConf = SiteConfig::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
-            if (!empty($defaultImageIdConf)) {
-                $dokuPath = WikiPath::createMediaPathFromId($defaultImageIdConf);
-                if (FileSystems::exists($dokuPath)) {
-                    try {
-                        $twitterImages[] = IFetcherLocalImage::createImageFetchFromPath($dokuPath);
-                    } catch (ExceptionCompile $e) {
-                        LogUtility::error("We were unable to add the default twitter image ($defaultImageIdConf) because of the following error: {$e->getMessage()}", self::CANONICAL);
-                    }
-                } else {
-                    if ($defaultImageIdConf != ":apple-touch-icon.png") {
-                        LogUtility::msg("The default twitter image ($defaultImageIdConf) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    }
-                }
-            }
-
+        try {
+            $twitterImagePath = TwitterImage::createFromResource($page)->getValueOrDefault();
+        } catch (ExceptionNotFound $e) {
+            // no twitter image
+            return;
         }
-        if (!empty($twitterImages)) {
-            foreach ($twitterImages as $twitterImageFetcher) {
-                $twitterImagePath =   $twitterImageFetcher->getSourcePath();
 
-                if(!FileSystems::exists($twitterImagePath)){
-                    continue;
-                }
-                $twitterMeta[self::META_IMAGE] = $twitterImageFetcher->getFetchUrl()->toAbsoluteUrlString();
-                $title = ResourceName::getFromPath($twitterImagePath);
-                if (!empty($title)) {
-                    $twitterMeta[self::META_IMAGE_ALT] = $title;
-                }
-                // One image only
-                break;
+        if (!FileSystems::exists($twitterImagePath)) {
+            LogUtility::error("The twitter image ($twitterImagePath) does not exists.", self::CANONICAL);
+            return;
+        }
 
-            }
+        try {
+            $twitterMeta[self::META_IMAGE] = FetcherRaster::createImageFetchFromPath($twitterImagePath)->getFetchUrl()->toAbsoluteUrlString();
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+            LogUtility::error("Error with the twitter image url. ".$e->getMessage(), self::CANONICAL, $e);
+            return;
+        }
+
+        $title = ResourceName::getFromPath($twitterImagePath);
+        if (!empty($title)) {
+            $twitterMeta[self::META_IMAGE_ALT] = $title;
         }
 
         /**

@@ -32,6 +32,7 @@ class DataType
      * A couple of words without any carriage return
      */
     public const TEXT_TYPE_VALUE = "text";
+
     /**
      * Date Time
      */

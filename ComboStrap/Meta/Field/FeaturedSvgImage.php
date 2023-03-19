@@ -3,10 +3,11 @@
 namespace ComboStrap\Meta\Field;
 
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataImage;
 use ComboStrap\Meta\Api\MetadataWikiPath;
 
 
-class FeaturedSvgImage extends MetadataWikiPath
+class FeaturedSvgImage extends MetadataImage
 {
 
     public function getDescription(): string

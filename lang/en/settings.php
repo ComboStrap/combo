@@ -20,6 +20,7 @@ use ComboStrap\LinkMarkup;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
+use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\Outline;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PageTemplateEngine;
@@ -142,7 +143,6 @@ $lang[LinkMarkup::CONF_PREVIEW_LINK] = PluginUtility::getDocumentationHyperLink(
 /**
  * Twitter
  */
-$lang[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - The media id (path) to the logo shown in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - Your twitter handle name used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - Your twitter handle id used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the `do not track` attribute";

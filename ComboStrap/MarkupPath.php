@@ -535,12 +535,11 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      * @return string - the description or the dokuwiki generated description
-     * @throws ExceptionNotFound
      */
     public
     function getDescriptionOrElseDokuWiki(): string
     {
-        return $this->description->getValueFromStoreOrDefault();
+        return $this->description->getValueOrDefault();
     }
 
 

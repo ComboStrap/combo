@@ -25,8 +25,10 @@ use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\Meta\Field\Aliases;
 use ComboStrap\Meta\Field\AliasPath;
 use ComboStrap\Meta\Field\AliasType;
+use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataMutation;
 use ComboStrap\ModificationDate;
@@ -162,6 +164,10 @@ abstract class Metadata
             case PageImagePath::getName():
             case PageImageUsage::getName():
                 return new PageImages();
+            case FeaturedRasterImage::getName():
+                return new FeaturedRasterImage();
+            case TwitterImage::getName():
+                return new TwitterImage();
             case Region::OLD_REGION_PROPERTY:
             case Region::getName():
                 return new Region();
@@ -315,9 +321,10 @@ abstract class Metadata
 
     /**
      * @return bool
-     * used in the {@link Metadata::buildCheck()} function
+     * Used in the {@link Metadata::buildCheck()} function
      * If the value is null, the {@link Metadata::buildFromReadStore()} will be performed
-     * otherwise, it will not
+     * otherwise, it will not.
+     * Why ? because the value may have been set before building.
      */
     public abstract function valueIsNotNull(): bool;
 

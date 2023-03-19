@@ -10,6 +10,8 @@ use ComboStrap\Meta\Api\MetadataWikiPath;
 class FeaturedSvgImage extends MetadataImage
 {
 
+    const PROPERTY_NAME = "featured-svg-image";
+
     public function getDescription(): string
     {
         return "A featured image in svg format";

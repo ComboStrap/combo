@@ -1,9 +1,12 @@
 <?php
 
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataImage;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Meta\Field\PageImages;
@@ -133,37 +136,56 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;
         }
-        $pageImagesObject = PageImages::createForPage($page)
-            ->setReadStore($metadataFrontmatterStore);
-        $images = $pageImagesObject->getValueAsPageImages();
-        if ($images === null) {
-            return $match;
-        }
+        $data = $metadataFrontmatterStore->getData();
+        foreach ($data as $key => $value) {
+            try {
+                $metadata = Metadata::getForName($key)
+                    ->setResource($page)
+                    ->setReadStore($metadataFrontmatterStore);
+            } catch (ExceptionNotFound $e) {
+                continue;
+            }
 
-        try {
+            /**
+             * Old deprecated
+             */
+            if ($metadata instanceof PageImages) {
+                $pageImagesObject = $metadata;
+                $images = $metadata->getValueAsPageImages();
+                if (empty($images)) {
+                    return $match;
+                }
+                try {
 
-            foreach ($images as $image) {
-                $path = $image->getImagePath();
-                $imageId = $path->toAbsolutePath()->toAbsoluteString();
-                $before = $imageId;
-                $this->moveImage($imageId, $handler);
-                if ($before != $imageId) {
-                    $pageImagesObject->remove($before);
-                    $pageImagesObject->addImage($imageId, $image->getUsages());
+                    foreach ($images as $image) {
+                        $path = $image->getImagePath();
+                        $imageId = $path->toAbsolutePath()->toAbsoluteString();
+                        $before = $imageId;
+                        $this->moveImage($imageId, $handler);
+                        if ($before !== $imageId) {
+                            $pageImagesObject->remove($before);
+                            $pageImagesObject->addImage($imageId, $image->getUsages());
+                        }
+                    }
+
+                    $pageImagesObject->sendToWriteStore();
+
+                } catch (ExceptionCompile $e) {
+                    // Could not resolve the image, image does not exist, ... return the data without modification
+                    if (PluginUtility::isDevOrTest()) {
+                        throw new ExceptionRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
+                    } else {
+                        LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                    }
+                    return $match;
                 }
             }
-
-            $pageImagesObject->sendToWriteStore();
-
-        } catch (ExceptionCompile $e) {
-            // Could not resolve the image, image does not exist, ... return the data without modification
-            if (PluginUtility::isDevOrTest()) {
-                throw new ExceptionRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
-            } else {
-                LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+            if (!($metadata instanceof MetadataImage)) {
+                continue;
             }
-            return $match;
+            LogUtility::internalError("The move of the image frontmatter metadata ($metadata) should be implemented");
         }
+
 
         /**
          * All good,

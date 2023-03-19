@@ -220,6 +220,12 @@ abstract class MetadataTabular extends Metadata
                 } catch (ExceptionNotFound $e) {
                     throw ExceptionRuntimeInternal::withMessageAndError("The meta identifier ($identifierMetadata) should have a value", $e);
                 }
+                if (DataType::isObject($identifierValue)) {
+                    /**
+                     * An object cannot be the key of an array
+                     */
+                    $identifierValue = $identifierValue->__toString();
+                }
                 $this->rows[$identifierValue] = [$identifierPersistentName => $identifierMetadata];
                 continue;
             }

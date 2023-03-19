@@ -207,5 +207,10 @@ class DataType
 
     }
 
+    public static function isObject($value): bool
+    {
+        return is_object($value);
+    }
+
 
 }

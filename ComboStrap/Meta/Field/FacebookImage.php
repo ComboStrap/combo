@@ -14,6 +14,9 @@ class FacebookImage extends MetadataImage
 {
 
 
+    const PROPERTY_NAME = "facebook-image";
+
+
     public static function createFromResource(MarkupPath $page)
     {
         return (new FacebookImage())->setResource($page);
@@ -31,7 +34,7 @@ class FacebookImage extends MetadataImage
 
     public static function getName(): string
     {
-        return "facebook-image";
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

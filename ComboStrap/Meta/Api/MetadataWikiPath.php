@@ -93,11 +93,18 @@ abstract class MetadataWikiPath extends Metadata
         if ($value === null) {
             return $this;
         }
+
+        if($value instanceof WikiPath){
+            $this->value = $value;
+            return $this;
+        }
+
         if ($value !== "") {
             $value = WikiPath::toValidAbsolutePath($value);
         }
         $this->value = WikiPath::createMediaPathFromPath($value);
         return $this;
+
     }
 
 

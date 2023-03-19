@@ -205,7 +205,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
-
     public static function createMarkupFromId($id): MarkupPath
     {
         return new MarkupPath(WikiPath::createMarkupPathFromId($id));
@@ -1071,9 +1070,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
 
         foreach ($metadataNames as $metadataName) {
-            $metadata = Metadata::getForName($metadataName);
-            if ($metadata === null) {
-                LogUtility::msg("The metadata ($metadata) should be defined");
+            try {
+                $metadata = Metadata::getForName($metadataName);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::msg("The metadata ($metadataName) should be defined");
                 continue;
             }
             /**
@@ -1086,16 +1086,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
              * ToStoreValue to get the string format of date/boolean in the {@link PipelineUtility}
              * If we want the native value, we need to change the pipeline
              */
-            try {
-                $value = $metadata
-                    ->setResource($this)
-                    ->setWriteStore(TemplateStore::class)
-                    ->toStoreValueOrDefault();
-
-
-            } catch (ExceptionNotFound $e) {
-                $value = null;
-            }
+            $value = $metadata
+                ->setResource($this)
+                ->setReadStore(MetadataDokuWikiStore::class)
+                ->setWriteStore(TemplateStore::class)
+                ->buildFromReadStore()
+                ->toStoreValueOrDefault();
             $array[$metadataName] = $value;
         }
 

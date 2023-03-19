@@ -6,7 +6,9 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\FacebookImage;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
+use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\Meta\Field\PageTemplateName;
@@ -42,7 +44,9 @@ class MetaManagerForm
         ModificationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
         FeaturedRasterImage::PROPERTY_NAME,
+        FeaturedSvgImage::PROPERTY_NAME,
         TwitterImage::PROPERTY_NAME,
+        FacebookImage::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
         PageType::PROPERTY_NAME,
         PagePublicationDate::PROPERTY_NAME,
@@ -149,8 +153,9 @@ class MetaManagerForm
             )
             ->addTab(
                 FormMetaTab::create(self::TAB_IMAGE_VALUE)
-                    ->setLabel("Image")
-                    ->setWidthField(12)
+                    ->setLabel("Images")
+                    ->setWidthLabel(3)
+                    ->setWidthField(9)
             )
             ->addTab(
                 FormMetaTab::create(self::TAB_QUALITY_VALUE)

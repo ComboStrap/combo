@@ -67,7 +67,7 @@ class References extends MetadataTabular
         if ($metadataStore->isDokuWikiStore()) {
 
             $relation = $metadataStore->getFromPersistentName("relation");
-            if ($relation !== null) {
+            if (is_array($relation)) {
 
                 $this->wasBuild = true;
                 $referencesArray = $relation["references"];
@@ -75,6 +75,7 @@ class References extends MetadataTabular
                     $referencesArray = array_keys($referencesArray);
                 }
                 $this->buildFromStoreValue($referencesArray);
+
                 return $this;
 
             }

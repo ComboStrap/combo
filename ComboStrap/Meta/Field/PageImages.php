@@ -193,8 +193,7 @@ class PageImages extends MetadataTabular
                 LogUtility::internalError("The page path didn't have any values in the rows", self::CANONICAL);
                 continue;
             }
-            $pageImageObject = WikiPath::createMediaPathFromId($pageImagePathValue);
-            $pageImage = PageImage::create($pageImageObject, $this->getResource());
+            $pageImage = PageImage::create($pageImagePathValue, $this->getResource());
 
             /**
              * @var PageImageUsage $pageImageUsage

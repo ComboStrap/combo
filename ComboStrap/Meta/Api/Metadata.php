@@ -25,7 +25,9 @@ use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\Meta\Field\Aliases;
 use ComboStrap\Meta\Field\AliasPath;
 use ComboStrap\Meta\Field\AliasType;
+use ComboStrap\Meta\Field\FacebookImage;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
+use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\Meta\Field\PageTemplateName;
 use ComboStrap\Meta\Field\TwitterImage;
@@ -166,8 +168,12 @@ abstract class Metadata
                 return new PageImages();
             case FeaturedRasterImage::getName():
                 return new FeaturedRasterImage();
+            case FeaturedSvgImage::getName():
+                return new FeaturedSvgImage();
             case TwitterImage::getName():
                 return new TwitterImage();
+            case FacebookImage::getName():
+                return new FacebookImage();
             case Region::OLD_REGION_PROPERTY:
             case Region::getName():
                 return new Region();

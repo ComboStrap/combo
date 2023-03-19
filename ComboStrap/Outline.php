@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Field\FeaturedRasterImage;
+use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
 use syntax_plugin_combo_header;
 use syntax_plugin_combo_headingatx;
@@ -216,13 +218,13 @@ class Outline
                              * In a fragment run (preview),
                              * the first heading may not be the first one
                              */
-                            if(!$this->isFragment) {
+                            if (!$this->isFragment) {
                                 $message = "The first section heading should have the level 1 or 2 (not $newSectionLevel).";
                             }
                         } else {
                             $message = "The child section heading ($actualSectionLevel) has the level ($newSectionLevel) but is parent ({$this->actualSection->getLabel()}) has the level ($actualSectionLevel). The expected level is ($expectedLevel).";
                         }
-                        if(isset($message)) {
+                        if (isset($message)) {
                             LogUtility::warning($message, self::CANONICAL);
                         }
                         $actualCall->setAttribute(HeadingTag::LEVEL, $newSectionLevel);
@@ -636,7 +638,7 @@ EOF;
 
     }
 
-    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId, bool $noH1Display): void
+    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId, bool $captureHeaderMeta): void
     {
 
         $totalComboCalls[] = Call::createComboCall(
@@ -675,15 +677,51 @@ EOF;
 
             $actualChildren = $outlineSection->getChildren();
             /**
-             * With theming, the h1, is not displayed
+             * On item page, the h1 and the featured image are
+             * captured and deleted by default to allow complex header layout
              */
-            if ($noH1Display && $outlineSection->getLevel() === 0) {
+            if ($captureHeaderMeta && $outlineSection->getLevel() === 0) {
                 // should be only one 1
                 if (count($actualChildren) === 1) {
                     $h1Section = $actualChildren[array_key_first($actualChildren)];
                     if ($h1Section->getLevel() === 1) {
                         $h1ContentCalls = $h1Section->getContentCalls();
-                        $contentCalls = array_merge($contentCalls,$h1ContentCalls);
+                        /**
+                         * Capture the image if any
+                         */
+                        if ($this->markupPath !== null) {
+                            foreach ($h1ContentCalls as $h1ContentCall) {
+                                $tagName = $h1ContentCall->getTagName();
+                                switch ($tagName) {
+                                    case "p":
+                                        continue 2;
+                                    case "media":
+                                        $h1ContentCall->addAttribute(Display::DISPLAY, Display::DISPLAY_NONE_VALUE);
+                                        try {
+                                            $fetcher = MediaMarkup::createFromCallStackArray($h1ContentCall->getAttributes())->getFetcher();
+                                            switch (get_class($fetcher)) {
+                                                case FetcherRaster::class:
+                                                    $path = $fetcher->getSourcePath();
+                                                    FeaturedRasterImage::createFromResourcePage($this->markupPath)
+                                                        ->setParsedValue($path);
+                                                    break;
+                                                case FetcherSvg::class:
+                                                    $path = $fetcher->getSourcePath();
+                                                    FeaturedSvgImage::createFromResourcePage($this->markupPath)
+                                                        ->setParsedValue($path);
+                                                    break;
+                                            }
+                                        } catch (\Exception $e) {
+                                            LogUtility::error("Error while capturing the feature images. Error: " . $e->getMessage(), self::CANONICAL, $e);
+                                        }
+                                        continue 2;
+                                    default:
+                                        // only the images found just after h1
+                                        break;
+                                }
+                            }
+                        }
+                        $contentCalls = array_merge($contentCalls, $h1ContentCalls);
                         $actualChildren = $h1Section->getChildren();
                     }
                 }
@@ -699,7 +737,7 @@ EOF;
 
 
             foreach ($actualChildren as $child) {
-                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $noH1Display);
+                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $captureHeaderMeta);
             }
 
         } else {
@@ -710,6 +748,7 @@ EOF;
             );
             $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
         }
+
         $totalComboCalls[] = Call::createComboCall(
             SectionTag::TAG,
             DOKU_LEXER_EXIT,
@@ -724,19 +763,28 @@ EOF;
 
     }
 
-    public function toHtmlSectionOutlineCalls(): array
+    public
+    function toHtmlSectionOutlineCalls(): array
     {
         $totalCalls = [];
         $sectionSequenceId = 0;
-        $noH1Display = ExecutionContext::getActualOrCreateFromEnv()
-            ->getConfig()
-            ->isThemeSystemEnabled();
+
+        $captureHeaderMeta = false;
+        if (
+            $this->markupPath !== null
+            && !$this->markupPath->isIndexPage()
+            && ExecutionContext::getActualOrCreateFromEnv()
+                ->getConfig()
+                ->isThemeSystemEnabled()
+        ) {
+            $captureHeaderMeta = true;
+        }
 
         /**
          * Transform and collect the calls in Instructions calls
          */
 
-        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $noH1Display);
+        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $captureHeaderMeta);
 
         return array_map(function (Call $element) {
             return $element->getInstructionCall();
@@ -749,7 +797,8 @@ EOF;
      * @param $sectionSequenceId
      * @param array $totalInstructionCalls
      */
-    private function addSectionEditButtonComboFormatIfNeeded(OutlineSection $outlineSection, int $sectionSequenceId, array &$totalInstructionCalls): void
+    private
+    function addSectionEditButtonComboFormatIfNeeded(OutlineSection $outlineSection, int $sectionSequenceId, array &$totalInstructionCalls): void
     {
         if (!$outlineSection->hasParent()) {
             // no button for the root (ie the page)
@@ -781,7 +830,8 @@ EOF;
      *
      * @return array
      */
-    public function toFragmentInstructionCalls(): array
+    public
+    function toFragmentInstructionCalls(): array
     {
         $totalInstructionCalls = [];
         $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls) {
@@ -806,7 +856,8 @@ EOF;
      *
      * @return void
      */
-    private function saveOutlineToMetadata()
+    private
+    function saveOutlineToMetadata()
     {
         try {
             $firstChild = $this->rootSection->getFirstChild();
@@ -825,17 +876,17 @@ EOF;
     }
 
 
-    public function toHtmlSectionOutlineCallsWithoutHeader(): array
+    public
+    function toHtmlSectionOutlineCallsWithoutHeader(): array
     {
 
         $totalCalls = [];
         $sectionSequenceId = 0;
-        $headerToNone = true;
 
         /**
          * Transform and collect the calls in Instructions calls
          */
-        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $headerToNone);
+        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, true);
 
         return array_map(function (Call $element) {
             return $element->getInstructionCall();
@@ -843,7 +894,8 @@ EOF;
 
     }
 
-    private function storeH1()
+    private
+    function storeH1()
     {
         try {
             $outlineSection = $this->getRootOutlineSection()->getFirstChild();
@@ -853,8 +905,7 @@ EOF;
         }
         if ($this->markupPath != null && $outlineSection->getLevel() === 1) {
             $label = $outlineSection->getLabel();
-            PageH1::createForPage($this->markupPath)
-                ->persistDefaultValue($label);
+            PageH1::createForPage($this->markupPath)->persistDefaultValue($label);
         }
     }
 
@@ -897,13 +948,15 @@ EOF;
         return $this->markupPath;
     }
 
-    private function isSectionEditingEnabled(): bool
+    private
+    function isSectionEditingEnabled(): bool
     {
         return ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()->isSectionEditingEnabled();
     }
 
-    private function getTocMaxLevel(): int
+    private
+    function getTocMaxLevel(): int
     {
         return ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()->getTocMaxLevel();

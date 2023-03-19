@@ -110,6 +110,7 @@ abstract class MetadataWikiPath extends Metadata
 
     public function getValue(): WikiPath
     {
+        $this->buildCheck();
         if (isset($this->value)) {
             return $this->value;
         }

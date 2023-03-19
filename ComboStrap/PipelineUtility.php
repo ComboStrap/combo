@@ -30,7 +30,7 @@ class PipelineUtility
 
     /**
      * @param $expression
-     * @param array $contextData
+     * @param array|null $contextData
      * @return string
      * @throws ExceptionBadSyntax - if there is any syntax error
      */

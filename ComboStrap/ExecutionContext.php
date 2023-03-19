@@ -935,7 +935,7 @@ class ExecutionContext
                     if (!empty($ID)) {
                         try {
                             $markupPath = MarkupPath::createMarkupFromId($ID);
-                            if($markupPath->isSlot()) {
+                            if ($markupPath->isSlot()) {
                                 return SlotSystem::getContextPath()->toWikiPath();
                             }
                         } catch (ExceptionCast|ExceptionNotFound $e) {
@@ -1030,15 +1030,14 @@ class ExecutionContext
 
     }
 
+    /**
+     * @return array - data in context
+     * It takes care of returning the context path
+     * (in case of slot via the {@link self::getContextPath()}
+     */
     public function getContextData(): array
     {
-        try {
-            return $this->getExecutingMarkupHandler()
-                ->getContextData();
-        } catch (ExceptionNotFound $e) {
-            return [];
-        }
-
+        return MarkupPath::createPageFromPathObject($this->getContextPath())->getMetadataForRendering();
     }
 
     /**

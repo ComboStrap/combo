@@ -7,6 +7,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\PageImageUsage;
 use ComboStrap\Site;
 use ComboStrap\WikiPath;
@@ -17,13 +18,14 @@ class FeaturedRasterImage extends MetadataImage
 
 
     const PROPERTY_NAME = "featured-raster-image";
+    const FEATURED_IMAGE_PARSED = "featured-raster-image-parsed";
 
     public static function getComboStrapLogo(): WikiPath
     {
         return WikiPath::createComboResource(":images:apple-touch-icon.png");
     }
 
-    public static function createFromResourcePage(MarkupPath $page)
+    public static function createFromResourcePage(MarkupPath $page): FeaturedRasterImage
     {
         return (new FeaturedRasterImage())->setResource($page);
     }
@@ -82,6 +84,15 @@ class FeaturedRasterImage extends MetadataImage
 
     public function getDefaultValue(): WikiPath
     {
+
+        /**
+         * Parsed Feature Images
+         */
+        $parsedPath = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
+        if ($parsedPath !== null) {
+            return WikiPath::createMediaPathFromPath($parsedPath);
+        }
+
         /**
          * Ancestor
          */
@@ -103,9 +114,18 @@ class FeaturedRasterImage extends MetadataImage
         try {
             return Site::getLogoAsRasterImage()->getSourcePath();
         } catch (ExceptionNotFound $e) {
-            return self::getComboStrapLogo() ;
+            return self::getComboStrapLogo();
         }
 
+    }
+
+    public function setParsedValue(WikiPath $path): FeaturedRasterImage
+    {
+        $store = $this->getWriteStore();
+        if ($store instanceof MetadataDokuWikiStore) {
+            $store->setFromPersistentName(self::FEATURED_IMAGE_PARSED, $path->toAbsoluteString());
+        }
+        return $this;
     }
 
 }

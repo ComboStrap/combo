@@ -4,6 +4,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\CardTag;
 use ComboStrap\Dimension;
+use ComboStrap\Display;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -248,9 +249,22 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             case 'xhtml':
 
+                $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                $display = $callStackArray[Display::DISPLAY];
+                if ($display === Display::DISPLAY_NONE_VALUE) {
+                    /**
+                     * Used primarly to not show the featured images
+                     * in the outline {@link Outline::toHtmlSectionOutlineCallsRecurse()}
+                     * for item page
+                     * But we keep the metadata to move them if any
+                     */
+                    return false;
+                }
+
                 /** @var Doku_Renderer_xhtml $renderer */
                 try {
-                    $mediaMarkup = MediaMarkup::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+
+                    $mediaMarkup = MediaMarkup::createFromCallStackArray($callStackArray);
                 } catch (ExceptionCompile $e) {
                     $renderer->doc .= $e->getMessage();
                     return false;

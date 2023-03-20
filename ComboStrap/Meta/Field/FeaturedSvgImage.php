@@ -8,7 +8,6 @@ use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
-use ComboStrap\Site;
 use ComboStrap\WikiPath;
 
 
@@ -18,10 +17,6 @@ class FeaturedSvgImage extends MetadataImage
     const PROPERTY_NAME = "featured-svg-image";
     const ITEM_FEATURED_IMAGE_PARSED = "item-featured-svg-image-parsed";
 
-    private static function getComboStrapSvgLogo(): WikiPath
-    {
-        return WikiPath::createComboResource(":images:logo.svg");
-    }
 
     public static function createFromResourcePage(MarkupPath $markupPath): FeaturedSvgImage
     {
@@ -69,7 +64,7 @@ class FeaturedSvgImage extends MetadataImage
         /**
          * Parsed Feature Images
          */
-        return WikiPath::createMediaPathFromPath($this->getParsedValue());
+        return $this->getParsedValue();
 
     }
 

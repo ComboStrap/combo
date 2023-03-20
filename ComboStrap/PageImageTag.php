@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Field\AncestorImage;
 use ComboStrap\Meta\Field\FeaturedImage;
 use Exception;
 use Mpdf\Gif\Image;
@@ -20,6 +21,7 @@ class PageImageTag
         PageImageTag::FEATURED,
         PageImageTag::FIRST_TYPE,
         PageImageTag::ANCESTOR_TYPE,
+        PageImageTag::ICON_TYPE,
         PageImageTag::VIGNETTE_TYPE,
         PageImageTag::LOGO_TYPE
     ];
@@ -27,6 +29,7 @@ class PageImageTag
     public const ANCESTOR_TYPE = "ancestor";
     public const TAG = "pageimage";
     public const FEATURED = "featured";
+    public const ICON_TYPE = "icon";
     public const NONE_TYPE = "none";
     public const FIRST_TYPE = "first";
 
@@ -35,7 +38,8 @@ class PageImageTag
         PageImageTag::FIRST_TYPE,
         PageImageTag::VIGNETTE_TYPE,
         PageImageTag::ANCESTOR_TYPE,
-        PageImageTag::LOGO_TYPE
+        PageImageTag::LOGO_TYPE,
+        PageImageTag::ICON_TYPE
     ];
 
 
@@ -119,19 +123,27 @@ class PageImageTag
                     break;
                 case PageImageTag::ANCESTOR_TYPE:
                 case "parent": // old
-                    $parent = $contextPage;
-                    while (true) {
-                        try {
-                            $parent = $parent->getParent();
-                        } catch (ExceptionNotFound $e) {
-                            break;
-                        }
-                        try {
-                            $imageFetcher = FeaturedImage::createFromResourcePage($contextPage)->getValue();
-                        } catch (ExceptionNotFound $e) {
-                            continue;
-                        }
-                        break;
+                    try {
+                        $ancestor = AncestorImage::createFromResourcePage($contextPage)->getValue();
+                    } catch (ExceptionNotFound $e) {
+                        continue 2;
+                    }
+                    try {
+                        $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($ancestor);
+                    } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+                        LogUtility::warning("Error while creating the ancestor image handler for the image ($ancestor) and the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
+                    }
+                    break;
+                case PageImageTag::ICON_TYPE:
+                    try {
+                        $icon = IconImage::createForPage($contextPage)->getValueOrDefault();
+                    } catch (ExceptionNotFound $e) {
+                        continue 2;
+                    }
+                    try {
+                        $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($icon);
+                    } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+                        LogUtility::warning("Error while creating the icon image handler for the image ($icon) and the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
                     }
                     break;
                 case PageImageTag::FIRST_TYPE:

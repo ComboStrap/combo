@@ -18,6 +18,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FirstRasterImage;
 use ComboStrap\FirstSvgImage;
+use ComboStrap\IconImage;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;
 use ComboStrap\Locale;
@@ -27,6 +28,7 @@ use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\Meta\Field\Aliases;
 use ComboStrap\Meta\Field\AliasPath;
 use ComboStrap\Meta\Field\AliasType;
+use ComboStrap\Meta\Field\AncestorImage;
 use ComboStrap\Meta\Field\FacebookImage;
 use ComboStrap\Meta\Field\FeaturedImage;
 use ComboStrap\Meta\Field\SocialCardImage;
@@ -184,8 +186,12 @@ abstract class Metadata
                 return new SocialCardImage();
             case FirstRasterImage::PROPERTY_NAME:
                 return new FirstRasterImage();
+            case AncestorImage::PROPERTY_NAME:
+                return new AncestorImage();
             case FirstSvgImage::PROPERTY_NAME:
                 return new FirstSvgImage();
+            case IconImage::PROPERTY_NAME:
+                return new IconImage();
             case Region::OLD_REGION_PROPERTY:
             case Region::getName():
                 return new Region();

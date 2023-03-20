@@ -1648,11 +1648,10 @@ class FetcherSvg extends IFetcherLocalImage
     }
 
     /**
-     * Build is done late
-     * because we want to be able to create
-     * a fetch url even if the file is not a correct svg
+     * Build is done late because we want to be able to create a fetch url even if the file is not a correct svg
      *
-     * The downside is that there is exception that may be triggered all over the place
+     * The downside is that there is an exception that may be triggered all over the place
+     *
      *
      * @throws ExceptionBadSyntax
      */

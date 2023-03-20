@@ -63,32 +63,7 @@ class FeaturedImage extends MetadataImage
     {
 
         $contextPage = $this->getResource();
-
-        $actual = $contextPage;
-        while (true) {
-            try {
-                return $this->getFeaturedImageBlogForContext($actual);
-            } catch (ExceptionNotFound $e) {
-                // ok
-            }
-            try {
-                $actual = $actual->getParent();
-            } catch (ExceptionNotFound $e) {
-                break;
-            }
-        }
-        /**
-         * Logo cascade
-         */
-        try {
-            return Site::getLogoAsSvgImage();
-        } catch (ExceptionNotFound $e) {
-            try {
-                return Site::getLogoAsRasterImage()->getSourcePath();
-            } catch (ExceptionNotFound $e) {
-                return  FeaturedRasterImage::getComboStrapLogo();
-            }
-        }
+        return $this->getFeaturedImageBlogForContext($contextPage);
 
     }
 

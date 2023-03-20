@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\AncestorImage;
 use ComboStrap\Meta\Field\FacebookImage;
 use ComboStrap\Meta\Field\FeaturedImage;
 use ComboStrap\Meta\Field\SocialCardImage;
@@ -48,9 +49,11 @@ class MetaManagerForm
         FeaturedImage::PROPERTY_NAME,
         FeaturedRasterImage::PROPERTY_NAME,
         FeaturedSvgImage::PROPERTY_NAME,
+        IconImage::PROPERTY_NAME,
         TwitterImage::PROPERTY_NAME,
         FacebookImage::PROPERTY_NAME,
         SocialCardImage::PROPERTY_NAME,
+        AncestorImage::PROPERTY_NAME,
         FirstRasterImage::PROPERTY_NAME,
         FirstSvgImage::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,

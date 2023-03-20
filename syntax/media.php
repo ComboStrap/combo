@@ -11,9 +11,11 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\FetcherSvg;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstRasterImage;
 use ComboStrap\FirstSvgImage;
+use ComboStrap\IconImage;
 use ComboStrap\IFetcherAbs;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
@@ -107,9 +109,19 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 return;
             }
         }
-        if (!isset($renderer->meta[FirstSvgImage::PROPERTY_NAME])) {
+        if (!isset($renderer->meta[FirstSvgImage::PROPERTY_NAME]) || !isset($renderer->meta[IconImage::FIRST_ICON_PARSED])) {
             if ($mime->toString() === Mime::SVG) {
-                $renderer->meta[FirstSvgImage::PROPERTY_NAME] = $wikiId;
+                try {
+                    $isIcon = FetcherSvg::createSvgFromPath(WikiPath::createMediaPathFromId($wikiId))
+                        ->isIconStructure();
+                } catch (Exception $e) {
+                    return;
+                }
+                if(!$isIcon) {
+                    $renderer->meta[FirstSvgImage::PROPERTY_NAME] = $wikiId;
+                } else {
+                    $renderer->meta[IconImage::FIRST_ICON_PARSED] = $wikiId;
+                }
             }
         }
 

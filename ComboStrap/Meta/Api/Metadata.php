@@ -16,9 +16,10 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\FirstImage;
 use ComboStrap\FirstRasterImage;
 use ComboStrap\FirstSvgImage;
-use ComboStrap\IconImage;
+use ComboStrap\FeaturedIcon;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;
 use ComboStrap\Locale;
@@ -190,8 +191,10 @@ abstract class Metadata
                 return new AncestorImage();
             case FirstSvgImage::PROPERTY_NAME:
                 return new FirstSvgImage();
-            case IconImage::PROPERTY_NAME:
-                return new IconImage();
+            case FeaturedIcon::PROPERTY_NAME:
+                return new FeaturedIcon();
+            case FirstImage::PROPERTY_NAME:
+                return new FirstImage();
             case Region::OLD_REGION_PROPERTY:
             case Region::getName():
                 return new Region();

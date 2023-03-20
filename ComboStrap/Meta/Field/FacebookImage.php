@@ -29,7 +29,7 @@ class FacebookImage extends MetadataImage
 
     public function getLabel(): string
     {
-        return "Facebook/OpenGraph Image";
+        return "Facebook/OpenGraph";
     }
 
     public static function getName(): string

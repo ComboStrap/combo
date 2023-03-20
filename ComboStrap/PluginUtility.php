@@ -431,7 +431,7 @@ class PluginUtility
      */
     public static function processStyle(&$attributes)
     {
-// Style
+        // Style
         $styleAttributeName = "style";
         if ($attributes->hasComponentAttribute($styleAttributeName)) {
             $properties = explode(";", $attributes->getValueAndRemove($styleAttributeName));

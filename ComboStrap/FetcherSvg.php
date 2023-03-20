@@ -826,7 +826,7 @@ class FetcherSvg extends IFetcherLocalImage
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      * @throws ExceptionBadState
-     * @throws ExceptionNotFound|ExceptionCompile
+     * @throws ExceptionCompile
      */
     public function process(): FetcherSvg
     {
@@ -957,6 +957,14 @@ class FetcherSvg extends IFetcherLocalImage
                     $targetHeight = $this->getTargetHeight();
                 }
                 if ($targetWidth !== $targetHeight) {
+                    /**
+                     * Check if the widht and height are the same
+                     *
+                     * Note: this is not the case for an illustration,
+                     * they may be different
+                     * They are not the width and height of the icon but
+                     * the width and height of the viewbox
+                     */
                     LogUtility::info("An icon or tile is defined as having the same dimension but the width ($targetWidth) is different from the height ($targetHeight). The icon will be cropped.");
                 }
 

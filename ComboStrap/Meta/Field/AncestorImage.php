@@ -25,9 +25,9 @@ class AncestorImage extends MetadataImage
 
     const PROPERTY_NAME = "ancestor-image";
 
-    public static function createFromResourcePage(MarkupPath $page): FeaturedImage
+    public static function createFromResourcePage(MarkupPath $page): AncestorImage
     {
-        return (new FeaturedImage())->setResource($page);
+        return (new AncestorImage())->setResource($page);
     }
 
     public function getDescription(): string

@@ -10,26 +10,26 @@ use ComboStrap\Meta\Store\MetadataDokuWikiStore;
  * A derived meta that captures the first raster image
  * via {@link \syntax_plugin_combo_media::registerFirstImage()}
  */
-class IconImage extends MetadataImage
+class FeaturedIcon extends MetadataImage
 {
 
-    public const PROPERTY_NAME = "icon-image";
+    public const PROPERTY_NAME = "featured-icon";
     public const FIRST_ICON_PARSED = "first-icon-image-parsed";
 
-    public static function createForPage(ResourceCombo $resource): IconImage
+    public static function createForPage(ResourceCombo $resource): FeaturedIcon
     {
-        return (new IconImage())
+        return (new FeaturedIcon())
             ->setResource($resource);
     }
 
     public function getDescription(): string
     {
-        return "The icon image of the page";
+        return "An illustrative icon for the page";
     }
 
     public function getLabel(): string
     {
-        return "Icon image";
+        return "Featured Icon";
     }
 
     public static function getName(): string
@@ -55,7 +55,7 @@ class IconImage extends MetadataImage
          *
          * Image set by {@link \syntax_plugin_combo_media::registerFirstImage()}
          */
-        $iconImageParsed = $this->getReadStore()->getFromPersistentName(IconImage::FIRST_ICON_PARSED);
+        $iconImageParsed = $this->getReadStore()->getFromPersistentName(FeaturedIcon::FIRST_ICON_PARSED);
 
         if($iconImageParsed!==null){
             return WikiPath::createMediaPathFromId($iconImageParsed);

@@ -82,6 +82,9 @@ abstract class ImageLink extends MediaLink
         } catch (ExceptionNotFound $e) {
             $linking = MediaMarkup::LINKING_DIRECT_VALUE;
         }
+        if($linking==="default"){
+            $linking = MediaMarkup::LINKING_DIRECT_VALUE;
+        }
         switch ($linking) {
             case MediaMarkup::LINKING_LINKONLY_VALUE:
                 // show only a url, no image

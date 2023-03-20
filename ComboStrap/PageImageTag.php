@@ -41,6 +41,7 @@ class PageImageTag
         PageImageTag::LOGO_TYPE,
         PageImageTag::ICON_TYPE
     ];
+    const DEFAULT_ZOOM = -4;
 
 
     /**
@@ -102,6 +103,13 @@ class PageImageTag
         $contextPage = MarkupPath::createPageFromPathObject($path);
 
         /**
+         * Zoom applied only to icon
+         * but we get and **delete** it
+         * because it's not a standard html attribute
+         */
+        $zoom = $tagAttributes->getValueAndRemoveIfPresent(Dimension::ZOOM_ATTRIBUTE, self::DEFAULT_ZOOM);
+
+        /**
          * Image Order of precedence
          */
         $order = $data[PageImageTag::ORDER_OF_PREFERENCE];
@@ -136,26 +144,46 @@ class PageImageTag
                     break;
                 case PageImageTag::ICON_TYPE:
                     try {
-                        $icon = IconImage::createForPage($contextPage)->getValueOrDefault();
+                        $icon = FeaturedIcon::createForPage($contextPage)->getValueOrDefault();
                     } catch (ExceptionNotFound $e) {
                         continue 2;
                     }
-                    try {
-                        $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($icon);
-                    } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
-                        LogUtility::warning("Error while creating the icon image handler for the image ($icon) and the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
+
+                    $width = $tagAttributes->getValueAndRemoveIfPresent(Dimension::WIDTH_KEY);
+                    $height = $tagAttributes->getValueAndRemoveIfPresent(Dimension::HEIGHT_KEY);
+                    $ratio = $tagAttributes->getValueAndRemoveIfPresent(Dimension::RATIO_ATTRIBUTE);
+                    if ($width === null && $height !== null && $ratio === null) {
+                        $width = $height;
                     }
+                    if ($width !== null && $height !== null && $ratio === null) {
+                        $height = $width;
+                    }
+                    $imageFetcher = FetcherSvg::createSvgFromPath($icon)
+                        ->setRequestedZoom($zoom);
+
+                    if ($ratio !== null) {
+                        try {
+                            $imageFetcher->setRequestedAspectRatio($ratio);
+                        } catch (ExceptionBadSyntax $e) {
+                            LogUtility::error("The ratio value ($ratio) is not a valid ratio for the icon image ($icon)");
+                        }
+                    }
+                    if ($width !== null) {
+                        $imageFetcher->setRequestedWidth($width);
+                    }
+                    if ($height !== null) {
+                        $imageFetcher->setRequestedHeight($height);
+                    }
+
                     break;
                 case PageImageTag::FIRST_TYPE:
-                    try {
-                        $firstImagePath = FirstRasterImage::createForPage($contextPage)->getValue();
-                    } catch (ExceptionNotFound $e) {
+
                         try {
-                            $firstImagePath = FirstSvgImage::createForPage($contextPage)->getValue();
+                            $firstImagePath = FirstImage::createForPage($contextPage)->getValue();
                         } catch (ExceptionNotFound $e) {
                             continue 2;
                         }
-                    }
+
                     try {
                         $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($firstImagePath);
                     } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
@@ -208,39 +236,35 @@ class PageImageTag
             /**
              * This is an illustration image
              * Used by svg to color by default with the primary color for instance
+             *
+             * (Note that because we use icon as page-image type,
+             * the buildFromTagAttributes would have set it to icon)
              */
             $imageFetcher->setRequestedType(FetcherSvg::ILLUSTRATION_TYPE);
 
             /**
-             * Zoom applies only to icon not to illustration
+             * When the width requested is small, no zoom out
              */
-            $isIcon = $imageFetcher->isIconStructure();
-            if (!$isIcon) {
-                $imageFetcher->setRequestedZoom(1);
-            } else {
-                /**
-                 * When the width requested is small, no zoom out
-                 */
+            try {
+                $requestedWidth = $imageFetcher->getRequestedWidth();
                 try {
-                    $width = $imageFetcher->getRequestedWidth();
-                    try {
-                        $pixelWidth = ConditionalLength::createFromString($width)->toPixelNumber();
-                        if ($pixelWidth < 30) {
-                            /**
-                             * Icon rendering
-                             */
-                            $imageFetcher->setRequestedZoom(1);
-                            $imageFetcher->setRequestedType(FetcherSvg::ICON_TYPE);
+                    $pixelWidth = ConditionalLength::createFromString($requestedWidth)->toPixelNumber();
+                    if ($pixelWidth < 30) {
+                        /**
+                         * Icon rendering
+                         */
+                        $imageFetcher
+                            ->setRequestedZoom(1)
+                            ->setRequestedType(FetcherSvg::ICON_TYPE);
 
-                        }
-                    } catch (ExceptionCompile $e) {
-                        LogUtility::msg("The width value ($width) could not be translated in pixel value. Error: {$e->getMessage()}");
                     }
-                } catch (ExceptionNotFound $e) {
-                    // no width
+                } catch (ExceptionCompile $e) {
+                    LogUtility::msg("The width value ($requestedWidth) could not be translated in pixel value. Error: {$e->getMessage()}");
                 }
-
+            } catch (ExceptionNotFound $e) {
+                // no width
             }
+
         }
 
 

@@ -215,7 +215,7 @@ class IconDownloader
 
 
     /**
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadArgument|ExceptionFileSystem
      */
     public function __construct(string $name)
     {
@@ -246,7 +246,7 @@ class IconDownloader
         $this->setIconName($name);
         // parse
         $sepPosition = strpos($name, ":");
-        if ($sepPosition != false) {
+        if ($sepPosition !== false) {
             $libraryName = substr($name, 0, $sepPosition);
             $this->setLibrary($libraryName);
             $iconName = substr($name, $sepPosition + 1);
@@ -277,6 +277,7 @@ class IconDownloader
 
     /**
      * @throws ExceptionBadArgument - if the icon library is not supported
+     * @throws ExceptionFileSystem
      */
     public static function createFromName(string $name): IconDownloader
     {
@@ -311,9 +312,16 @@ class IconDownloader
     public function getDownloadUrl(): string
     {
 
+        /**
+         * The test of the supported library
+         * happens lately because the user may install them manually
+         */
+        $library = $this->library;
+        if (!in_array($library, array_keys($this->getLibraries()))) {
+            throw new ExceptionBadArgument("The library ($library) is not a icon library supported");
+        }
 
         // Get the qualified library name
-        $library = $this->library;
         $acronymLibraries = self::getLibraries();
         if (isset($acronymLibraries[$library])) {
             $library = $acronymLibraries[$library];
@@ -439,8 +447,9 @@ class IconDownloader
     public function download()
     {
 
+
+        $libraryName = $this->getLibrary();
         $mediaDokuPath = $this->path;
-        $library = $this->getLibrary();
 
         /**
          * Create the target directory if it does not exist
@@ -464,17 +473,17 @@ class IconDownloader
         ErrorHandler::phpErrorAsException();
         try {
             $filePointer = fopen($downloadUrl, 'r');
-        } catch (ExceptionPhpError $e) {
+        } catch (\Exception $e) {
             // (ie no icon file found at ($downloadUrl)
             $message = "We couldn't find the <a href=\"$downloadUrl\">icon $this->iconName</a>) from the";
             try {
                 $urlLibrary = $this->getLibraryUrl();
-                $message = "$message <a href=\"$urlLibrary\">library $library</a>";
+                $message = "$message <a href=\"$urlLibrary\">library $libraryName</a>";
             } catch (ExceptionNotFound $e) {
                 if (PluginUtility::isDevOrTest()) {
                     throw $e;
                 }
-                $message = "$message library $library";
+                $message = "$message library $libraryName";
             }
             $message = "$message. Error: {$e->getMessage()}";
             throw new ExceptionCompile($message, Icon::ICON_CANONICAL_NAME);
@@ -483,10 +492,10 @@ class IconDownloader
         }
 
         $numberOfByte = file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toAbsoluteString(), $filePointer);
-        if ($numberOfByte != false) {
-            LogUtility::msg("The icon ($this) from the library ($library) was downloaded to ($mediaDokuPath)", LogUtility::LVL_MSG_INFO, Icon::ICON_CANONICAL_NAME);
+        if ($numberOfByte !== false) {
+            LogUtility::msg("The icon ($this) from the library ($libraryName) was downloaded to ($mediaDokuPath)", LogUtility::LVL_MSG_INFO, Icon::ICON_CANONICAL_NAME);
         } else {
-            LogUtility::msg("Internal error: The icon ($this) from the library ($library) could no be written to ($mediaDokuPath)", LogUtility::LVL_MSG_ERROR, Icon::ICON_CANONICAL_NAME);
+            LogUtility::msg("Internal error: The icon ($this) from the library ($libraryName) could no be written to ($mediaDokuPath)", LogUtility::LVL_MSG_ERROR, Icon::ICON_CANONICAL_NAME);
         }
 
 
@@ -582,14 +591,18 @@ class IconDownloader
 
 
     /**
-     * @throws ExceptionBadArgument
+     * @noinspection PhpReturnValueOfMethodIsNeverUsedInspection
      */
-    private function setLibrary($libraryName)
+    private function setLibrary($libraryName): IconDownloader
     {
-        if (!in_array($libraryName, array_keys($this->getLibraries()))) {
-            throw new ExceptionBadArgument("The library ($libraryName) is not a icon library supported");
-        }
+        /**
+         * The library may be not supported
+         * but the users can install them manually
+         * We test the support of the library if the logo does not exists
+         * on the file system
+         */
         $this->library = $libraryName;
+        return $this;
     }
 
     private function setIconName(string $iconName)

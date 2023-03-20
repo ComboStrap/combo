@@ -11,7 +11,12 @@ class Icon
     private FetcherSvg $fetchSvg;
 
     /**
+     * @param string $name
+     * @param TagAttributes|null $iconAttributes
+     * @return Icon
      * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionCompile
      * @throws ExceptionNotExists
      * @throws ExceptionNotFound
      */
@@ -85,7 +90,6 @@ class Icon
     }
 
     /**
-     * @throws ExceptionCompile
      */
     public static function createFromComboResource(string $name, TagAttributes $tagAttributes = null): Icon
     {

@@ -174,8 +174,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     private $readStore;
 
     /**
-     * @var Path - we wrap a path and not extends to be able to return a {@link MarkupPath}
-     * otherwise we get an hierarchy error
+     * @var Path -  {@link MarkupPath} has other hierachy system in regards with parent
+     * May be we just should extends {@link WikiPath} but it was a way to be able to locate
+     * default markup path file that were not in any drive
+     * TODO: Just extends WikiPath and add private drive when data should be accessed locally ?
      */
     private Path $path;
 
@@ -629,8 +631,15 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getFirstImage(): IFetcherLocalImage
     {
-        $firstImage = FirstImage::createForPage($this);
-        return $firstImage->getLocalImageFetcher();
+        try {
+            return IFetcherLocalImage::createImageFetchFromPath(FirstRasterImage::createForPage($this)->getValue());
+        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
+            LogUtility::error("First Raster Image error. Error: " . $e->getMessage(), self::CANONICAL_PAGE, $e);
+            throw new ExceptionNotFound();
+        } catch (ExceptionNotExists $e) {
+            throw new ExceptionNotFound();
+        }
+
     }
 
     /**
@@ -1332,6 +1341,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      * @return PageImage[]
+     * @deprecated
      */
     public
     function getPageMetadataImages(): array
@@ -2253,15 +2263,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return $this->path->toAbsolutePath();
     }
 
-    function getMime(): Mime
-    {
-        return $this->path->getMime();
-    }
 
     function resolve(string $name): Path
     {
         return $this->path->resolve($name);
     }
+
 
     function getUrl(): Url
     {

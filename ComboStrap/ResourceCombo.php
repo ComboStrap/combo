@@ -16,7 +16,7 @@ use ComboStrap\Meta\Api\MetadataStore;
  *
  * A resource is a just a wrapper around path that adds metadata functionalities
  *
- * @deprecated it's just a {@link Path}
+ * @deprecated it's just a {@link Path} with a {@link PageId} that can be accessed with the web server, therefore it should be a {@link WikiPath}
  */
 interface ResourceCombo
 {

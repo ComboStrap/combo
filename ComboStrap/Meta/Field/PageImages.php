@@ -7,7 +7,7 @@ namespace ComboStrap\Meta\Field;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
-use ComboStrap\FirstImage;
+use ComboStrap\FirstRasterImage;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
@@ -304,7 +304,7 @@ class PageImages extends MetadataTabular
         $pageImagePath = null;
         // Not really the default value but yeah
         try {
-            $firstImage = FirstImage::createForPage($this->getResource())->getValue();
+            $firstImage = FirstRasterImage::createForPage($this->getResource())->getValue();
             $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($firstImage);
         } catch (ExceptionNotFound $e) {
             // no first image

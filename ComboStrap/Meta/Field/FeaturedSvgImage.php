@@ -6,7 +6,6 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
-use ComboStrap\Meta\Api\MetadataWikiPath;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\Site;
 use ComboStrap\WikiPath;
@@ -69,10 +68,12 @@ class FeaturedSvgImage extends MetadataImage
         /**
          * Parsed Feature Images
          */
-        $parsedPath = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
-        if ($parsedPath !== null) {
-            return WikiPath::createMediaPathFromPath($parsedPath);
+        try {
+            return WikiPath::createMediaPathFromPath($this->getParsedValue());
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
+
 
         /**
          * Ancestor
@@ -98,6 +99,30 @@ class FeaturedSvgImage extends MetadataImage
             return self::getComboStrapSvgLogo();
         }
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getParsedValue(): WikiPath
+    {
+        $parsedValue = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
+        if($parsedValue===null){
+            throw new ExceptionNotFound();
+        }
+        return WikiPath::createMediaPathFromPath($parsedValue);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getValueOrParsed(): WikiPath
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getParsedValue();
+        }
     }
 
 

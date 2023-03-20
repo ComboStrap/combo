@@ -12,13 +12,15 @@ use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FileSystems;
-use ComboStrap\FirstImage;
+use ComboStrap\FirstRasterImage;
+use ComboStrap\FirstSvgImage;
 use ComboStrap\IFetcherAbs;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Mime;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\ThirdPartyPlugins;
@@ -84,9 +86,38 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         if (!FileSystems::exists($path)) {
             return;
         }
-        if (!isset($renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION])) {
-            if ($path->getMime()->isImage()) {
-                $renderer->meta[FirstImage::FIRST_IMAGE_META_RELATION] = $path->getWikiId();
+        try {
+            $mime = $path->getMime();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("The mime for the path ($path) was not found", self::CANONICAL, $e);
+            return;
+        }
+        if (!isset($renderer->meta[FirstRasterImage::PROPERTY_NAME])) {
+            if ($mime->isSupportedRasterImage()) {
+                /**
+                 * Image Id check
+                 */
+                $wikiId = $path->getWikiId();
+                if (media_isexternal($wikiId)) {
+                    // The first image is not a local image
+                    // Don't set
+                    return;
+                }
+                $renderer->meta[FirstRasterImage::PROPERTY_NAME] = $wikiId;
+            }
+        }
+        if (!isset($renderer->meta[FirstSvgImage::PROPERTY_NAME])) {
+            if ($mime->toString() === Mime::SVG) {
+                /**
+                 * Image Id check
+                 */
+                $wikiId = $path->getWikiId();
+                if (media_isexternal($wikiId)) {
+                    // The first image is not a local image
+                    // Don't set
+                    return;
+                }
+                $renderer->meta[FirstSvgImage::PROPERTY_NAME] = $wikiId;
             }
         }
 

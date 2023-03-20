@@ -85,7 +85,13 @@ class LdJson extends MetadataJson
                 LogUtility::internalError("The page image should come from a wiki path", self::CANONICAL, $e);
                 continue;
             }
-            $mime = $pageImagePath->getMime()->toString();
+            try {
+                $mime = $pageImagePath->getMime()->toString();
+            } catch (ExceptionNotFound $e) {
+                // should not happen
+                LogUtility::internalError("The page image mime could not be determined. Error:" . $e->getMessage(), self::CANONICAL, $e);
+                $mime = "unknown";
+            }
             if (in_array($mime, $supportedMime)) {
                 if (FileSystems::exists($pageImagePath)) {
                     try {

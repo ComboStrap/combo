@@ -88,10 +88,12 @@ class FeaturedRasterImage extends MetadataImage
         /**
          * Parsed Feature Images
          */
-        $parsedPath = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
-        if ($parsedPath !== null) {
-            return WikiPath::createMediaPathFromPath($parsedPath);
+        try {
+            return $this->getParsedValue();
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
+
 
         /**
          * Ancestor
@@ -126,6 +128,27 @@ class FeaturedRasterImage extends MetadataImage
             $store->setFromPersistentName(self::FEATURED_IMAGE_PARSED, $path->toAbsoluteString());
         }
         return $this;
+    }
+
+    public function getValueOrParsed()
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getParsedValue();
+        }
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getParsedValue(): WikiPath
+    {
+        $value = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
+        if($value===null){
+            throw new ExceptionNotFound();
+        }
+        return WikiPath::createMediaPathFromPath($value);
     }
 
 }

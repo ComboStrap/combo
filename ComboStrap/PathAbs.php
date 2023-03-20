@@ -8,7 +8,6 @@ abstract class PathAbs implements Path
 {
 
 
-
     /**
      * @throws ExceptionNotFound
      */
@@ -24,15 +23,14 @@ abstract class PathAbs implements Path
 
     /**
      * @return Mime based on the {@link PathAbs::getExtension()}
+     * @throws ExceptionNotFound
      * @deprecated see {@link FileSystems::getMime()}
      */
-    public function getMime(): ?Mime
+    public function getMime(): Mime
     {
-        try {
-            return FileSystems::getMime($this);
-        } catch (ExceptionNotFound $e) {
-            return null;
-        }
+
+        return FileSystems::getMime($this);
+
     }
 
     /**

@@ -57,27 +57,6 @@ abstract class IFetcherLocalImage extends FetcherImage implements IFetcherSource
         return IFetcherLocalImage::createImageFetchFromPath($dokuPath);
     }
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    public static function createImageFetchFromPageImageMetadata(MarkupPath $page)
-    {
-        $selectedPageImage = null;
-        foreach ($page->getPageMetadataImages() as $pageMetadataImage) {
-            try {
-                $pageMetadataImagePath = $pageMetadataImage->getImagePath();
-                $selectedPageImage = IFetcherLocalImage::createImageFetchFromPath($pageMetadataImagePath);
-            } catch (ExceptionBadArgument $e) {
-                LogUtility::internalError("The file ($pageMetadataImagePath) is not a valid image for the page ($page). Error: {$e->getMessage()}");
-                continue;
-            }
-        }
-        if ($selectedPageImage !== null) {
-            return $selectedPageImage;
-        }
-        throw new ExceptionNotFound("No page image metadata image could be found for the page ($page)");
-    }
-
 
     function getBuster(): string
     {

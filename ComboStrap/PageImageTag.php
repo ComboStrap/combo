@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Field\FeaturedImagePage;
 use Exception;
 use Mpdf\Gif\Image;
 use syntax_plugin_combo_iterator;
@@ -36,8 +37,6 @@ class PageImageTag
         PageImageTag::ANCESTOR_TYPE,
         PageImageTag::LOGO_TYPE
     ];
-
-
 
 
     /**
@@ -107,7 +106,7 @@ class PageImageTag
             switch ($pageImageProcessing) {
                 case PageImageTag::FEATURED:
                     try {
-                        $imageFetcher = self::selectAndGetBestMetadataPageImageFetcherForRatio($contextPage, $tagAttributes);
+                        $imageFetcher = FeaturedImagePage::createFromResourcePage($contextPage)->getValue();
                     } catch (ExceptionNotFound $e) {
                         // ok
                     }
@@ -122,24 +121,23 @@ class PageImageTag
                             break;
                         }
                         try {
-                            $imageFetcher = self::selectAndGetBestMetadataPageImageFetcherForRatio($parent, $tagAttributes);
+                            $imageFetcher = FeaturedImagePage::createFromResourcePage($contextPage)->getValue();
                         } catch (ExceptionNotFound $e) {
-                            try {
-                                $imageFetcher = FirstImage::createForPage($parent)
-                                    ->getLocalImageFetcher();
-                            } catch (ExceptionNotFound $e) {
-                                continue;
-                            }
+                            continue;
                         }
                         break;
                     }
                     break;
                 case PageImageTag::FIRST_TYPE:
                     try {
-                        $imageFetcher = FirstImage::createForPage($contextPage)
-                            ->getLocalImageFetcher();
+                        $firstRasterImagePath = FirstRasterImage::createForPage($contextPage)->getValue();
                     } catch (ExceptionNotFound $e) {
                         continue 2;
+                    }
+                    try {
+                        $imageFetcher = FetcherRaster::createImageRasterFetchFromPath($firstRasterImagePath);
+                    } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+                        LogUtility::warning("Error while creating the first image handler for the image ($firstRasterImagePath) and the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
                     }
                     break;
                 case PageImageTag::VIGNETTE_TYPE:
@@ -249,51 +247,6 @@ class PageImageTag
             return $message;
         }
 
-    }
-
-    /**
-     * @throws ExceptionNotFound - if the page was not found
-     */
-    private static function selectAndGetBestMetadataPageImageFetcherForRatio(MarkupPath $page, TagAttributes $tagAttributes): IFetcherLocalImage
-    {
-        /**
-         * Take the image and the page images
-         * of the first page with an image
-         */
-        $selectedPageImage = IFetcherLocalImage::createImageFetchFromPageImageMetadata($page);
-        $stringRatio = $tagAttributes->getValue(Dimension::RATIO_ATTRIBUTE);
-        if ($stringRatio === null) {
-            return $selectedPageImage;
-        }
-
-        /**
-         * We select the best image for the ratio
-         * Best ratio
-         */
-        $bestRatioDistance = 9999;
-        try {
-            $targetRatio = Dimension::convertTextualRatioToNumber($stringRatio);
-        } catch (ExceptionBadSyntax $e) {
-            LogUtility::error("The ratio ($stringRatio) is not a valid ratio. Error: {$e->getMessage()}", PageImageTag::CANONICAL);
-            return $selectedPageImage;
-        }
-
-        $pageImages = $page->getPageMetadataImages();
-        foreach ($pageImages as $pageImage) {
-            $path = $pageImage->getImagePath();
-            try {
-                $fetcherImage = IFetcherLocalImage::createImageFetchFromPath($path);
-            } catch (Exception $e) {
-                LogUtility::msg("An image object could not be build from ($path). Is it an image file ?. Error: {$e->getMessage()}");
-                continue;
-            }
-            $ratioDistance = $targetRatio - $fetcherImage->getIntrinsicAspectRatio();
-            if ($ratioDistance < $bestRatioDistance) {
-                $bestRatioDistance = $ratioDistance;
-                $selectedPageImage = $fetcherImage;
-            }
-        }
-        return $selectedPageImage;
     }
 
     public static function getDefaultAttributes(): array

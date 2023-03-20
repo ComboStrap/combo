@@ -1030,12 +1030,15 @@ class WikiPath extends PathAbs
 
     }
 
-    function getMime(): ?Mime
+    /**
+     * @throws ExceptionNotFound
+     */
+    function getMime(): Mime
     {
         if ($this->drive === self::MARKUP_DRIVE) {
             return new Mime(Mime::PLAIN_TEXT);
         }
-        return parent::getMime();
+        return FileSystems::getMime($this);
 
     }
 

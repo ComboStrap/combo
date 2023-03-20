@@ -3,6 +3,7 @@
 namespace ComboStrap\Meta\Field;
 
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\FirstSvgImage;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
@@ -15,7 +16,7 @@ class FeaturedSvgImage extends MetadataImage
 {
 
     const PROPERTY_NAME = "featured-svg-image";
-    const FEATURED_IMAGE_PARSED = "featured-svg-image-parsed";
+    const ITEM_FEATURED_IMAGE_PARSED = "item-featured-svg-image-parsed";
 
     private static function getComboStrapSvgLogo(): WikiPath
     {
@@ -57,7 +58,7 @@ class FeaturedSvgImage extends MetadataImage
     {
         $store = $this->getWriteStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $store->setFromPersistentName(self::FEATURED_IMAGE_PARSED, $path->toAbsoluteString());
+            $store->setFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED, $path->toAbsoluteString());
         }
         return $this;
     }
@@ -68,36 +69,7 @@ class FeaturedSvgImage extends MetadataImage
         /**
          * Parsed Feature Images
          */
-        try {
-            return WikiPath::createMediaPathFromPath($this->getParsedValue());
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
-
-
-        /**
-         * Ancestor
-         */
-        $parent = $this->getResource();
-        while (true) {
-            try {
-                $parent = $parent->getParent();
-            } catch (ExceptionNotFound $e) {
-                // no parent
-                break;
-            }
-            try {
-                return FeaturedSvgImage::createFromResourcePage($parent)->getValue();
-            } catch (ExceptionNotFound $e) {
-                continue;
-            }
-        }
-
-        try {
-            return Site::getLogoAsSvgImage();
-        } catch (ExceptionNotFound $e) {
-            return self::getComboStrapSvgLogo();
-        }
+        return WikiPath::createMediaPathFromPath($this->getParsedValue());
 
     }
 
@@ -106,8 +78,17 @@ class FeaturedSvgImage extends MetadataImage
      */
     public function getParsedValue(): WikiPath
     {
-        $parsedValue = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
-        if($parsedValue===null){
+        /**
+         * @var MarkupPath $markupPath
+         */
+        $markupPath = $this->getResource();
+        $isIndex = $markupPath->isIndexPage();
+        if ($isIndex) {
+            $parsedValue = $this->getReadStore()->getFromPersistentName(FirstSvgImage::PROPERTY_NAME);
+        } else {
+            $parsedValue = $this->getReadStore()->getFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED);
+        }
+        if ($parsedValue === null) {
             throw new ExceptionNotFound();
         }
         return WikiPath::createMediaPathFromPath($parsedValue);

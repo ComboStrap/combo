@@ -7,6 +7,8 @@ namespace ComboStrap;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Field\Aliases;
 use ComboStrap\Meta\Field\FacebookImage;
+use ComboStrap\Meta\Field\FeaturedImage;
+use ComboStrap\Meta\Field\SocialCardImage;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
@@ -43,10 +45,14 @@ class MetaManagerForm
         PageTemplateName::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
+        FeaturedImage::PROPERTY_NAME,
         FeaturedRasterImage::PROPERTY_NAME,
         FeaturedSvgImage::PROPERTY_NAME,
         TwitterImage::PROPERTY_NAME,
         FacebookImage::PROPERTY_NAME,
+        SocialCardImage::PROPERTY_NAME,
+        FirstRasterImage::PROPERTY_NAME,
+        FirstSvgImage::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
         PageType::PROPERTY_NAME,
         PagePublicationDate::PROPERTY_NAME,
@@ -116,7 +122,7 @@ class MetaManagerForm
             try {
                 $metadata = Metadata::getForName($formsMetaDatum);
             } catch (ExceptionNotFound $e) {
-                LogUtility::msg("The metadata ($formsMetaDatum} was not found");
+                LogUtility::error("The metadata ($formsMetaDatum} was not found");
                 continue;
             }
             $metadata

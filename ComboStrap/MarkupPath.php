@@ -2282,7 +2282,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     public function __toString(): string
     {
-        return "$this->path";
+        return $this->path->__toString();
     }
 
     /**
@@ -2294,5 +2294,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $path = FileSystems::createPathFromUri($uri);
         return new MarkupPath($path);
     }
+
+
 
 }

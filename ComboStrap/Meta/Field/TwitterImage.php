@@ -64,7 +64,7 @@ class TwitterImage extends MetadataImage
     public function getDefaultValue()
     {
 
-        return FeaturedRasterImage::createFromResourcePage($this->getResource())
+        return SocialCardImage::createFromResourcePage($this->getResource())
             ->getValueOrDefault();
 
     }

@@ -86,6 +86,15 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         if (!FileSystems::exists($path)) {
             return;
         }
+        /**
+         * Image Id check
+         */
+        $wikiId = $path->getWikiId();
+        if (media_isexternal($wikiId)) {
+            // The first image is not a local image
+            // Don't set
+            return;
+        }
         try {
             $mime = $path->getMime();
         } catch (ExceptionNotFound $e) {
@@ -94,29 +103,12 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         }
         if (!isset($renderer->meta[FirstRasterImage::PROPERTY_NAME])) {
             if ($mime->isSupportedRasterImage()) {
-                /**
-                 * Image Id check
-                 */
-                $wikiId = $path->getWikiId();
-                if (media_isexternal($wikiId)) {
-                    // The first image is not a local image
-                    // Don't set
-                    return;
-                }
                 $renderer->meta[FirstRasterImage::PROPERTY_NAME] = $wikiId;
+                return;
             }
         }
         if (!isset($renderer->meta[FirstSvgImage::PROPERTY_NAME])) {
             if ($mime->toString() === Mime::SVG) {
-                /**
-                 * Image Id check
-                 */
-                $wikiId = $path->getWikiId();
-                if (media_isexternal($wikiId)) {
-                    // The first image is not a local image
-                    // Don't set
-                    return;
-                }
                 $renderer->meta[FirstSvgImage::PROPERTY_NAME] = $wikiId;
             }
         }

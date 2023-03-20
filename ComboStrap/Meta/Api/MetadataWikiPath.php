@@ -67,17 +67,23 @@ abstract class MetadataWikiPath extends Metadata
 
     public function toStoreValue()
     {
-        if(!isset($this->value)){
+        try {
+            /**
+             * {@link self::getValue()} because
+             * it may be overwritten by derived metadata
+             */
+            $actualPath = $this->getValue();
+        } catch (ExceptionNotFound $e) {
             return null;
         }
-        return $this->value->getAbsolutePath();
+        return $actualPath->getAbsolutePath();
     }
 
     public function toStoreDefaultValue()
     {
         try {
             $defaultValue = $this->getDefaultValue();
-            if(!($defaultValue instanceof WikiPath)){
+            if (!($defaultValue instanceof WikiPath)) {
                 LogUtility::internalError("The value ($defaultValue) is not a wiki path");
                 return $defaultValue;
             }
@@ -94,7 +100,7 @@ abstract class MetadataWikiPath extends Metadata
             return $this;
         }
 
-        if($value instanceof WikiPath){
+        if ($value instanceof WikiPath) {
             $this->value = $value;
             return $this;
         }

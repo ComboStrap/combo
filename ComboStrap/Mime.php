@@ -214,7 +214,7 @@ class Mime
 
     public function isSupportedRasterImage(): bool
     {
-        return !in_array($this->mime, Mime::RASTER_MIMES);
+        return in_array($this->mime, Mime::RASTER_MIMES);
     }
 
 

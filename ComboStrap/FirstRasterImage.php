@@ -33,7 +33,7 @@ class FirstRasterImage extends MetadataImage
 
     public function getLabel(): string
     {
-        return "First raster image";
+        return "First Raster image";
     }
 
     public static function getName(): string
@@ -47,34 +47,30 @@ class FirstRasterImage extends MetadataImage
         return false;
     }
 
-    public function buildFromReadStore(): FirstRasterImage
+    /**
+     * @return WikiPath
+     * @throws ExceptionNotFound
+     */
+    public function getValue(): WikiPath
     {
-        $this->wasBuild = true;
+
         $store = $this->getReadStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
-            return $this;
+            throw new ExceptionNotFound();
         }
 
         /**
-         * Dokuwiki stores the first image in under relation
-         * but as we can't take over the renderer code to enable svg as first image
-         * we write it in the root to overcome a conflict
          *
          * Image set by {@link \syntax_plugin_combo_media::registerFirstImage()}
          */
         $firstImageId = $store->getFromPersistentName(FirstRasterImage::PROPERTY_NAME);
 
-        /**
-         * Image Id check
-         */
-        if (media_isexternal($firstImageId)) {
-            // The first image is not a local image
-            // Don't set
-            return $this;
+        if($firstImageId!==null){
+            return WikiPath::createMediaPathFromId($firstImageId);
         }
-        $this->buildFromStoreValue($firstImageId);
 
-        return $this;
+        throw new ExceptionNotFound();
+
     }
 
 
@@ -82,4 +78,5 @@ class FirstRasterImage extends MetadataImage
     {
         return Metadata::DERIVED_METADATA;
     }
+
 }

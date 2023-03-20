@@ -2,7 +2,7 @@
 
 namespace ComboStrap;
 
-use ComboStrap\Meta\Field\FeaturedImagePage;
+use ComboStrap\Meta\Field\FeaturedImage;
 use Exception;
 use Mpdf\Gif\Image;
 use syntax_plugin_combo_iterator;
@@ -106,9 +106,15 @@ class PageImageTag
             switch ($pageImageProcessing) {
                 case PageImageTag::FEATURED:
                     try {
-                        $imageFetcher = FeaturedImagePage::createFromResourcePage($contextPage)->getValue();
+                        $imagePath = FeaturedImage::createFromResourcePage($contextPage)->getValue();
                     } catch (ExceptionNotFound $e) {
                         // ok
+                        continue 2;
+                    }
+                    try {
+                        $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($imagePath);
+                    } catch (ExceptionNotExists|ExceptionBadArgument|ExceptionBadSyntax $e) {
+                        LogUtility::warning("Error while creating the fetcher for the feature image ($imagePath) and the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
                     }
                     break;
                 case PageImageTag::ANCESTOR_TYPE:
@@ -121,7 +127,7 @@ class PageImageTag
                             break;
                         }
                         try {
-                            $imageFetcher = FeaturedImagePage::createFromResourcePage($contextPage)->getValue();
+                            $imageFetcher = FeaturedImage::createFromResourcePage($contextPage)->getValue();
                         } catch (ExceptionNotFound $e) {
                             continue;
                         }
@@ -130,14 +136,18 @@ class PageImageTag
                     break;
                 case PageImageTag::FIRST_TYPE:
                     try {
-                        $firstRasterImagePath = FirstRasterImage::createForPage($contextPage)->getValue();
+                        $firstImagePath = FirstRasterImage::createForPage($contextPage)->getValue();
                     } catch (ExceptionNotFound $e) {
-                        continue 2;
+                        try {
+                            $firstImagePath = FirstSvgImage::createForPage($contextPage)->getValue();
+                        } catch (ExceptionNotFound $e) {
+                            continue 2;
+                        }
                     }
                     try {
-                        $imageFetcher = FetcherRaster::createImageRasterFetchFromPath($firstRasterImagePath);
+                        $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($firstImagePath);
                     } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
-                        LogUtility::warning("Error while creating the first image handler for the image ($firstRasterImagePath) and the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
+                        LogUtility::warning("Error while creating the first image handler for the image ($firstImagePath) and the page ($contextPage). Error: {$e->getMessage()}", self::CANONICAL, $e);
                     }
                     break;
                 case PageImageTag::VIGNETTE_TYPE:

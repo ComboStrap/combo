@@ -1032,12 +1032,34 @@ class ExecutionContext
 
     /**
      * @return array - data in context
+     * This is the central point to get data in context as there is no
+     * content object in dokuwiki
+     *
      * It takes care of returning the context path
      * (in case of slot via the {@link self::getContextPath()}
      */
     public function getContextData(): array
     {
-        return MarkupPath::createPageFromPathObject($this->getContextPath())->getMetadataForRendering();
+
+        try {
+
+            /**
+             * Context data may be dynamically given
+             * by the {@link \syntax_plugin_combo_iterator}
+             */
+            return $this
+                ->getExecutingMarkupHandler()
+                ->getContextData();
+
+        } catch (ExceptionNotFound $e) {
+
+            /**
+             * Preview / slot
+             */
+            return MarkupPath::createPageFromPathObject($this->getContextPath())->getMetadataForRendering();
+
+        }
+
     }
 
     /**

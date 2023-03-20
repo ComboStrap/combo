@@ -4,6 +4,8 @@ namespace ComboStrap\Meta\Field;
 
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
+use ComboStrap\FirstRasterImage;
+use ComboStrap\FirstSvgImage;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
@@ -88,36 +90,8 @@ class FeaturedRasterImage extends MetadataImage
         /**
          * Parsed Feature Images
          */
-        try {
-            return $this->getParsedValue();
-        } catch (ExceptionNotFound $e) {
-            // ok
-        }
+        return $this->getParsedValue();
 
-
-        /**
-         * Ancestor
-         */
-        $parent = $this->getResource();
-        while (true) {
-            try {
-                $parent = $parent->getParent();
-            } catch (ExceptionNotFound $e) {
-                // no parent
-                break;
-            }
-            try {
-                return FeaturedRasterImage::createFromResourcePage($parent)->getValue();
-            } catch (ExceptionNotFound $e) {
-                continue;
-            }
-        }
-
-        try {
-            return Site::getLogoAsRasterImage()->getSourcePath();
-        } catch (ExceptionNotFound $e) {
-            return self::getComboStrapLogo();
-        }
 
     }
 
@@ -130,7 +104,10 @@ class FeaturedRasterImage extends MetadataImage
         return $this;
     }
 
-    public function getValueOrParsed()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getValueOrParsed(): WikiPath
     {
         try {
             return $this->getValue();
@@ -144,11 +121,21 @@ class FeaturedRasterImage extends MetadataImage
      */
     private function getParsedValue(): WikiPath
     {
-        $value = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
-        if($value===null){
+        /**
+         * @var MarkupPath $markupPath
+         */
+        $markupPath = $this->getResource();
+        $isIndex = $markupPath->isIndexPage();
+        if ($isIndex) {
+            $parsedValue = $this->getReadStore()->getFromPersistentName(FirstRasterImage::PROPERTY_NAME);
+        } else {
+            $parsedValue = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
+        }
+        if ($parsedValue === null) {
             throw new ExceptionNotFound();
         }
-        return WikiPath::createMediaPathFromPath($value);
+        return WikiPath::createMediaPathFromPath($parsedValue);
+
     }
 
 }

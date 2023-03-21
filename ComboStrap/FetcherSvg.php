@@ -1288,12 +1288,14 @@ class FetcherSvg extends IFetcherLocalImage
 
         if ($zoomFactor !== null) {
             // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
+            $intrinsicWidth = $this->getIntrinsicWidth();
+            $intrinsicHeight = $this->getIntrinsicHeight();
             if ($zoomFactor < 0) {
-                $processedWidth = -$zoomFactor * $targetWidth;
-                $processedHeight = -$zoomFactor * $targetHeight;
+                $processedWidth = -$zoomFactor * $intrinsicWidth;
+                $processedHeight = -$zoomFactor * $intrinsicHeight;
             } else {
-                $processedWidth = $targetWidth / $zoomFactor;
-                $processedHeight = $targetHeight / $zoomFactor;
+                $processedWidth = $intrinsicWidth / $zoomFactor;
+                $processedHeight = $intrinsicHeight / $zoomFactor;
             }
             // center
             $actualWidth = $mediaWidth;

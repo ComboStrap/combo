@@ -94,7 +94,7 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
      * Handle the syntax
      *
      * At the end of the parser, the `section_open` and `section_close` calls
-     * are created in {@link action_plugin_combo_headingpostprocessing}
+     * are created in {@link action_plugin_combo_instructionspostprocessing}
      * and the text inside for the toc is captured
      *
      * @param string $match

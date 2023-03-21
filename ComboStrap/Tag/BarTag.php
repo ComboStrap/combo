@@ -2,7 +2,7 @@
 
 namespace ComboStrap\Tag;
 
-use action_plugin_combo_headingpostprocessing;
+use action_plugin_combo_instructionspostprocessing;
 use ComboStrap\CallStack;
 use ComboStrap\ContainerTag;
 use ComboStrap\DataType;
@@ -81,7 +81,7 @@ class BarTag
         if ($htmlTag === BarTag::HTML_SECTION_TAG) {
             $headingFound = false;
             while ($actualCall = $callStack->next()) {
-                if (in_array($actualCall->getTagName(), action_plugin_combo_headingpostprocessing::HEADING_TAGS)) {
+                if (in_array($actualCall->getTagName(), action_plugin_combo_instructionspostprocessing::HEADING_TAGS)) {
                     $headingFound = true;
                     break;
                 }

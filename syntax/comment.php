@@ -30,7 +30,7 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
     {
         /**
          * {@link EditButtonManager::createAndAddEditButtonToStack()} }
-         * section edit added at {@link action_plugin_combo_headingpostprocessing}
+         * section edit added at {@link action_plugin_combo_instructionspostprocessing}
          * if there is no heading at all
          */
         $normalizedContent = trim($content);

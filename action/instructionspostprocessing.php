@@ -9,7 +9,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\Outline;
 use ComboStrap\WikiPath;
 
-class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
+class action_plugin_combo_instructionspostprocessing extends DokuWiki_Action_Plugin
 {
 
 
@@ -41,7 +41,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             'PARSER_HANDLER_DONE',
             'AFTER',
             $this,
-            '_post_process_heading',
+            '_post_processing',
             array()
         );
 
@@ -61,7 +61,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
      *
      * @param   $event Doku_Event
      */
-    function _post_process_heading(&$event, $param)
+    function _post_processing(&$event, $param)
     {
 
         /**
@@ -134,12 +134,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $executingMarkupPath = null;
         }
         $outline = Outline::createFromCallStack($callStack, $executingMarkupPath, $isFragment);
-        if (!$executionContext->getConfig()->isThemeSystemEnabled()) {
-            $handler->calls = $outline->toDokuWikiTemplateInstructionCalls();
-        } else {
-            $handler->calls = $outline->toHtmlSectionOutlineCalls();
-        }
-
+        $handler->calls = $outline->toHtmlSectionOutlineCalls();
+        /**
+         * No more supported
+         * $handler->calls = $outline->toDokuWikiTemplateInstructionCalls();
+         */
 
     }
 

@@ -24,6 +24,7 @@ class TableUtility
 {
 
     const TABLE_SNIPPET_ID = "table";
+    const BOOT_TABLE_CLASSES = 'table table-non-fluid table-hover table-striped';
 
     static function tableOpen($renderer, $class)
     {
@@ -35,7 +36,7 @@ class TableUtility
         // Otherwise we can't have floating element at the right and the visual space is too big
         PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TABLE_SNIPPET_ID);
 
-        $bootTableClass = 'table table-non-fluid table-hover table-striped';
+        $bootTableClass = self::BOOT_TABLE_CLASSES;
 
         $renderer->doc .=<<<EOF
 <div class="$class $bootResponsiveClass"><table class="inline $bootTableClass">

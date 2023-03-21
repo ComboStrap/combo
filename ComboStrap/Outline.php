@@ -6,11 +6,18 @@ namespace ComboStrap;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
+use syntax_plugin_combo_analytics;
 use syntax_plugin_combo_header;
 use syntax_plugin_combo_headingatx;
 use syntax_plugin_combo_headingwiki;
 use syntax_plugin_combo_media;
 
+/**
+ * The outline is creating a XML like document
+ * with section
+ *
+ * It's also the post-processing of the instructions
+ */
 class Outline
 {
 
@@ -113,6 +120,15 @@ class Outline
     {
 
         /**
+         * {@link syntax_plugin_combo_analytics tag analytics}
+         * By default, in a test environment
+         * this is set to 0
+         * to speed test and to not pollute
+         */
+        $analtyicsEnabled = SiteConfig::getConfValue(syntax_plugin_combo_analytics::CONF_SYNTAX_ANALYTICS_ENABLE, true);
+        $analyticsTagUsed = [];
+
+        /**
          * Processing variable about the context
          */
         $this->rootSection = OutlineSection::createOutlineRoot()
@@ -122,13 +138,67 @@ class Outline
         $callStack->moveToStart();
         while ($actualCall = $callStack->next()) {
 
-            $tagName = $actualCall->getTagName();
+            /**
+             * Block Post Processing
+             * to not get any unwanted p
+             * to counter {@link Block::process()}
+             */
+            if ($actualCall->isDisplaySet()) {
+                if ($actualCall->getDisplay() === Call::BlOCK_DISPLAY) {
+
+                    /**
+                     * Previous call control
+                     */
+                    $previous = $callStack->previous();
+                    if ($previous->isUnMatchedEmptyCall()) {
+                        /**
+                         * An empty unmatched call will create a block
+                         * Delete
+                         */
+                        $callStack->deleteActualCallAndPrevious();
+                        $previous = $callStack->getActualCall();
+                    }
+                    if ($previous->getTagName() === "p" && $previous->getState() === DOKU_LEXER_ENTER) {
+                        $callStack->deleteActualCallAndPrevious();
+                    }
+
+                    /**
+                     * Go back on the actual call
+                     */
+                    $callStack->next();
+
+                    /**
+                     * Next call Control
+                     */
+                    $next = $callStack->next();
+                    if ($next->getTagName() === "p" && $next->getState() === DOKU_LEXER_EXIT) {
+                        $callStack->deleteActualCallAndPrevious();
+                    }
+                }
+            }
+
+
+            if ($analtyicsEnabled) {
+
+                if (in_array($actualCall->getState(), CallStack::TAG_STATE)) {
+                    $tagName = $actualCall->getComponentName();
+                    // The dokuwiki component name have open in their name
+                    $tagName = str_replace("_open", "", $tagName);
+                    if (isset($analyticsTagUsed[$tagName])) {
+                        $analyticsTagUsed[$tagName] = $analyticsTagUsed[$tagName] + 1;
+                    } else {
+                        $analyticsTagUsed[$tagName] = 1;
+                    }
+                }
+
+            }
 
             /**
              * We don't take the outline and document call if any
              * This is the case when we build from an actual stored instructions
              * (to bundle multiple page for instance)
              */
+            $tagName = $actualCall->getTagName();
             switch ($tagName) {
                 case "document_start":
                 case "document_end":
@@ -138,6 +208,12 @@ class Outline
                     if ($actualCall->isPluginCall() && $actualCall->getContext() === self::CONTEXT) {
                         continue 2;
                     }
+            }
+
+            $componentName = $actualCall->getComponentName();
+            if ($componentName === "table_open") {
+                $originalInstructionCall = &$actualCall->getInstructionCall();
+                $originalInstructionCall[1][3] = TableUtility::BOOT_TABLE_CLASSES;
             }
 
             /**
@@ -272,8 +348,8 @@ class Outline
 
 
             switch ($actualCall->getComponentName()) {
-                case \action_plugin_combo_headingpostprocessing::EDIT_SECTION_OPEN:
-                case \action_plugin_combo_headingpostprocessing::EDIT_SECTION_CLOSE:
+                case \action_plugin_combo_instructionspostprocessing::EDIT_SECTION_OPEN:
+                case \action_plugin_combo_instructionspostprocessing::EDIT_SECTION_CLOSE:
                     // we don't store them
                     continue 2;
             }
@@ -335,6 +411,16 @@ class Outline
                 }
             }
             $this->addCallToSection($actualCall);
+        }
+
+        // empty text
+        if (sizeof($analyticsTagUsed) > 0) {
+            $pluginAnalyticsCall = Call::createComboCall(
+                syntax_plugin_combo_analytics::TAG,
+                DOKU_LEXER_SPECIAL,
+                $analyticsTagUsed
+            );
+            $this->addCallToSection($pluginAnalyticsCall);
         }
 
         // Add label the heading text to the metadata
@@ -532,12 +618,12 @@ EOF;
         $collectCalls = function (OutlineSection $outlineSection) use (&$totalInstructionCalls, &$sectionSequenceId) {
 
             $wikiSectionOpen = Call::createNativeCall(
-                \action_plugin_combo_headingpostprocessing::EDIT_SECTION_OPEN,
+                \action_plugin_combo_instructionspostprocessing::EDIT_SECTION_OPEN,
                 array($outlineSection->getLevel()),
                 $outlineSection->getStartPosition()
             );
             $wikiSectionClose = Call::createNativeCall(
-                \action_plugin_combo_headingpostprocessing::EDIT_SECTION_CLOSE,
+                \action_plugin_combo_instructionspostprocessing::EDIT_SECTION_CLOSE,
                 array(),
                 $outlineSection->getEndPosition()
             );
@@ -726,15 +812,21 @@ EOF;
                     }
                 }
             }
-            $totalComboCalls = array_merge(
-                $totalComboCalls,
-                [$openHeader],
-                $outlineSection->getHeadingCalls(),
-                $contentCalls,
-            );
-            $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
-            $totalComboCalls[] = $closeHeader;
-
+            /**
+             * If header has content,
+             * we add it
+             */
+            $headerHasContent = !(empty($contentCalls) && empty($outlineSection->getHeadingCalls()));
+            if ($headerHasContent) {
+                $totalComboCalls = array_merge(
+                    $totalComboCalls,
+                    [$openHeader],
+                    $outlineSection->getHeadingCalls(),
+                    $contentCalls,
+                );
+                $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
+                $totalComboCalls[] = $closeHeader;
+            }
 
             foreach ($actualChildren as $child) {
                 $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $captureHeaderMeta);

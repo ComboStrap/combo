@@ -123,7 +123,7 @@ class MarkupRenderer
                  * ```p_cached_instructions(wikiFN($id),false,$id)```
                  *
                  * The best way to manipulate the instructions is not before but after
-                 * the parsing. See {@link \action_plugin_combo_headingpostprocessing}
+                 * the parsing. See {@link \action_plugin_combo_instructionspostprocessing}
                  *
                  */
                 return p_get_instructions($this->markupSource);

@@ -183,13 +183,19 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         return new FetcherMarkupBuilder();
     }
 
-    public static function createFromStringMarkupToXhtml(string $markup): FetcherMarkup
+    /**
+     * Use mostly in test
+     * The coutnerpart of {@link \TestUtility::renderText2XhtmlWithoutP()}
+     * @throws ExceptionNotExists
+     */
+    public static function createStandaloneExecutionFromStringMarkupToXhtml(string $markup): FetcherMarkup
     {
         return self::confRoot()
             ->setRequestedMarkupString($markup)
             ->setDeleteRootBlockElement(true)
             ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
+            ->setIsCodeStandAloneExecution(true)
             ->build();
     }
 

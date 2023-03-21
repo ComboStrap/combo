@@ -14,6 +14,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "analytics";
+    public const CONF_SYNTAX_ANALYTICS_ENABLE = "syntaxAnalyticsEnable";
 
     /**
      * Syntax Type.
@@ -66,7 +67,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
     {
         /**
          * The instruction `calls` are not created via syntax
-         * but dynamically via {@link action_plugin_combo_pluginanalytics::_extract_plugin_info()}
+         * but dynamically in the Outline {@link \ComboStrap\Outline::buildOutline()}
          */
 
     }
@@ -76,7 +77,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
 
         /**
          * The instruction `calls` are not created via syntax
-         * but dynamically via {@link action_plugin_combo_pluginanalytics::_extract_plugin_info()}
+         * but dynamically in the Outline {@link \ComboStrap\Outline::buildOutline()}
          */
 
     }

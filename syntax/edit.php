@@ -92,7 +92,7 @@ class syntax_plugin_combo_edit extends DokuWiki_Syntax_Plugin
     {
 
         /**
-         * Call is generated in {@link action_plugin_combo_headingpostprocessing}
+         * Call is generated in {@link action_plugin_combo_instructionspostprocessing}
          */
 
     }

@@ -140,44 +140,47 @@ class Outline
         $callStack->moveToStart();
         while ($actualCall = $callStack->next()) {
 
+
+            $state = $actualCall->getState();
+
             /**
              * Block Post Processing
              * to not get any unwanted p
              * to counter {@link Block::process()}
+             * setting dynamically the {@link SyntaxPlugin::getPType()}
+             *
+             * Unfortunately, it can't work because this is called after
+             * {@link Block::process()}
              */
-            $state = $actualCall->getState();
-            if ($actualCall->isDisplaySet()) {
+//            if ($actualCall->isDisplaySet()) {
 
-                /**
-                 * Setting dynamically the {@link SyntaxPlugin::getPType()}
-                 */
-                $display = $actualCall->getDisplay();
-                switch ($display) {
-                    case Call::BlOCK_DISPLAY:
-                        switch ($state) {
-                            case DOKU_LEXER_SPECIAL:
-                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
-                                break;
-                            case DOKU_LEXER_ENTER:
-                            case DOKU_LEXER_EXIT:
-                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblocktag::TAG);
-                                break;
-                        }
-                        break;
-                    case Call::INLINE_DISPLAY:
-                        switch ($state) {
-                            case DOKU_LEXER_SPECIAL:
-                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlinlineemptytag::TAG);
-                                break;
-                            case DOKU_LEXER_ENTER:
-                            case DOKU_LEXER_EXIT:
-                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
-                                break;
-                        }
-                        break;
-                }
-
-            }
+//                $display = $actualCall->getDisplay();
+//                switch ($display) {
+//                    case Call::BlOCK_DISPLAY:
+//                        switch ($state) {
+//                            case DOKU_LEXER_SPECIAL:
+//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
+//                                break;
+//                            case DOKU_LEXER_ENTER:
+//                            case DOKU_LEXER_EXIT:
+//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblocktag::TAG);
+//                                break;
+//                        }
+//                        break;
+//                    case Call::INLINE_DISPLAY:
+//                        switch ($state) {
+//                            case DOKU_LEXER_SPECIAL:
+//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlinlineemptytag::TAG);
+//                                break;
+//                            case DOKU_LEXER_ENTER:
+//                            case DOKU_LEXER_EXIT:
+//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
+//                                break;
+//                        }
+//                        break;
+//                }
+//
+//            }
 
 
             if ($analtyicsEnabled) {

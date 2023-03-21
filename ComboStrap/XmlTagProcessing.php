@@ -252,7 +252,7 @@ class XmlTagProcessing
                 $renderer->doc .= FollowTag::renderSpecialEnterNode($tagAttributes, DOKU_LEXER_ENTER);
                 return true;
             case TableTag::TAG:
-                TableTag::renderEnterXhtml( $tagAttributes, $renderer);
+                TableTag::renderEnterXhtml($tagAttributes, $renderer);
                 return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
@@ -756,6 +756,12 @@ class XmlTagProcessing
                 break;
             case BreadcrumbTag::MARKUP_BLOCK:
                 $returnedArray = BreadcrumbTag::handleEnter($tagAttributes);
+                break;
+            case HrTag::TAG:
+                /**
+                 * Block tag
+                 */
+                $returnedArray = [PluginUtility::DISPLAY => HrTag::getDisplay()];
                 break;
         }
 

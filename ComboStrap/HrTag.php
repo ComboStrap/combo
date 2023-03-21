@@ -21,4 +21,9 @@ class HrTag
         return $tagAttributes->toHtmlEmptyTag("hr");
     }
 
+    public static function getDisplay(): string
+    {
+        return Call::BlOCK_DISPLAY;
+    }
+
 }

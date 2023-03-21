@@ -9,6 +9,7 @@ use ComboStrap\Tag\BoxTag;
 use ComboStrap\Tag\FollowTag;
 use ComboStrap\Tag\MermaidTag;
 use ComboStrap\Tag\ShareTag;
+use ComboStrap\Tag\TableTag;
 use ComboStrap\Tag\WebCodeTag;
 use ComboStrap\TagAttribute\Hero;
 use Doku_Handler;
@@ -249,6 +250,9 @@ class XmlTagProcessing
                 return true;
             case FollowTag::MARKUP:
                 $renderer->doc .= FollowTag::renderSpecialEnterNode($tagAttributes, DOKU_LEXER_ENTER);
+                return true;
+            case TableTag::TAG:
+                TableTag::renderEnterXhtml( $tagAttributes, $renderer);
                 return true;
             default:
                 LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");

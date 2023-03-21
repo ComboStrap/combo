@@ -2,3 +2,7 @@
     /*no-cell wrap*/
     width: max-content !important;
 }
+/*fighting dokuwiki css*/
+.table>:not(caption)>*>*{
+    padding:0.5rem .5rem!important;
+}

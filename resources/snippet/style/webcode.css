@@ -47,3 +47,8 @@
 .webcode-cs {
     margin-bottom: 1rem;
 }
+
+/* Hack: The button is shown because we don't take over completly the table*/
+.webcode-cs .editbutton_table{
+    display: none!important;
+}

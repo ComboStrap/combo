@@ -6,6 +6,7 @@ namespace ComboStrap;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Tag\TableTag;
 use syntax_plugin_combo_analytics;
 use syntax_plugin_combo_header;
 use syntax_plugin_combo_headingatx;
@@ -212,8 +213,18 @@ class Outline
 
             $componentName = $actualCall->getComponentName();
             if ($componentName === "table_open") {
+                $position = $actualCall->getFirstMatchedCharacterPosition();
                 $originalInstructionCall = &$actualCall->getInstructionCall();
-                $originalInstructionCall[1][3] = TableUtility::BOOT_TABLE_CLASSES;
+                $originalInstructionCall = Call::createComboCall(
+                    TableTag::TAG,
+                    DOKU_LEXER_ENTER,
+                    [PluginUtility::POSITION=>$position],
+                    null,
+                    null,
+                    null,
+                    $position,
+                    \syntax_plugin_combo_xmlblocktag::TAG
+                )->toCallArray();
             }
 
             /**

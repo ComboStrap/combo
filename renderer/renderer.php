@@ -5,7 +5,7 @@ use ComboStrap\FsWikiUtility;
 use ComboStrap\HeadingTag;
 use ComboStrap\Xml\XhtmlUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\TableUtility;
+use ComboStrap\Tag\TableTag;
 use ComboStrap\Toc;
 
 
@@ -203,47 +203,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         }
 
         parent::document_end();
-
-    }
-
-    /**
-     * Start a table
-     *
-     * @param int $maxcols maximum number of columns
-     * @param int $numrows NOT IMPLEMENTED
-     * @param int $pos byte position in the original source
-     * @param string|string[]  classes - have to be valid, do not pass unfiltered user input
-     */
-    function table_open($maxcols = null, $numrows = null, $pos = null, $classes = NULL)
-    {
-        // initialize the row counter used for classes
-        /** @noinspection DuplicatedCode */
-        $this->_counter['row_counter'] = 0;
-
-        /**
-         * Table editing
-         */
-        $class = 'table';
-        if ($classes !== null) {
-            if (is_array($classes)) $classes = join(' ', $classes);
-            $class .= ' ' . $classes;
-        }
-
-        /**
-         * Does not seems to work
-         * there is no relation to this code
-         * https://www.dokuwiki.org/tips:table_editing
-         */
-//        if ($pos !== null) {
-//            $hid = $this->_headerToLink($class, true);
-//            $data = array();
-//            $data['target'] = 'table';
-//            $data['name'] = '';
-//            $data['hid'] = $hid;
-//            $class .= ' ' . $this->startSectionEdit($pos, $data);
-//        }
-
-        TableUtility::tableOpen($this, $class);
 
     }
 

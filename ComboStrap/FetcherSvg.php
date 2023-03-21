@@ -1277,6 +1277,8 @@ class FetcherSvg extends IFetcherLocalImage
         $ratio = $this->getTargetAspectRatio();
         [$processedWidth, $processedHeight] = $this->getCroppingDimensionsWithRatio($ratio);
         $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $processedWidth $processedHeight");
+        $documentElement->setAttribute(Dimension::WIDTH_KEY,$processedWidth);
+        $documentElement->setAttribute(Dimension::HEIGHT_KEY,$processedHeight);
 
 
         /**

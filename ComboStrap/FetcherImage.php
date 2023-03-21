@@ -26,8 +26,8 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
     const CANONICAL = "image";
 
 
-    private ?int $requestedWidth = null;
-    private ?int $requestedHeight = null;
+    protected ?int $requestedWidth = null;
+    protected ?int $requestedHeight = null;
 
     private ?string $requestedRatio = null;
     private ?float $requestedRatioAsFloat = null;
@@ -119,7 +119,7 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
                 $id = $this->getSourcePath()->toWikiPath()->getWikiId();
             } catch (ExceptionCast $e) {
                 LogUtility::error("Unable to calculate the image tok. The source path is not a web/wiki path", self::CANONICAL, $e);
-                throw new ExceptionNotNeeded("No tok added, error ".$e->getMessage());
+                throw new ExceptionNotNeeded("No tok added, error " . $e->getMessage());
             }
             return media_get_token($id, $requestedWidth, $requestedHeight);
 
@@ -551,6 +551,17 @@ abstract class FetcherImage extends IFetcherAbs implements IFetcherPath
             throw new ExceptionNotFound("No ratio was specified");
         }
         return $this->requestedRatio;
+    }
+
+    public function isCropRequested(): bool
+    {
+        if ($this->requestedHeight !== null && $this->requestedWidth !== null) {
+            return true;
+        }
+        if ($this->requestedRatio != null) {
+            return true;
+        }
+        return false;
     }
 
 

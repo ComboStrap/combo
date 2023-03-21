@@ -96,7 +96,7 @@ class FetcherSvg extends IFetcherLocalImage
     public const CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY = "svgOptimizationElementsToDeleteIfEmpty";
     public const SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg";
     public const STROKE_ATTRIBUTE = "stroke";
-    public const DEFAULT_ICON_WIDTH = "24";
+    public const DEFAULT_ICON_LENGTH = 24;
     public const REQUESTED_NAME_ATTRIBUTE = "name";
     public const REQUESTED_PRESERVE_ATTRIBUTE = "preserve";
     public const ILLUSTRATION_TYPE = "illustration";
@@ -119,6 +119,7 @@ class FetcherSvg extends IFetcherLocalImage
     const TAG = "svg";
     public const NAME_ATTRIBUTE = "name";
     public const DATA_NAME_HTML_ATTRIBUTE = "data-name";
+    const DEFAULT_TILE_WIDTH = 192;
 
 
     private ?ColorRgb $color = null;
@@ -822,6 +823,24 @@ class FetcherSvg extends IFetcherLocalImage
         return $this;
     }
 
+    public function getRequestedHeight(): int
+    {
+        try {
+            return $this->getDefaultWidhtAndHeightForIconAndTileIfNotSet();
+        } catch (ExceptionNotFound $e) {
+            return parent::getRequestedHeight();
+        }
+    }
+
+    public function getRequestedWidth(): int
+    {
+        try {
+            return $this->getDefaultWidhtAndHeightForIconAndTileIfNotSet();
+        } catch (ExceptionNotFound $e) {
+            return parent::getRequestedWidth();
+        }
+    }
+
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
@@ -841,15 +860,6 @@ class FetcherSvg extends IFetcherLocalImage
         // Handy variable
         $documentElement = $this->getXmlDocument()->getElement();
 
-        /**
-         * ViewBox should exist
-         */
-        $viewBox = $documentElement->getAttribute(FetcherSvg::VIEW_BOX);
-        if ($viewBox === "") {
-            $width = $this->getIntrinsicWidth();
-            $targetHeight = $this->getIntrinsicHeight();
-            $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $width $targetHeight");
-        }
 
         if ($this->getRequestedOptimizeOrDefault()) {
             $this->optimize();
@@ -929,33 +939,52 @@ class FetcherSvg extends IFetcherLocalImage
         $extraAttributes = TagAttributes::createEmpty(self::TAG);
 
         /**
-         * Dimension and other attributes by requested type
+         * Dimension processing (heigth, width, viewbox)
+         *
+         * ViewBox should exist
+         *
+         * Ratio / Width / Height Cropping happens via the viewbox
+         *
+         * Width and height used to set the viewBox of a svg
+         * to crop it (In a raster image, there is not this distinction)
+         *
+         * We set the viewbox everytime:
+         * If width and height are not the same, this is a crop
+         * If width and height are the same, this is not a crop
+         */
+        $targetWidth = $this->getTargetWidth();
+        $targetHeight = $this->getTargetHeight();
+        if ($this->isCropRequested()) {
+            $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $targetWidth $targetHeight");
+        } else {
+            $viewBox = $documentElement->getAttribute(FetcherSvg::VIEW_BOX);
+            if (empty($viewBox)) {
+                // viewbox is mandatory
+                $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 {$this->getIntrinsicWidth()} {$this->getIntrinsicHeight()}");
+            }
+        }
+        /**
+         * Dimension are mandatory
+         * Why ?
+         * - to not take the dimension of the parent - Setting the width and height is important, otherwise it takes the dimension of the parent (that are generally a squared)
+         * - to show the crop
+         * - to have internal calculate dimension otherwise, it's tiny
+         * - To have an internal width and not shrink on the css property `width: auto !important;` of a table
+         * - To have an internal height and not shrink on the css property `height: auto !important;` of a table
+         * - Using a icon in the navbrand component of bootstrap require the set of width and height otherwise the svg has a calculated width of null and the bar component are below the brand text
+         * - ...
+         * */
+        $documentElement
+            ->setAttribute(Dimension::WIDTH_KEY, $targetWidth)
+            ->setAttribute(Dimension::HEIGHT_KEY, $targetHeight);
+
+        /**
+         * Css styling due to dimension
          */
         switch ($requestedType) {
             case FetcherSvg::ICON_TYPE:
             case FetcherSvg::TILE_TYPE:
-                /**
-                 * Dimension: An icon or a tile have the same height and width
-                 *
-                 * Using a icon in the navbrand component of bootstrap
-                 * require the set of width and height otherwise
-                 * the svg has a calculated width of null
-                 * and the bar component are below the brand text
-                 *
-                 */
-                if ($this->norWidthNorHeightWasRequested()) {
-                    if ($requestedType == FetcherSvg::ICON_TYPE) {
-                        $length = FetcherSvg::DEFAULT_ICON_WIDTH;
-                    } else {
-                        // tile
-                        $length = "192";
-                    }
-                    $targetWidth = $length;
-                    $targetHeight = $length;
-                } else {
-                    $targetWidth = $this->getTargetWidth();
-                    $targetHeight = $this->getTargetHeight();
-                }
+
                 if ($targetWidth !== $targetHeight) {
                     /**
                      * Check if the widht and height are the same
@@ -968,12 +997,6 @@ class FetcherSvg extends IFetcherLocalImage
                     LogUtility::info("An icon or tile is defined as having the same dimension but the width ($targetWidth) is different from the height ($targetHeight). The icon will be cropped.");
                 }
 
-                /**
-                 * Dimension
-                 * The default unit on attribute is pixel, no need to add it to the number as in CSS
-                 */
-                $documentElement->setAttribute("width", $targetWidth)
-                    ->setAttribute("height", $targetHeight);
                 break;
             default:
                 /**
@@ -1026,14 +1049,8 @@ class FetcherSvg extends IFetcherLocalImage
                     }
                     $extraAttributes->addStyleDeclarationIfNotSet("max-width", "{$widthInPixel}px");
 
-                    /**
-                     * To have an internal width
-                     * and not shrink on the css property `width: auto !important;`
-                     * of a table
-                     */
-                    $documentElement->setAttribute("width", $widthInPixel);
-
                 }
+
 
                 if ($requestedHeight !== null) {
                     /**
@@ -1049,15 +1066,8 @@ class FetcherSvg extends IFetcherLocalImage
                     }
                     $extraAttributes->addStyleDeclarationIfNotSet("max-height", "{$heightInPixel}px");
 
-                    /**
-                     * To have an internal height
-                     * and not shrink on the css property `height: auto !important;`
-                     * of a table
-                     */
-                    $documentElement->setAttribute("height", $heightInPixel);
 
                 }
-
 
                 break;
         }
@@ -1262,27 +1272,9 @@ class FetcherSvg extends IFetcherLocalImage
 
         }
 
-        /**
-         * Ratio / Width / Height Cropping
-         *
-         * Width and height used to set the viewBox of a svg
-         * to crop it (In a raster image, there is not this distinction)
-         *
-         * With an icon, the viewBox can be small but it can be zoomed out
-         * via the {@link Dimension::WIDTH_KEY}
-         *
-         * We get a crop, it means that we need to change the viewBox
-         *
-         */
-        $ratio = $this->getTargetAspectRatio();
-        [$processedWidth, $processedHeight] = $this->getCroppingDimensionsWithRatio($ratio);
-        $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $processedWidth $processedHeight");
-        $documentElement->setAttribute(Dimension::WIDTH_KEY,$processedWidth);
-        $documentElement->setAttribute(Dimension::HEIGHT_KEY,$processedHeight);
-
 
         /**
-         * Zoom occurs after the crop if any
+         * Zoom occurs after the crop/dimenions setting if any
          */
         try {
             $zoomFactor = $this->getRequestedZoom();
@@ -1297,11 +1289,11 @@ class FetcherSvg extends IFetcherLocalImage
         if ($zoomFactor !== null) {
             // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
             if ($zoomFactor < 0) {
-                $processedWidth = -$zoomFactor * $processedWidth;
-                $processedHeight = -$zoomFactor * $processedHeight;
+                $processedWidth = -$zoomFactor * $targetWidth;
+                $processedHeight = -$zoomFactor * $targetHeight;
             } else {
-                $processedWidth = $processedWidth / $zoomFactor;
-                $processedHeight = $processedHeight / $zoomFactor;
+                $processedWidth = $targetWidth / $zoomFactor;
+                $processedHeight = $targetHeight / $zoomFactor;
             }
             // center
             $actualWidth = $mediaWidth;
@@ -1526,18 +1518,15 @@ class FetcherSvg extends IFetcherLocalImage
      */
     private function norWidthNorHeightWasRequested(): bool
     {
-        try {
-            $this->getRequestedWidth();
+
+        if ($this->requestedWidth !== null) {
             return false;
-        } catch (ExceptionNotFound $e) {
-            // ok
         }
-        try {
-            $this->getRequestedHeight();
+        if ($this->requestedHeight !== null) {
             return false;
-        } catch (ExceptionNotFound $e) {
-            return true;
         }
+        return true;
+
     }
 
     /**
@@ -1718,7 +1707,7 @@ class FetcherSvg extends IFetcherLocalImage
      */
     public function isIconStructure(): bool
     {
-        return $this->getInternalStructureType()===self::ICON_TYPE;
+        return $this->getInternalStructureType() === self::ICON_TYPE;
     }
 
     /**
@@ -1763,6 +1752,48 @@ class FetcherSvg extends IFetcherLocalImage
             return $svgStructureType;
 
         }
+    }
+
+    /**
+     *
+     * This function returns a consistent requested width and height for icon and tile
+     *
+     * @throws ExceptionNotFound - if not a icon or tile requested
+     */
+    private function getDefaultWidhtAndHeightForIconAndTileIfNotSet(): int
+    {
+
+        if (!$this->norWidthNorHeightWasRequested()) {
+            throw new ExceptionNotFound();
+        }
+
+        if ($this->isCropRequested()) {
+            /**
+             * With a crop, the internal dimension takes over
+             */
+            throw new ExceptionNotFound();
+        }
+
+        $internalStructure = $this->getInternalStructureType();
+        switch ($internalStructure) {
+            case FetcherSvg::ICON_TYPE:
+                try {
+                    $requestedType = $this->getRequestedType();
+                } catch (ExceptionNotFound $e) {
+                    $requestedType = FetcherSvg::ICON_TYPE;
+                }
+                switch ($requestedType) {
+                    case FetcherSvg::TILE_TYPE:
+                        return self::DEFAULT_TILE_WIDTH;
+                    default:
+                    case FetcherSvg::ICON_TYPE:
+                        return FetcherSvg::DEFAULT_ICON_LENGTH;
+                }
+            default:
+                throw new ExceptionNotFound();
+        }
+
+
     }
 
 

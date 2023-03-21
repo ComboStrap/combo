@@ -5,12 +5,10 @@ namespace ComboStrap;
 use Doku_Handler;
 use Doku_Renderer_metadata;
 use Exception;
-use syntax_plugin_combo_tooltip;
-use syntax_plugin_combo_xmlinlinetag;
-use syntax_plugin_combo_icon;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_media;
 use syntax_plugin_combo_note;
+use syntax_plugin_combo_tooltip;
 
 class IconTag
 {
@@ -47,7 +45,7 @@ class IconTag
             ])
         ) {
 
-            $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, FetcherSvg::DEFAULT_ICON_WIDTH);
+            $requestedWidth = $tagAttributes->getValue(Dimension::WIDTH_KEY, FetcherSvg::DEFAULT_ICON_LENGTH);
 
             // By default, a character icon
             $color = Site::getSecondaryColor();

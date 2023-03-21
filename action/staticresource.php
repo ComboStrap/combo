@@ -1,34 +1,23 @@
 <?php
 
-use ComboStrap\ExceptionBadSyntax;
-use ComboStrap\ExceptionInternal;
-use ComboStrap\ExceptionNotExists;
-use ComboStrap\ExecutionContext;
-use ComboStrap\FetcherSystem;
-use ComboStrap\HttpResponseStatus;
-use ComboStrap\IFetcherAbs;
-use ComboStrap\FetcherCache;
-use ComboStrap\Site;
-use ComboStrap\SiteConfig;
-use ComboStrap\WikiPath;
-use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionBadState;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\IFetcher;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherRaster;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
+use ComboStrap\IFetcher;
 use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\MarkupPath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\SiteConfig;
 use ComboStrap\Web\Url;
-use ComboStrap\FetcherVignette;
+use ComboStrap\WikiPath;
 use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');

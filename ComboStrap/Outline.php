@@ -174,6 +174,8 @@ class Outline
                     $next = $callStack->next();
                     if ($next->getTagName() === "p" && $next->getState() === DOKU_LEXER_EXIT) {
                         $callStack->deleteActualCallAndPrevious();
+                    } else {
+                        $callStack->previous();
                     }
                 }
             }

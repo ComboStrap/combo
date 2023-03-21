@@ -420,7 +420,7 @@ class FetcherSvg extends IFetcherLocalImage
 
 
     /**
-     *
+     * The height of the viewbox
      * @return int
      */
     public function getIntrinsicHeight(): int
@@ -436,6 +436,7 @@ class FetcherSvg extends IFetcherLocalImage
     }
 
     /**
+     * The width of the view box
      * @return int
      */
     public
@@ -905,8 +906,8 @@ class FetcherSvg extends IFetcherLocalImage
          * can be an icon or an illustrative image
          *
          */
-        $mediaWidth = $this->getIntrinsicWidth();
-        $mediaHeight = $this->getIntrinsicHeight();
+        $intrinsicWidth = $this->getIntrinsicWidth();
+        $intrinsicHeight = $this->getIntrinsicHeight();
 
 
         $svgStructureType = $this->getInternalStructureType();
@@ -939,6 +940,20 @@ class FetcherSvg extends IFetcherLocalImage
         $extraAttributes = TagAttributes::createEmpty(self::TAG);
 
         /**
+         * Zoom occurs after the crop/dimenions setting if any
+         */
+        try {
+            $zoomFactor = $this->getRequestedZoom();
+        } catch (ExceptionNotFound $e) {
+            if ($svgStructureType === FetcherSvg::ICON_TYPE && $requestedType === FetcherSvg::ILLUSTRATION_TYPE) {
+                $zoomFactor = -4;
+            } else {
+                $zoomFactor = 1; // 0r 1 :)
+            }
+        }
+
+
+        /**
          * Dimension processing (heigth, width, viewbox)
          *
          * ViewBox should exist
@@ -954,8 +969,53 @@ class FetcherSvg extends IFetcherLocalImage
          */
         $targetWidth = $this->getTargetWidth();
         $targetHeight = $this->getTargetHeight();
-        if ($this->isCropRequested()) {
-            $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "0 0 $targetWidth $targetHeight");
+        if ($this->isCropRequested() || $zoomFactor !== 1) {
+
+            /**
+             * ViewBox is the logical view
+             *
+             * with an icon case, we zoom out for illustation otherwise, this is ugly as the icon takes the whole place
+             *
+             * Zoom applies on the target/cropped dimension
+             * so that we can center all at once in the next step
+             */
+
+            /**
+             * Cropping First
+             * Before appying the zoom
+             */
+            $viewBoxWidth = $this->getIntrinsicWidth();
+            $viewBoxHeight = $this->getIntrinsicHeight();
+            if ($viewBoxWidth > $targetWidth) {
+                $viewBoxWidth = $targetWidth;
+            }
+            if ($viewBoxHeight > $targetHeight) {
+                $viewBoxHeight = $targetHeight;
+            }
+
+            /**
+             * Note: if the svg is an icon of width 24 with a viewbox of 0 0 24 24,
+             * if you double the viewbox to 0 0 48 48, you have applied of -2
+             * The icon is two times smaller smaller
+             */
+            if ($zoomFactor < 0) {
+                $viewBoxWidth = -$zoomFactor * $viewBoxWidth;
+                $viewBoxHeight = -$zoomFactor * $viewBoxHeight;
+            } else {
+                $viewBoxWidth = $viewBoxWidth / $zoomFactor;
+                $viewBoxHeight = $viewBoxHeight / $zoomFactor;
+            }
+
+
+            /**
+             * Center
+             *
+             * We center by moving the origin (ie x and y)
+             */
+            $x = -($viewBoxWidth - $intrinsicWidth) / 2;
+            $y = -($viewBoxHeight - $intrinsicHeight) / 2;
+            $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "$x $y $viewBoxWidth $viewBoxHeight");
+
         } else {
             $viewBox = $documentElement->getAttribute(FetcherSvg::VIEW_BOX);
             if (empty($viewBox)) {
@@ -1270,39 +1330,6 @@ class FetcherSvg extends IFetcherLocalImage
                 }
                 break;
 
-        }
-
-
-        /**
-         * Zoom occurs after the crop/dimenions setting if any
-         */
-        try {
-            $zoomFactor = $this->getRequestedZoom();
-        } catch (ExceptionNotFound $e) {
-            if ($svgStructureType === FetcherSvg::ICON_TYPE && $requestedType === FetcherSvg::ILLUSTRATION_TYPE) {
-                $zoomFactor = -4;
-            } else {
-                $zoomFactor = null; // 0r 1 :)
-            }
-        }
-
-        if ($zoomFactor !== null) {
-            // icon case, we zoom out otherwise, this is ugly, the icon takes the whole place
-            $intrinsicWidth = $this->getIntrinsicWidth();
-            $intrinsicHeight = $this->getIntrinsicHeight();
-            if ($zoomFactor < 0) {
-                $processedWidth = -$zoomFactor * $intrinsicWidth;
-                $processedHeight = -$zoomFactor * $intrinsicHeight;
-            } else {
-                $processedWidth = $intrinsicWidth / $zoomFactor;
-                $processedHeight = $intrinsicHeight / $zoomFactor;
-            }
-            // center
-            $actualWidth = $mediaWidth;
-            $actualHeight = $mediaHeight;
-            $x = -($processedWidth - $actualWidth) / 2;
-            $y = -($processedHeight - $actualHeight) / 2;
-            $documentElement->setAttribute(FetcherSvg::VIEW_BOX, "$x $y $processedWidth $processedHeight");
         }
 
 

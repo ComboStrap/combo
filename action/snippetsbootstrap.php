@@ -13,7 +13,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\PageTemplate;
 use ComboStrap\SiteConfig;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  *

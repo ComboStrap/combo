@@ -8,6 +8,9 @@ use ComboStrap\TagAttribute\Align;
 use ComboStrap\TagAttribute\Animation;
 use ComboStrap\TagAttribute\Shadow;
 use ComboStrap\Web\Url;
+use Doku_Renderer_metadata;
+use Doku_Renderer_xhtml;
+use renderer_plugin_combo_analytics;
 use syntax_plugin_combo_media;
 
 /**
@@ -26,6 +29,11 @@ use syntax_plugin_combo_media;
  */
 class MediaMarkup
 {
+
+    /**
+     * No name as this is {{ --- }}
+     */
+    public const TAG = "media";
 
     /**
      * The dokuwiki type and mode name
@@ -178,6 +186,119 @@ class MediaMarkup
             ->setFetcher($fetcher);
     }
 
+    public static function renderSpecial(array $data, Doku_Renderer_xhtml $renderer)
+    {
+
+        $callStackArray = $data[PluginUtility::ATTRIBUTES];
+        $display = $callStackArray[Display::DISPLAY];
+        if ($display === Display::DISPLAY_NONE_VALUE) {
+            /**
+             * Used primarly to not show the featured images
+             * in the outline {@link Outline::toHtmlSectionOutlineCallsRecurse()}
+             * for item page
+             * But we keep the metadata to move them if any
+             */
+            return false;
+        }
+
+        /** @var Doku_Renderer_xhtml $renderer */
+        try {
+
+            $mediaMarkup = MediaMarkup::createFromCallStackArray($callStackArray);
+        } catch (ExceptionCompile $e) {
+            return $e->getMessage();
+        }
+
+
+        if (
+            $mediaMarkup->getInternalExternalType() === MediaMarkup::INTERNAL_MEDIA_CALL_NAME
+        ) {
+            try {
+                $isImage = $mediaMarkup->getFetcher()->getMime()->isImage();
+            } catch (\Exception $e) {
+                $isImage = false;
+            }
+            if ($isImage) {
+                try {
+                    return MediaLink::createFromMediaMarkup($mediaMarkup)->renderMediaTag();
+                } catch (ExceptionCompile $e) {
+                    if (PluginUtility::isDevOrTest()) {
+                        throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
+                    } else {
+                        $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
+                        $message = "Media ({$mediaMarkup}). Error while rendering: {$e->getMessage()}";
+                        LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
+                        return "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
+
+                    }
+                }
+            }
+
+        }
+
+
+        /**
+         * This is not an local internal media image (a video or an url image)
+         * Dokuwiki takes over
+         */
+        $mediaType = $mediaMarkup->getInternalExternalType();
+        $src = $mediaMarkup->getSrc();
+        try {
+            $title = $mediaMarkup->getLabel();
+        } catch (ExceptionNotFound $e) {
+            $title = null;
+        }
+        try {
+            $linking = $mediaMarkup->getLinking();
+        } catch (ExceptionNotFound $e) {
+            $linking = null;
+        }
+        try {
+            $align = $mediaMarkup->getAlign();
+        } catch (ExceptionNotFound $e) {
+            $align = null;
+        }
+        try {
+            /**
+             * We use the markup ref url
+             * because we don't support http/https (external) url
+             * And there is therefore no fetcher available
+             */
+            $markupUrl = $mediaMarkup->getMarkupRef()->getUrl();
+        } catch (ExceptionNotFound $e) {
+            // the
+            LogUtility::internalError("As the media markup is created from a markup in the syntax component, it should be available");
+            return "";
+        }
+        try {
+            $width = $markupUrl->getQueryPropertyValue(Dimension::WIDTH_KEY);
+        } catch (ExceptionNotFound $e) {
+            $width = null;
+        }
+        try {
+            $height = $markupUrl->getQueryPropertyValue(Dimension::HEIGHT_KEY);
+        } catch (ExceptionNotFound $e) {
+            $height = null;
+        }
+        try {
+            $cache = $markupUrl->getQueryPropertyValue(IFetcherAbs::CACHE_KEY);
+        } catch (ExceptionNotFound $e) {
+            // Dokuwiki needs a value
+            // If their is no value it will output it without any value
+            // in the query string.
+            $cache = IFetcherAbs::CACHE_DEFAULT_VALUE;
+        }
+        switch ($mediaType) {
+            case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
+                return $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+            case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:
+                return $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+            default:
+                LogUtility::msg("The dokuwiki media type ($mediaType) is unknown");
+                return "";
+        }
+    }
+
 
     /**
      * Compliance: src in dokuwiki is the id and the anchor if any
@@ -231,6 +352,39 @@ class MediaMarkup
     public static function createFromRef(string $markupRef): MediaMarkup
     {
         return (new MediaMarkup())->setMarkupRef($markupRef);
+    }
+
+    /**
+     * Keep track of the metadata
+     * @param array $data
+     * @return void
+     * @param Doku_Renderer_metadata $renderer
+     */
+    public static function metadata(array $data, Doku_Renderer_metadata $renderer)
+    {
+
+        $tagAttributes = $data[PluginUtility::ATTRIBUTES];
+        if ($tagAttributes === null) {
+            // error on handle
+            return;
+        }
+        syntax_plugin_combo_media::registerImageMeta($tagAttributes, $renderer);
+
+    }
+
+    /**
+     * Special pattern call
+     * @param array $data
+     * @param renderer_plugin_combo_analytics $renderer
+     * @return void
+     * @deprecated - for metadata but yeah ...
+     */
+    public static function analytics(array $data, renderer_plugin_combo_analytics $renderer)
+    {
+
+        $tagAttributes = $data[PluginUtility::ATTRIBUTES];
+        syntax_plugin_combo_media::updateStatistics($tagAttributes, $renderer);
+
     }
 
 
@@ -580,7 +734,7 @@ class MediaMarkup
             $this->extraMediaTagAttributes->addComponentAttributeValue($key, $value);
         }
 
-        foreach ($tagAttributes->getStyleDeclarations() as $key => $value){
+        foreach ($tagAttributes->getStyleDeclarations() as $key => $value) {
             $this->extraMediaTagAttributes->addStyleDeclarationIfNotSet($key, $value);
         }
 

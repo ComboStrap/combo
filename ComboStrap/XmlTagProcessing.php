@@ -721,11 +721,6 @@ class XmlTagProcessing
                 $knownTypes = BreadcrumbTag::TYPES;
                 $defaultAttributes = BreadcrumbTag::getDefaultBlockAttributes();
                 break;
-            case BreadcrumbTag::MARKUP_INLINE:
-                $logicalTag = BreadcrumbTag::LOGICAL_TAG;
-                $knownTypes = BreadcrumbTag::TYPES;
-                $defaultAttributes = BreadcrumbTag::getDefaultInlineAttributes();
-                break;
         }
         $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes, $allowAnyFirstBooleanAttributesAsType)
             ->setLogicalTag($logicalTag);
@@ -759,10 +754,14 @@ class XmlTagProcessing
             case PermalinkTag::TAG:
                 $returnedArray = PermalinkTag::handleEnterSpecial($tagAttributes, $state, $handler);
                 break;
+            case BreadcrumbTag::MARKUP_BLOCK:
+                $returnedArray = BreadcrumbTag::handleEnter($tagAttributes);
+                break;
         }
 
         /**
          * Common default
+         * {@link PluginUtility::DISPLAY} should be set on handle
          */
         $defaultReturnedArray[PluginUtility::STATE] = $state;
         $defaultReturnedArray[PluginUtility::TAG] = $logicalTag;
@@ -825,6 +824,9 @@ class XmlTagProcessing
                     case FollowTag::MARKUP:
                         $renderer->doc .= FollowTag::renderSpecialEnterNode($tagAttributes, DOKU_LEXER_SPECIAL);
                         return true;
+                    case MediaMarkup::TAG:
+                        $renderer->doc .= MediaMarkup::renderSpecial($data, $renderer);
+                        return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");
                 }
@@ -834,11 +836,17 @@ class XmlTagProcessing
                 switch ($tag) {
                     case IconTag::TAG:
                         IconTag::metadata($renderer, $tagAttributes);
-                        break;
+                        return true;
                     case CacheTag::MARKUP:
                         CacheTag::metadata($data);
+                        return true;
+                    case MediaMarkup::TAG:
+                        MediaMarkup::metadata($data, $renderer);
+                        return true;
                 }
                 break;
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
+
         }
         // unsupported $mode
         return false;

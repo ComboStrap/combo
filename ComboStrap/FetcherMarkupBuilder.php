@@ -401,7 +401,7 @@ class FetcherMarkupBuilder
      * To avoid this problem, a warning is send if the calling code does not set explicitly that this is specifically a
      * standalone execution
      */
-    public function setIsCodeStandAloneExecution(bool $isStandAlone): FetcherMarkupBuilder
+    public function setIsStandAloneCodeExecution(bool $isStandAlone): FetcherMarkupBuilder
     {
         $this->isCodeStandAloneExecution = $isStandAlone;
         return $this;

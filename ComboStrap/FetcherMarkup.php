@@ -195,7 +195,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             ->setDeleteRootBlockElement(true)
             ->setRequestedContextPathWithDefault()
             ->setRequestedMimeToXhtml()
-            ->setIsCodeStandAloneExecution(true)
+            ->setIsStandAloneCodeExecution(true)
             ->build();
     }
 

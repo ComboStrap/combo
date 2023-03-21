@@ -25,6 +25,7 @@ use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Mime;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 use ComboStrap\ThirdPartyPlugins;
 use ComboStrap\WikiPath;
 
@@ -117,7 +118,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 } catch (Exception $e) {
                     return;
                 }
-                if(!$isIcon) {
+                if (!$isIcon) {
                     $renderer->meta[FirstSvgImage::PROPERTY_NAME] = $wikiId;
                 } else {
                     $renderer->meta[FeaturedIcon::FIRST_ICON_PARSED] = $wikiId;
@@ -260,7 +261,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             return array(
                 PluginUtility::STATE => $state,
                 PluginUtility::ATTRIBUTES => $callStackArray,
-                PluginUtility::CONTEXT => $parentTag
+                PluginUtility::CONTEXT => $parentTag,
+                PluginUtility::TAG => MediaMarkup::TAG
             );
         }
         return array();
@@ -275,7 +277,6 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * @return boolean - rendered correctly? (however, returned value is not used at the moment)
      * @see DokuWiki_Syntax_Plugin::render()
      *
-     *
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
@@ -283,148 +284,26 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         switch ($format) {
 
             case 'xhtml':
-
-                $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                $display = $callStackArray[Display::DISPLAY];
-                if ($display === Display::DISPLAY_NONE_VALUE) {
-                    /**
-                     * Used primarly to not show the featured images
-                     * in the outline {@link Outline::toHtmlSectionOutlineCallsRecurse()}
-                     * for item page
-                     * But we keep the metadata to move them if any
-                     */
-                    return false;
-                }
-
-                /** @var Doku_Renderer_xhtml $renderer */
-                try {
-
-                    $mediaMarkup = MediaMarkup::createFromCallStackArray($callStackArray);
-                } catch (ExceptionCompile $e) {
-                    $renderer->doc .= $e->getMessage();
-                    return false;
-                }
-
-
-                if (
-                    $mediaMarkup->getInternalExternalType() === MediaMarkup::INTERNAL_MEDIA_CALL_NAME
-                ) {
-                    try {
-                        $isImage = $mediaMarkup->getFetcher()->getMime()->isImage();
-                    } catch (\Exception $e) {
-                        $isImage = false;
-                    }
-                    if ($isImage) {
-                        try {
-                            $renderer->doc .= MediaLink::createFromMediaMarkup($mediaMarkup)->renderMediaTag();
-                        } catch (ExceptionCompile $e) {
-                            if (PluginUtility::isDevOrTest()) {
-                                throw new ExceptionRuntime("Media Rendering Error. {$e->getMessage()}", MediaLink::CANONICAL, 0, $e);
-                            } else {
-                                $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                                $message = "Media ({$mediaMarkup}). Error while rendering: {$e->getMessage()}";
-                                $renderer->doc .= "<span class=\"text-danger $errorClass\">" . hsc(trim($message)) . "</span>";
-                                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
-                            }
-                        }
-                        return true;
-                    }
-
-                }
-
-
                 /**
-                 * This is not an local internal media image (a video or an url image)
-                 * Dokuwiki takes over
+                 * @var Doku_Renderer_xhtml $renderer
                  */
-                $mediaType = $mediaMarkup->getInternalExternalType();
-                $src = $mediaMarkup->getSrc();
-                try {
-                    $title = $mediaMarkup->getLabel();
-                } catch (ExceptionNotFound $e) {
-                    $title = null;
-                }
-                try {
-                    $linking = $mediaMarkup->getLinking();
-                } catch (ExceptionNotFound $e) {
-                    $linking = null;
-                }
-                try {
-                    $align = $mediaMarkup->getAlign();
-                } catch (ExceptionNotFound $e) {
-                    $align = null;
-                }
-                try {
-                    /**
-                     * We use the markup ref url
-                     * because we don't support http/https (external) url
-                     * And there is therefore no fetcher available
-                     */
-                    $markupUrl = $mediaMarkup->getMarkupRef()->getUrl();
-                } catch (ExceptionNotFound $e) {
-                    // the
-                    LogUtility::internalError("As the media markup is created from a markup in the syntax component, it should be available");
-                    return false;
-                }
-                try {
-                    $width = $markupUrl->getQueryPropertyValue(Dimension::WIDTH_KEY);
-                } catch (ExceptionNotFound $e) {
-                    $width = null;
-                }
-                try {
-                    $height = $markupUrl->getQueryPropertyValue(Dimension::HEIGHT_KEY);
-                } catch (ExceptionNotFound $e) {
-                    $height = null;
-                }
-                try {
-                    $cache = $markupUrl->getQueryPropertyValue(IFetcherAbs::CACHE_KEY);
-                } catch (ExceptionNotFound $e) {
-                    // Dokuwiki needs a value
-                    // If their is no value it will output it without any value
-                    // in the query string.
-                    $cache = IFetcherAbs::CACHE_DEFAULT_VALUE;
-                }
-                switch ($mediaType) {
-                    case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
-                        $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
-                        break;
-                    case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:
-                        $renderer->doc .= $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
-                        break;
-                    default:
-                        LogUtility::msg("The dokuwiki media type ($mediaType) is unknown");
-                        break;
-                }
+                $renderer->doc .= MediaMarkup::renderSpecial($data, $renderer);
                 return true;
-
 
             case "metadata":
 
                 /**
-                 * Keep track of the metadata
                  * @var Doku_Renderer_metadata $renderer
                  */
-                $tagAttributes = $data[PluginUtility::ATTRIBUTES];
-                if ($tagAttributes === null) {
-                    // error on handle
-                    return false;
-                }
-                try {
-                    self::registerImageMeta($tagAttributes, $renderer);
-                } catch (ExceptionCompile $e) {
-                    LogUtility::error("Metadata image registration, return an error. Error: {$e->getMessage()}");
-                    return false;
-                }
+                MediaMarkup::metadata($data, $renderer);
                 return true;
 
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
                 /**
-                 * Special pattern call
                  * @var renderer_plugin_combo_analytics $renderer
                  */
-                $tagAttributes = $data[PluginUtility::ATTRIBUTES];
-                self::updateStatistics($tagAttributes, $renderer);
+                MediaMarkup::analytics($data, $renderer);
                 return true;
 
         }

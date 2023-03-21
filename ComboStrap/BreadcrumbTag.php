@@ -29,7 +29,6 @@ class BreadcrumbTag
     public const CANONICAL_HIERARCHICAL = "breadcrumb-hierarchical";
     public const DEPTH_ATTRIBUTE = "depth";
     const TYPES = [self::TYPOGRAPHY_TYPE, self::NAVIGATION_TYPE];
-    const MARKUP_INLINE = "ibreadcrumb";
 
     /**
      * Hierarchical breadcrumbs (you are here)
@@ -194,8 +193,13 @@ class BreadcrumbTag
         return [TagAttributes::TYPE_KEY => BreadcrumbTag::NAVIGATION_TYPE];
     }
 
-    public static function getDefaultInlineAttributes(): array
+    public static function handleEnter(TagAttributes $tagAttributes): array
     {
-        return [TagAttributes::TYPE_KEY => BreadcrumbTag::TYPOGRAPHY_TYPE];
+        if ($tagAttributes->getType() === self::TYPOGRAPHY_TYPE) {
+            return [PluginUtility::DISPLAY => Call::INLINE_DISPLAY];
+        } else {
+            return [PluginUtility::DISPLAY => Call::BlOCK_DISPLAY];
+        }
     }
+
 }

@@ -7,6 +7,7 @@ use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\Tag\TableTag;
+use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_analytics;
 use syntax_plugin_combo_header;
 use syntax_plugin_combo_headingatx;
@@ -144,46 +145,44 @@ class Outline
              * to not get any unwanted p
              * to counter {@link Block::process()}
              */
+            $state = $actualCall->getState();
             if ($actualCall->isDisplaySet()) {
-                if ($actualCall->getDisplay() === Call::BlOCK_DISPLAY) {
 
-                    /**
-                     * Previous call control
-                     */
-                    $previous = $callStack->previous();
-                    if ($previous->isUnMatchedEmptyCall()) {
-                        /**
-                         * An empty unmatched call will create a block
-                         * Delete
-                         */
-                        $callStack->deleteActualCallAndPrevious();
-                        $previous = $callStack->getActualCall();
-                    }
-                    if ($previous->getTagName() === "p" && $previous->getState() === DOKU_LEXER_ENTER) {
-                        $callStack->deleteActualCallAndPrevious();
-                    }
-
-                    /**
-                     * Go back on the actual call
-                     */
-                    $callStack->next();
-
-                    /**
-                     * Next call Control
-                     */
-                    $next = $callStack->next();
-                    if ($next->getTagName() === "p" && $next->getState() === DOKU_LEXER_EXIT) {
-                        $callStack->deleteActualCallAndPrevious();
-                    } else {
-                        $callStack->previous();
-                    }
+                /**
+                 * Setting dynamically the {@link SyntaxPlugin::getPType()}
+                 */
+                $display = $actualCall->getDisplay();
+                switch ($display) {
+                    case Call::BlOCK_DISPLAY:
+                        switch ($state) {
+                            case DOKU_LEXER_SPECIAL:
+                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
+                                break;
+                            case DOKU_LEXER_ENTER:
+                            case DOKU_LEXER_EXIT:
+                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblocktag::TAG);
+                                break;
+                        }
+                        break;
+                    case Call::INLINE_DISPLAY:
+                        switch ($state) {
+                            case DOKU_LEXER_SPECIAL:
+                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlinlineemptytag::TAG);
+                                break;
+                            case DOKU_LEXER_ENTER:
+                            case DOKU_LEXER_EXIT:
+                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
+                                break;
+                        }
+                        break;
                 }
+
             }
 
 
             if ($analtyicsEnabled) {
 
-                if (in_array($actualCall->getState(), CallStack::TAG_STATE)) {
+                if (in_array($state, CallStack::TAG_STATE)) {
                     $tagName = $actualCall->getComponentName();
                     // The dokuwiki component name have open in their name
                     $tagName = str_replace("_open", "", $tagName);
@@ -220,7 +219,7 @@ class Outline
                 $originalInstructionCall = Call::createComboCall(
                     TableTag::TAG,
                     DOKU_LEXER_ENTER,
-                    [PluginUtility::POSITION=>$position],
+                    [PluginUtility::POSITION => $position],
                     null,
                     null,
                     null,
@@ -243,7 +242,7 @@ class Outline
                     break;
                 case HeadingTag::HEADING_TAG:
                 case syntax_plugin_combo_headingwiki::TAG:
-                    if ($actualCall->getState() == DOKU_LEXER_ENTER
+                    if ($state == DOKU_LEXER_ENTER
                         && $actualCall->getContext() === HeadingTag::TYPE_OUTLINE) {
                         $shouldWeCreateASection = true;
                         $this->enterHeading($actualCall);
@@ -375,7 +374,7 @@ class Outline
 
                     case HeadingTag::HEADING_TAG:
                     case syntax_plugin_combo_headingwiki::TAG:
-                        if ($actualCall->getState() == DOKU_LEXER_EXIT) {
+                        if ($state == DOKU_LEXER_EXIT) {
                             $this->addCallToSection($actualCall);
                             $this->exitHeading();
                             continue 2;

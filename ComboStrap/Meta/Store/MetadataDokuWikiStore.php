@@ -56,7 +56,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
      * Because the current is only usable in rendering, all
      * metadata are persistent inside dokuwiki
      */
-    public const PERSISTENT_METADATA = "persistent";
+    public const PERSISTENT_DOKUWIKI_KEY = "persistent";
 
 
     /**
@@ -256,7 +256,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
                  */
                 global $METADATA_RENDERERS;
                 $METADATA_RENDERERS[$wikiId][self::CURRENT_METADATA][$name] = $value;
-                $METADATA_RENDERERS[$wikiId][self::PERSISTENT_METADATA][$name] = $value;
+                $METADATA_RENDERERS[$wikiId][self::PERSISTENT_DOKUWIKI_KEY][$name] = $value;
 
             } else {
 
@@ -366,7 +366,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
 
     public function deleteAndFlush()
     {
-        $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], self::PERSISTENT_METADATA => []];
+        $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], self::PERSISTENT_DOKUWIKI_KEY => []];
         $dokuwikiId = $this->getWikiId();
         p_save_metadata($dokuwikiId, $emptyMeta);
     }

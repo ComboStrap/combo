@@ -131,7 +131,7 @@ class PageUrlPath extends MetadataText
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -290,6 +290,11 @@ class PageUrlPath extends MetadataText
                 return $pagePath;
 
         }
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 
 }

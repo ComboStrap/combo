@@ -61,7 +61,7 @@ class PageLevel extends MetadataInteger
         return "Page Level";
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -71,5 +71,10 @@ class PageLevel extends MetadataInteger
         return self::PROPERTY_NAME;
     }
 
+
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 
 }

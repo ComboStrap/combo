@@ -54,7 +54,7 @@ class SocialCardImage extends MetadataImage
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }

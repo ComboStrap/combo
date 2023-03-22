@@ -11,6 +11,7 @@ use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\Html;
 use ComboStrap\LogUtility;
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\MetadataMultiple;
 use ComboStrap\Meta\Api\MetadataTabular;
 use ComboStrap\PluginUtility;
@@ -164,7 +165,7 @@ class FormMetaField
                 foreach ($metadata->getChildrenClass() as $childMetadataClass) {
 
                     try {
-                        $childMetadata = Metadata::toMetadataObject($childMetadataClass, $metadata);
+                        $childMetadata = MetadataSystem::toMetadataObject($childMetadataClass, $metadata);
                     } catch (ExceptionBadArgument $e) {
                         // should happen only internally
                         LogUtility::internalError("The metadata class/object ($childMetadataClass) is not a metadata class");
@@ -524,7 +525,7 @@ class FormMetaField
     static
     function setLeafDataToFieldFromMetadata(FormMetaField $field, Metadata $metadata)
     {
-        $field->setMutable($metadata->getMutable());
+        $field->setMutable($metadata->isMutable());
 
         $formControlWidth = $metadata->getFormControlWidth();
         if ($formControlWidth !== null) {

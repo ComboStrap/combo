@@ -72,7 +72,7 @@ class PageImageUsage extends MetadataMultiple
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }

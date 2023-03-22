@@ -95,7 +95,7 @@ class Slug extends MetadataText
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -108,5 +108,10 @@ class Slug extends MetadataText
         $title = PageTitle::createForMarkup($this->getResource())
             ->getValueOrDefault();
         return self::toSlugPath($title);
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

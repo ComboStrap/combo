@@ -115,7 +115,7 @@ class PagePublicationDate extends MetadataDateTime
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -150,4 +150,8 @@ class PagePublicationDate extends MetadataDateTime
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

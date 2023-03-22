@@ -54,7 +54,7 @@ class LowQualityPageOverwrite extends MetadataBoolean
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -89,4 +89,8 @@ class LowQualityPageOverwrite extends MetadataBoolean
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

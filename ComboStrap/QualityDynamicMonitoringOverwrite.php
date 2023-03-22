@@ -54,7 +54,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -78,4 +78,10 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
     {
         return self::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT;
     }
+
+    public function isOnForm(): bool
+    {
+        return true;
+    }
+
 }

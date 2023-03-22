@@ -51,7 +51,7 @@ class PageH1 extends MetadataText
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -115,4 +115,8 @@ class PageH1 extends MetadataText
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

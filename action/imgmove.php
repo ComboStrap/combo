@@ -7,6 +7,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
+use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Meta\Field\PageImages;
@@ -139,7 +140,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $data = $metadataFrontmatterStore->getData();
         foreach ($data as $key => $value) {
             try {
-                $metadata = Metadata::getForName($key)
+                $metadata = MetadataSystem::getForName($key)
                     ->setResource($page)
                     ->setReadStore($metadataFrontmatterStore);
             } catch (ExceptionNotFound $e) {

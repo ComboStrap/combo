@@ -62,7 +62,7 @@ class PageType extends MetadataText
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -112,5 +112,10 @@ class PageType extends MetadataText
         ];
         sort($types);
         return $types;
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

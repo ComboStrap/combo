@@ -43,7 +43,7 @@ class StartDate extends MetadataDateTime
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -59,4 +59,8 @@ class StartDate extends MetadataDateTime
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

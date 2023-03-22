@@ -47,7 +47,7 @@ class BacklinkCount extends MetadataInteger
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }

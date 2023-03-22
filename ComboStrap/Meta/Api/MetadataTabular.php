@@ -171,13 +171,13 @@ abstract class MetadataTabular extends Metadata
                     // an empty row in the table
                     continue;
                 }
-                $row[$identifierPersistentName] = Metadata::toMetadataObject($identifierMetadataObject, $this)
+                $row[$identifierPersistentName] = MetadataSystem::toMetadataObject($identifierMetadataObject, $this)
                     ->setFromStoreValue($identifierValue);
                 foreach ($this->getChildrenClass() as $childClass) {
                     if ($childClass === get_class($identifierMetadataObject)) {
                         continue;
                     }
-                    $metadataChildObject = Metadata::toMetadataObject($childClass, $this);
+                    $metadataChildObject = MetadataSystem::toMetadataObject($childClass, $this);
                     $name = $metadataChildObject::getPersistentName();
                     if ($identifierNameType === self::IDENTIFIER_NAME) {
                         $name = $metadataChildObject::getName();
@@ -211,7 +211,7 @@ abstract class MetadataTabular extends Metadata
              */
             if (is_string($item)) {
                 try {
-                    $identifierMetadata = Metadata::toMetadataObject($identifierMetadataObject, $this)->setFromStoreValue($item);
+                    $identifierMetadata = MetadataSystem::toMetadataObject($identifierMetadataObject, $this)->setFromStoreValue($item);
                 } catch (ExceptionBadArgument $e) {
                     throw ExceptionRuntimeInternal::withMessageAndError("The $identifierMetadataObject should be known", $e);
                 }
@@ -240,7 +240,7 @@ abstract class MetadataTabular extends Metadata
                     LogUtility::msg("The column ($colName) does not have a metadata definition");
                     continue;
                 }
-                $childObject = Metadata::toMetadataObject($childClass, $this);
+                $childObject = MetadataSystem::toMetadataObject($childClass, $this);
                 $childObject->buildFromStoreValue($colValue);
                 $row[$childObject::getPersistentName()] = $childObject;
                 if ($childObject::getPersistentName() === $identifierPersistentName) {

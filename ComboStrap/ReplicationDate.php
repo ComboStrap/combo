@@ -54,7 +54,7 @@ class ReplicationDate extends MetadataDateTime
         return Metadata::RUNTIME_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -66,5 +66,10 @@ class ReplicationDate extends MetadataDateTime
     public function getDefaultValue()
     {
         throw new ExceptionNotFound("No default replication date");
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

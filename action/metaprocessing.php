@@ -6,6 +6,7 @@ use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\MetadataDokuWikiArrayStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataMutation;
@@ -84,11 +85,11 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
         foreach ($attributes as $attribute) {
 
             try {
-                $beforeMeta = Metadata::getForName($attribute)
+                $beforeMeta = MetadataSystem::getForName($attribute)
                     ->setReadStore($beforeStore)
                     ->setWriteStore($targetStoreFormat)
                     ->setResource($page);
-                $afterMeta = Metadata::getForName($attribute)
+                $afterMeta = MetadataSystem::getForName($attribute)
                     ->setReadStore($afterStore)
                     ->setWriteStore($targetStoreFormat)
                     ->setResource($page);

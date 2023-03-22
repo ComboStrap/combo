@@ -193,7 +193,7 @@ class Lang extends MetadataText
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -243,4 +243,8 @@ class Lang extends MetadataText
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

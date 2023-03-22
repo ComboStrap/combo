@@ -37,7 +37,7 @@ class References extends MetadataTabular
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }

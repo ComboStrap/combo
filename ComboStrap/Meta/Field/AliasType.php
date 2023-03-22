@@ -49,7 +49,7 @@ class AliasType extends MetadataText
         return DataType::TEXT_TYPE_VALUE;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }

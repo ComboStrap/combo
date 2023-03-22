@@ -15,6 +15,7 @@ use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\MarkupPath;
 use ComboStrap\Message;
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\Meta\Form\FormMeta;
 use ComboStrap\Meta\Form\FormMetaField;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
@@ -172,7 +173,7 @@ class MetaManagerHandler
         $defaultBoolean = [];
         foreach ($defaultBooleanMetadata as $booleanMeta) {
             try {
-                $metadata = Metadata::getForName($booleanMeta)
+                $metadata = MetadataSystem::getForName($booleanMeta)
                     ->setResource($page)
                     ->setReadStore($formStore)
                     ->setWriteStore($targetStore);
@@ -269,13 +270,13 @@ class MetaManagerHandler
             return;
         }
         $metadata = MetadataDokuWikiStore::getOrCreateFromResource($page)->getDataCurrentAndPersistent();
-        $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_METADATA];
+        $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY];
         ksort($persistent);
         $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
         ksort($current);
         $form = FormMeta::create("raw_metadata")
             ->addField(
-                FormMetaField::create(MetadataDokuWikiStore::PERSISTENT_METADATA, DataType::JSON_TYPE_VALUE)
+                FormMetaField::create(MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY, DataType::JSON_TYPE_VALUE)
                     ->setLabel("Persistent Metadata (User Metadata)")
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata contains raw values. They contains the values set by the user and the fixed values such as page id.")
@@ -314,7 +315,7 @@ class MetaManagerHandler
          * Technically, persistent is a copy of persistent data
          * but on the ui for now, only persistent data can be modified
          */
-        $postMeta = json_decode($post[MetadataDokuWikiStore::PERSISTENT_METADATA], true);
+        $postMeta = json_decode($post[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY], true);
         if ($postMeta === null) {
             ExecutionContext::getActualOrCreateFromEnv()
                 ->response()
@@ -333,7 +334,7 @@ class MetaManagerHandler
          * We loop only over the persistent metadata
          * that are the one that we want change
          */
-        $persistentMetadata = $actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA];
+        $persistentMetadata = $actualMeta[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY];
         foreach ($persistentMetadata as $key => $value) {
 
             $postMetaValue = null;
@@ -342,8 +343,15 @@ class MetaManagerHandler
                 unset($postMeta[$key]);
             }
 
+            try {
+                $metadata = MetadataSystem::getForName($key);
+            } catch (ExceptionNotFound $e) {
+                $metadata = null;
+            }
+
             if ($postMetaValue === null) {
-                if (in_array($key, Metadata::MUTABLE_METADATA)) {
+
+                if ($metadata!==null && $metadata->isMutable()) {
                     $messages[] = Message::createInfoMessage("The metadata ($key) $managedMetaMessageSuffix");
                     continue;
                 }
@@ -352,11 +360,11 @@ class MetaManagerHandler
                     continue;
                 }
                 unset($actualMeta[MetadataDokuWikiStore::CURRENT_METADATA][$key]);
-                unset($actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA][$key]);
+                unset($actualMeta[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY][$key]);
                 $messages[] = Message::createInfoMessage("The metadata ($key) with the value ($value) was deleted");
             } else {
                 if ($value !== $postMetaValue) {
-                    if (in_array($key, Metadata::MUTABLE_METADATA)) {
+                    if ($metadata!==null && $metadata->isMutable()) {
                         $messages[] = Message::createInfoMessage("The metadata ($key) $managedMetaMessageSuffix");
                         continue;
                     }
@@ -365,7 +373,7 @@ class MetaManagerHandler
                         continue;
                     }
                     $actualMeta[MetadataDokuWikiStore::CURRENT_METADATA][$key] = $postMetaValue;
-                    $actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA][$key] = $postMetaValue;
+                    $actualMeta[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY][$key] = $postMetaValue;
                     $messages[] = Message::createInfoMessage("The metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
                 }
             }
@@ -374,18 +382,25 @@ class MetaManagerHandler
          * Process the new attribute
          */
         foreach ($postMeta as $key => $value) {
-            if (in_array($key, Metadata::MUTABLE_METADATA)) {
-                // This meta should be modified via the form
-                $messages[] = Message::createInfoMessage("The metadata ($key) can only be added via the meta manager");
-                continue;
+
+            try {
+                $metadata = MetadataSystem::getForName($key);
+                if ($metadata->isMutable()) {
+                    // This meta should be modified via the form
+                    $messages[] = Message::createInfoMessage("The metadata ($key) can only be added via the meta manager");
+                    continue;
+                }
+            } catch (ExceptionNotFound $e) {
+                //
             }
+
             if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
                 // this meta are not modifiable
                 $messages[] = Message::createInfoMessage("The metadata ($key) is a internal metadata, you can't modify it");
                 continue;
             }
             $actualMeta[MetadataDokuWikiStore::CURRENT_METADATA][$key] = $value;
-            $actualMeta[MetadataDokuWikiStore::PERSISTENT_METADATA][$key] = $value;
+            $actualMeta[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY][$key] = $value;
             $messages[] = Message::createInfoMessage("The metadata ($key) was created with the value ($value)");
         }
 

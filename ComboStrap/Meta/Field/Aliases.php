@@ -10,6 +10,7 @@ use ComboStrap\ExceptionSqliteNotAvailable;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\Meta\Api\MetadataTabular;
 use ComboStrap\MetaManagerForm;
@@ -153,7 +154,7 @@ class Aliases extends MetadataTabular
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
     /**
@@ -294,14 +295,14 @@ class Aliases extends MetadataTabular
         /**
          * @var AliasPath $path
          */
-        $path = Metadata::toMetadataObject(AliasPath::class, $this)
+        $path = MetadataSystem::toMetadataObject(AliasPath::class, $this)
             ->setFromStoreValue($aliasPath);
         $row[$path::getPersistentName()] = $path;
 
         $alias = Alias::create($this->getResource(), $path->getValue());
 
         if ($aliasType !== null) {
-            $aliasObject = Metadata::toMetadataObject(AliasType::class, $this)
+            $aliasObject = MetadataSystem::toMetadataObject(AliasType::class, $this)
                 ->setFromStoreValue($aliasType);
             $row[$aliasObject::getPersistentName()] = $aliasObject;
             $alias->setType($aliasType);
@@ -338,7 +339,7 @@ class Aliases extends MetadataTabular
 
 
     public
-    function getMutable(): bool
+    function isMutable(): bool
     {
         return true;
     }
@@ -354,4 +355,8 @@ class Aliases extends MetadataTabular
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

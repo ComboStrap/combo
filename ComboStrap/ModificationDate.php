@@ -83,7 +83,7 @@ class ModificationDate extends MetadataDateTime
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -108,4 +108,8 @@ class ModificationDate extends MetadataDateTime
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

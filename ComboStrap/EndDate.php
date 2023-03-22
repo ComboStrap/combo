@@ -44,7 +44,7 @@ class EndDate extends MetadataDateTime
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -59,5 +59,10 @@ class EndDate extends MetadataDateTime
         return PageType::EVENT_TYPE;
     }
 
+
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 
 }

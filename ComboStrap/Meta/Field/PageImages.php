@@ -165,7 +165,7 @@ class PageImages extends MetadataTabular
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
 
@@ -258,7 +258,7 @@ class PageImages extends MetadataTabular
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }

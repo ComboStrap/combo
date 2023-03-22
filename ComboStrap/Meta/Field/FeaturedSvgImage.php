@@ -43,7 +43,7 @@ class FeaturedSvgImage extends MetadataImage
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -104,5 +104,10 @@ class FeaturedSvgImage extends MetadataImage
     public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

@@ -74,7 +74,7 @@ class Region extends MetadataText
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -102,5 +102,10 @@ class Region extends MetadataText
         return "region";
     }
 
+
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 
 }

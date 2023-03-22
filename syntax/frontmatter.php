@@ -31,6 +31,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\MarkupRef;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
@@ -56,7 +57,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
     const CANONICAL = "frontmatter";
     const TAG = "frontmatter";
-    const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT = "enableFrontMatterOnSubmit";
     const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT = 0;
 
     /**
@@ -268,7 +268,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  */
                 $frontmatterData = $data[PluginUtility::ATTRIBUTES];
                 if (sizeof($frontmatterData) === 0) {
-                    foreach (Metadata::MUTABLE_METADATA as $metaKey) {
+                    foreach (MetadataSystem::getMutableMetadata() as $metaData) {
+                        $metaKey = $metaData::getName();
                         if ($metaKey === PageDescription::PROPERTY_NAME) {
                             // array
                             continue;

@@ -43,7 +43,7 @@ class FacebookImage extends MetadataImage
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -79,4 +79,8 @@ class FacebookImage extends MetadataImage
         return WikiPath::MEDIA_DRIVE;
     }
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

@@ -130,8 +130,13 @@ class CacheExpirationDate extends MetadataDateTime
         return "Cache Expiration Date";
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

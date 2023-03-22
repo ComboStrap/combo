@@ -9,6 +9,8 @@ use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\Canonical;
 use ComboStrap\DataType;
+use ComboStrap\ExceptionRuntimeInternal;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Label;
 use ComboStrap\DisqusIdentifier;
 use ComboStrap\DokuwikiId;
@@ -56,6 +58,7 @@ use ComboStrap\PagePublicationDate;
 use ComboStrap\PageTitle;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlPath;
+use ComboStrap\PluginUtility;
 use ComboStrap\QualityDynamicMonitoringOverwrite;
 use ComboStrap\References;
 use ComboStrap\Meta\Field\Region;
@@ -119,22 +122,9 @@ abstract class Metadata
         $this->parent = $parent;
     }
 
-    /**
-     * @param object|string $class
-     * @param Metadata|null $parent
-     * @return Metadata
-     * @throws ExceptionBadArgument - if the class is not a metadata class
-     */
-    public static function toMetadataObject($class, Metadata $parent = null): Metadata
-    {
-        if (!is_subclass_of($class, Metadata::class)) {
-            throw new ExceptionBadArgument("The class ($class) is not a metadata class");
-        }
-        return new $class($parent);
-    }
 
-
-    public function getParent(): ?Metadata
+    public
+    function getParent(): ?Metadata
     {
         return $this->parent;
     }
@@ -143,130 +133,10 @@ abstract class Metadata
      * The class string of the child/columns metadata
      * @return null|string[];
      */
-    public function getChildrenClass(): ?array
+    public
+    function getChildrenClass(): ?array
     {
         return null;
-    }
-
-    /**
-     * @throws ExceptionNotFound
-     */
-    public static function getForName(string $name): ?Metadata
-    {
-
-        $name = strtolower(trim($name));
-        /**
-         * TODO: this array could be build automatically by creating an object for each metadata
-         */
-        switch ($name) {
-            case Canonical::getName():
-                return new Canonical();
-            case PageType::getName():
-                return new PageType();
-            case PageH1::getName():
-                return new PageH1();
-            case Aliases::getName():
-            case AliasPath::getName():
-            case AliasType::getName():
-                return new Aliases();
-            case PageImages::getName():
-            case PageImages::OLD_PROPERTY_NAME:
-            case PageImages::getPersistentName():
-            case PageImagePath::getName():
-            case PageImageUsage::getName():
-                return new PageImages();
-            case FeaturedRasterImage::getName():
-                return new FeaturedRasterImage();
-            case FeaturedSvgImage::getName():
-                return new FeaturedSvgImage();
-            case TwitterImage::getName():
-                return new TwitterImage();
-            case FacebookImage::getName():
-                return new FacebookImage();
-            case FeaturedImage::PROPERTY_NAME:
-                return new FeaturedImage();
-            case SocialCardImage::PROPERTY_NAME:
-                return new SocialCardImage();
-            case FirstRasterImage::PROPERTY_NAME:
-                return new FirstRasterImage();
-            case AncestorImage::PROPERTY_NAME:
-                return new AncestorImage();
-            case FirstSvgImage::PROPERTY_NAME:
-                return new FirstSvgImage();
-            case FeaturedIcon::PROPERTY_NAME:
-                return new FeaturedIcon();
-            case FirstImage::PROPERTY_NAME:
-                return new FirstImage();
-            case Region::OLD_REGION_PROPERTY:
-            case Region::getName():
-                return new Region();
-            case Lang::PROPERTY_NAME:
-                return new Lang();
-            case PageTitle::TITLE:
-                return new PageTitle();
-            case PagePublicationDate::OLD_META_KEY:
-            case PagePublicationDate::PROPERTY_NAME:
-                return new PagePublicationDate();
-            case ResourceName::PROPERTY_NAME:
-                return new ResourceName();
-            case LdJson::OLD_ORGANIZATION_PROPERTY:
-            case LdJson::PROPERTY_NAME:
-                return new LdJson();
-            case PageTemplateName::PROPERTY_NAME:
-            case PageTemplateName::PROPERTY_NAME_OLD:
-                return new PageTemplateName();
-            case StartDate::PROPERTY_NAME:
-                return new StartDate();
-            case EndDate::PROPERTY_NAME:
-                return new EndDate();
-            case PageDescription::DESCRIPTION_PROPERTY:
-                return new PageDescription();
-            case Slug::PROPERTY_NAME:
-                return new Slug();
-            case PageKeywords::PROPERTY_NAME:
-                return new PageKeywords();
-            case CacheExpirationFrequency::PROPERTY_NAME:
-                return new CacheExpirationFrequency();
-            case QualityDynamicMonitoringOverwrite::PROPERTY_NAME:
-                return new QualityDynamicMonitoringOverwrite();
-            case LowQualityPageOverwrite::PROPERTY_NAME:
-                return new LowQualityPageOverwrite();
-            case LowQualityCalculatedIndicator::getName():
-                return new LowQualityCalculatedIndicator();
-            case PageId::PROPERTY_NAME:
-                return new PageId();
-            case PagePath::PROPERTY_NAME:
-                return new PagePath();
-            case PageCreationDate::PROPERTY_NAME:
-                return new PageCreationDate();
-            case ModificationDate::PROPERTY_NAME:
-                return new ModificationDate();
-            case DokuwikiId::DOKUWIKI_ID_ATTRIBUTE:
-                return new DokuwikiId();
-            case PageUrlPath::PROPERTY_NAME:
-                return new PageUrlPath();
-            case Locale::PROPERTY_NAME:
-                return new Locale();
-            case CacheExpirationDate::PROPERTY_NAME:
-                return new CacheExpirationDate();
-            case ReplicationDate::getName():
-                return new ReplicationDate();
-            case PageLevel::PROPERTY_NAME:
-                return new PageLevel();
-            case DisqusIdentifier::PROPERTY_NAME:
-                return new DisqusIdentifier();
-            case References::getName():
-                return new References();
-            case Label::PROPERTY_NAME:
-                return new Label();
-            case Lead::PROPERTY_NAME:
-                return new Lead();
-            default:
-                $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
-                LogUtility::msg($msg, LogUtility::LVL_MSG_INFO, self::CANONICAL);
-        }
-        throw new ExceptionNotFound("No metadata found with the name ($name)");
-
     }
 
 
@@ -275,7 +145,8 @@ abstract class Metadata
      * Store value may returns null as they may be stored
      * Be careful
      */
-    public function toStoreValueOrDefault()
+    public
+    function toStoreValueOrDefault()
     {
 
         $value = $this->toStoreValue();
@@ -286,7 +157,8 @@ abstract class Metadata
 
     }
 
-    public function getChildrenObject()
+    public
+    function getChildrenObject()
     {
         if ($this->getChildrenClass() === null) {
             return null;
@@ -296,7 +168,7 @@ abstract class Metadata
         }
         foreach ($this->getChildrenClass() as $childrenClass) {
             try {
-                $this->childrenObject[] = Metadata::toMetadataObject($childrenClass)
+                $this->childrenObject[] = MetadataSystem::toMetadataObject($childrenClass)
                     ->setResource($this->getResource());
             } catch (ExceptionCompile $e) {
                 LogUtility::msg("Unable to build the metadata children object: " . $e->getMessage());
@@ -309,7 +181,8 @@ abstract class Metadata
     /**
      * @return bool - true if single value, false if an array
      */
-    public function isScalar(): bool
+    public
+    function isScalar(): bool
     {
 
         if ($this->getParent() !== null && $this->getParent()->getDataType() === DataType::TABULAR_TYPE_VALUE) {
@@ -324,7 +197,8 @@ abstract class Metadata
      * @param $store
      * @return $this
      */
-    public function setReadStore($store): Metadata
+    public
+    function setReadStore($store): Metadata
     {
         if ($this->readStore !== null) {
             LogUtility::msg("The read store was already set.");
@@ -340,7 +214,8 @@ abstract class Metadata
      * @param MetadataStore|string $store
      * @return $this
      */
-    public function setWriteStore($store): Metadata
+    public
+    function setWriteStore($store): Metadata
     {
         $this->writeStore = $store;
         return $this;
@@ -350,7 +225,9 @@ abstract class Metadata
      * @param mixed $value
      * @return Metadata
      */
-    public abstract function setValue($value): Metadata;
+    public
+
+    abstract function setValue($value): Metadata;
 
     /**
      * @return bool
@@ -592,7 +469,7 @@ abstract class Metadata
      * Therefore all metadata are persistent
      *
      * Ie a {@link MetadataDokuWikiStore::CURRENT_METADATA} is only derived
-     * in a rendering context. A {@link MetadataDokuWikiStore::PERSISTENT_METADATA} is always stored.
+     * in a rendering context. A {@link MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY} is always stored.
      *
      *
      *
@@ -635,38 +512,6 @@ abstract class Metadata
 
 
     /**
-     * The meta that are modifiable in the form.
-     *
-     * This meta could be replicated
-     *   * in the {@link \syntax_plugin_combo_frontmatter}
-     *   * or in the database
-     */
-    const MUTABLE_METADATA = [
-        Canonical::PROPERTY_NAME,
-        PageType::PROPERTY_NAME,
-        PageH1::PROPERTY_NAME,
-        Aliases::PROPERTY_NAME,
-        PageImages::PROPERTY_NAME,
-        Region::PROPERTY_NAME,
-        Lang::PROPERTY_NAME,
-        PageTitle::PROPERTY_NAME,
-        PagePublicationDate::PROPERTY_NAME,
-        ResourceName::PROPERTY_NAME,
-        LdJson::PROPERTY_NAME,
-        PageTemplateName::PROPERTY_NAME,
-        StartDate::PROPERTY_NAME,
-        EndDate::PROPERTY_NAME,
-        PageDescription::PROPERTY_NAME,
-        DisqusIdentifier::PROPERTY_NAME,
-        Slug::PROPERTY_NAME,
-        PageKeywords::PROPERTY_NAME,
-        CacheExpirationFrequency::PROPERTY_NAME,
-        QualityDynamicMonitoringOverwrite::PROPERTY_NAME,
-        LowQualityPageOverwrite::PROPERTY_NAME,
-    ];
-
-
-    /**
      * Delete the managed metadata
      * @param $metadataArray - a metadata array
      * @return array - the metadata array without the managed metadata
@@ -678,8 +523,12 @@ abstract class Metadata
         }
         $cleanedMetadata = [];
         foreach ($metadataArray as $key => $value) {
-            if (!in_array($key, Metadata::MUTABLE_METADATA)) {
-                $cleanedMetadata[$key] = $value;
+            try {
+                if (!MetadataSystem::getForName($key)->isMutable()) {
+                    $cleanedMetadata[$key] = $value;
+                }
+            } catch (ExceptionNotFound $e) {
+                continue;
             }
         }
         return $cleanedMetadata;
@@ -731,8 +580,23 @@ abstract class Metadata
     /**
      * @return bool can the user change the value
      * In a form, the field will be disabled
+     *
+     * The meta that are modifiable (in the form, ...)
+     *
+     * This meta could be replicated
+     *   * in the {@link \syntax_plugin_combo_frontmatter}
+     *   * or in the database
      */
-    public abstract function getMutable(): bool;
+    public abstract function isMutable(): bool;
+
+    /**
+     * @return bool if true the metadata will be shown on the meta manager form
+     * Note that a non-mutable meta may also be shown for information purpose
+     */
+    public function isOnForm(): bool
+    {
+        return false;
+    }
 
 
     /**
@@ -903,7 +767,7 @@ abstract class Metadata
     {
         if ($this->uidObject === null) {
 
-            $this->uidObject = Metadata::toMetadataObject($this->getUidClass())
+            $this->uidObject = MetadataSystem::toMetadataObject($this->getUidClass())
                 ->setResource($this->getResource());
 
         }

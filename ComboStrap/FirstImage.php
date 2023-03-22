@@ -38,7 +38,7 @@ class FirstImage extends MetadataImage
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -67,5 +67,10 @@ class FirstImage extends MetadataImage
     public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

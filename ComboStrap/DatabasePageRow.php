@@ -838,7 +838,7 @@ class DatabasePageRow
         $metaRecord = [];
         foreach ($record as $name) {
             try {
-                $metadata = Metadata::getForName($name);
+                $metadata = Meta\Api\MetadataSystem::getForName($name);
             } catch (ExceptionNotFound $e) {
                 LogUtility::internalError("The metadata ($name) is unknown", self::CANONICAL);
                 continue;

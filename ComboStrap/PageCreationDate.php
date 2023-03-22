@@ -115,7 +115,7 @@ class PageCreationDate extends MetadataDateTime
         return "Creation Date";
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         /**
          * Not sure, It should not be really mutable by the user
@@ -127,5 +127,10 @@ class PageCreationDate extends MetadataDateTime
     public function getCanonical(): string
     {
         return Metadata::CANONICAL;
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

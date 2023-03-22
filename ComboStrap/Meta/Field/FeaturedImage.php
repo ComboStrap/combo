@@ -54,7 +54,7 @@ class FeaturedImage extends MetadataImage
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -89,4 +89,8 @@ class FeaturedImage extends MetadataImage
         return WikiPath::MEDIA_DRIVE;
     }
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

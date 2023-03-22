@@ -23,6 +23,7 @@ use ComboStrap\LinkMarkup;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Meta\Field\TwitterImage;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
@@ -333,7 +334,7 @@ $meta[PageUrlType::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' =>
 /**
  * Frontmatter on sumbit
  */
-$meta[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = array("onoff");
+$meta[MetadataFrontmatterStore::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = array("onoff");
 
 /**
  * Heading

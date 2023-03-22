@@ -24,6 +24,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
 
     const NAME = "frontmatter";
     const CANONICAL = self::NAME;
+    public const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT = "enableFrontMatterOnSubmit";
 
     /**
      * @var bool Do we have a frontmatter on the page
@@ -49,12 +50,17 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
          * Resource Id special
          */
         $guidObject = $resourceCombo->getUidObject();
+        try {
+            $guidValue = $guidObject->getValue();
+        } catch (ExceptionNotFound $e) {
+            $guidValue = null;
+        }
         if (
             !$this->hasProperty($guidObject::getPersistentName())
             &&
-            $guidObject->getValue() !== null
+            $guidValue !== null
         ) {
-            $this->setFromPersistentName($guidObject::getPersistentName(), $guidObject->getValue());
+            $this->setFromPersistentName($guidObject::getPersistentName(), $guidValue);
         }
 
         /**
@@ -73,20 +79,13 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
                 $resourceCombo->renderMetadataAndFlush();
             }
         }
+
         /**
          * Update the mutable data
          * (ie delete insert)
          */
-        foreach (Metadata::MUTABLE_METADATA as $metaKey) {
-            $metadata = Metadata::getForName($metaKey);
-            if ($metadata === null) {
-                $msg = "The metadata $metaKey should be defined";
-                if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionCompile($msg);
-                } else {
-                    LogUtility::msg($msg);
-                }
-            }
+        foreach (Meta\Api\MetadataSystem::getMutableMetadata() as $metadata) {
+
             $metadata
                 ->setResource($resourceCombo)
                 ->setReadStore($dokuwikiStore)
@@ -130,7 +129,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
         /**
          * Default update value for the frontmatter
          */
-        $updateFrontMatter = SiteConfig::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
+        $updateFrontMatter = SiteConfig::getConfValue(self::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
 
 
         if ($this->isPresent()) {

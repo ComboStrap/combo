@@ -66,7 +66,7 @@ class Locale extends MetadataText
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -103,4 +103,8 @@ class Locale extends MetadataText
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\Meta\Field\Aliases;
 use ComboStrap\Meta\Field\AncestorImage;
 use ComboStrap\Meta\Field\FacebookImage;
@@ -34,45 +35,7 @@ class MetaManagerForm
     public const TAB_IMAGE_VALUE = "image";
     private MarkupPath $page;
 
-    private const FORM_METADATA_LIST = [ResourceName::PROPERTY_NAME,
-        PageTitle::PROPERTY_NAME,
-        Lead::PROPERTY_NAME,
-        PageH1::PROPERTY_NAME,
-        Label::PROPERTY_NAME,
-        PageDescription::PROPERTY_NAME,
-        PageKeywords::PROPERTY_NAME,
-        PagePath::PROPERTY_NAME,
-        Canonical::PROPERTY_NAME,
-        Slug::PROPERTY_NAME,
-        PageUrlPath::PROPERTY_NAME,
-        PageTemplateName::PROPERTY_NAME,
-        ModificationDate::PROPERTY_NAME,
-        PageCreationDate::PROPERTY_NAME,
-        FeaturedImage::PROPERTY_NAME,
-        FeaturedRasterImage::PROPERTY_NAME,
-        FeaturedSvgImage::PROPERTY_NAME,
-        FeaturedIcon::PROPERTY_NAME,
-        TwitterImage::PROPERTY_NAME,
-        FacebookImage::PROPERTY_NAME,
-        AncestorImage::PROPERTY_NAME,
-        FirstImage::PROPERTY_NAME,
-        Aliases::PROPERTY_NAME,
-        PageType::PROPERTY_NAME,
-        PagePublicationDate::PROPERTY_NAME,
-        StartDate::PROPERTY_NAME,
-        EndDate::PROPERTY_NAME,
-        LdJson::PROPERTY_NAME,
-        LowQualityPageOverwrite::PROPERTY_NAME,
-        QualityDynamicMonitoringOverwrite::PROPERTY_NAME,
-        Locale::PROPERTY_NAME,
-        Lang::PROPERTY_NAME,
-        Region::PROPERTY_NAME,
-        ReplicationDate::PROPERTY_NAME,
-        PageId::PROPERTY_NAME,
-        CacheExpirationFrequency::PROPERTY_NAME,
-        CacheExpirationDate::PROPERTY_NAME,
-        PageLevel::PROPERTY_NAME
-    ];
+
 
     /**
      * @var MetadataFormDataStore
@@ -120,12 +83,8 @@ class MetaManagerForm
          * The manager
          */
         $dokuwikiFsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
-        foreach (self::FORM_METADATA_LIST as $formsMetaDatum) {
-
-            try {
-                $metadata = Metadata::getForName($formsMetaDatum);
-            } catch (ExceptionNotFound $e) {
-                LogUtility::error("The metadata ($formsMetaDatum} was not found");
+        foreach (MetadataSystem::getMetadataObjects()  as $metadata) {
+            if(!$metadata->isOnForm()){
                 continue;
             }
             $metadata

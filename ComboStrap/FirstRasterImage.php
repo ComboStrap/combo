@@ -42,7 +42,7 @@ class FirstRasterImage extends MetadataImage
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }

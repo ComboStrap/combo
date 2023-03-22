@@ -205,7 +205,7 @@ class PageId extends MetadataText
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -360,4 +360,8 @@ class PageId extends MetadataText
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

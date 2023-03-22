@@ -74,7 +74,7 @@ class PagePath extends MetadataWikiPath
         return "Page Path";
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -90,4 +90,8 @@ class PagePath extends MetadataWikiPath
         return WikiPath::MARKUP_DRIVE;
     }
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

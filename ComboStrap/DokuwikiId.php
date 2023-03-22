@@ -75,8 +75,10 @@ class DokuwikiId extends MetadataText
         return "Wiki Id";
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
+
+
 }

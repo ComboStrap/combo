@@ -21,6 +21,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Meta\Field\TwitterImage;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PageTemplateEngine;
@@ -266,7 +267,7 @@ $lang[PageUrlType::CONF_CANONICAL_URL_TYPE] = PluginUtility::getDocumentationHyp
 /**
  * Frontmatter
  */
-$lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::CANONICAL, "If checked, the metadata manager will create a frontmatter on submit.");
+$lang[MetadataFrontmatterStore::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::CANONICAL, "If checked, the metadata manager will create a frontmatter on submit.");
 
 /**
  * Heading

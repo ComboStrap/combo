@@ -54,10 +54,10 @@ class Canonical extends MetadataWikiPath
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -144,5 +144,10 @@ class Canonical extends MetadataWikiPath
     public function getDrive(): string
     {
         return WikiPath::MARKUP_DRIVE;
+    }
+
+    public function isOnForm(): bool
+    {
+        return true;
     }
 }

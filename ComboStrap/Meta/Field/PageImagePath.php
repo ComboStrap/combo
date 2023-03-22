@@ -52,7 +52,7 @@ class PageImagePath extends MetadataWikiPath
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }

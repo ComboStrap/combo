@@ -1084,7 +1084,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
         foreach ($metadataNames as $metadataName) {
             try {
-                $metadata = Metadata::getForName($metadataName);
+                $metadata = Meta\Api\MetadataSystem::getForName($metadataName);
             } catch (ExceptionNotFound $e) {
                 LogUtility::msg("The metadata ($metadataName) should be defined");
                 continue;
@@ -2218,7 +2218,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         if ($this->uidObject === null) {
             try {
-                $this->uidObject = Metadata::toMetadataObject($this->getUid())
+                $this->uidObject = Meta\Api\MetadataSystem::toMetadataObject($this->getUid())
                     ->setResource($this);
             } catch (ExceptionBadArgument $e) {
                 throw new ExceptionRuntimeInternal("Uid object is a metadata object. It should not happen.", self::CANONICAL_PAGE, 1, $e);

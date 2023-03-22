@@ -22,7 +22,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      */
     protected bool $hasChanged = false;
 
-    protected ?array $data = null;
+    protected array $data = [];
 
     /**
      * MetadataSingleArrayStore constructor.
@@ -86,7 +86,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function reset()
     {
-        $this->data = null;
+        $this->data = [];
     }
 
     public function getFromPersistentName(string $name, $default = null)

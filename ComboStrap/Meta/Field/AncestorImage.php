@@ -51,7 +51,7 @@ class AncestorImage extends MetadataImage
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return false;
     }
@@ -84,4 +84,8 @@ class AncestorImage extends MetadataImage
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

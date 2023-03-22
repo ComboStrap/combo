@@ -46,7 +46,7 @@ abstract class MetadataWikiPath extends Metadata
     protected WikiPath $value;
 
     /**
-     * @param string|null $value
+     * @param WikiPath|string|null $value
      * @return Metadata
      */
     public function setValue($value): Metadata

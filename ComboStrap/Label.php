@@ -42,10 +42,10 @@ class Label extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -73,6 +73,8 @@ class Label extends MetadataText
     }
 
 
-
-
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

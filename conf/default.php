@@ -23,6 +23,7 @@
 use ComboStrap\Canonical;
 use ComboStrap\ContainerTag;
 use ComboStrap\IconDownloader;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
@@ -384,7 +385,7 @@ $conf["enableEnhancedLinkWizard"] = 1;
 $conf["pageUrlType"] = "page path";
 
 /**
- * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT}
+ * {@link MetadataFrontmatterStore::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT}
  * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT}
  */
 $conf["enableFrontMatterOnSubmit"] = 0;

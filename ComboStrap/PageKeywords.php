@@ -83,7 +83,7 @@ class PageKeywords extends MetadataMultiple
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -106,4 +106,8 @@ class PageKeywords extends MetadataMultiple
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

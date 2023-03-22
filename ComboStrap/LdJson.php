@@ -129,7 +129,7 @@ class LdJson extends MetadataJson
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
     public function getCanonical(): string
@@ -154,7 +154,7 @@ class LdJson extends MetadataJson
     }
 
 
-    public function getMutable(): bool
+    public function isMutable(): bool
     {
         return true;
     }
@@ -453,4 +453,8 @@ class LdJson extends MetadataJson
     }
 
 
+    public function isOnForm(): bool
+    {
+        return true;
+    }
 }

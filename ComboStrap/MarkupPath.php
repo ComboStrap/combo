@@ -1049,9 +1049,11 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
         $metadataNames = [
             PageH1::PROPERTY_NAME,
-            PageTitle::TITLE,
+            PageTitle::PROPERTY_NAME,
+            Lead::PROPERTY_NAME,
             Canonical::PROPERTY_NAME,
             PagePath::PROPERTY_NAME,
+            Label::PROPERTY_NAME,
             PageDescription::PROPERTY_NAME,
             ResourceName::PROPERTY_NAME,
             PageType::PROPERTY_NAME,

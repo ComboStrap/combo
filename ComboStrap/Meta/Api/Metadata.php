@@ -9,6 +9,7 @@ use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\Canonical;
 use ComboStrap\DataType;
+use ComboStrap\Label;
 use ComboStrap\DisqusIdentifier;
 use ComboStrap\DokuwikiId;
 use ComboStrap\EndDate;
@@ -22,6 +23,7 @@ use ComboStrap\FirstSvgImage;
 use ComboStrap\FeaturedIcon;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;
+use ComboStrap\Lead;
 use ComboStrap\Locale;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;
@@ -255,6 +257,10 @@ abstract class Metadata
                 return new DisqusIdentifier();
             case References::getName():
                 return new References();
+            case Label::PROPERTY_NAME:
+                return new Label();
+            case Lead::PROPERTY_NAME:
+                return new Lead();
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
                 LogUtility::msg($msg, LogUtility::LVL_MSG_INFO, self::CANONICAL);

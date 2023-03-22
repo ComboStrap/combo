@@ -36,7 +36,9 @@ class MetaManagerForm
 
     private const FORM_METADATA_LIST = [ResourceName::PROPERTY_NAME,
         PageTitle::PROPERTY_NAME,
+        Lead::PROPERTY_NAME,
         PageH1::PROPERTY_NAME,
+        Label::PROPERTY_NAME,
         PageDescription::PROPERTY_NAME,
         PageKeywords::PROPERTY_NAME,
         PagePath::PROPERTY_NAME,

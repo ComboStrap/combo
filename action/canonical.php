@@ -58,7 +58,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
         global $JSINFO;
         try {
             $canonical = $page->getCanonical();
-            $JSINFO[Canonical::PROPERTY_NAME] = $canonical;
+            $JSINFO[Canonical::PROPERTY_NAME] = $canonical->toAbsoluteId();
         } catch (ExceptionNotFound $e) {
             return;
         }

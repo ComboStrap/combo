@@ -8,6 +8,7 @@ use ComboStrap\Meta\Api\MetadataImage;
 use ComboStrap\Meta\Api\MetadataWikiPath;
 use ComboStrap\PageImageUsage;
 use ComboStrap\SiteConfig;
+use ComboStrap\WikiPath;
 
 
 class FacebookImage extends MetadataImage
@@ -73,5 +74,9 @@ class FacebookImage extends MetadataImage
 
     }
 
+    public function getDrive(): string
+    {
+        return WikiPath::MEDIA_DRIVE;
+    }
 
 }

@@ -15,6 +15,7 @@ use ComboStrap\Meta\Api\MetadataTabular;
 use ComboStrap\MetaManagerForm;
 use ComboStrap\Sqlite;
 use ComboStrap\StringUtility;
+use ComboStrap\WikiPath;
 
 class Aliases extends MetadataTabular
 {
@@ -115,8 +116,9 @@ class Aliases extends MetadataTabular
                 }
                 if (!is_string($path)) {
                     $path = StringUtility::toString($path);
-                    LogUtility::msg("The alias element ($path) is not a string", Alias::CANONICAL);
+                    LogUtility::error("The alias element ($path) is not a string", Alias::CANONICAL);
                 }
+                $path = WikiPath::createMarkupPathFromId($path);
                 $aliases[] = Alias::create($this->getResource(), $path);
             }
         }
@@ -135,8 +137,8 @@ class Aliases extends MetadataTabular
         }
         $array = [];
         foreach ($aliases as $alias) {
-            $array[$alias->getPath()] = [
-                AliasPath::PERSISTENT_NAME => $alias->getPath(),
+            $array[$alias->getPath()->toAbsoluteId()] = [
+                AliasPath::PERSISTENT_NAME => $alias->getPath()->toAbsoluteId(),
                 AliasType::PERSISTENT_NAME => $alias->getType()
             ];
         }
@@ -289,6 +291,9 @@ class Aliases extends MetadataTabular
     function addAndGetAlias($aliasPath, $aliasType = null): Alias
     {
         $this->buildCheck();
+        /**
+         * @var AliasPath $path
+         */
         $path = Metadata::toMetadataObject(AliasPath::class, $this)
             ->setFromStoreValue($aliasPath);
         $row[$path::getPersistentName()] = $path;
@@ -301,7 +306,7 @@ class Aliases extends MetadataTabular
             $row[$aliasObject::getPersistentName()] = $aliasObject;
             $alias->setType($aliasType);
         }
-        $this->rows[$path->getValue()] = $row;
+        $this->rows[$path->getValue()->toAbsoluteId()] = $row;
 
         return $alias;
     }

@@ -16,37 +16,29 @@ class Alias
     const CANONICAL = "alias";
 
 
-    private $path; // the path of the alias
-    private $page;
+    private WikiPath $path; // the path of the alias
+    private MarkupPath $page;
     /**
      * @var string
      */
-    private $type = AliasType::REDIRECT;
+    private string $type = AliasType::REDIRECT;
 
     /**
      * Alias constructor.
-     * @param {Page} $page
-     * @param {string} $alias
+     * @param MarkupPath $page
+     * @param WikiPath $path
      */
-    public function __construct($page, $path)
+    public function __construct(MarkupPath $page, WikiPath $path)
     {
         $this->page = $page;
-        if (empty($path)) {
-            LogUtility::msg("Alias: To create an alias, the path value should not be empty", LogUtility::LVL_MSG_ERROR);
-            return;
-        }
-        if (!is_string($path)) {
-            LogUtility::msg("Alias: To create an alias, the path value should a string. Value: " . var_export($path, true), LogUtility::LVL_MSG_ERROR);
-            return;
-        }
-        WikiPath::addRootSeparatorIfNotPresent($path);
+
         $this->path = $path;
     }
 
     /**
-     * @return mixed
+     * @return WikiPath
      */
-    public function getPath()
+    public function getPath(): WikiPath
     {
         return $this->path;
     }
@@ -73,7 +65,7 @@ class Alias
 
 
     public
-    static function create(ResourceCombo $page, $alias): Alias
+    static function create(ResourceCombo $page, WikiPath $alias): Alias
     {
         return new Alias($page, $alias);
     }
@@ -93,7 +85,7 @@ class Alias
     public
     function __toString()
     {
-        return $this->path;
+        return "Alias: ($this->page) to ($this->path)";
     }
 
 

@@ -330,12 +330,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * otherwise derive it from the id
      * by taking the last two parts
      *
-     * @return string
+     * @return WikiPath
      * @throws ExceptionNotFound
      * @deprecated for {@link Canonical::getValueOrDefault()}
      */
     public
-    function getCanonicalOrDefault(): string
+    function getCanonicalOrDefault(): WikiPath
     {
         return $this->canonical->getValueFromStoreOrDefault();
 
@@ -524,13 +524,13 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
     /**
-     * @return mixed
+     * @return string
      * @throws ExceptionNotFound
      */
     public
     function getDescription(): string
     {
-        return $this->description->getValueFromStore();
+        return $this->description->getValue();
     }
 
 
@@ -717,11 +717,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * Get the create date of page
      *
      * @return DateTime
+     * @throws ExceptionNotFound
      */
     public
     function getCreatedTime(): ?DateTime
     {
-        return $this->creationTime->getValueFromStore();
+        return $this->creationTime->getValue();
     }
 
 
@@ -1012,7 +1013,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     function getName(): string
     {
 
-        return $this->pageName->getValueFromStore();
+        return $this->pageName->getValue();
 
     }
 
@@ -1229,11 +1230,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     /**
      * @throws ExceptionNotFound
+     * @deprecated
      */
     public
-    function getCanonical(): string
+    function getCanonical(): WikiPath
     {
-        return $this->canonical->getValueFromStore();
+        return $this->canonical->getValue();
     }
 
     /**
@@ -2297,7 +2299,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $path = FileSystems::createPathFromUri($uri);
         return new MarkupPath($path);
     }
-
 
 
 }

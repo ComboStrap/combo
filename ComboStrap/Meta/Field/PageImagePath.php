@@ -74,4 +74,8 @@ class PageImagePath extends MetadataWikiPath
     }
 
 
+    public function getDrive(): string
+    {
+        return WikiPath::MEDIA_DRIVE;
+    }
 }

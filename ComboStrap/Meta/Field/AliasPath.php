@@ -6,6 +6,7 @@ namespace ComboStrap\Meta\Field;
 
 use ComboStrap\DataType;
 use ComboStrap\Meta\Api\MetadataWikiPath;
+use ComboStrap\WikiPath;
 
 class AliasPath extends MetadataWikiPath
 {
@@ -42,5 +43,10 @@ class AliasPath extends MetadataWikiPath
     public function getMutable(): bool
     {
         return true;
+    }
+
+    public function getDrive(): string
+    {
+        return WikiPath::MARKUP_DRIVE;
     }
 }

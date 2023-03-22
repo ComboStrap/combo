@@ -11,7 +11,7 @@ use ComboStrap\Meta\Api\MetadataWikiPath;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 
-class Canonical extends MetadataText
+class Canonical extends MetadataWikiPath
 {
 
     public const PROPERTY_NAME = "canonical";
@@ -62,16 +62,12 @@ class Canonical extends MetadataText
         return true;
     }
 
-    public function buildFromStoreValue($value): Metadata
-    {
-        if($value!==null){
-            WikiPath::addRootSeparatorIfNotPresent($value);
-        }
-        return parent::buildFromStoreValue($value);
-    }
 
-
-    public function getDefaultValue(): string
+    /**
+     * @return WikiPath
+     * @throws ExceptionNotFound
+     */
+    public function getDefaultValue(): WikiPath
     {
 
         $resourceCombo = $this->getResource();
@@ -129,7 +125,12 @@ class Canonical extends MetadataText
         }
         $calculatedCanonical = implode(":", $names);
         WikiPath::addRootSeparatorIfNotPresent($calculatedCanonical);
-        return $calculatedCanonical;
+        try {
+            return WikiPath::createMarkupPathFromPath($calculatedCanonical);
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::internalError("A canonical should not be the root, should not happen", self::CANONICAL);
+            throw new ExceptionNotFound();
+        }
 
     }
 
@@ -140,4 +141,8 @@ class Canonical extends MetadataText
     }
 
 
+    public function getDrive(): string
+    {
+        return WikiPath::MARKUP_DRIVE;
+    }
 }

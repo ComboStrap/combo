@@ -6,6 +6,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
 use ComboStrap\PageImageUsage;
+use ComboStrap\WikiPath;
 
 
 class TwitterImage extends MetadataImage
@@ -69,5 +70,9 @@ class TwitterImage extends MetadataImage
 
     }
 
+    public function getDrive(): string
+    {
+        return WikiPath::MEDIA_DRIVE;
+    }
 
 }

@@ -843,12 +843,11 @@ abstract class Metadata
 
     /**
      * @return mixed - set the memory value from the store and return ut
-     * @throws ExceptionNotFound - if not found
+     * @deprecated use the {@link self::toStoreValue()} instead
      */
     public function getValueFromStore()
     {
-        $this->buildFromStoreValue($this->getReadStore()->get($this));
-        return $this->getValue();
+        return $this->toStoreValue();
     }
 
 

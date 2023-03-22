@@ -5,13 +5,11 @@ namespace ComboStrap\Meta\Field;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\FirstRasterImage;
-use ComboStrap\FirstSvgImage;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\PageImageUsage;
-use ComboStrap\Site;
 use ComboStrap\WikiPath;
 
 
@@ -138,4 +136,8 @@ class FeaturedRasterImage extends MetadataImage
 
     }
 
+    public function getDrive(): string
+    {
+        return WikiPath::MEDIA_DRIVE;
+    }
 }

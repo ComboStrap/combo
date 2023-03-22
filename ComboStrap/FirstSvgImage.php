@@ -72,4 +72,9 @@ class FirstSvgImage extends MetadataImage
     {
         return Metadata::DERIVED_METADATA;
     }
+
+    public function getDrive(): string
+    {
+        return WikiPath::MEDIA_DRIVE;
+    }
 }

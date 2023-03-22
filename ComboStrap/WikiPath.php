@@ -989,7 +989,7 @@ class WikiPath extends PathAbs
 
     /**
      * The absolute path for a wiki path
-     * @return string - the wiki path version
+     * @return string - the wiki id with a root separator
      */
     function toAbsoluteId(): string
     {

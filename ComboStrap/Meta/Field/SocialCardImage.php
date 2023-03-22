@@ -97,5 +97,9 @@ class SocialCardImage extends MetadataImage
         }
     }
 
+    public function getDrive(): string
+    {
+        return WikiPath::MEDIA_DRIVE;
+    }
 
 }

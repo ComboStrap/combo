@@ -471,8 +471,8 @@ class DatabasePageRow
          * (Note that canonical should become a soft link and therefore a path)
          */
         try {
-            $canonical = $markupPath->getCanonical();
-            return $this->getDatabaseRowFromCanonical($canonical);
+            $canonical = Canonical::createForPage($markupPath)->getValue();
+            return $this->getDatabaseRowFromCanonical($canonical->toAbsoluteId());
         } catch (ExceptionNotFound $e) {
             // no canonical
         }

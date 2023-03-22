@@ -32,9 +32,14 @@ class ApiRouter
     {
 
         $call = $event->data;
-        if ($call == QualityMessageHandler::CALL_ID) {
-            QualityMessageHandler::handle($event);
-            return;
+        switch ($call) {
+            case QualityMessageHandler::CALL_ID:
+                QualityMessageHandler::handle($event);
+                return;
+            case MetaManagerHandler::META_MANAGER_CALL_ID:
+            case MetaManagerHandler::META_VIEWER_CALL_ID:
+                MetaManagerHandler::handle($event);
+                return;
         }
 
         $fetchUrl = Url::createFromGetOrPostGlobalVariable();

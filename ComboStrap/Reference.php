@@ -50,4 +50,9 @@ class Reference extends MetadataWikiPath
         return false;
     }
 
+    public function getDrive(): string
+    {
+        return WikiPath::MARKUP_DRIVE;
+    }
+
 }

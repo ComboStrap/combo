@@ -85,5 +85,9 @@ class PagePath extends MetadataWikiPath
     }
 
 
+    public function getDrive(): string
+    {
+        return WikiPath::MARKUP_DRIVE;
+    }
 
 }

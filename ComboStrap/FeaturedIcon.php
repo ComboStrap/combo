@@ -64,5 +64,9 @@ class FeaturedIcon extends MetadataImage
         throw new ExceptionNotFound();
     }
 
+    public function getDrive(): string
+    {
+        return WikiPath::MEDIA_DRIVE;
+    }
 
 }

@@ -20,6 +20,12 @@ abstract class MetadataWikiPath extends Metadata
 {
 
     /**
+     * @return string - the drive from where the path should be created
+     */
+    public abstract function getDrive(): string;
+
+
+    /**
      * @return string
      *
      * We don't extend text because the default wiki path
@@ -60,7 +66,7 @@ abstract class MetadataWikiPath extends Metadata
             return $this;
         }
         $value = WikiPath::toValidAbsolutePath($value);
-        $this->value = WikiPath::createMediaPathFromPath($value);
+        $this->value = WikiPath::createWikiPath($value, $this->getDrive());
         return $this;
     }
 
@@ -99,7 +105,7 @@ abstract class MetadataWikiPath extends Metadata
 
     public function buildFromStoreValue($value): Metadata
     {
-        if ($value === null) {
+        if ($value === null || trim($value) === "") {
             return $this;
         }
 
@@ -108,10 +114,8 @@ abstract class MetadataWikiPath extends Metadata
             return $this;
         }
 
-        if ($value !== "") {
-            $value = WikiPath::toValidAbsolutePath($value);
-        }
-        $this->value = WikiPath::createMediaPathFromPath($value);
+        $value = WikiPath::toValidAbsolutePath($value);
+        $this->value = WikiPath::createFromPath($value, $this->getDrive());
         return $this;
 
     }

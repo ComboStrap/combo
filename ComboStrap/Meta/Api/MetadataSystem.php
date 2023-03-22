@@ -63,9 +63,8 @@ use ComboStrap\StartDate;
 class MetadataSystem
 {
 
-
     /**
-     *
+     * All known metadatas
      */
     public const METADATAS = [
         Aliases::PROPERTY_NAME => Aliases::class,

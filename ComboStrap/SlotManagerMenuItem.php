@@ -106,7 +106,7 @@ class SlotManagerMenuItem extends AbstractItem
 
             $label = $secondarySlot;
             switch ($secondarySlot) {
-                case Site::getSidebarName():
+                case SlotSystem::getSidebarName():
                     $label = "Page Sidebar";
                     break;
                 case SlotSystem::getMainHeaderSlotName():

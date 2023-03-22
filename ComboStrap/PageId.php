@@ -180,17 +180,17 @@ class PageId extends MetadataText
     }
 
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_INTEGRATION_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "An unique identifier for the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Id";
     }
@@ -200,12 +200,12 @@ class PageId extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -216,11 +216,6 @@ class PageId extends MetadataText
     public function getDefaultValue(): ?string
     {
         return null;
-    }
-
-    public function getCanonical(): string
-    {
-        return $this->getName();
     }
 
 
@@ -360,7 +355,7 @@ class PageId extends MetadataText
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

@@ -153,7 +153,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      */
     private $description;
     /**
-     * @var PageCreationDate
+     * @var CreationDate
      */
     private $creationTime;
     /**
@@ -297,7 +297,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      */
     public function isSideSlot(): bool
     {
-        $slotNames = Site::getSidebarName();
+        $slotNames = SlotSystem::getSidebarName();
         try {
             $name = $this->getPathObject()->getLastNameWithoutExtension();
         } catch (ExceptionNotFound $e) {
@@ -1072,7 +1072,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         if (FileSystems::exists($this)) {
             $metadataThatNeedsExistingFile = [
                 PageId::PROPERTY_NAME,
-                PageCreationDate::PROPERTY_NAME,
+                CreationDate::PROPERTY_NAME,
                 ModificationDate::PROPERTY_NAME,
                 PagePublicationDate::PROPERTY_NAME,
                 StartDate::PROPERTY_NAME,
@@ -1648,7 +1648,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         $this->description = PageDescription::createForPage($this);
         $this->h1 = PageH1::createForPage($this);
         $this->type = PageType::createForPage($this);
-        $this->creationTime = PageCreationDate::createForPage($this);
+        $this->creationTime = CreationDate::createForPage($this);
         $this->title = PageTitle::createForMarkup($this);
         $this->keywords = PageKeywords::createForPage($this);
         $this->publishedDate = PagePublicationDate::createFromPage($this);
@@ -2028,7 +2028,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             return null;
         }
 
-        $nearestMainFooter = $this->findNearest(Site::getSidebarName());
+        $nearestMainFooter = $this->findNearest(SlotSystem::getSidebarName());
         if ($nearestMainFooter === false) {
             return null;
         }

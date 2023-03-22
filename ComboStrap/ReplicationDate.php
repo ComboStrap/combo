@@ -24,22 +24,22 @@ class ReplicationDate extends MetadataDateTime
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_INTEGRATION_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The modification date of the database row";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Database Replication Date";
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::REPLICATION_CANONICAL;
     }
@@ -49,12 +49,12 @@ class ReplicationDate extends MetadataDateTime
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::RUNTIME_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -68,7 +68,7 @@ class ReplicationDate extends MetadataDateTime
         throw new ExceptionNotFound("No default replication date");
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

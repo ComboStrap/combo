@@ -132,7 +132,7 @@ class Lang extends MetadataText
         return $lang;
     }
 
-    public function getTab(): ?string
+    static public function getTab(): ?string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;
     }
@@ -173,12 +173,12 @@ class Lang extends MetadataText
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The language of the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Language";
     }
@@ -188,12 +188,12 @@ class Lang extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -219,7 +219,7 @@ class Lang extends MetadataText
         }
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "lang";
     }
@@ -243,8 +243,9 @@ class Lang extends MetadataText
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }
+
 }

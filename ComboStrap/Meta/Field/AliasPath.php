@@ -14,12 +14,12 @@ class AliasPath extends MetadataWikiPath
     public const PERSISTENT_NAME = "path";
     const PROPERTY_NAME = "alias-path";
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The path of the alias";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Alias Path";
     }
@@ -35,17 +35,17 @@ class AliasPath extends MetadataWikiPath
     }
 
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return DataType::TEXT_TYPE_VALUE;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MARKUP_DRIVE;
     }

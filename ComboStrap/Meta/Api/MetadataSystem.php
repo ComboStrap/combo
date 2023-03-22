@@ -33,6 +33,7 @@ use ComboStrap\Meta\Field\FeaturedImage;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Field\PageImage;
 use ComboStrap\Meta\Field\PageImagePath;
 use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\Meta\Field\PageTemplateName;
@@ -40,7 +41,7 @@ use ComboStrap\Meta\Field\Region;
 use ComboStrap\Meta\Field\SocialCardImage;
 use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\ModificationDate;
-use ComboStrap\PageCreationDate;
+use ComboStrap\CreationDate;
 use ComboStrap\PageDescription;
 use ComboStrap\PageId;
 use ComboStrap\PageImageUsage;
@@ -62,35 +63,60 @@ use ComboStrap\StartDate;
 class MetadataSystem
 {
 
-    public const GLOBAL_METADATAS_IDENTIFIER = "metadata-object-array";
+
+    /**
+     *
+     */
     public const METADATAS = [
-        Canonical::PROPERTY_NAME,
-        PageType::PROPERTY_NAME,
-        PageH1::PROPERTY_NAME,
-        Aliases::PROPERTY_NAME,
-        Region::PROPERTY_NAME,
-        Lang::PROPERTY_NAME,
-        PageTitle::PROPERTY_NAME,
-        PagePublicationDate::PROPERTY_NAME,
-        ResourceName::PROPERTY_NAME,
-        LdJson::PROPERTY_NAME,
-        PageTemplateName::PROPERTY_NAME,
-        StartDate::PROPERTY_NAME,
-        EndDate::PROPERTY_NAME,
-        PageDescription::PROPERTY_NAME,
-        DisqusIdentifier::PROPERTY_NAME,
-        Slug::PROPERTY_NAME,
-        PageKeywords::PROPERTY_NAME,
-        CacheExpirationFrequency::PROPERTY_NAME,
-        QualityDynamicMonitoringOverwrite::PROPERTY_NAME,
-        LowQualityPageOverwrite::PROPERTY_NAME,
-        FeaturedSvgImage::PROPERTY_NAME,
-        FeaturedRasterImage::PROPERTY_NAME,
-        FeaturedIcon::PROPERTY_NAME,
-        Lead::PROPERTY_NAME,
-        Label::PROPERTY_NAME,
-        TwitterImage::PROPERTY_NAME,
-        FacebookImage::PROPERTY_NAME
+        Aliases::PROPERTY_NAME => Aliases::class,
+        Canonical::PROPERTY_NAME => Canonical::class,
+        EndDate::PROPERTY_NAME => EndDate::class,
+        PageType::PROPERTY_NAME => PageType::class,
+        PageH1::PROPERTY_NAME => PageH1::class,
+        Lang::PROPERTY_NAME => Lang::class,
+        LdJson::PROPERTY_NAME => LdJson::class,
+        LdJson::OLD_ORGANIZATION_PROPERTY => LdJson::class,
+        PageTitle::PROPERTY_NAME => PageTitle::class,
+        PagePublicationDate::PROPERTY_NAME => PagePublicationDate::class,
+        PagePublicationDate::OLD_META_KEY => PagePublicationDate::class,
+        Region::PROPERTY_NAME => Region::class,
+        ResourceName::PROPERTY_NAME => ResourceName::class,
+        StartDate::PROPERTY_NAME => StartDate::class,
+        PageDescription::PROPERTY_NAME => PageDescription::class,
+        DisqusIdentifier::PROPERTY_NAME => DisqusIdentifier::class,
+        Slug::PROPERTY_NAME => Slug::class,
+        PageKeywords::PROPERTY_NAME => PageKeywords::class,
+        CacheExpirationFrequency::PROPERTY_NAME => CacheExpirationFrequency::class,
+        QualityDynamicMonitoringOverwrite::PROPERTY_NAME => QualityDynamicMonitoringOverwrite::class,
+        LowQualityPageOverwrite::PROPERTY_NAME => LowQualityPageOverwrite::class,
+        FeaturedSvgImage::PROPERTY_NAME => FeaturedSvgImage::class,
+        FeaturedRasterImage::PROPERTY_NAME => FeaturedRasterImage::class,
+        FeaturedIcon::PROPERTY_NAME => FeaturedIcon::class,
+        Lead::PROPERTY_NAME => Lead::class,
+        Label::PROPERTY_NAME => Label::class,
+        TwitterImage::PROPERTY_NAME => TwitterImage::class,
+        FacebookImage::PROPERTY_NAME => FacebookImage::class,
+        AliasPath::PROPERTY_NAME => Aliases::class,
+        AliasType::PROPERTY_NAME => Aliases::class,
+        PageImages::PROPERTY_NAME => PageImages::class,
+        PageImages::OLD_PROPERTY_NAME => PageImages::class,
+        PageImagePath::PROPERTY_NAME => PageImages::class,
+        PageImageUsage::PROPERTY_NAME => PageImages::class,
+        SocialCardImage::PROPERTY_NAME => SocialCardImage::class,
+        AncestorImage::PROPERTY_NAME => AncestorImage::class,
+        FirstImage::PROPERTY_NAME => FirstImage::class,
+        Region::OLD_REGION_PROPERTY => Region::class,
+        PageTemplateName::PROPERTY_NAME => PageTemplateName::class,
+        PageTemplateName::PROPERTY_NAME_OLD => PageTemplateName::class,
+        DokuwikiId::DOKUWIKI_ID_ATTRIBUTE => DokuwikiId::class,
+        ReplicationDate::PROPERTY_NAME => ReplicationDate::class,
+        References::PROPERTY_NAME => References::class,
+        LowQualityCalculatedIndicator::PROPERTY_NAME => LowQualityCalculatedIndicator::class,
+        PagePath::PROPERTY_NAME => PagePath::class,
+        CreationDate::PROPERTY_NAME => CreationDate::class,
+        ModificationDate::PROPERTY_NAME => ModificationDate::class,
+        PageLevel::PROPERTY_NAME => PageLevel::class,
+        PageId::PROPERTY_NAME => PageId::class
     ];
 
 
@@ -106,17 +132,8 @@ class MetadataSystem
          *     * and the process object {@link Metadata::setReadStore()}, writestore, value
          */
         $metadatas = [];
-        foreach (self::METADATAS as $metadataName) {
-            try {
-                $metadatas[] = self::getForName($metadataName);
-            } catch (ExceptionNotFound $e) {
-                $msg = "The metadata $metadataName should be defined";
-                if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionRuntimeInternal($msg);
-                } else {
-                    LogUtility::error($msg);
-                }
-            }
+        foreach (self::METADATAS as $metadataClass) {
+            $metadatas[] = new $metadataClass();
         }
         return $metadatas;
 
@@ -143,134 +160,24 @@ class MetadataSystem
     {
         $metas = [];
         foreach (MetadataSystem::getMetadataObjects() as $metadata) {
-            if($metadata->isMutable()){
+            if ($metadata::isMutable()) {
                 $metas[] = $metadata;
             }
         }
         return $metas;
     }
 
-    public static function getMutableMetadataPropertyName()
-    {
-
-    }
 
     /**
      * @throws ExceptionNotFound
      */
-    public static function getForName(string $name): ?Metadata
+    public static function getForName(string $name): Metadata
     {
 
         $name = strtolower(trim($name));
-        /**
-         * TODO: the creation could be build automatically if we add a list of metadata class
-         */
-        switch ($name) {
-            case Canonical::getName():
-                return new Canonical();
-            case PageType::getName():
-                return new PageType();
-            case PageH1::getName():
-                return new PageH1();
-            case Aliases::getName():
-            case AliasPath::getName():
-            case AliasType::getName():
-                return new Aliases();
-            case PageImages::getName():
-            case PageImages::OLD_PROPERTY_NAME:
-            case PageImages::getPersistentName():
-            case PageImagePath::getName():
-            case PageImageUsage::getName():
-                return new PageImages();
-            case FeaturedRasterImage::getName():
-                return new FeaturedRasterImage();
-            case FeaturedSvgImage::getName():
-                return new FeaturedSvgImage();
-            case TwitterImage::getName():
-                return new TwitterImage();
-            case FacebookImage::getName():
-                return new FacebookImage();
-            case FeaturedImage::PROPERTY_NAME:
-                return new FeaturedImage();
-            case SocialCardImage::PROPERTY_NAME:
-                return new SocialCardImage();
-            case FirstRasterImage::PROPERTY_NAME:
-                return new FirstRasterImage();
-            case AncestorImage::PROPERTY_NAME:
-                return new AncestorImage();
-            case FirstSvgImage::PROPERTY_NAME:
-                return new FirstSvgImage();
-            case FeaturedIcon::PROPERTY_NAME:
-                return new FeaturedIcon();
-            case FirstImage::PROPERTY_NAME:
-                return new FirstImage();
-            case Region::OLD_REGION_PROPERTY:
-            case Region::getName():
-                return new Region();
-            case Lang::PROPERTY_NAME:
-                return new Lang();
-            case PageTitle::TITLE:
-                return new PageTitle();
-            case PagePublicationDate::OLD_META_KEY:
-            case PagePublicationDate::PROPERTY_NAME:
-                return new PagePublicationDate();
-            case ResourceName::PROPERTY_NAME:
-                return new ResourceName();
-            case LdJson::OLD_ORGANIZATION_PROPERTY:
-            case LdJson::PROPERTY_NAME:
-                return new LdJson();
-            case PageTemplateName::PROPERTY_NAME:
-            case PageTemplateName::PROPERTY_NAME_OLD:
-                return new PageTemplateName();
-            case StartDate::PROPERTY_NAME:
-                return new StartDate();
-            case EndDate::PROPERTY_NAME:
-                return new EndDate();
-            case PageDescription::DESCRIPTION_PROPERTY:
-                return new PageDescription();
-            case Slug::PROPERTY_NAME:
-                return new Slug();
-            case PageKeywords::PROPERTY_NAME:
-                return new PageKeywords();
-            case CacheExpirationFrequency::PROPERTY_NAME:
-                return new CacheExpirationFrequency();
-            case QualityDynamicMonitoringOverwrite::PROPERTY_NAME:
-                return new QualityDynamicMonitoringOverwrite();
-            case LowQualityPageOverwrite::PROPERTY_NAME:
-                return new LowQualityPageOverwrite();
-            case LowQualityCalculatedIndicator::getName():
-                return new LowQualityCalculatedIndicator();
-            case PageId::PROPERTY_NAME:
-                return new PageId();
-            case PagePath::PROPERTY_NAME:
-                return new PagePath();
-            case PageCreationDate::PROPERTY_NAME:
-                return new PageCreationDate();
-            case ModificationDate::PROPERTY_NAME:
-                return new ModificationDate();
-            case DokuwikiId::DOKUWIKI_ID_ATTRIBUTE:
-                return new DokuwikiId();
-            case PageUrlPath::PROPERTY_NAME:
-                return new PageUrlPath();
-            case Locale::PROPERTY_NAME:
-                return new Locale();
-            case CacheExpirationDate::PROPERTY_NAME:
-                return new CacheExpirationDate();
-            case ReplicationDate::getName():
-                return new ReplicationDate();
-            case PageLevel::PROPERTY_NAME:
-                return new PageLevel();
-            case DisqusIdentifier::PROPERTY_NAME:
-                return new DisqusIdentifier();
-            case References::getName():
-                return new References();
-            case Label::PROPERTY_NAME:
-                return new Label();
-            case Lead::PROPERTY_NAME:
-                return new Lead();
-            default:
-                $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
-                LogUtility::msg($msg, LogUtility::LVL_MSG_INFO, Metadata::CANONICAL);
+        $metadataClass = self::METADATAS[$name];
+        if ($metadataClass !== null) {
+            return new $metadataClass();
         }
         throw new ExceptionNotFound("No metadata found with the name ($name)");
 

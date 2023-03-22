@@ -23,7 +23,7 @@ abstract class MetadataText extends Metadata
     protected $value;
 
 
-    public function getDataType(): string
+    public static function getDataType(): string
     {
         return DataType::TEXT_TYPE_VALUE;
     }

@@ -21,17 +21,17 @@ class Locale extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata.";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Locale";
     }
@@ -61,12 +61,12 @@ class Locale extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -83,7 +83,7 @@ class Locale extends MetadataText
         return Site::getLocale($this->separator);
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "locale";
     }
@@ -103,7 +103,7 @@ class Locale extends MetadataText
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

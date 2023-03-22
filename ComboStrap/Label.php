@@ -20,17 +20,17 @@ class Label extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "A label is a short description of a couple of words used in a listing (table row)";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Label";
     }
@@ -40,12 +40,12 @@ class Label extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -73,7 +73,7 @@ class Label extends MetadataText
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

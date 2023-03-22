@@ -61,7 +61,7 @@ EOF;
 
         try {
             return [
-                Site::getSidebarName(),
+                self::getSidebarName(),
                 self::getPageHeaderSlotName(),
                 self::getPageFooterSlotName(),
                 self::getMainHeaderSlotName(),
@@ -72,7 +72,7 @@ EOF;
             LogUtility::msg("An error has occurred while retrieving the name of the secondary slots. Error: {$e->getMessage()}");
             // We known at least this one
             return [
-                Site::getSidebarName(),
+                self::getSidebarName(),
                 self::getMainHeaderSlotName(),
                 self::getMainFooterSlotName()
             ];
@@ -118,5 +118,14 @@ EOF;
     public static function getMainFooterSlotName(): string
     {
         return Site::SLOT_MAIN_FOOTER_NAME;
+    }
+
+    /**
+     * @return string - the name of the sidebar page
+     */
+    public static function getSidebarName(): string
+    {
+        global $conf;
+        return $conf["sidebar"];
     }
 }

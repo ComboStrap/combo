@@ -54,28 +54,28 @@ class DokuwikiId extends MetadataText
     }
 
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
 
-    public function getTab(): ?string
+    public static function getTab(): ?string
     {
         return null;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The id of a resource represents the path of a resource from its root directory";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Wiki Id";
     }
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return false;
     }

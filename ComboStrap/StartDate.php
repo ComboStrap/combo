@@ -18,17 +18,17 @@ class StartDate extends MetadataDateTime
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The start date of an event";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Start Date";
     }
@@ -38,12 +38,12 @@ class StartDate extends MetadataDateTime
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -53,13 +53,13 @@ class StartDate extends MetadataDateTime
         throw new ExceptionNotFound("Start date does not have any default value");
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return PageType::EVENT_TYPE;
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

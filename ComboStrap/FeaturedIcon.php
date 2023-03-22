@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
-use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 /**
  * A derived meta that captures the first raster image
@@ -22,12 +21,12 @@ class FeaturedIcon extends MetadataImage
             ->setResource($resource);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "An illustrative icon for the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Featured Icon";
     }
@@ -38,13 +37,13 @@ class FeaturedIcon extends MetadataImage
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
@@ -57,19 +56,19 @@ class FeaturedIcon extends MetadataImage
          */
         $iconImageParsed = $this->getReadStore()->getFromPersistentName(FeaturedIcon::FIRST_ICON_PARSED);
 
-        if($iconImageParsed!==null){
+        if ($iconImageParsed !== null) {
             return WikiPath::createMediaPathFromId($iconImageParsed);
         }
 
         throw new ExceptionNotFound();
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

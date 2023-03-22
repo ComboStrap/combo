@@ -18,25 +18,25 @@ class PageKeywords extends MetadataMultiple
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
 
-    public function getDataType(): string
+    static public function getDataType(): string
     {
         // in a form, we send a list of words
         return DataType::TEXT_TYPE_VALUE;
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The keywords added to your page (separated by a comma)";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Keywords";
     }
@@ -78,12 +78,12 @@ class PageKeywords extends MetadataMultiple
         return array_unique($keyWords);
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -100,13 +100,13 @@ class PageKeywords extends MetadataMultiple
     }
 
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::PROPERTY_NAME;
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

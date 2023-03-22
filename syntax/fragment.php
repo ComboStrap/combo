@@ -11,7 +11,7 @@ use ComboStrap\Canonical;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
-use ComboStrap\PageCreationDate;
+use ComboStrap\CreationDate;
 use ComboStrap\PagePath;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\PluginUtility;

@@ -304,7 +304,7 @@ abstract class MetadataTabular extends Metadata
         return $this->rows[$normalizedValue];
     }
 
-    public function getDataType(): string
+    static public function getDataType(): string
     {
         return DataType::TABULAR_TYPE_VALUE;
     }

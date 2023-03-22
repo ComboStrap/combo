@@ -20,17 +20,17 @@ class PageTitle extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The page title is a description advertised to external application such as search engine and browser.";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Title";
     }
@@ -40,12 +40,12 @@ class PageTitle extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
@@ -84,13 +84,13 @@ class PageTitle extends MetadataText
     }
 
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return self::TITLE;
     }
 
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

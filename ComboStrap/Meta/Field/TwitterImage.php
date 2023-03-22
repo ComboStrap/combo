@@ -20,12 +20,12 @@ class TwitterImage extends MetadataImage
         return (new TwitterImage())->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The twitter image used in twitter card";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Twitter Image";
     }
@@ -35,12 +35,12 @@ class TwitterImage extends MetadataImage
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -70,12 +70,12 @@ class TwitterImage extends MetadataImage
 
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

@@ -152,7 +152,7 @@ class Aliases extends MetadataTabular
     }
 
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
@@ -313,33 +313,31 @@ class Aliases extends MetadataTabular
     }
 
 
-    public
+    static public
     function getCanonical(): string
     {
         return Alias::CANONICAL;
     }
 
-    public
+    static public
     function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
-    public
+    static public
     function getDescription(): string
     {
         return "Aliases that will redirect to this page.";
     }
 
-    public
-    function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Aliases";
     }
 
 
-    public
-    function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -349,13 +347,13 @@ class Aliases extends MetadataTabular
         return AliasPath::class;
     }
 
-    public function getChildrenClass(): ?array
+    static public function getChildrenClass(): array
     {
         return [AliasPath::class, AliasType::class];
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

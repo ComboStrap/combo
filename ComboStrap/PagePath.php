@@ -53,44 +53,44 @@ class PagePath extends MetadataWikiPath
     }
 
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The path of the page on the file system (in wiki format with the colon `:` as path separator)";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Page Path";
     }
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return false;
     }
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return self::PROPERTY_NAME;
     }
 
 
-    public function getDrive(): string
+    public static function getDrive(): string
     {
         return WikiPath::MARKUP_DRIVE;
     }
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

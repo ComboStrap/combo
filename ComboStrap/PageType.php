@@ -37,17 +37,17 @@ class PageType extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The type of page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Type";
     }
@@ -57,12 +57,12 @@ class PageType extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -70,7 +70,7 @@ class PageType extends MetadataText
     public function getDefaultValue(): ?string
     {
         $resource = $this->getResource();
-        if(!($resource instanceof MarkupPath)){
+        if (!($resource instanceof MarkupPath)) {
             return null;
         }
 
@@ -91,7 +91,7 @@ class PageType extends MetadataText
     /**
      * The canonical for page type
      */
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "page:type";
     }
@@ -114,7 +114,7 @@ class PageType extends MetadataText
         return $types;
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

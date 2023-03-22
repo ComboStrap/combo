@@ -133,7 +133,7 @@ class PageImages extends MetadataTabular
     }
 
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::CANONICAL;
     }
@@ -163,7 +163,7 @@ class PageImages extends MetadataTabular
         return null;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
@@ -241,24 +241,24 @@ class PageImages extends MetadataTabular
     }
 
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_IMAGE_VALUE;
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The illustrative images of the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Images";
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -284,7 +284,7 @@ class PageImages extends MetadataTabular
     }
 
 
-    function getChildrenClass(): array
+    static function getChildrenClass(): array
     {
         return [PageImagePath::class, PageImageUsage::class];
     }

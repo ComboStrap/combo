@@ -127,34 +127,34 @@ class LdJson extends MetadataJson
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return action_plugin_combo_metagoogle::CANONICAL;
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "Advanced Page metadata definition with the json-ld format";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Json-ld";
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -453,7 +453,7 @@ class LdJson extends MetadataJson
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

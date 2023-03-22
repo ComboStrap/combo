@@ -84,7 +84,7 @@ class MetaManagerForm
          */
         $dokuwikiFsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
         foreach (MetadataSystem::getMetadataObjects()  as $metadata) {
-            if(!$metadata->isOnForm()){
+            if(!$metadata::isOnForm()){
                 continue;
             }
             $metadata

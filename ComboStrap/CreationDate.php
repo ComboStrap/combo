@@ -14,7 +14,7 @@ use DateTime;
  * @package ComboStrap
  * Represents the creation date of a resource
  */
-class PageCreationDate extends MetadataDateTime
+class CreationDate extends MetadataDateTime
 {
 
 
@@ -23,15 +23,15 @@ class PageCreationDate extends MetadataDateTime
     const DOKUWIKI_SUB_KEY = 'created';
 
 
-    public static function createForPage(ResourceCombo $page): PageCreationDate
+    public static function createForPage(ResourceCombo $page): CreationDate
     {
-        return (new PageCreationDate())
+        return (new CreationDate())
             ->setResource($page);
     }
 
-    public static function create(): PageCreationDate
+    public static function create(): CreationDate
     {
-        return new PageCreationDate();
+        return new CreationDate();
     }
 
     public function getDefaultValue(): DateTime
@@ -79,11 +79,11 @@ class PageCreationDate extends MetadataDateTime
 
     static public function getName(): string
     {
-        return PageCreationDate::PROPERTY_NAME;
+        return CreationDate::PROPERTY_NAME;
     }
 
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         /**
          * On windows, the creation time is not preserved when you copy
@@ -100,22 +100,22 @@ class PageCreationDate extends MetadataDateTime
     }
 
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The creation date of the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Creation Date";
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         /**
          * Not sure, It should not be really mutable by the user
@@ -124,12 +124,12 @@ class PageCreationDate extends MetadataDateTime
         return false;
     }
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return Metadata::CANONICAL;
     }
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

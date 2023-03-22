@@ -10,6 +10,7 @@ use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use DateTime;
@@ -27,7 +28,7 @@ abstract class MetadataDateTime extends Metadata
 
     /**
      * Helper function for date metadata
-     * @return string|array (may be an array for dokuwiki ie {@link PageCreationDate::toStoreValue()} for instance
+     * @return string|array (may be an array for dokuwiki ie {@link CreationDate::toStoreValue()} for instance
      */
     public function toStoreValue()
     {
@@ -38,7 +39,11 @@ abstract class MetadataDateTime extends Metadata
         } catch (ExceptionNotFound $e) {
             return null;
         }
-        return $this->toPersistentDateTimeUtility($value);
+        try {
+            return $this->toPersistentDateTimeUtility($value);
+        } catch (ExceptionBadArgument $e) {
+            throw ExceptionRuntimeInternal::withMessageAndError("The date time should have been checked on set. This error should not happen", $e);
+        }
 
     }
 
@@ -86,7 +91,7 @@ abstract class MetadataDateTime extends Metadata
 
     }
 
-    public function getDataType(): string
+    public static function getDataType(): string
     {
         return DataType::DATETIME_TYPE_VALUE;
     }
@@ -145,7 +150,7 @@ abstract class MetadataDateTime extends Metadata
         return Iso8601Date::createFromDateTime($value)->toString();
     }
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return "date";
     }

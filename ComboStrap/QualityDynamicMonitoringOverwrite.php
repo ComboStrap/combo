@@ -23,22 +23,22 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
             ->setResource($page);
     }
 
-    public function getTab(): ?string
+    static public function getTab(): ?string
     {
         return MetaManagerForm::TAB_QUALITY_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "If checked, the quality message will not be shown for the page.";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Disable the quality control of this page";
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return QualityMessageHandler::CANONICAL;
     }
@@ -49,12 +49,12 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -79,7 +79,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
         return self::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT;
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

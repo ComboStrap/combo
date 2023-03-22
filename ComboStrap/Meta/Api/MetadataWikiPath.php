@@ -4,7 +4,6 @@
 namespace ComboStrap\Meta\Api;
 
 use ComboStrap\DataType;
-use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\WikiPath;
@@ -22,7 +21,7 @@ abstract class MetadataWikiPath extends Metadata
     /**
      * @return string - the drive from where the path should be created
      */
-    public abstract function getDrive(): string;
+    public abstract static function getDrive(): string;
 
 
     /**
@@ -34,7 +33,7 @@ abstract class MetadataWikiPath extends Metadata
      *
      * We store still the image path in the store as text
      */
-    public function getDataType(): string
+    public static function getDataType(): string
     {
         return DataType::TEXT_TYPE_VALUE;
     }

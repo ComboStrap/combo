@@ -45,7 +45,7 @@ use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataMutation;
 use ComboStrap\ModificationDate;
-use ComboStrap\PageCreationDate;
+use ComboStrap\CreationDate;
 use ComboStrap\PageDescription;
 use ComboStrap\PageId;
 use ComboStrap\Meta\Field\PageImagePath;
@@ -84,7 +84,7 @@ abstract class Metadata
     /**
      * @var bool
      */
-    protected $wasBuild = false;
+    protected bool $wasBuild = false;
 
     /**
      * The metadata is for this resource
@@ -93,25 +93,29 @@ abstract class Metadata
     private $resource;
 
     /**
-     * @var MetadataStore
+     * @var MetadataStore|string - string is the class
      */
     private $readStore;
+
     /**
-     * @var Metadata|null
-     */
-    private $parent;
-    /**
-     * @var MetadataStore
+     * @var MetadataStore|string
      */
     private $writeStore;
     /**
      * @var Metadata
      */
     private $uidObject;
+
     /**
-     * @var Metadata[]
+     * @var Metadata[] - the runtime children
      */
-    private $childrenObject;
+    private array $childrenObject;
+
+    /**
+     * @var Metadata|null - the parent with runtime metadata
+     */
+    private ?Metadata $parent;
+
 
     /**
      * The metadata may be just not stored
@@ -122,21 +126,24 @@ abstract class Metadata
         $this->parent = $parent;
     }
 
-
-    public
-    function getParent(): ?Metadata
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getParent(): Metadata
     {
+        if ($this->parent === null) {
+            throw new ExceptionNotFound("No parent");
+        }
         return $this->parent;
     }
 
     /**
      * The class string of the child/columns metadata
-     * @return null|string[];
+     * @return string[];
      */
-    public
-    function getChildrenClass(): ?array
+    public static function getChildrenClass(): array
     {
-        return null;
+        return [];
     }
 
 
@@ -157,16 +164,18 @@ abstract class Metadata
 
     }
 
-    public
-    function getChildrenObject()
+    /**
+     * @return Metadata[]
+     */
+    public function getChildrenObject(): array
     {
-        if ($this->getChildrenClass() === null) {
-            return null;
+        if (static::getChildrenClass() === []) {
+            return [];
         }
-        if ($this->childrenObject !== null) {
+        if (isset($this->childrenObject)) {
             return $this->childrenObject;
         }
-        foreach ($this->getChildrenClass() as $childrenClass) {
+        foreach (static::getChildrenClass() as $childrenClass) {
             try {
                 $this->childrenObject[] = MetadataSystem::toMetadataObject($childrenClass)
                     ->setResource($this->getResource());
@@ -185,8 +194,13 @@ abstract class Metadata
     function isScalar(): bool
     {
 
-        if ($this->getParent() !== null && $this->getParent()->getDataType() === DataType::TABULAR_TYPE_VALUE) {
-            return false;
+        try {
+            $parent = $this->getParent();
+            if ($parent::getDataType() === DataType::TABULAR_TYPE_VALUE) {
+                return false;
+            }
+        } catch (ExceptionNotFound $e) {
+            // no parent
         }
         return true;
 
@@ -200,7 +214,7 @@ abstract class Metadata
     public
     function setReadStore($store): Metadata
     {
-        if ($this->readStore !== null) {
+        if (isset($this->readStore)) {
             LogUtility::msg("The read store was already set.");
         }
         if (is_string($store) && !is_subclass_of($store, MetadataStore::class)) {
@@ -254,12 +268,11 @@ abstract class Metadata
      * Return the store for this metadata
      * By default, this is the {@link ResourceCombo::getReadStoreOrDefault() default resource metadata store}
      *
-     * (ie a memory variable or a database)
-     * @return MetadataStore|null
+     * @return MetadataStore
      */
     public function getReadStore(): ?MetadataStore
     {
-        if ($this->readStore === null) {
+        if (!isset($this->readStore)) {
             return $this->getResource()->getReadStoreOrDefault();
         }
         if (!$this->readStore instanceof MetadataStore) {
@@ -268,9 +281,9 @@ abstract class Metadata
         return $this->readStore;
     }
 
-    public function getTab(): ?string
+    public static function getTab(): ?string
     {
-        return $this->getName();
+        return static::getName();
     }
 
     /**
@@ -322,30 +335,24 @@ abstract class Metadata
      *   * to store the data in the database
      *   * to select the type of input in a HTML form
      */
-    public abstract function getDataType(): string;
+    public static abstract function getDataType(): string;
 
     /**
      * @return string - the description (used in tooltip)
      */
-    public abstract function getDescription(): string;
+    public static abstract function getDescription(): string;
 
     /**
      * @return string - the label used in a form or log
      */
-    public abstract function getLabel(): string;
+    public static abstract function getLabel(): string;
 
-    public function getCanonical(): string
+    /**
+     * @return string - the short link name
+     */
+    public static function getCanonical(): string
     {
-        if ($this->parent !== null) {
-            $canonical = $this->parent->getCanonical();
-            if ($canonical !== null) {
-                return $canonical;
-            }
-        }
-        /**
-         * The canonical to page metadata
-         */
-        return self::CANONICAL;
+        return static::getName();
     }
 
     /**
@@ -474,7 +481,7 @@ abstract class Metadata
      *
      *
      */
-    public abstract function getPersistenceType(): string;
+    public abstract static function getPersistenceType(): string;
 
 
     /**
@@ -483,7 +490,7 @@ abstract class Metadata
      */
     const NOT_MODIFIABLE_PERSISTENT_METADATA = [
         PagePath::PROPERTY_NAME,
-        PageCreationDate::PROPERTY_NAME,
+        CreationDate::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
         PageId::PROPERTY_NAME,
         "user",
@@ -507,7 +514,7 @@ abstract class Metadata
         "internal", // toc, cache, ...
         "relation",
         PageH1::H1_PARSED,
-        LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED
+        LowQualityCalculatedIndicator::PROPERTY_NAME
     ];
 
 
@@ -587,13 +594,13 @@ abstract class Metadata
      *   * in the {@link \syntax_plugin_combo_frontmatter}
      *   * or in the database
      */
-    public abstract function isMutable(): bool;
+    public abstract static function isMutable(): bool;
 
     /**
      * @return bool if true the metadata will be shown on the meta manager form
      * Note that a non-mutable meta may also be shown for information purpose
      */
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return false;
     }
@@ -670,7 +677,7 @@ abstract class Metadata
      */
     public function getUidClass(): ?string
     {
-        if ($this->getChildrenClass() !== null) {
+        if (count(static::getChildrenClass()) >= 1) {
             LogUtility::msg("An entity metadata should define a metadata that store the unique value");
         }
         return null;
@@ -680,7 +687,7 @@ abstract class Metadata
      * The width on a scale of 12 for the form field
      * @return null
      */
-    public function getFormControlWidth()
+    public static function getFormControlWidth()
     {
         return null;
     }

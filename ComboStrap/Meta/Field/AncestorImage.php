@@ -3,15 +3,10 @@
 namespace ComboStrap\Meta\Field;
 
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FileSystems;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
-use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\PageImageTag;
-use ComboStrap\PageImageUsage;
-use ComboStrap\ResourceCombo;
-use ComboStrap\Site;
 use ComboStrap\WikiPath;
 
 /**
@@ -30,12 +25,12 @@ class AncestorImage extends MetadataImage
         return (new AncestorImage())->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The featured image from the closest ancestor page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Ancestor Image";
     }
@@ -45,13 +40,13 @@ class AncestorImage extends MetadataImage
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -78,13 +73,13 @@ class AncestorImage extends MetadataImage
     }
 
 
-    public function getDrive(): string
+    static     public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

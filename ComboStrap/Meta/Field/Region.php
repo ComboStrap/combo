@@ -26,7 +26,7 @@ class Region extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): ?string
+    static public function getTab(): ?string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;
     }
@@ -54,12 +54,12 @@ class Region extends MetadataText
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The region of the language";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Region";
     }
@@ -69,12 +69,12 @@ class Region extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -97,13 +97,13 @@ class Region extends MetadataText
         }
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "region";
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

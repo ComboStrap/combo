@@ -49,17 +49,17 @@ class PageDescription extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The description is a paragraph that describe your page. It's advertised to external application and used in templating.";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Description";
     }
@@ -69,18 +69,18 @@ class PageDescription extends MetadataText
         return self::DESCRIPTION_PROPERTY;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function getDataType(): string
+    public static function getDataType(): string
     {
         return DataType::PARAGRAPH_TYPE_VALUE;
     }
 
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
@@ -225,10 +225,7 @@ class PageDescription extends MetadataText
         }
     }
 
-    public function getCanonical(): string
-    {
-        return $this->getName();
-    }
+
 
     public function getDescriptionOrigin(): string
     {
@@ -270,7 +267,7 @@ class PageDescription extends MetadataText
     }
 
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

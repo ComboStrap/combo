@@ -69,7 +69,7 @@ class PageUrlPath extends MetadataText
         return substr($lastPartName, $lastPosition + 1);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
@@ -111,12 +111,12 @@ class PageUrlPath extends MetadataText
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The path used in the page url";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Url Path";
     }
@@ -126,12 +126,12 @@ class PageUrlPath extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -147,7 +147,7 @@ class PageUrlPath extends MetadataText
 
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::CANONICAL;
     }
@@ -265,7 +265,7 @@ class PageUrlPath extends MetadataText
                 while (true) {
                     try {
                         $parentPage = $parentPage->getParent();
-                    } catch (ExceptionNotFound $e){
+                    } catch (ExceptionNotFound $e) {
                         break;
                     }
                     if (!$parentPage->isRootHomePage()) {
@@ -292,7 +292,7 @@ class PageUrlPath extends MetadataText
         }
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

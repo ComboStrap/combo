@@ -13,7 +13,6 @@ class PageUrlType extends MetadataText
     public const CONF_CANONICAL_URL_TYPE = "pageUrlType";
     public const CONF_CANONICAL_URL_TYPE_DEFAULT = self::CONF_VALUE_PAGE_PATH;
     public const CONF_VALUE_PAGE_PATH = "page path";
-    private static $urlTypeInstanceCache = [];
     public const CONF_VALUE_SLUG = "slug";
     public const CONF_VALUE_CANONICAL_PATH = "canonical path";
     public const CONF_VALUE_HIERARCHICAL_SLUG = "hierarchical slug";
@@ -63,17 +62,17 @@ class PageUrlType extends MetadataText
     }
 
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The type of Url for pages";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Url";
     }
@@ -83,12 +82,12 @@ class PageUrlType extends MetadataText
         return PageUrlType::CONF_CANONICAL_URL_TYPE;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }

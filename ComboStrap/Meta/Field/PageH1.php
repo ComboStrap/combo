@@ -25,17 +25,17 @@ class PageH1 extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title.";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "H1 (Heading 1)";
     }
@@ -45,13 +45,13 @@ class PageH1 extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
@@ -98,9 +98,9 @@ class PageH1 extends MetadataText
     }
 
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
-        return $this->getName();
+        return static::getName();
     }
 
     public function persistDefaultValue(string $defaultValue): PageH1
@@ -115,7 +115,7 @@ class PageH1 extends MetadataText
     }
 
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

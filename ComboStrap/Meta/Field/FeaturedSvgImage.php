@@ -23,12 +23,12 @@ class FeaturedSvgImage extends MetadataImage
         return (new FeaturedSvgImage())->setResource($markupPath);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "A featured image in svg format";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Featured Svg Image";
     }
@@ -38,12 +38,12 @@ class FeaturedSvgImage extends MetadataImage
         return "featured-svg-image";
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -101,12 +101,12 @@ class FeaturedSvgImage extends MetadataImage
         }
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

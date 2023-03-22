@@ -33,12 +33,12 @@ class SocialCardImage extends MetadataImage
         return (new SocialCardImage())->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The image for social card";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Social Card Image";
     }
@@ -48,13 +48,13 @@ class SocialCardImage extends MetadataImage
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -79,7 +79,7 @@ class SocialCardImage extends MetadataImage
         try {
             return Site::getLogoAsRasterImage()->getSourcePath();
         } catch (ExceptionNotFound $e) {
-            return  FeaturedRasterImage::getComboStrapLogo();
+            return FeaturedRasterImage::getComboStrapLogo();
         }
 
     }
@@ -97,7 +97,7 @@ class SocialCardImage extends MetadataImage
         }
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }

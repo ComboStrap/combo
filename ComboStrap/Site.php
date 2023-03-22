@@ -488,15 +488,6 @@ class Site
         return ($tag ? $tag : null);
     }
 
-    /**
-     * @return string - the name of the sidebar page
-     */
-    public static function getSidebarName(): string
-    {
-        global $conf;
-        return $conf["sidebar"];
-    }
-
     public static function setTemplate($template)
     {
         global $conf;

@@ -11,33 +11,35 @@ class References extends MetadataTabular
 {
 
 
+    const PROPERTY_NAME = "references";
+
     public static function createFromResource(MarkupPath $page)
     {
         return (new References())
             ->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The link of the page that references another resources";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "References";
     }
 
     public static function getName(): string
     {
-        return "references";
+        return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -52,7 +54,7 @@ class References extends MetadataTabular
         return Reference::class;
     }
 
-    public function getChildrenClass(): ?array
+    static public function getChildrenClass(): array
     {
         return [Reference::class];
     }

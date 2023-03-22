@@ -104,38 +104,38 @@ class CacheExpirationDate extends MetadataDateTime
     }
 
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::CURRENT_METADATA;
     }
 
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return CacheExpirationFrequency::PROPERTY_NAME;
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_CACHE_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The next cache expiration date (calculated from the cache frequency expression)";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Cache Expiration Date";
     }
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return false;
     }
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

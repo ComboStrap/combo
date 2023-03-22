@@ -32,24 +32,9 @@ abstract class MetadataJson extends MetadataText
     }
 
 
-    public function getDataType(): string
+    static public function getDataType(): string
     {
         return DataType::JSON_TYPE_VALUE;
-    }
-
-
-    /**
-     * @throws ExceptionCompile
-     */
-    public function setFromFormData($formData)
-    {
-        // From the form data, we receive a string
-        $value = $formData[$this->getName()];
-        // validate that this a json by normalizing it
-        $value = Json::createFromString($value)->toPrettyJsonString();
-        $this->setValue($value);
-        return $this;
-
     }
 
 

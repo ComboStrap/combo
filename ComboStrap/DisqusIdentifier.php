@@ -16,7 +16,6 @@ class DisqusIdentifier extends MetadataText
 {
 
 
-
     public const PROPERTY_NAME = "disqus_identifier";
 
     public static function createForResource($page): DisqusIdentifier
@@ -25,18 +24,18 @@ class DisqusIdentifier extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): ?string
+    static public function getTab(): ?string
     {
         // Page id should be taken
         return null;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The identifier of the disqus forum";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Disqus Identifier";
     }
@@ -46,12 +45,12 @@ class DisqusIdentifier extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -63,9 +62,9 @@ class DisqusIdentifier extends MetadataText
 
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
-        return  "disqus";
+        return "disqus";
     }
 
 

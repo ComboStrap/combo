@@ -11,7 +11,7 @@ use renderer_plugin_combo_analytics;
 class LowQualityCalculatedIndicator extends MetadataBoolean
 {
 
-    public const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
+    public const PROPERTY_NAME = "low_quality_indicator_calculated";
 
     public static function createFromPage(MarkupPath $page)
     {
@@ -19,13 +19,13 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
             ->setResource($page);
     }
 
-    public function getTab(): ?string
+    public static function getTab(): ?string
     {
         // not in a form
         return null;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The indicator calculated by the analytics process that tells if a page is of a low quality";
     }
@@ -39,18 +39,24 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
 
             /**
              * Migration code
-             * The indicator {@link LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED} is new
+             * The indicator {@link LowQualityCalculatedIndicator::PROPERTY_NAME} is new
              * but if the analytics was done, we can get it
              */
             $resource = $this->getResource();
             if (!($resource instanceof MarkupPath)) {
                 throw new ExceptionNotFound("Low Quality is only for page resources");
             }
-            $analyticsDocument = $resource->fetchAnalyticsDocument();
+            try {
+                $analyticsDocument = $resource->fetchAnalyticsDocument();
+            } catch (ExceptionNotExists $e) {
+                throw new ExceptionNotFound("No analytics document could be found");
+            }
+
             $analyticsCache = $analyticsDocument->getContentCachePath();
             if (!FileSystems::exists($analyticsCache)) {
                 throw new ExceptionNotFound("No analytics document could be found");
             }
+
             try {
                 return Json::createFromPath($analyticsCache)->toArray()[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::LOW];
             } catch (ExceptionCompile $e) {
@@ -64,22 +70,22 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
     }
 
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Low Quality Indicator";
     }
 
     static public function getName(): string
     {
-        return self::LOW_QUALITY_INDICATOR_CALCULATED;
+        return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }

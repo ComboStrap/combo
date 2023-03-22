@@ -65,17 +65,17 @@ class PagePublicationDate extends MetadataDateTime
     }
 
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The publication date";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Publication Date";
     }
@@ -110,12 +110,12 @@ class PagePublicationDate extends MetadataDateTime
     }
 
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -134,7 +134,7 @@ class PagePublicationDate extends MetadataDateTime
             }
         }
 
-        return PageCreationDate::create()
+        return CreationDate::create()
             ->setResource($this->getResource())
             ->getValueOrDefault();
     }
@@ -144,13 +144,13 @@ class PagePublicationDate extends MetadataDateTime
         return [PagePublicationDate::OLD_META_KEY];
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "published";
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

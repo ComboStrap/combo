@@ -32,17 +32,17 @@ class Canonical extends MetadataWikiPath
 
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The canonical path is a short unique path for the page (used in named permalink)";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Canonical Path";
     }
@@ -52,12 +52,12 @@ class Canonical extends MetadataWikiPath
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
@@ -134,19 +134,18 @@ class Canonical extends MetadataWikiPath
 
     }
 
-    public
-    function getCanonical(): string
+    public static function getCanonical(): string
     {
         return self::CANONICAL;
     }
 
 
-    public function getDrive(): string
+    public static function getDrive(): string
     {
         return WikiPath::MARKUP_DRIVE;
     }
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

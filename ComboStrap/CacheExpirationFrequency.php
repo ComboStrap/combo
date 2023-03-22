@@ -23,7 +23,7 @@ class CacheExpirationFrequency extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_CACHE_VALUE;
     }
@@ -64,12 +64,12 @@ class CacheExpirationFrequency extends MetadataText
     }
 
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "A page expiration frequency expressed as a cron expression";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Cache Expiration Frequency";
     }
@@ -79,12 +79,12 @@ class CacheExpirationFrequency extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
@@ -94,13 +94,13 @@ class CacheExpirationFrequency extends MetadataText
         return null;
     }
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return self::CANONICAL;
     }
 
 
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

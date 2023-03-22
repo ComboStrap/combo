@@ -18,7 +18,7 @@ class Slug extends MetadataText
             ->setResource($resource);
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::PROPERTY_NAME;
     }
@@ -54,17 +54,17 @@ class Slug extends MetadataText
         return $slug;
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The slug is used in the url of the page (if chosen)";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Slug Path";
     }
@@ -90,12 +90,12 @@ class Slug extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -110,7 +110,7 @@ class Slug extends MetadataText
         return self::toSlugPath($title);
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

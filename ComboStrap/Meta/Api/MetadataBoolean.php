@@ -24,7 +24,7 @@ abstract class MetadataBoolean extends Metadata
      */
     protected $value;
 
-    public function getDataType(): string
+    static public function getDataType(): string
     {
         return DataType::BOOLEAN_TYPE_VALUE;
     }
@@ -71,7 +71,11 @@ abstract class MetadataBoolean extends Metadata
              * By default, this is not checked, therefore, the default value is when this is not the default.
              * It means that this is the inverse of the default value
              */
-            return !$this->getDefaultValue();
+            try {
+                return !$this->getDefaultValue();
+            } catch (ExceptionNotFound $e) {
+                return null;
+            }
 
         }
         return parent::toStoreDefaultValue();

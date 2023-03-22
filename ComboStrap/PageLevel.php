@@ -40,39 +40,39 @@ class PageLevel extends MetadataInteger
     }
 
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The level of the page on the file system (The home page is at level 0)";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Level";
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::PROPERTY_NAME;
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

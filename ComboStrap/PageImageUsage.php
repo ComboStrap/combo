@@ -51,12 +51,12 @@ class PageImageUsage extends MetadataMultiple
     }
 
 
-    public function getDescription(): string
+    static     public function getDescription(): string
     {
         return "The possible usages of the image";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Usages";
     }
@@ -72,7 +72,7 @@ class PageImageUsage extends MetadataMultiple
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -83,12 +83,12 @@ class PageImageUsage extends MetadataMultiple
         return [self::ALL];
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getFormControlWidth(): int
+    static public function getFormControlWidth(): int
     {
         return 4;
     }

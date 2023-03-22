@@ -35,7 +35,7 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
         /**
          * Caching the slot and private namespace
          */
-        $pattern = "(" . Site::getSidebarName() . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
+        $pattern = "(" . SlotSystem::getSidebarName() . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
         $pattern .= "|" . SlotSystem::getPageHeaderSlotName();
         $pattern .= "|" . SlotSystem::getPageFooterSlotName();
         $pattern .= "|" . SlotSystem::getMainSideSlotName();

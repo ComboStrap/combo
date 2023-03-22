@@ -26,12 +26,12 @@ class FirstRasterImage extends MetadataImage
             ->setResource($resource);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The first raster image of the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "First Raster image";
     }
@@ -42,7 +42,7 @@ class FirstRasterImage extends MetadataImage
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -65,7 +65,7 @@ class FirstRasterImage extends MetadataImage
          */
         $firstImageId = $store->getFromPersistentName(FirstRasterImage::PROPERTY_NAME);
 
-        if($firstImageId!==null){
+        if ($firstImageId !== null) {
             return WikiPath::createMediaPathFromId($firstImageId);
         }
 
@@ -73,13 +73,12 @@ class FirstRasterImage extends MetadataImage
 
     }
 
-
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }

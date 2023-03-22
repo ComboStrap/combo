@@ -29,17 +29,17 @@ class LowQualityPageOverwrite extends MetadataBoolean
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_QUALITY_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "If checked, this page will never be a low quality page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Prevent this page to become a low quality page";
     }
@@ -49,12 +49,12 @@ class LowQualityPageOverwrite extends MetadataBoolean
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -83,14 +83,15 @@ class LowQualityPageOverwrite extends MetadataBoolean
         return self::CAN_BE_LOW_QUALITY_PAGE_DEFAULT;
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "low_quality_page";
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }
+
 }

@@ -19,17 +19,17 @@ class EndDate extends MetadataDateTime
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The end date of an event";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "End Date";
     }
@@ -39,12 +39,12 @@ class EndDate extends MetadataDateTime
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -54,13 +54,13 @@ class EndDate extends MetadataDateTime
         throw new ExceptionNotFound("The end date does not have any default value");
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return PageType::EVENT_TYPE;
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

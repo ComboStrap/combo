@@ -18,19 +18,18 @@ class Reference extends MetadataWikiPath
 {
 
 
-
     public static function createFromResource(MarkupPath $page)
     {
         return (new Reference())
             ->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The path to the internal page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Reference Path";
     }
@@ -40,17 +39,17 @@ class Reference extends MetadataWikiPath
         return "reference";
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MARKUP_DRIVE;
     }

@@ -27,12 +27,12 @@ class BacklinkCount extends MetadataInteger
             ->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The number of backlinks";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Backlink Count";
     }
@@ -42,12 +42,12 @@ class BacklinkCount extends MetadataInteger
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }

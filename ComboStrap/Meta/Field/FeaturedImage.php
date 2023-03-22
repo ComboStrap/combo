@@ -33,12 +33,12 @@ class FeaturedImage extends MetadataImage
         return (new FeaturedImage())->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The image for a page/blog";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Featured Image";
     }
@@ -48,13 +48,13 @@ class FeaturedImage extends MetadataImage
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -84,12 +84,12 @@ class FeaturedImage extends MetadataImage
         }
     }
 
-    public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

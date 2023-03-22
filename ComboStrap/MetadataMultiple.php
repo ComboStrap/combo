@@ -44,7 +44,7 @@ abstract class MetadataMultiple extends Metadata
         return $this;
     }
 
-    public function getDataType(): string
+    static     public function getDataType(): string
     {
         return DataType::TEXT_TYPE_VALUE;
     }
@@ -92,10 +92,12 @@ abstract class MetadataMultiple extends Metadata
 
     public function toStoreDefaultValue()
     {
-        if ($this->getDefaultValue() === null) {
+        try {
+            $defaultValue = $this->getDefaultValue();
+        } catch (ExceptionNotFound $e) {
             return null;
         }
-        return implode($this->getStringSeparator(), $this->getDefaultValue());
+        return implode($this->getStringSeparator(), $defaultValue);
     }
 
 

@@ -18,7 +18,7 @@ abstract class MetadataInteger extends Metadata
     protected $value;
 
 
-    public function getDataType(): string
+    static public function getDataType(): string
     {
         return DataType::INTEGER_TYPE_VALUE;
     }

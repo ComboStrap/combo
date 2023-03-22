@@ -132,8 +132,9 @@ class FormMetaField
 
         $childrenMetadata = $metadata->getChildrenClass();
 
-        $parent = $metadata->getParent();
-        if ($parent === null) {
+        try {
+            $parent = $metadata->getParent();
+        } catch (ExceptionNotFound $e) {
             /**
              * Only the top field have a tab value
              */
@@ -144,7 +145,7 @@ class FormMetaField
         /**
          * No children
          */
-        if ($childrenMetadata === null) {
+        if (count($childrenMetadata) === 0) {
 
             static::setLeafDataToFieldFromMetadata($field, $metadata);
 

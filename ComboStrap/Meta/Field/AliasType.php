@@ -11,7 +11,7 @@ class AliasType extends MetadataText
 {
 
 
-    private const PROPERTY_NAME = "alias-type";
+    public const PROPERTY_NAME = "alias-type";
     public const PERSISTENT_NAME = "type";
     const REDIRECT = "redirect";
     const ALIAS_TYPE_VALUES = [AliasType::SYNONYM, AliasType::REDIRECT];
@@ -23,12 +23,12 @@ class AliasType extends MetadataText
         return new AliasType($parent);
     }
 
-    public function getDescription(): string
+    static     public function getDescription(): string
     {
         return "The type of the alias";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Alias Type";
     }
@@ -44,12 +44,12 @@ class AliasType extends MetadataText
     }
 
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return DataType::TEXT_TYPE_VALUE;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }

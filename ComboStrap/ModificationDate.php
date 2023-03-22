@@ -18,7 +18,7 @@ class ModificationDate extends MetadataDateTime
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
@@ -63,12 +63,12 @@ class ModificationDate extends MetadataDateTime
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The last modification date of the page"; // resource
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Modification Date";
     }
@@ -78,12 +78,12 @@ class ModificationDate extends MetadataDateTime
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -97,18 +97,18 @@ class ModificationDate extends MetadataDateTime
         try {
             return FileSystems::getModifiedTime($this->getResource()->getPathObject());
         } catch (ExceptionNotFound $e) {
-            return PageCreationDate::createForPage($this->getResource())->getValue();
+            return CreationDate::createForPage($this->getResource())->getValue();
         }
 
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return Metadata::CANONICAL;
     }
 
 
-    public function isOnForm(): bool
+    static public function isOnForm(): bool
     {
         return true;
     }

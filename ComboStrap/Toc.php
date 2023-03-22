@@ -263,17 +263,17 @@ EOF;
         return $this->tocData !== null;
     }
 
-    public function getDataType(): string
+    static     public function getDataType(): string
     {
         return DataType::ARRAY_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "Table of Contents";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "The table of content for the page";
     }
@@ -283,12 +283,12 @@ EOF;
         return "toc";
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function isMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -307,10 +307,10 @@ EOF;
     }
 
     /**
-     * @return array|null
+     * @return array
      * @throws ExceptionNotFound
      */
-    public function getValue()
+    public function getValue(): array
     {
         $this->buildCheck();
         if ($this->tocData === null) {

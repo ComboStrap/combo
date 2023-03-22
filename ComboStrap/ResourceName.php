@@ -45,25 +45,21 @@ class ResourceName extends MetadataText
 
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
-        $resourceCombo = $this->getResource();
-        $resourceType = $resourceCombo->getType();
-        $desc = "The $resourceType name is the shortest $resourceType description. It should be at maximum a couple of words long.";
-        if ($resourceType === MarkupPath::TYPE) {
-            $desc = $desc . " It's used mainly in navigational components.";
-        }
-        return $desc;
+
+        return "A name is the shortest description. It should be at maximum a couple of words long. It's used in navigational components or as a default in link.";
+
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
-        return "Name";
+        return "The name of a page";
     }
 
     static public function getName(): string
@@ -71,12 +67,12 @@ class ResourceName extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function isMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
@@ -115,9 +111,9 @@ class ResourceName extends MetadataText
 
     }
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
-        return $this->getName();
+        return static::getName();
     }
 
     /**
@@ -130,11 +126,9 @@ class ResourceName extends MetadataText
         } catch (ExceptionNotFound $e) {
             return $this->getDefaultValue();
         }
-
     }
 
-
-    public function isOnForm(): bool
+    public static function isOnForm(): bool
     {
         return true;
     }

@@ -107,7 +107,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
             $fetcher = $executionContext->createPathMainFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
-            $event->data['file'] = $fetchPath->toAbsoluteString();
+            $event->data['file'] = $fetchPath->toAbsoluteId();
             $event->data['status'] = HttpResponseStatus::ALL_GOOD;
             $mime = $fetcher->getMime();
             $event->data["mime"] = $mime->toString();
@@ -309,12 +309,12 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Use x-sendfile header to pass the delivery to compatible web servers
          * (Taken over from SendFile)
          */
-        http_sendfile($mediaToSend->toAbsolutePath()->toAbsoluteString());
+        http_sendfile($mediaToSend->toAbsolutePath()->toAbsoluteId());
 
         /**
          * Send the file
          */
-        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toAbsoluteString(), "rb");
+        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toAbsoluteId(), "rb");
         if ($filePointer) {
             http_rangeRequest($filePointer, FileSystems::getSize($mediaToSend), $mime->toString());
             /**

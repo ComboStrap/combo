@@ -53,7 +53,7 @@ class FeaturedSvgImage extends MetadataImage
     {
         $store = $this->getWriteStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $store->setFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED, $path->toAbsoluteString());
+            $store->setFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED, $path->toAbsoluteId());
         }
         return $this;
     }

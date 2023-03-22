@@ -369,7 +369,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     ->setRequestedMimeToMetadata()
                     ->build()
                     ->getMetadataPath()
-                    ->toAbsoluteString();
+                    ->toAbsoluteId();
             } catch (ExceptionNotExists|ExceptionNotFound $e) {
                 LogUtility::error("The metadata path should be known", self::CANONICAL, $e);
             }
@@ -1035,7 +1035,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
 
         try {
-            $globalSnippets = SnippetSystem::getFromContext()->getSnippetsForSlot($this->getRequestedExecutingPath()->toAbsoluteString());
+            $globalSnippets = SnippetSystem::getFromContext()->getSnippetsForSlot($this->getRequestedExecutingPath()->toAbsoluteId());
         } catch (ExceptionNotFound $e) {
             // string execution
             $globalSnippets = [];
@@ -1184,7 +1184,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                      * and triggers a render that fails if the wiki file does not exists
                      */
                     $depends['files'][] = $this->instructionsCache->cache;
-                    $depends['files'][] = $executingPath->toAbsolutePath()->toAbsoluteString();
+                    $depends['files'][] = $executingPath->toAbsolutePath()->toAbsoluteId();
                     $useCache = $this->metaCache->useCache($depends);
                     if ($useCache) {
                         $this->meta = $actualMeta;

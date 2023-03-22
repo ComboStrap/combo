@@ -504,7 +504,7 @@ class PageExplorerTag
                     // Namespace
                     if (!($namespaceInstructions === null && $namespaceAttributes !== null)) {
                         try {
-                            $subNamespacePage = MarkupPath::getIndexPageFromNamespace($subNamespacePath->toAbsoluteString());
+                            $subNamespacePage = MarkupPath::getIndexPageFromNamespace($subNamespacePath->toAbsoluteId());
                         } catch (ExceptionBadSyntax $e) {
                             LogUtility::msg("Bad syntax for the namespace $namespacePath. Error: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, PageExplorerTag::CANONICAL);
                             return false;
@@ -755,7 +755,7 @@ class PageExplorerTag
 
             // Button label
 
-            $subHomePage = MarkupPath::getIndexPageFromNamespace($containerPath->toAbsoluteString());
+            $subHomePage = MarkupPath::getIndexPageFromNamespace($containerPath->toAbsoluteId());
             if ($subHomePage->exists()) {
                 if ($namespaceInstructions !== null) {
                     try {

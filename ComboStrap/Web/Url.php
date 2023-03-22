@@ -645,7 +645,7 @@ class Url extends PathAbs
         return $this->setPath($parentPath);
     }
 
-    function toAbsoluteString(): string
+    function toAbsoluteId(): string
     {
         try {
             return $this->getPath();

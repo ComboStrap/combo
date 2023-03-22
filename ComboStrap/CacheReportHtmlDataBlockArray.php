@@ -69,7 +69,7 @@ class CacheReportHtmlDataBlockArray
                 $data = [
                     self::RESULT_STATUS => $result->getResult(),
                     self::DATE_MODIFIED => $modifiedDate,
-                    self::CACHE_FILE => $cacheFile->toAbsoluteString()
+                    self::CACHE_FILE => $cacheFile->toAbsoluteId()
                 ];
 
                 if ($mode === FetcherMarkup::XHTML_MODE) {
@@ -83,7 +83,7 @@ class CacheReportHtmlDataBlockArray
                     $data[self::DEPENDENCY_ATT] = $dependencies;
                 }
 
-                $htmlDataBlock[$sourcePath->toAbsoluteString()][$mode] = $data;
+                $htmlDataBlock[$sourcePath->toAbsoluteId()][$mode] = $data;
 
             }
 

@@ -216,13 +216,13 @@ class MarkupCacheDependencies
             case MarkupCacheDependencies::REQUESTED_NAMESPACE_DEPENDENCY:
                 try {
                     $parentPath = $requestedPage->getPathObject()->getParent();
-                    return $parentPath->toAbsoluteString();
+                    return $parentPath->toAbsoluteId();
                 } catch (ExceptionNotFound $e) {
                     // root
                     return ":";
                 }
             case MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY:
-                return $requestedPage->getPathObject()->toAbsoluteString();
+                return $requestedPage->getPathObject()->toAbsoluteId();
             default:
                 throw new ExceptionRuntimeInternal("The requested dependency value ($dependenciesValue) has no calculation");
         }
@@ -304,7 +304,7 @@ class MarkupCacheDependencies
                 $wikiId = $this->markupFetcher->getRequestedExecutingPath()->toWikiPath()->getWikiId();
                 $absoluteString = wikiFN($wikiId);
             } catch (ExceptionCast|ExceptionNotFound $e) {
-                $absoluteString = $this->markupFetcher->getRequestedExecutingPath()->toAbsoluteString();
+                $absoluteString = $this->markupFetcher->getRequestedExecutingPath()->toAbsoluteId();
             }
             $keyDokuWikiCompliant = str_replace("\\", "/", $absoluteString);
             return $keyDokuWikiCompliant . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];

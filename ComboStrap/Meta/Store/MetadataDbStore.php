@@ -113,7 +113,7 @@ class MetadataDbStore extends MetadataStoreAbs implements MetadataStore
 
         } else {
 
-            $pageMetaFromFileSystem = MarkupPath::createPageFromQualifiedId($resource->getPathObject()->toAbsoluteString());
+            $pageMetaFromFileSystem = MarkupPath::createPageFromQualifiedId($resource->getPathObject()->toAbsoluteId());
             $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($pageMetaFromFileSystem);
             $pageMetaFromFileSystem->setReadStore($fsStore);
 
@@ -323,7 +323,7 @@ EOF;
 
     private function getDatabaseRow(): DatabasePageRow
     {
-        $mapKey = $this->getResource()->getPathObject()->toAbsoluteString();
+        $mapKey = $this->getResource()->getPathObject()->toAbsoluteId();
         $row = self::$dbRows[$mapKey];
         if ($row === null) {
             $page = $this->getResource();

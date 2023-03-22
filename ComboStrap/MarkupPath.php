@@ -806,6 +806,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
     /**
+     * The home page is an index page
      * Adapted from {@link FsWikiUtility::getHomePagePath()}
      * @return bool
      */
@@ -987,7 +988,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public function getNamespacePath(): string
     {
 
-        return $this->getParent()->toAbsoluteString();
+        return $this->getParent()->toAbsoluteId();
 
     }
 
@@ -1210,7 +1211,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         global $conf;
         $startPageName = $conf['start'];
-        return $this->getPathObject()->toAbsoluteString() === ":$startPageName";
+        return $this->getPathObject()->toAbsoluteId() === ":$startPageName";
 
     }
 
@@ -2248,9 +2249,9 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return $this->path->getNames();
     }
 
-    function toAbsoluteString(): string
+    function toAbsoluteId(): string
     {
-        return $this->path->toAbsoluteString();
+        return $this->path->toAbsoluteId();
     }
 
     function toUriString(): string

@@ -809,7 +809,7 @@ class ExecutionContext
         try {
 
             $executingPath = $markupHandler->getRequestedExecutingPath();
-            $executingId = $executingPath->toAbsoluteString();
+            $executingId = $executingPath->toAbsoluteId();
             $this->setExecutingId($executingId);
         } catch (ExceptionNotFound $e) {
             // no executing path dynamic markup execution

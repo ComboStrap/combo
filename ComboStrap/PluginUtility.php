@@ -93,7 +93,7 @@ class PluginUtility
     {
 
         $pluginInfoFile = DirectoryLayout::getPluginInfoPath();
-        self::$INFO_PLUGIN = confToHash($pluginInfoFile->toAbsoluteString());
+        self::$INFO_PLUGIN = confToHash($pluginInfoFile->toAbsoluteId());
         self::$PLUGIN_NAME = 'ComboStrap';
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];

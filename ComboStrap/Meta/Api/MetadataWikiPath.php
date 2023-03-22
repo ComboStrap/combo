@@ -76,7 +76,10 @@ abstract class MetadataWikiPath extends Metadata
         } catch (ExceptionNotFound $e) {
             return null;
         }
-        return $actualPath->getAbsolutePath();
+        /**
+         * The absolute id with the extension if not a wiki file
+         */
+        return $actualPath->toAbsoluteId();
     }
 
     public function toStoreDefaultValue()
@@ -87,7 +90,7 @@ abstract class MetadataWikiPath extends Metadata
                 LogUtility::internalError("The value ($defaultValue) is not a wiki path");
                 return $defaultValue;
             }
-            return $defaultValue->getAbsolutePath();
+            return $defaultValue->toAbsoluteId();
         } catch (ExceptionNotFound $e) {
             return null;
         }

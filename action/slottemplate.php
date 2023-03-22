@@ -45,7 +45,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
          * Header
          */
         $pageHeaderSlotName = SlotSystem::getPageHeaderSlotName();
-        $toQualifiedId = $page->getPathObject()->toAbsoluteString();
+        $toQualifiedId = $page->getPathObject()->toAbsoluteId();
         if ($toQualifiedId === ":$pageHeaderSlotName") {
             $pageHeaderPath = PageTemplateSlot::getDefaultElementContentPath(PageTemplateSlot::PAGE_HEADER_ID);
             try {

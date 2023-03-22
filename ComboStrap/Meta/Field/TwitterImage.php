@@ -53,7 +53,7 @@ class TwitterImage extends MetadataImage
                 ->getValueAsPageImages();
             foreach ($pageImages as $pageImage) {
                 if (in_array(PageImageUsage::TWITTER, $pageImage->getUsages())) {
-                    return parent::buildFromStoreValue($pageImage->getImagePath()->toAbsoluteString());
+                    return parent::buildFromStoreValue($pageImage->getImagePath()->toAbsoluteId());
                 }
             }
         }

@@ -44,7 +44,7 @@ class MetadataMutation
                 self::NAME_ATTRIBUTE => $attribute,
                 self::NEW_VALUE_ATTRIBUTE => $valueAfter,
                 self::OLD_VALUE_ATTRIBUTE => $valueBefore,
-                self::PATH_ATTRIBUTE => $wikiPath->toAbsoluteString()
+                self::PATH_ATTRIBUTE => $wikiPath->toAbsoluteId()
             ];
             Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $eventData);
         }

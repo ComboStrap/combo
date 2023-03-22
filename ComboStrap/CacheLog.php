@@ -42,7 +42,7 @@ class CacheLog
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $contentCachePath->toAbsoluteString(),
+                $contentCachePath->toAbsoluteId(),
                 $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_DELETION,
                 $message
@@ -65,7 +65,7 @@ class CacheLog
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $fetcher->getSourcePath()->toAbsoluteString(),
+                $fetcher->getSourcePath()->toAbsoluteId(),
                 $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_CREATION,
                 $message

@@ -76,7 +76,7 @@ class FetcherMarkupBuilder
                 $wikiId = $markuSourceWikiPath->toUriString();
             }
         } catch (ExceptionCast $e) {
-            $wikiId = $sourcePath->toAbsoluteString();
+            $wikiId = $sourcePath->toAbsoluteId();
             try {
                 $localFile = $sourcePath->toLocalPath();
             } catch (ExceptionCast $e) {

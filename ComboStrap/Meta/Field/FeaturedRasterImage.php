@@ -69,7 +69,7 @@ class FeaturedRasterImage extends MetadataImage
                 } catch (ExceptionNotFound $e) {
                     continue;
                 }
-                $value = $wikiPath->toAbsoluteString();
+                $value = $wikiPath->toAbsoluteId();
                 if (in_array(PageImageUsage::ALL, $pageImage->getUsages())) {
                     break;
                 }
@@ -99,7 +99,7 @@ class FeaturedRasterImage extends MetadataImage
     {
         $store = $this->getWriteStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $store->setFromPersistentName(self::FEATURED_IMAGE_PARSED, $path->toAbsoluteString());
+            $store->setFromPersistentName(self::FEATURED_IMAGE_PARSED, $path->toAbsoluteId());
         }
         return $this;
     }

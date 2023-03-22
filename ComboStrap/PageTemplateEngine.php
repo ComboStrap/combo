@@ -46,7 +46,13 @@ class PageTemplateEngine
              * Default
              */
             $default = self::CONF_THEME_DEFAULT;
+            /**
+             * @var LocalPath[] $templatesSearchDirectories
+             */
             $templatesSearchDirectories = array(); // a list of directories where to search the template
+            /**
+             * @var LocalPath[] $templatesSearchDirectories
+             */
             $partialSearchDirectories = array(); // a list of directories where to search the partials
             if ($themeName !== $default) {
                 $themeDirectory = self::getThemeHome()->resolve($themeName);
@@ -85,10 +91,10 @@ class PageTemplateEngine
              * Handlebars Files
              */
             $templatesSearchDirectoriesAsStringPath = array_map(function ($element) {
-                return $element->toAbsoluteString();
+                return $element->toAbsoluteId();
             }, $templatesSearchDirectories);
             $partialSearchDirectoriesAsStringPath = array_map(function ($element) {
-                return $element->toAbsoluteString();
+                return $element->toAbsoluteId();
             }, $partialSearchDirectories);
             $templatesLoader = new FilesystemLoader($templatesSearchDirectoriesAsStringPath, ["extension" => self::EXTENSION_HBS]);
             $partialLoader = new FilesystemLoader($partialSearchDirectoriesAsStringPath, ["extension" => self::EXTENSION_HBS]);

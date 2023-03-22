@@ -131,7 +131,7 @@ class WikiPath extends PathAbs
 
         if (trim($path) === "") {
             try {
-                $path = WikiPath::getContextPath()->toAbsoluteString();
+                $path = WikiPath::getContextPath()->toAbsoluteId();
             } catch (ExceptionNotFound $e) {
                 throw new ExceptionRuntimeInternal("The context path is unknwon. The empty path string needs it.");
             }
@@ -238,38 +238,38 @@ class WikiPath extends PathAbs
 
     /**
      *
-     * @param string $path - the path in a wiki form that may be relative - if the path is blank, it's the current markup (the requested markup)
+     * @param string $parameterPath - the path in a wiki form that may be relative - if the path is blank, it's the current markup (the requested markup)
      * @param string|null $rev - the revision (ie timestamp in number format)
      * @return WikiPath - the wiki path
      * @throws ExceptionBadArgument - if a relative path is given and the context path does not have any parent
      */
-    public static function createMarkupPathFromPath(string $path, string $rev = null): WikiPath
+    public static function createMarkupPathFromPath(string $parameterPath, string $rev = null): WikiPath
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
 
-        if ($path == "") {
+        if ($parameterPath == "") {
             return $executionContext->getContextPath();
         }
-        if (WikiPath::isNamespacePath($path)) {
+        if (WikiPath::isNamespacePath($parameterPath)) {
 
-            if ($path[0] !== self::CURRENT_PATH_CHARACTER) {
+            if ($parameterPath[0] !== self::CURRENT_PATH_CHARACTER) {
                 /**
                  * Not a relative path
                  */
-                return new WikiPath($path, self::MARKUP_DRIVE, $rev);
+                return new WikiPath($parameterPath, self::MARKUP_DRIVE, $rev);
             }
             /**
              * A relative path
              */
             $contextPath = $executionContext->getContextPath();
-            if ($path === self::CURRENT_PARENT_PATH_CHARACTER . self::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
+            if ($parameterPath === self::CURRENT_PARENT_PATH_CHARACTER . self::NAMESPACE_SEPARATOR_DOUBLE_POINT) {
                 /**
                  * ie processing `..:`
                  */
                 try {
                     return $contextPath->getParent()->getParent();
                 } catch (ExceptionNotFound $e) {
-                    throw new ExceptionBadArgument("The context path ($contextPath) does not have a grand parent, therefore the relative path ($path) is invalid.", $e);
+                    throw new ExceptionBadArgument("The context path ($contextPath) does not have a grand parent, therefore the relative path ($parameterPath) is invalid.", $e);
                 }
             }
             /**
@@ -287,18 +287,21 @@ class WikiPath extends PathAbs
          * Default Path
          * (we add the txt extension if not present)
          */
-        $defaultPath = $path;
-        $lastName = $path;
-        $lastSeparator = strrpos($path, self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
+        $defaultPath = $parameterPath;
+        $lastName = $parameterPath;
+        $lastSeparator = strrpos($parameterPath, self::NAMESPACE_SEPARATOR_DOUBLE_POINT);
         if ($lastSeparator !== false) {
-            $lastName = substr($path, $lastSeparator);
+            $lastName = substr($parameterPath, $lastSeparator);
         }
         $lastPoint = strpos($lastName, ".");
         if ($lastPoint === false) {
             $defaultPath = $defaultPath . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION;
         } else {
-            $extension = substr($lastName, $lastPoint + 1);
-            if (!in_array($extension, self::ALL_MARKUP_EXTENSIONS)) {
+            /**
+             * Case such as file `1.22`
+             */
+            $parameterPathExtension = substr($lastName, $lastPoint + 1);
+            if (!in_array($parameterPathExtension, self::ALL_MARKUP_EXTENSIONS)) {
                 $defaultPath = $defaultPath . '.' . self::MARKUP_DEFAULT_TXT_EXTENSION;
             }
         }
@@ -310,13 +313,15 @@ class WikiPath extends PathAbs
         /**
          * Markup extension (Markdown, ...)
          */
-        foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
-            if ($markupExtension == self::MARKUP_DEFAULT_TXT_EXTENSION) {
-                continue;
-            }
-            $markupWikiPath = new WikiPath($path . '.' . $markupExtension, self::MARKUP_DRIVE, $rev);
-            if (FileSystems::exists($markupWikiPath)) {
-                return $markupWikiPath;
+        if(!isset($parameterPathExtension)) {
+            foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
+                if ($markupExtension == self::MARKUP_DEFAULT_TXT_EXTENSION) {
+                    continue;
+                }
+                $markupWikiPath = new WikiPath($parameterPath . '.' . $markupExtension, self::MARKUP_DRIVE, $rev);
+                if (FileSystems::exists($markupWikiPath)) {
+                    return $markupWikiPath;
+                }
             }
         }
 
@@ -590,11 +595,11 @@ class WikiPath extends PathAbs
                 /**
                  * May be a symlink link
                  */
-                if (!is_link($drivePath->toAbsoluteString())) {
+                if (!is_link($drivePath->toAbsoluteId())) {
                     continue;
                 }
                 try {
-                    $realPath = readlink($drivePath->toAbsoluteString());
+                    $realPath = readlink($drivePath->toAbsoluteId());
                     $drivePath = LocalPath::createFromPathString($realPath);
                     $relativePath = $path->relativize($drivePath);
                 } catch (ExceptionBadArgument $e) {
@@ -602,7 +607,7 @@ class WikiPath extends PathAbs
                     continue;
                 }
             }
-            $wikiId = $relativePath->toAbsoluteString();
+            $wikiId = $relativePath->toAbsoluteId();
             if (FileSystems::isDirectory($path)) {
                 WikiPath::addNamespaceEndSeparatorIfNotPresent($wikiId);
             }
@@ -986,7 +991,7 @@ class WikiPath extends PathAbs
      * The absolute path for a wiki path
      * @return string - the wiki path version
      */
-    function toAbsoluteString(): string
+    function toAbsoluteId(): string
     {
         return self::NAMESPACE_SEPARATOR_DOUBLE_POINT . $this->getWikiId();
     }
@@ -1166,9 +1171,9 @@ class WikiPath extends PathAbs
                 }
                 $idFileSystem = str_replace(':', '/', $this->id);
                 if (empty($this->rev)) {
-                    $filePathString = Site::getPageDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $extension)->toAbsoluteString();
+                    $filePathString = Site::getPageDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $extension)->toAbsoluteId();
                 } else {
-                    $filePathString = Site::getOldDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension)->toAbsoluteString();
+                    $filePathString = Site::getOldDirectory()->resolve(utf8_encodeFN($idFileSystem) . '.' . $this->rev . '.' . $extension)->toAbsoluteId();
                     if ($conf['compression']) {
                         //test for extensions here, we want to read both compressions
                         if (file_exists($filePathString . '.gz')) {
@@ -1194,7 +1199,7 @@ class WikiPath extends PathAbs
                 foreach ($this->getNames() as $name) {
                     $filePath = $filePath->resolve($name);
                 }
-                $filePathString = $filePath->toAbsoluteString();
+                $filePathString = $filePath->toAbsoluteId();
                 break;
         }
         return LocalPath::createFromPathString($filePathString);

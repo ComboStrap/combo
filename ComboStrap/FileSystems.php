@@ -297,7 +297,7 @@ class FileSystems
     {
         $sourceLocal = LocalPath::createFromPathObject($source);
         $destinationLocal = LocalPath::createFromPathObject($destination);
-        copy($sourceLocal->toAbsoluteString(), $destinationLocal->toAbsoluteString());
+        copy($sourceLocal->toAbsoluteId(), $destinationLocal->toAbsoluteId());
 
         // D:\dokuwiki\lib\plugins\combo\_test\resources\bootstrapLocal.json
     }
@@ -316,8 +316,8 @@ class FileSystems
      */
     public static function printModificationTimeToConsole(Path $mediaFile, string $log)
     {
-        fputs(STDOUT, "ModificationTime of {$mediaFile->toAbsoluteString()}" . PHP_EOL);
-        $filename = $mediaFile->toAbsolutePath()->toAbsoluteString();
+        fputs(STDOUT, "ModificationTime of {$mediaFile->toAbsoluteId()}" . PHP_EOL);
+        $filename = $mediaFile->toAbsolutePath()->toAbsoluteId();
         fputs(STDOUT, "ModificationTime of $filename at $log ");
         $timestamp = filemtime($filename);
         fputs(STDOUT, " $timestamp" . PHP_EOL);
@@ -326,7 +326,7 @@ class FileSystems
     public static function clearStatCache(Path $path)
     {
         try {
-            $pathString = $path->toLocalPath()->toCanonicalPath()->toAbsoluteString();
+            $pathString = $path->toLocalPath()->toCanonicalPath()->toAbsoluteId();
             clearstatcache(true, $pathString);
         } catch (ExceptionCast $e) {
             throw new ExceptionRuntimeInternal("The cache can be clear only for local path");

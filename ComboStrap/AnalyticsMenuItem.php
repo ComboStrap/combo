@@ -58,7 +58,7 @@ class AnalyticsMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return DirectoryLayout::getComboImagesDirectory()->resolve('file-chart.svg')->toAbsoluteString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('file-chart.svg')->toAbsoluteId();
 
     }
 

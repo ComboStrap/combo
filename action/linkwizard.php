@@ -109,7 +109,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
                 LogUtility::internalError("The selection should return wiki path", self::CANONICAL, $e);
                 continue;
             }
-            $path = $page->getPathObject()->toAbsoluteString();
+            $path = $page->getPathObject()->toAbsoluteId();
             /**
              * The name is the label that is put
              * punt in the markup link

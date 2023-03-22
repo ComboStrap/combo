@@ -39,11 +39,11 @@ abstract class PathAbs implements Path
     public function getLastNameWithoutExtension(): string
     {
         $lastName = $this->getLastName();
-        $firstPoint = strpos($lastName, '.');
-        if ($firstPoint === false) {
+        $lastPoint = strrpos($lastName, '.');
+        if ($lastPoint === false) {
             return $lastName;
         }
-        return substr($lastName, 0, $firstPoint);
+        return substr($lastName, 0, $lastPoint);
     }
 
     /**
@@ -73,7 +73,7 @@ abstract class PathAbs implements Path
 
     public function toUriString(): string
     {
-        return $this->toAbsoluteString();
+        return $this->toAbsoluteId();
     }
 
     /**

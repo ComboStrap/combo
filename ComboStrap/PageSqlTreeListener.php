@@ -78,7 +78,7 @@ final class PageSqlTreeListener implements ParseTreeListener
     /**
      * @var MarkupPath|null
      */
-    private $requestedPage;
+    private ?MarkupPath $requestedPage;
 
 
     /**
@@ -95,11 +95,7 @@ final class PageSqlTreeListener implements ParseTreeListener
         $this->parser = $parser;
         $this->pageSqlString = $sql;
         if ($pageContext == null) {
-            try {
-                $this->requestedPage = MarkupPath::createFromRequestedPage();
-            } catch (ExceptionNotFound $e) {
-                throw ExceptionRuntimeInternal::withMessageAndError("The markup context path is mandatory and was not found", $e);
-            }
+            $this->requestedPage = MarkupPath::createPageFromPathObject(ExecutionContext::getActualOrCreateFromEnv()->getContextPath());
         } else {
             $this->requestedPage = $pageContext;
         }
@@ -263,7 +259,7 @@ final class PageSqlTreeListener implements ParseTreeListener
                                 break;
                             default:
                                 try {
-                                    if(strpos($text,".")!==false) {
+                                    if (strpos($text, ".") !== false) {
                                         $this->parameters[] = DataType::toFloat($text);
                                     } else {
                                         $this->parameters[] = DataType::toInteger($text);
@@ -362,7 +358,7 @@ where
 EOF;
 
                         if ($this->requestedPage !== null) {
-                            $this->parameters[] = $this->requestedPage->getPathObject()->toAbsoluteString();
+                            $this->parameters[] = $this->requestedPage->getPathObject()->toAbsoluteId();
                         } else {
                             LogUtility::msg("The page is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                             $this->parameters[] = "unknown page";
@@ -370,18 +366,30 @@ EOF;
                         break;
                     case self::DESCENDANTS:
                         if ($this->requestedPage !== null) {
+
+                            if (!$this->requestedPage->isIndexPage()) {
+                                LogUtility::warning("Descendants should be asked from an index page.", PageSql::CANONICAL);
+                            }
+
+                            $path = $this->requestedPage->getPathObject();
+                            $this->parameters[] = $path->toAbsoluteId();
                             try {
-                                $query = $this->requestedPage->getPathObject()->getParent()->resolve("%")->toAbsoluteString();
-                                $this->parameters[] = $query;
-                                $this->parameters[] = PageLevel::createForPage($this->requestedPage)->getValue();
+                                $likePredicatequery = $path->getParent()->resolve("%")->toAbsoluteId();
                             } catch (ExceptionNotFound $e) {
                                 // root
+                                $likePredicatequery = "%";
                             }
+                            $this->parameters[] = $likePredicatequery;
+                            $level = PageLevel::createForPage($this->requestedPage)->getValue();
+                            $this->parameters[] = $level;
+
                         } else {
                             LogUtility::msg("The page is unknown. A Page SQL with a depth attribute should be asked within a page request scope. The start depth has been set to 0", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
-                            $this->parameters[] = 0;
+                            $this->parameters[] = "";
+                            $this->parameters[] = "";
+                            $this->parameters[] = "";
                         }
-                        $tableName = "\tpages\nwhere\n\tpath like ?\n\tand level >= ?\n";
+                        $tableName = "\tpages\nwhere\n\tpath != ?\n\tand path like ?\n\tand level >= ?\n";
                         break;
                     default:
                         $tableName = "\t$tableName\n";

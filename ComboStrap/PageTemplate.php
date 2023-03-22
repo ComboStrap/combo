@@ -1046,7 +1046,7 @@ EOF;
             if (!FileSystems::exists($file)) {
                 return [];
             }
-            $this->templateDefinition = Yaml::parseFile($file->toAbsoluteString());
+            $this->templateDefinition = Yaml::parseFile($file->toAbsoluteId());
             return $this->templateDefinition;
         } catch (ExceptionNotFound $e) {
             // no template directory, not a theme run

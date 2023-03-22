@@ -29,8 +29,11 @@ class PagePath extends MetadataWikiPath
     }
 
 
-
-
+    /**
+     * We build to be able to send the value elsewhere
+     * @param $value
+     * @return Metadata
+     */
     public function buildFromStoreValue($value): Metadata
     {
         try {

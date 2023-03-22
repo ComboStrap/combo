@@ -639,7 +639,7 @@ class DatabasePageRow
             }
 
             $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->markupPath->getPathObject()->getWikiId();
-            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toAbsoluteString();
+            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toAbsoluteId();
             /**
              * Default implements the auto-canonical feature
              */
@@ -837,9 +837,11 @@ class DatabasePageRow
         );
         $metaRecord = [];
         foreach ($record as $name) {
-            $metadata = Metadata::getForName($name);
-            if ($metadata === null) {
-                throw new ExceptionRuntime("The metadata ($name) is unknown");
+            try {
+                $metadata = Metadata::getForName($name);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The metadata ($name) is unknown", self::CANONICAL);
+                continue;
             }
             $metaRecord[$name] = $metadata
                 ->setResource($this->markupPath)
@@ -1149,7 +1151,7 @@ class DatabasePageRow
     function addRedirectAliasWhileBuildingRow(MarkupPath $pageAlias)
     {
 
-        $aliasPath = $pageAlias->getPathObject()->toAbsoluteString();
+        $aliasPath = $pageAlias->getPathObject()->toAbsoluteId();
         try {
             Aliases::createForPage($this->markupPath)
                 ->addAlias($aliasPath)

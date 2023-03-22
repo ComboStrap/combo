@@ -239,7 +239,7 @@ class PageUrlPath extends MetadataText
     {
 
         $page = $this->getResource();
-        $pagePath = $page->getPathObject()->toAbsoluteString();
+        $pagePath = $page->getPathObject()->toAbsoluteId();
         if ((!$page instanceof MarkupPath)) {
             $message = "The url path is only for page resources";
             LogUtility::internalError($message, $this->getCanonical());

@@ -68,7 +68,7 @@ class MetaManagerMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return DirectoryLayout::getComboImagesDirectory()->resolve('tag-text.svg')->toAbsoluteString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('tag-text.svg')->toAbsoluteId();
     }
 
 

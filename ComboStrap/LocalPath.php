@@ -203,7 +203,7 @@ class LocalPath extends PathAbs
     }
 
 
-    function toAbsoluteString(): string
+    function toAbsoluteId(): string
     {
         return $this->path;
     }
@@ -241,7 +241,7 @@ class LocalPath extends PathAbs
     public function resolve(string $name): LocalPath
     {
 
-        $newPath = $this->toCanonicalPath()->toAbsoluteString() . $this->getDirectorySeparator() . utf8_encodeFN($name);
+        $newPath = $this->toCanonicalPath()->toAbsoluteId() . $this->getDirectorySeparator() . utf8_encodeFN($name);
         return self::createFromPathString($newPath);
 
     }
@@ -254,7 +254,7 @@ class LocalPath extends PathAbs
         $actualPath = $this->toCanonicalPath();
         $localPath = $localPath->toCanonicalPath();
 
-        if (!(strpos($actualPath->toAbsoluteString(), $localPath->toAbsoluteString()) === 0)) {
+        if (!(strpos($actualPath->toAbsoluteId(), $localPath->toAbsoluteId()) === 0)) {
             /**
              * May be a symlink link
              */
@@ -265,11 +265,11 @@ class LocalPath extends PathAbs
             }
             throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
         }
-        if ($actualPath->toAbsoluteString() === $localPath->toAbsoluteString()) {
+        if ($actualPath->toAbsoluteId() === $localPath->toAbsoluteId()) {
             return LocalPath::createFromPathString("");
         }
         $sepCharacter = 1; // delete the sep characters
-        $relativePath = substr($actualPath->toAbsoluteString(), strlen($localPath->toAbsoluteString()) + $sepCharacter);
+        $relativePath = substr($actualPath->toAbsoluteId(), strlen($localPath->toAbsoluteId()) + $sepCharacter);
         $relativePath = str_replace($this->getDirectorySeparator(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
         return LocalPath::createFromPathString($relativePath);
 

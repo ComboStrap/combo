@@ -109,7 +109,7 @@ class MetaManagerForm
         /**
          * Creation
          */
-        $name = $this->page->getPathObject()->toAbsoluteString();
+        $name = $this->page->getPathObject()->toAbsoluteId();
         $formMeta = FormMeta::create($name)
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 

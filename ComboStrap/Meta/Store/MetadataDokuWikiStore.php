@@ -79,7 +79,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
             $executionCachedStores = [];
             $context->setRuntimeObject(MetadataDokuWikiStore::class, $executionCachedStores);
         }
-        $path = $resourceCombo->getPathObject()->toAbsoluteString();
+        $path = $resourceCombo->getPathObject()->toAbsoluteId();
         if (isset($executionCachedStores[$path])) {
             return $executionCachedStores[$path];
         }

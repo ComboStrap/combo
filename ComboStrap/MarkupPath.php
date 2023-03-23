@@ -29,17 +29,21 @@ use renderer_plugin_combo_analytics;
  *
  * A markup is a logical unit that represents a markup file.
  *
- * For instance:
- *   * the main slot is the main markdown file and the header and footer slot
- *   * while the sidebar is a leaf
- *
  * It has its own file system {@link MarkupFileSystem} explained in the
  * https://combostrap.com/page/system (or system.txt file).
+ * ie the {@link Path::getParent()} is not the same than on an normal file system.
  *
- * We are not extending {@link WikiPath} because:
- *   * we want to be able to return {@link MarkupPath} in the {@link MarkupPath::getParent()} function
+ * This should be an extension of {@link WikiPath} but for now, we are not extending {@link WikiPath}
+ * for the following old reasons:
+ *   * we want to be able to return a {@link MarkupPath} in the {@link MarkupPath::getParent()} function
  * otherwise if we do, we get a hierarchical error.
  *   * we can then accepts also {@link LocalPath}
+ *
+ * But because this is a {@link ResourceCombo}, we see tht this is part of the {@link WikiPath}
+ * system with an {@link ResourceCombo::getUid()} unique uid.
+ *
+ * We should find a way to be able to create a wiki path with a {@link LocalPath}
+ * via the {@link WikiPath::getDrive()} ?
  *
  */
 class MarkupPath extends PathAbs implements ResourceCombo, Path

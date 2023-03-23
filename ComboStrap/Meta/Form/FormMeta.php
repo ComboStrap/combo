@@ -29,6 +29,7 @@ class FormMeta
     const FORM_NAV_TABS_TYPE = "nav-tabs";
     const FORM_LIST_GROUP_TYPE = "list-group";
     const FIELDS_ATTRIBUTE = "fields";
+    const TABS_ATTRIBUTE = "tabs";
 
     private $name;
 
@@ -100,7 +101,7 @@ class FormMeta
         }
         return [
             self::FIELDS_ATTRIBUTE => $fieldsArray,
-            "tabs" => $tabs
+            self::TABS_ATTRIBUTE => $tabs
         ];
     }
 

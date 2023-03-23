@@ -586,13 +586,18 @@ abstract class Metadata
 
     /**
      * @return bool can the user change the value
-     * In a form, the field will be disabled
      *
-     * The meta that are modifiable (in the form, ...)
      *
-     * This meta could be replicated
+     * The meta that are modifiable by the user (in the form, ...)
+     *
+     * Usage:
+     * * In a form, the field will be disabled
+     * * Replication: this meta could be replicated
      *   * in the {@link \syntax_plugin_combo_frontmatter}
      *   * or in the database
+     *
+     * If you deprecate a metadata, you should set this value to false
+     * and set the replacement to true (where the replacement takes the value of the deprecated metadata)
      */
     public abstract static function isMutable(): bool;
 

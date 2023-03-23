@@ -260,7 +260,11 @@ class PageImages extends MetadataTabular
 
     static public function isMutable(): bool
     {
-        return true;
+        /**
+         * Deprecated, storage is frozen
+         * We don't take it anymore
+         */
+        return false;
     }
 
     /**

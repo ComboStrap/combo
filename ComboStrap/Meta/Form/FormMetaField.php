@@ -14,6 +14,7 @@ use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\MetadataMultiple;
 use ComboStrap\Meta\Api\MetadataTabular;
+use ComboStrap\PageDescription;
 use ComboStrap\PluginUtility;
 use ComboStrap\ResourceName;
 
@@ -48,9 +49,10 @@ class FormMetaField
     public const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
     public const WIDTH_ATTRIBUTE = "width";
     public const CHILDREN_ATTRIBUTE = "children";
-    const DESCRIPTION_ATTRIBUTE = "description";
-    const NAME_ATTRIBUTE = "name";
+    const DESCRIPTION_ATTRIBUTE = PageDescription::PROPERTY_NAME;
+    const NAME_ATTRIBUTE = ResourceName::PROPERTY_NAME;
     const MULTIPLE_ATTRIBUTE = "multiple";
+    const TYPE_ATTRIBUTE = DataType::PROPERTY_NAME;
 
 
     private $name;
@@ -261,9 +263,9 @@ class FormMetaField
          * Mandatory attributes
          */
         $associative = [
-            ResourceName::PROPERTY_NAME => $this->name,
+            self::NAME_ATTRIBUTE => $this->name,
             self::LABEL_ATTRIBUTE => $this->label,
-            DataType::PROPERTY_NAME => $this->type
+            self::TYPE_ATTRIBUTE => $this->type
         ];
         if ($this->getUrl() != null) {
             $associative[self::URL_ATTRIBUTE] = $this->getUrl();

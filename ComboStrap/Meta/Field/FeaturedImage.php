@@ -28,6 +28,7 @@ class FeaturedImage extends MetadataImage
 
     const PROPERTY_NAME = "featured-image";
 
+
     public static function createFromResourcePage(MarkupPath $page): FeaturedImage
     {
         return (new FeaturedImage())->setResource($page);
@@ -93,4 +94,11 @@ class FeaturedImage extends MetadataImage
     {
         return true;
     }
+
+    public static function getCanonical(): string
+    {
+        return self::PROPERTY_NAME;
+    }
+
+
 }

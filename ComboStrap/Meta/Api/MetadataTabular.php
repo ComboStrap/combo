@@ -10,7 +10,6 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
-use ComboStrap\Meta\Api\Metadata;
 
 /**
  * Class MetadataTabular

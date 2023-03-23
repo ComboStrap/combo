@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataMultiple;
 use ComboStrap\Meta\Field\PageImage;
 use ComboStrap\Meta\Field\PageImages;
 

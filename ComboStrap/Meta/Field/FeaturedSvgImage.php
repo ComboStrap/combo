@@ -110,4 +110,9 @@ class FeaturedSvgImage extends MetadataImage
     {
         return true;
     }
+
+    public static function getCanonical(): string
+    {
+        return FeaturedImage::getCanonical();
+    }
 }

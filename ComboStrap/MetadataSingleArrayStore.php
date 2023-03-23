@@ -158,4 +158,5 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
         return $this->hasChanged;
     }
 
+
 }

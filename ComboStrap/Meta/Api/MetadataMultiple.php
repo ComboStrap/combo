@@ -1,14 +1,18 @@
 <?php
 
 
-namespace ComboStrap;
+namespace ComboStrap\Meta\Api;
 
 
-use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\DataType;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\LogUtility;
 
 /**
  * @package ComboStrap
- * An array, ie list of value metadata
+ * A list of value metadata
  *   * Multiple select if the possible values are set
  *   * Text with a {@link  MetadataMultiple::getStringSeparator() separator}
  * Ie:

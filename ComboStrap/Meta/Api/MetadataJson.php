@@ -1,15 +1,18 @@
 <?php
 
 
-namespace ComboStrap;
+namespace ComboStrap\Meta\Api;
 
-use ComboStrap\Meta\Api\Metadata;
-use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\DataType;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\Json;
+use ComboStrap\LogUtility;
 
 /**
  * Class MetadataJson
  * @package ComboStrap
  * A text that can be saved as array
+ * TODO: Should be based on an array
  */
 abstract class MetadataJson extends MetadataText
 {

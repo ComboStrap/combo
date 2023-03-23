@@ -13,7 +13,7 @@ use ComboStrap\Html;
 use ComboStrap\LogUtility;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataSystem;
-use ComboStrap\MetadataMultiple;
+use ComboStrap\Meta\Api\MetadataMultiple;
 use ComboStrap\Meta\Api\MetadataTabular;
 use ComboStrap\PageDescription;
 use ComboStrap\PluginUtility;
@@ -271,7 +271,7 @@ class FormMetaField
         ];
 
         try {
-            $associative[self::URL_ATTRIBUTE] = $this->getUrl();
+            $associative[self::URL_ATTRIBUTE] = $this->getUrl()->toString();
         } catch (ExceptionNotFound $e) {
             // ok
         }

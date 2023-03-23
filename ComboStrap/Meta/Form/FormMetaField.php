@@ -355,9 +355,9 @@ class FormMetaField
         if (!isset($this->canonical)) {
             throw new ExceptionNotFound();
         }
-        return Canonical::createFromValue($this->canonical)
-            ->getUrl();
 
+        return Canonical::createFromValue($this->canonical)
+            ->getComboStrapUrlForDocumentation();
 
     }
 

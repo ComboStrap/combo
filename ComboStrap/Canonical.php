@@ -161,12 +161,32 @@ class Canonical extends MetadataWikiPath
 
 
     /**
+     * The Url of the local web server
      * @throws ExceptionNotFound
      */
-    public function getUrl(): Url
+    public function getLocalUrl(): Url
     {
         return UrlEndpoint::createDokuUrl()
             ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getValue()->getWikiId());
+    }
+
+    /**
+     *
+     * @return Url - the url of the combostrap web server for documentation
+     * @throws ExceptionNotFound
+     */
+    public function getComboStrapUrlForDocumentation(): Url
+    {
+        $path = $this->getValue()->toAbsoluteId();
+        $path = str_replace(":", "/", $path);
+        try {
+            return Url::createFromString(PluginUtility::$INFO_PLUGIN['url'])
+                ->setPath($path);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+            $message = "The url in the plugin info file seems to be broken.";
+            LogUtility::internalError($message, self::CANONICAL, $e);
+            throw new ExceptionNotFound($message);
+        }
     }
 
 }

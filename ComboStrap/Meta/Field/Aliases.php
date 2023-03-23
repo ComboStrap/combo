@@ -27,7 +27,7 @@ class Aliases extends MetadataTabular
     /**
      * @var Alias[]
      */
-    private $aliases;
+    private array $aliases = [];
 
 
     public static function createForPage(MarkupPath $page): Aliases
@@ -347,6 +347,9 @@ class Aliases extends MetadataTabular
         return AliasPath::class;
     }
 
+    /**
+     * @return Metadata[]
+     */
     static public function getChildrenClass(): array
     {
         return [AliasPath::class, AliasType::class];

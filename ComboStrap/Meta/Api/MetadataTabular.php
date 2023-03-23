@@ -10,6 +10,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
+use ComboStrap\Meta\Field\Aliases;
 
 /**
  * Class MetadataTabular
@@ -140,6 +141,14 @@ abstract class MetadataTabular extends Metadata
 
         /**
          * List of columns ({@link MetadataFormDataStore form html way}
+         *
+         * For example: for {@link Aliases}
+         *  alias-path:
+         *    0: path1
+         *    1: path2
+         *  alias-type:
+         *    0: redirect
+         *    1: redirect
          */
         $keys = array_keys($value);
         $firstElement = array_shift($keys);
@@ -182,6 +191,10 @@ abstract class MetadataTabular extends Metadata
                         $name = $metadataChildObject::getName();
                     }
                     $childValue = $value[$name];
+                    if (is_array($childValue)) {
+                        $childValue = $childValue[$index];
+                        $index++;
+                    }
                     $metadataChildObject->setFromStoreValue($childValue);
                     $row[$metadataChildObject::getPersistentName()] = $metadataChildObject;
                 }

@@ -67,6 +67,7 @@ use ComboStrap\ResourceCombo;
 use ComboStrap\ResourceName;
 use ComboStrap\Slug;
 use ComboStrap\StartDate;
+use ComboStrap\Web\UrlEndpoint;
 
 abstract class Metadata
 {
@@ -205,6 +206,8 @@ abstract class Metadata
         return true;
 
     }
+
+
 
 
     /**

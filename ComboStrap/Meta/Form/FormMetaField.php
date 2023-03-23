@@ -4,6 +4,7 @@
 namespace ComboStrap\Meta\Form;
 
 
+use ComboStrap\Canonical;
 use ComboStrap\DataType;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotFound;
@@ -17,6 +18,7 @@ use ComboStrap\Meta\Api\MetadataTabular;
 use ComboStrap\PageDescription;
 use ComboStrap\PluginUtility;
 use ComboStrap\ResourceName;
+use ComboStrap\Web\Url;
 
 /**
  * Class FormField
@@ -135,7 +137,7 @@ class FormMetaField
         $childrenMetadata = $metadata->getChildrenClass();
 
         try {
-            $parent = $metadata->getParent();
+            $metadata->getParent();
         } catch (ExceptionNotFound $e) {
             /**
              * Only the top field have a tab value
@@ -267,9 +269,13 @@ class FormMetaField
             self::LABEL_ATTRIBUTE => $this->label,
             self::TYPE_ATTRIBUTE => $this->type
         ];
-        if ($this->getUrl() != null) {
+
+        try {
             $associative[self::URL_ATTRIBUTE] = $this->getUrl();
+        } catch (ExceptionNotFound $e) {
+            // ok
         }
+
         if ($this->description != null) {
             $associative[self::DESCRIPTION_ATTRIBUTE] = $this->description;
         }
@@ -340,15 +346,19 @@ class FormMetaField
         return $this;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getUrl(): ?string
+    function getUrl(): Url
     {
         if (!isset($this->canonical)) {
-            return null;
+            throw new ExceptionNotFound();
         }
-        $url = PluginUtility::$URL_APEX;
-        $url .= "/" . str_replace(":", "/", $this->canonical);
-        return $url;
+        return Canonical::createFromValue($this->canonical)
+            ->getUrl();
+
+
     }
 
     public

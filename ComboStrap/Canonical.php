@@ -9,6 +9,8 @@ use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataText;
 use ComboStrap\Meta\Api\MetadataWikiPath;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
 
 
 class Canonical extends MetadataWikiPath
@@ -60,6 +62,13 @@ class Canonical extends MetadataWikiPath
     public static function isMutable(): bool
     {
         return true;
+    }
+
+    public static function createFromValue(string $canonical): Canonical
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return (new Canonical())
+            ->setValue($canonical);
     }
 
 
@@ -149,4 +158,15 @@ class Canonical extends MetadataWikiPath
     {
         return true;
     }
+
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getUrl(): Url
+    {
+        return UrlEndpoint::createDokuUrl()
+            ->addQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getValue()->getWikiId());
+    }
+
 }

@@ -327,7 +327,7 @@ abstract class Metadata
             return $this;
         }
         $value = $metadataStore->get($this);
-        $this->buildFromStoreValue($value);
+        $this->setFromStoreValueWithoutException($value);
         return $this;
     }
 
@@ -654,25 +654,28 @@ abstract class Metadata
      *
      * The difference between the {@link Metadata::setFromStoreValue()}
      * is that this function should not make any validity check
-     * or throw any exception
+     * or throw any compile exception.
+     *
+     * It's a commodity function that should be use by the developer
+     * when it sets a known value and therefore does not expect a quality error
      *
      * @param $value
      * @return mixed
      */
-    public abstract function buildFromStoreValue($value): Metadata;
+    public abstract function setFromStoreValueWithoutException($value): Metadata;
 
     /**
      * Set a value from the {@link self::getReadStore()}
      *
      * If you have quality problem to throw, you can use this function
-     * instead of {@link Metadata::buildFromStoreValue()}
+     * instead of {@link Metadata::setFromStoreValueWithoutException()}
      *
      * @param $value
      * @return Metadata
      */
     public function setFromStoreValue($value): Metadata
     {
-        return $this->buildFromStoreValue($value);
+        return $this->setFromStoreValueWithoutException($value);
     }
 
 
@@ -735,7 +738,7 @@ abstract class Metadata
      */
     public function getValueFromStoreOrDefault()
     {
-        $this->buildFromStoreValue($this->getReadStore()->get($this));
+        $this->setFromStoreValueWithoutException($this->getReadStore()->get($this));
         return $this->getValueOrDefault();
     }
 

@@ -90,7 +90,7 @@ class PageKeywords extends MetadataMultiple
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         try {
             $this->array = $this->toArrayOrNull($value);

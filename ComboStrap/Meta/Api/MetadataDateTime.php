@@ -160,7 +160,7 @@ abstract class MetadataDateTime extends Metadata
         return $this->dateTimeValue !== null;
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);

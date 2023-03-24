@@ -49,4 +49,10 @@ class AliasPath extends MetadataWikiPath
     {
         return WikiPath::MARKUP_DRIVE;
     }
+
+
+    public static function createForParent(Aliases $parent): AliasPath
+    {
+        return new AliasPath($parent);
+    }
 }

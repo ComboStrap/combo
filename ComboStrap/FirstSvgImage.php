@@ -62,7 +62,7 @@ class FirstSvgImage extends MetadataImage
         $firstImageId = $store->getFromPersistentName(FirstSvgImage::PROPERTY_NAME);
 
 
-        $this->buildFromStoreValue($firstImageId);
+        $this->setFromStoreValueWithoutException($firstImageId);
 
         return $this;
     }

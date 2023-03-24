@@ -320,7 +320,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                      */
                     $page = MarkupPath::createPageFromPathObject($executingPath);
                     $pageImages = PageImages::createForPage($page)
-                        ->buildFromStoreValue($value);
+                        ->setFromStoreValueWithoutException($value);
                     $pageImagesObject = $pageImages->getValueAsPageImages();
                     foreach ($pageImagesObject as $imageValue) {
                         $dokuwikiId = $imageValue->getImagePath()->getWikiId();

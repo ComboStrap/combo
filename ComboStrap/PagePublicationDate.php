@@ -86,11 +86,11 @@ class PagePublicationDate extends MetadataDateTime
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         $store = $this->getReadStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
-            return parent::buildFromStoreValue($value);
+            return parent::setFromStoreValueWithoutException($value);
         }
 
         if ($value === null) {

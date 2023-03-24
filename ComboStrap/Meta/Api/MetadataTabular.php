@@ -11,6 +11,7 @@ use ComboStrap\ExceptionRuntime;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\References;
 
 /**
  * Class MetadataTabular
@@ -32,9 +33,13 @@ abstract class MetadataTabular extends Metadata
 
 
     /**
-     * The rows
+     * A array of rows where
+     * - the key is the `identifier value`
+     * - the value is a list of column metadata
+     *     * the key is the {@link Metadata::getPersistentName()}
+     *     * the value is the metadata
+     *
      * @var Metadata[][]
-     * Each row has the key has value
      */
     protected ?array $rows = null;
 
@@ -79,24 +84,28 @@ abstract class MetadataTabular extends Metadata
         if ($this->rows === null) {
             return null;
         }
+        return $this->rowsToStore($this->rows);
+    }
 
-        $rowsArray = [];
-        ksort($this->rows);
-        foreach ($this->rows as $row) {
-            $rowArray = [];
-            foreach ($row as $metadata) {
-                $toStoreValue = $metadata->toStoreValue();
-                $toDefaultStoreValue = $metadata->toStoreDefaultValue();
-                if (
-                    $toStoreValue !== null
-                    && $toStoreValue !== $toDefaultStoreValue
-                ) {
-                    $rowArray[$metadata::getPersistentName()] = $toStoreValue;
-                }
-            }
-            $rowsArray[] = $rowArray;
+    /**
+     * /**
+     * A list of rows that contains a list of metadata
+     * with their value
+     * Each row has the key has value
+     * @return Metadata[][] - an array of rows
+     * @throws ExceptionNotFound
+     */
+    public abstract function getDefaultValue(): array;
+
+    public function toStoreDefaultValue(): ?array
+    {
+        try {
+            $defaultRows = $this->getDefaultValue();
+        } catch (ExceptionNotFound $e) {
+            return null;
         }
-        return $rowsArray;
+
+        return $this->rowsToStore($defaultRows);
     }
 
     /**
@@ -104,7 +113,7 @@ abstract class MetadataTabular extends Metadata
      *   * a string for a unique identifier value
      *   * an array of columns or an array of rows
      */
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
 
         if ($value === null) {
@@ -142,13 +151,18 @@ abstract class MetadataTabular extends Metadata
         /**
          * List of columns ({@link MetadataFormDataStore form html way}
          *
-         * For example: for {@link Aliases}
+         * For example: for {@link Aliases}, a form will have two fields
          *  alias-path:
          *    0: path1
          *    1: path2
          *  alias-type:
          *    0: redirect
          *    1: redirect
+         *
+         * or just a list ({@link References}
+         *   references:
+         *    0: reference-1
+         *    1: $colValue-2
          */
         $keys = array_keys($value);
         $firstElement = array_shift($keys);
@@ -253,10 +267,18 @@ abstract class MetadataTabular extends Metadata
                     continue;
                 }
                 $childObject = MetadataSystem::toMetadataObject($childClass, $this);
-                $childObject->buildFromStoreValue($colValue);
+                $childObject->setFromStoreValueWithoutException($colValue);
                 $row[$childObject::getPersistentName()] = $childObject;
                 if ($childObject::getPersistentName() === $identifierPersistentName) {
-                    $idValue = $colValue;
+                    try {
+                        $idValue = $childObject->getValue();
+                    } catch (ExceptionNotFound $e) {
+                        // should not happen but yeah
+                        $idValue = $colValue;
+                    }
+                    if(is_object($idValue)){
+                        $idValue = $idValue->__toString();
+                    }
                 }
             }
             if ($idValue === null) {
@@ -311,8 +333,11 @@ abstract class MetadataTabular extends Metadata
     {
         $this->buildCheck();
         $normalizedValue = $this->getUidObject()
-            ->buildFromStoreValue($id)
+            ->setFromStoreValueWithoutException($id)
             ->getValue();
+        if(is_object($normalizedValue)){
+            $normalizedValue = $normalizedValue->__toString();
+        }
         return $this->rows[$normalizedValue];
     }
 
@@ -340,6 +365,27 @@ abstract class MetadataTabular extends Metadata
         }
         $this->rows[$identifier] = $row;
         return $this;
+    }
+
+    private function rowsToStore(array $defaultRows): array
+    {
+        $rowsArray = [];
+        ksort($defaultRows);
+        foreach ($defaultRows as $row) {
+            $rowArray = [];
+            foreach ($row as $metadata) {
+                $toStoreValue = $metadata->toStoreValue();
+                $toDefaultStoreValue = $metadata->toStoreDefaultValue();
+                if (
+                    $toStoreValue !== null
+                    && $toStoreValue !== $toDefaultStoreValue
+                ) {
+                    $rowArray[$metadata::getPersistentName()] = $toStoreValue;
+                }
+            }
+            $rowsArray[] = $rowArray;
+        }
+        return $rowsArray;
     }
 
 }

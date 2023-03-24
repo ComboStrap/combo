@@ -293,7 +293,7 @@ EOF;
         return true;
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         $this->tocData = $value;
         return $this;

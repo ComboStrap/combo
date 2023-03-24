@@ -102,7 +102,7 @@ abstract class MetadataWikiPath extends Metadata
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         if ($value === null || trim($value) === "") {
             return $this;

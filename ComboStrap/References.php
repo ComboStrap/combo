@@ -44,9 +44,9 @@ class References extends MetadataTabular
         return false;
     }
 
-    public function getDefaultValue()
+    public function getDefaultValue(): array
     {
-        return null;
+        return [];
     }
 
     public function getUidClass(): ?string
@@ -76,7 +76,7 @@ class References extends MetadataTabular
                 if ($referencesArray !== null) {
                     $referencesArray = array_keys($referencesArray);
                 }
-                $this->buildFromStoreValue($referencesArray);
+                $this->setFromStoreValueWithoutException($referencesArray);
 
                 return $this;
 

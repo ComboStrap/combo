@@ -127,7 +127,7 @@ class PageImages extends MetadataTabular
      */
     public function setFromStoreValue($value): Metadata
     {
-        $this->buildFromStoreValue($value);
+        $this->setFromStoreValueWithoutException($value);
         $this->checkImageExistence();
         return $this;
     }
@@ -158,7 +158,7 @@ class PageImages extends MetadataTabular
         return parent::toStoreValue();
     }
 
-    public function toStoreDefaultValue()
+    public function toStoreDefaultValue(): ?array
     {
         return null;
     }
@@ -309,11 +309,11 @@ class PageImages extends MetadataTabular
         // Not really the default value but yeah
         try {
             $firstImage = FirstRasterImage::createForPage($this->getResource())->getValue();
-            $pageImagePath = PageImagePath::createFromParent($this)->buildFromStoreValue($firstImage);
+            $pageImagePath = PageImagePath::createFromParent($this)->setFromStoreValueWithoutException($firstImage);
         } catch (ExceptionNotFound $e) {
             // no first image
         }
-        $pageImageUsage = PageImageUsage::createFromParent($this)->buildFromStoreValue([PageImageUsage::DEFAULT]);
+        $pageImageUsage = PageImageUsage::createFromParent($this)->setFromStoreValueWithoutException([PageImageUsage::DEFAULT]);
         return [
             [
                 PageImagePath::getPersistentName() => $pageImagePath,

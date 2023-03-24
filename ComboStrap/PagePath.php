@@ -34,7 +34,7 @@ class PagePath extends MetadataWikiPath
      * @param $value
      * @return Metadata
      */
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         try {
             $value = $this->getResource()->getPathObject()->toWikiPath();
@@ -43,7 +43,7 @@ class PagePath extends MetadataWikiPath
             LogUtility::internalError($message);
             $value = null;
         }
-        return parent::buildFromStoreValue($value);
+        return parent::setFromStoreValueWithoutException($value);
     }
 
 

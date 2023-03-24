@@ -71,17 +71,17 @@ class Slug extends MetadataText
 
     public function setFromStoreValue($value): Metadata
     {
-        return $this->buildFromStoreValue($value);
+        return $this->setFromStoreValueWithoutException($value);
     }
 
     public function setValue($value): Metadata
     {
-        return $this->buildFromStoreValue($value);
+        return $this->setFromStoreValueWithoutException($value);
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
-        return parent::buildFromStoreValue(self::toSlugPath($value));
+        return parent::setFromStoreValueWithoutException(self::toSlugPath($value));
     }
 
 

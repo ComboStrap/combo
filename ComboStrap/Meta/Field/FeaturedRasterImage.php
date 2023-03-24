@@ -50,7 +50,7 @@ class FeaturedRasterImage extends MetadataImage
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
 
         if ($value === null) {
@@ -73,7 +73,7 @@ class FeaturedRasterImage extends MetadataImage
                 }
             }
         }
-        return parent::buildFromStoreValue($value);
+        return parent::setFromStoreValueWithoutException($value);
 
     }
 

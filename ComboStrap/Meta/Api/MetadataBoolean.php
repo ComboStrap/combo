@@ -130,7 +130,7 @@ abstract class MetadataBoolean extends Metadata
     }
 
     public
-    function buildFromStoreValue($value): Metadata
+    function setFromStoreValueWithoutException($value): Metadata
     {
         $this->value = $this->toBoolean($value);
         return $this;

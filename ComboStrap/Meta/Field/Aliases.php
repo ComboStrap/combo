@@ -24,11 +24,6 @@ class Aliases extends MetadataTabular
     public const PROPERTY_NAME = "aliases";
 
 
-    /**
-     * @var Alias[]
-     */
-    private array $aliases = [];
-
 
     public static function createForPage(MarkupPath $page): Aliases
     {
@@ -73,13 +68,6 @@ class Aliases extends MetadataTabular
         return $aliases;
     }
 
-    /**
-     * @return Alias[]
-     */
-    public function getAliases(): array
-    {
-        return $this->aliases;
-    }
 
     /**
      * @param array|null $aliasesPersistentValues
@@ -191,7 +179,7 @@ class Aliases extends MetadataTabular
                 ->execute()
                 ->getRows();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("An exception has occurred with the deprecated alias selection query. {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("An exception has occurred with the deprecated alias selection query. {$e->getMessage()}");
             return [];
         } finally {
             $request->close();
@@ -232,13 +220,17 @@ class Aliases extends MetadataTabular
 
     }
 
+
+    /**
+     * @return Metadata[][] - an list of rows of metadata columns
+     */
     public function getDefaultValue(): array
     {
         return
             [
                 [
-                    AliasPath::getPersistentName() => null,
-                    AliasType::getPersistentName() => AliasType::createForParent($this)->buildFromStoreValue(AliasType::DEFAULT)
+                    AliasPath::getPersistentName() => AliasPath::createForParent($this),
+                    AliasType::getPersistentName() => AliasType::createForParent($this)->setFromStoreValueWithoutException(AliasType::DEFAULT)
                 ]
             ];
     }
@@ -260,7 +252,7 @@ class Aliases extends MetadataTabular
             &&
             $this->getReadStore() instanceof MetadataDokuWikiStore
         ) {
-            $this->aliases = $this->getAndDeleteDeprecatedAlias();
+            $this->getAndDeleteDeprecatedAlias();
             /**
              * To validate the migration we set a value
              * (the array may be empty)

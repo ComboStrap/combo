@@ -141,7 +141,7 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
         foreach ($internalIdReferences as $internalIdReferenceValue => $internalIdReferenceExist) {
             $ref = Reference::createFromResource($page)
                 ->setReadStore(MetadataDokuWikiStore::class)
-                ->buildFromStoreValue($internalIdReferenceValue);
+                ->setFromStoreValueWithoutException($internalIdReferenceValue);
             try {
                 $references->addRow([$ref]);
             } catch (ExceptionNotFound $e) {

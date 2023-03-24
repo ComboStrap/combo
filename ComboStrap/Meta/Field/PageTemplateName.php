@@ -222,7 +222,7 @@ class PageTemplateName extends MetadataText
         if ($value === null) {
             $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME_OLD);
         }
-        parent::buildFromStoreValue($value);
+        parent::setFromStoreValueWithoutException($value);
         return $this;
     }
 

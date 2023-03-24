@@ -91,11 +91,11 @@ class PageId extends MetadataText
      * @param $value
      * @return Metadata
      */
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
 
         if ($value !== null) {
-            return parent::buildFromStoreValue($value);
+            return parent::setFromStoreValueWithoutException($value);
         }
 
 
@@ -107,7 +107,7 @@ class PageId extends MetadataText
 
         // null for non-existing page
         if (!FileSystems::exists($resource->getPathObject())) {
-            return parent::buildFromStoreValue($value);
+            return parent::setFromStoreValueWithoutException($value);
         }
 
 
@@ -121,7 +121,7 @@ class PageId extends MetadataText
             $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
             $value = $metadataFileSystemStore->getFromPersistentName(self::getPersistentName());
             if ($value !== null) {
-                return parent::buildFromStoreValue($value);
+                return parent::setFromStoreValueWithoutException($value);
             }
         }
 
@@ -132,7 +132,7 @@ class PageId extends MetadataText
             $frontmatter = MetadataFrontmatterStore::createFromPage($resource);
             $value = $frontmatter->getFromPersistentName(self::getPersistentName());
             if ($value !== null) {
-                return parent::buildFromStoreValue($value);
+                return parent::setFromStoreValueWithoutException($value);
             }
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while reading the frontmatter");
@@ -155,7 +155,7 @@ class PageId extends MetadataText
                      */
                     $pageDbValue = MarkupPath::createPageFromQualifiedId($pathDbValue);
                     if (!FileSystems::exists($pageDbValue->getPathObject())) {
-                        return parent::buildFromStoreValue($value);
+                        return parent::setFromStoreValueWithoutException($value);
                     }
 
                     /**
@@ -165,7 +165,7 @@ class PageId extends MetadataText
                      */
                     $resourcePath = $resource->getPathObject()->toAbsoluteId();
                     if ($pathDbValue === $resourcePath) {
-                        return parent::buildFromStoreValue($value);
+                        return parent::setFromStoreValueWithoutException($value);
                     }
                 }
             } catch (ExceptionNotExists|ExceptionSqliteNotAvailable $e) {
@@ -175,7 +175,7 @@ class PageId extends MetadataText
         }
 
         // null ?
-        return parent::buildFromStoreValue($value);
+        return parent::setFromStoreValueWithoutException($value);
 
     }
 

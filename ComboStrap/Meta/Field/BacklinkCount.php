@@ -106,7 +106,7 @@ class BacklinkCount extends MetadataInteger
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         /**
          * not used because

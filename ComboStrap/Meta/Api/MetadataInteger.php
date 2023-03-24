@@ -52,7 +52,7 @@ abstract class MetadataInteger extends Metadata
         return $this->setValue($value);
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         if ($value === null || $value === "") {
             $this->value = null;

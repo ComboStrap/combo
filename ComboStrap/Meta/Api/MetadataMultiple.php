@@ -165,7 +165,7 @@ abstract class MetadataMultiple extends Metadata
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         try {
             $this->array = $this->toArrayOrNull($value);

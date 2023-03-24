@@ -41,10 +41,10 @@ abstract class MetadataJson extends MetadataText
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         try {
-            parent::buildFromStoreValue($this->toInternalValue($value));
+            parent::setFromStoreValueWithoutException($this->toInternalValue($value));
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Value in the store is not a valid json. Message:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }

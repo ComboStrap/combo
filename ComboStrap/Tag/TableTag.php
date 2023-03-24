@@ -32,6 +32,7 @@ class TableTag
     const TABLE_SNIPPET_ID = "table";
     const BOOT_TABLE_CLASSES = 'table table-non-fluid table-hover table-striped';
     const TAG = "table";
+    const TAG_CONTAINER = "table-container";
     const TABLE_RESPONSIVE_CLASS = "table-responsive";
 
 
@@ -64,7 +65,7 @@ class TableTag
         // Otherwise we can't have floating element at the right and the visual space is too big
         PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TABLE_SNIPPET_ID);
 
-        $renderer->doc .= TagAttributes::createEmpty(self::TAG)
+        $renderer->doc .= TagAttributes::createEmpty(self::TAG_CONTAINER)
             ->addClassName(self::TABLE_RESPONSIVE_CLASS)
             ->toHtmlEnterTag("div");
         $renderer->doc .= TagAttributes::createEmpty(self::TAG)

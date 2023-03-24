@@ -60,8 +60,13 @@ class Align
                 case "x-center":
                     $blockAlign = true;
                     $attributes->addClassName(self::CENTER_CLASS);
-                    // valid for inline (link) but also for block such as (heading)
-                    $attributes->addStyleDeclarationIfNotSet(Dimension::WIDTH_KEY, "fit-content");
+                    /**
+                     * Don't set: `width:fit-content`
+                     * Setting  is cool for a little block
+                     * but it will take the max width of all children
+                     * making the design not responsive if a table
+                     * with `width:max-content` is a children
+                     */
                     break;
                 case "y-center":
                     $flexAxis[self::Y_AXIS] = true;

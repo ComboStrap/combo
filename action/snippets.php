@@ -85,8 +85,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             ->setRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED, true);
 
 
-        $requestedPath = $executionContext->getRequestedPath();
-
 
         /**
          * For each processed slot in the execution, retrieve the snippets

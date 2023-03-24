@@ -2,6 +2,10 @@
     /*no-cell wrap*/
     width: max-content !important;
 }
+.table-container-cs {
+    /* to allow mx-auto to work */
+    width: 100%;
+}
 /*fighting dokuwiki css*/
 .table>:not(caption)>*>*{
     padding:0.5rem .5rem!important;

@@ -1,4 +1,4 @@
-slots:
+elements:
     - 'page-header'
     - 'page-footer'
     - 'main-header'

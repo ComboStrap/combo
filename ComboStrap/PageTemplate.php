@@ -37,10 +37,6 @@ class PageTemplate
 
     private string $requestedTitle;
 
-    /**
-     * @var PageTemplateSlot[]
-     */
-    private array $pageElements = [];
 
     private bool $requestedEnableTaskRunner = true;
     private WikiPath $requestedContextPath;
@@ -160,14 +156,14 @@ class PageTemplate
     /**
      * @return string[]
      */
-    public function getSlotIds(): array
+    public function getElementIds(): array
     {
         $definition = $this->getDefinition();
-        $slots = $definition['slots'];
-        if ($slots == null) {
+        $elements = $definition['elements'];
+        if ($elements == null) {
             return [];
         }
-        return $slots;
+        return $elements;
 
     }
 
@@ -513,16 +509,16 @@ class PageTemplate
             /**
              * Slots
              */
-            foreach ($this->getSlotIds() as $slotId) {
+            foreach ($this->getElementIds() as $elementId) {
                 try {
-                    $slotFetcherMarkup = PageTemplateSlot::createFor($slotId, $this)
+                    $slotFetcherMarkup = PageTemplateSlot::createFor($elementId, $this)
                         ->getMarkupFetcher();
-                    $model["$slotId-html"] = $slotFetcherMarkup->getFetchString();
+                    $model["$elementId-html"] = $slotFetcherMarkup->getFetchString();
                 } catch (ExceptionNotFound $e) {
                     // no slot found
                 } catch (ExceptionCompile $e) {
-                    LogUtility::error("Error while rendering the slot $slotId for the template ($this)", self::CANONICAL, $e);
-                    $model["$slotId-html"] = LogUtility::wrapInRedForHtml("Error: " . $e->getMessage());
+                    LogUtility::error("Error while rendering the slot $elementId for the template ($this)", self::CANONICAL, $e);
+                    $model["$elementId-html"] = LogUtility::wrapInRedForHtml("Error: " . $e->getMessage());
                 }
             }
 

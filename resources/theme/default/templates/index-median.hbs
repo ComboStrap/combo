@@ -1,0 +1,19 @@
+<html lang="{{lang}}">
+<head>
+    <title>{{title}}</title>
+    {{>head-partial}}
+</head>
+<body class="{{body-classes}}">
+{{>page-header-partial}}
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <main id="page-main" class="row">
+        <div id="main-content" class="col-12 col-md-12 col-lg-10 col-xl-8 mx-auto">
+            {{{ main-content-html }}}
+        </div>
+    </main>
+    {{>railbar-partial}}
+</div>
+{{>page-footer-partial}}
+{{>body-beforeend-partial}}
+</body>
+</html>

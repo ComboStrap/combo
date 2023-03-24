@@ -72,6 +72,7 @@ class MetadataSystem
         EndDate::PROPERTY_NAME => EndDate::class,
         PageType::PROPERTY_NAME => PageType::class,
         PageH1::PROPERTY_NAME => PageH1::class,
+        PageUrlPath::PROPERTY_NAME => PageUrlPath::class,
         Lang::PROPERTY_NAME => Lang::class,
         LdJson::PROPERTY_NAME => LdJson::class,
         LdJson::OLD_ORGANIZATION_PROPERTY => LdJson::class,
@@ -88,6 +89,9 @@ class MetadataSystem
         CacheExpirationFrequency::PROPERTY_NAME => CacheExpirationFrequency::class,
         QualityDynamicMonitoringOverwrite::PROPERTY_NAME => QualityDynamicMonitoringOverwrite::class,
         LowQualityPageOverwrite::PROPERTY_NAME => LowQualityPageOverwrite::class,
+        Locale::PROPERTY_NAME=>Locale::class,
+        CacheExpirationDate::PROPERTY_NAME=>CacheExpirationDate::class,
+        FeaturedImage::PROPERTY_NAME => FeaturedImage::class,
         FeaturedSvgImage::PROPERTY_NAME => FeaturedSvgImage::class,
         FeaturedRasterImage::PROPERTY_NAME => FeaturedRasterImage::class,
         FeaturedIcon::PROPERTY_NAME => FeaturedIcon::class,
@@ -136,6 +140,14 @@ class MetadataSystem
         }
         return $metadatas;
 
+    }
+
+    /**
+     * @return Metadata[]
+     */
+    public static function getMetadataClasses(): array
+    {
+        return self::METADATAS;
     }
 
     /**

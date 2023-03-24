@@ -36,6 +36,45 @@ class MetaManagerForm
     private MarkupPath $page;
 
 
+    private const META_ORDERS = [ResourceName::PROPERTY_NAME,
+        PageTitle::PROPERTY_NAME,
+        Lead::PROPERTY_NAME,
+        PageH1::PROPERTY_NAME,
+        Label::PROPERTY_NAME,
+        PageDescription::PROPERTY_NAME,
+        PageKeywords::PROPERTY_NAME,
+        PagePath::PROPERTY_NAME,
+        Canonical::PROPERTY_NAME,
+        Slug::PROPERTY_NAME,
+        PageUrlPath::PROPERTY_NAME,
+        PageTemplateName::PROPERTY_NAME,
+        ModificationDate::PROPERTY_NAME,
+        CreationDate::PROPERTY_NAME,
+        FeaturedImage::PROPERTY_NAME,
+        FeaturedRasterImage::PROPERTY_NAME,
+        FeaturedSvgImage::PROPERTY_NAME,
+        FeaturedIcon::PROPERTY_NAME,
+        TwitterImage::PROPERTY_NAME,
+        FacebookImage::PROPERTY_NAME,
+        AncestorImage::PROPERTY_NAME,
+        FirstImage::PROPERTY_NAME,
+        Aliases::PROPERTY_NAME,
+        PageType::PROPERTY_NAME,
+        PagePublicationDate::PROPERTY_NAME,
+        StartDate::PROPERTY_NAME,
+        EndDate::PROPERTY_NAME,
+        LdJson::PROPERTY_NAME,
+        LowQualityPageOverwrite::PROPERTY_NAME,
+        QualityDynamicMonitoringOverwrite::PROPERTY_NAME,
+        Locale::PROPERTY_NAME,
+        Lang::PROPERTY_NAME,
+        Region::PROPERTY_NAME,
+        ReplicationDate::PROPERTY_NAME,
+        PageId::PROPERTY_NAME,
+        CacheExpirationFrequency::PROPERTY_NAME,
+        CacheExpirationDate::PROPERTY_NAME,
+        PageLevel::PROPERTY_NAME
+    ];
 
     /**
      * @var MetadataFormDataStore
@@ -83,16 +122,43 @@ class MetaManagerForm
          * The manager
          */
         $dokuwikiFsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
-        foreach (MetadataSystem::getMetadataObjects()  as $metadata) {
-            if(!$metadata::isOnForm()){
+        $metadataNameInOrder = self::META_ORDERS;
+
+
+        foreach ($metadataNameInOrder as $metadataName) {
+            try {
+                $metadataObject = MetadataSystem::getForName($metadataName);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The metadata ($metadataName) was not found");
                 continue;
             }
-            $metadata
+            if(!$metadataObject::isOnForm()){
+                LogUtility::internalError("This metadata should not be on the order list as it's not for the form");
+                continue;
+            }
+            $metadataObject
                 ->setResource($this->page)
                 ->setReadStore($dokuwikiFsStore)
                 ->buildFromReadStore()
                 ->setWriteStore($this->targetFormDataStore);
-            $formMeta->addFormFieldFromMetadata($metadata);
+            $formMeta->addFormFieldFromMetadata($metadataObject);
+        }
+
+        /**
+         * Metadata that are not in the order list
+         */
+        foreach (MetadataSystem::getMetadataClasses() as $metadata) {
+            if (!$metadata::isOnForm()) {
+                continue;
+            }
+            if (!in_array($metadata::getName(), $metadataNameInOrder)) {
+                $metadataObject = (new $metadata())
+                    ->setResource($this->page)
+                    ->setReadStore($dokuwikiFsStore)
+                    ->buildFromReadStore()
+                    ->setWriteStore($this->targetFormDataStore);
+                $formMeta->addFormFieldFromMetadata($metadataObject);
+            }
         }
 
 

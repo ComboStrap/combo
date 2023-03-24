@@ -180,7 +180,7 @@ class PageTemplate
     }
 
 
-    private function getTemplateName(): string
+    public function getTemplateName(): string
     {
         if (isset($this->templateName)) {
             return $this->templateName;
@@ -232,6 +232,11 @@ class PageTemplate
     {
         $this->requestedTheme = $themeName;
         return $this;
+    }
+
+    public function hasElement(string $elementId): bool
+    {
+        return in_array($elementId, $this->getElementIds());
     }
 
 
@@ -489,11 +494,11 @@ class PageTemplate
                         }
                     }
                     $model["main-content-html"] = FetcherMarkup::confRoot()
-                            ->setRequestedMimeToXhtml()
-                            ->setRequestedContextPath($requestedContextPathForMain)
-                            ->setRequestedExecutingPath($this->getRequestedContextPath())
-                            ->build()
-                            ->getFetchString();
+                        ->setRequestedMimeToXhtml()
+                        ->setRequestedContextPath($requestedContextPathForMain)
+                        ->setRequestedExecutingPath($this->getRequestedContextPath())
+                        ->build()
+                        ->getFetchString();
                 } catch (ExceptionCompile|ExceptionNotExists|ExceptionNotExists $e) {
                     LogUtility::error("Error while rendering the page content.", self::CANONICAL, $e);
                     $model["main-content-html"] = "An error has occured. " . $e->getMessage();
@@ -1038,7 +1043,7 @@ EOF;
             if (isset($this->templateDefinition)) {
                 return $this->templateDefinition;
             }
-            $file = $this->getEngine()->search("$this->templateName.yml");
+            $file = $this->getEngine()->search("{$this->getTemplateName()}.yml");
             if (!FileSystems::exists($file)) {
                 return [];
             }

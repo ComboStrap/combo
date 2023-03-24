@@ -879,14 +879,21 @@ EOF;
         $sectionSequenceId = 0;
 
         $captureHeaderMeta = false;
-        if (
-            $this->markupPath !== null
-            && !$this->markupPath->isIndexPage()
-            && ExecutionContext::getActualOrCreateFromEnv()
-                ->getConfig()
-                ->isThemeSystemEnabled()
-        ) {
-            $captureHeaderMeta = true;
+        try {
+            if ($this->markupPath !== null) {
+                $contextPath = $this->markupPath->getPathObject()->toWikiPath();
+                $hasMainHeaderElement = PageTemplate::create()
+                    ->setRequestedContextPath($contextPath)
+                    ->hasElement(PageTemplateSlot::MAIN_HEADER_ID);
+                $isThemeSystemEnabled = ExecutionContext::getActualOrCreateFromEnv()
+                    ->getConfig()
+                    ->isThemeSystemEnabled();
+                if ($isThemeSystemEnabled && $hasMainHeaderElement) {
+                    $captureHeaderMeta = true;
+                }
+            }
+        } catch (ExceptionCast $e) {
+            // to Wiki Path should be good
         }
 
         /**

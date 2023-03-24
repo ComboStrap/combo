@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Field\PageTemplateName;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
@@ -74,6 +75,16 @@ class LinkMarkup
      * For styling on the anchor tag (ie a)
      */
     public const ANCHOR_HTML_SNIPPET_ID = "anchor-branding";
+
+    /**
+     * Url properties
+     * that are not seen as styling properties
+     */
+    const PROTECTED_URL_PROPERTY = [
+        self::SEARCH_HIGHLIGHT_QUERY_PROPERTY,
+        DokuWikiId::DOKUWIKI_ID_ATTRIBUTE,
+        PageTemplateName::PROPERTY_NAME
+    ];
 
 
     private MarkupRef $markupRef;
@@ -641,9 +652,8 @@ EOF;
          */
         switch ($this->markupRef->getSchemeType()) {
             case MarkupRef::WIKI_URI:
-                $showDokuProperty = [self::SEARCH_HIGHLIGHT_QUERY_PROPERTY, DokuWikiId::DOKUWIKI_ID_ATTRIBUTE];
                 foreach ($this->getMarkupRef()->getUrl()->getQueryProperties() as $key => $value) {
-                    if (!in_array($key, $showDokuProperty)) {
+                    if (!in_array($key, self::PROTECTED_URL_PROPERTY)) {
                         $this->getMarkupRef()->getUrl()->removeQueryParameter($key);
                         if (!TagAttributes::isEmptyValue($value)) {
                             $this->stylingAttributes->addComponentAttributeValue($key, $value);

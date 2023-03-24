@@ -22,7 +22,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
 {
-    const CANONICAL = "move";
+    const CANONICAL = "imgmove";
 
     /**
      * As explained https://www.dokuwiki.org/plugin:move
@@ -139,6 +139,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         }
         $data = $metadataFrontmatterStore->getData();
         foreach ($data as $key => $value) {
+
             try {
                 $metadata = MetadataSystem::getForName($key)
                     ->setResource($page)
@@ -178,13 +179,31 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                     } else {
                         LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                     }
-                    return $match;
+                    continue;
                 }
             }
             if (!($metadata instanceof MetadataImage)) {
                 continue;
             }
-            LogUtility::internalError("The move of the image frontmatter metadata ($metadata) should be implemented");
+            try {
+                $imageId = $metadata->getValue()->toAbsoluteId();
+            } catch (ExceptionNotFound $e) {
+                continue;
+            }
+            $before = $imageId;
+            try {
+                $this->moveImage($imageId, $handler);
+                if ($before !== $imageId) {
+                    $metadata->setValue($imageId)->persist();
+                }
+            } catch (\Exception $e) {
+                if (PluginUtility::isDevOrTest()) {
+                    throw new ExceptionRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
+                } else {
+                    LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL, $e);
+                }
+                continue;
+            }
         }
 
 

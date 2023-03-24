@@ -780,7 +780,11 @@ EOF;
             /**
              * On item page, the h1 and the featured image are
              * captured and deleted by default to allow complex header layout
+             *
+             * Delete the parsed value (runtime works only on rendering)
              */
+            FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue();
+            FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue();
             if ($captureHeaderMeta && $outlineSection->getLevel() === 0) {
                 // should be only one 1
                 if (count($actualChildren) === 1) {
@@ -802,14 +806,12 @@ EOF;
                                             $fetcher = MediaMarkup::createFromCallStackArray($h1ContentCall->getAttributes())->getFetcher();
                                             switch (get_class($fetcher)) {
                                                 case FetcherRaster::class:
-                                                    $path = $fetcher->getSourcePath();
-                                                    FeaturedRasterImage::createFromResourcePage($this->markupPath)
-                                                        ->setParsedValue($path);
+                                                    $path = $fetcher->getSourcePath()->toAbsoluteId();
+                                                    FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue($path);
                                                     break;
                                                 case FetcherSvg::class:
-                                                    $path = $fetcher->getSourcePath();
-                                                    FeaturedSvgImage::createFromResourcePage($this->markupPath)
-                                                        ->setParsedValue($path);
+                                                    $path = $fetcher->getSourcePath()->toAbsoluteId();
+                                                    FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue($path);
                                                     break;
                                             }
                                         } catch (\Exception $e) {

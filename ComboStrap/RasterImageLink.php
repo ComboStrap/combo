@@ -187,8 +187,9 @@ class RasterImageLink extends ImageLink
          */
         $srcValue = $fetchRaster->getFetchUrl();
         /**
-         * Add smaller sizes
+         * Add samller breakpoints sizes
          */
+        $intrinsicWidth = $fetchRaster->getIntrinsicWidth();
         foreach (Breakpoint::getBreakpoints() as $breakpoint) {
 
             try {
@@ -201,38 +202,36 @@ class RasterImageLink extends ImageLink
                 continue;
             }
 
+            if ($breakpointPixels > $intrinsicWidth) {
+                continue;
+            }
+
             if (!empty($srcSet)) {
                 $srcSet .= ", ";
                 $sizes .= ", ";
             }
             $breakpointWidthMinusMargin = $breakpointPixels - $imageMargin;
 
-            try {
 
-                $breakpointRaster = clone $fetchRaster;
-                if (
-                    !$fetchRaster->hasHeightRequested() // breakpoint url needs only the h attribute in this case
-                    || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
-                ) {
-                    $breakpointRaster->setRequestedWidth($breakpointWidthMinusMargin);
-                }
-                if ($fetchRaster->hasHeightRequested() // if this is a height request
-                    || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
-                ) {
-                    $breakPointHeight = FetcherRaster::round($breakpointWidthMinusMargin / $fetchRaster->getTargetAspectRatio());
-                    $breakpointRaster->setRequestedHeight($breakPointHeight);
-                }
-
-                $breakpointUrl = $breakpointRaster->getFetchUrl()
-                    ->toString();
-
-            } catch (ExceptionCompile $e) {
-                // should not happen as the fetch url was already validated at build time but yeah
-                LogUtility::internalError("We are unable to create the breakpoint image url ($fetchRaster) for the size ($breakpoint). Error:{$e->getMessage()}");
-                continue;
+            $breakpointRaster = clone $fetchRaster;
+            if (
+                !$fetchRaster->hasHeightRequested() // breakpoint url needs only the h attribute in this case
+                || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
+            ) {
+                $breakpointRaster->setRequestedWidth($breakpointWidthMinusMargin);
             }
+            if ($fetchRaster->hasHeightRequested() // if this is a height request
+                || $fetchRaster->hasAspectRatioRequested() // width and height are mandatory
+            ) {
+                $breakPointHeight = FetcherRaster::round($breakpointWidthMinusMargin / $fetchRaster->getTargetAspectRatio());
+                $breakpointRaster->setRequestedHeight($breakPointHeight);
+            }
+
+            $breakpointUrl = $breakpointRaster->getFetchUrl()->toString();
+
+
             $srcSet .= "$breakpointUrl {$breakpointWidthMinusMargin}w";
-            $sizes .= $this->getSizes($breakpoint->getWidth(), $breakpointWidthMinusMargin);
+            $sizes .= $this->getSizes($breakpointPixels, $breakpointWidthMinusMargin);
 
 
         }

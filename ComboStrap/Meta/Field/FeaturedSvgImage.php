@@ -49,11 +49,11 @@ class FeaturedSvgImage extends MetadataImage
     }
 
 
-    public function setParsedValue(WikiPath $path): FeaturedSvgImage
+    public function setParsedValue(string $path = null): FeaturedSvgImage
     {
         $store = $this->getWriteStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $store->setFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED, $path->toAbsoluteId());
+            $store->setFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED, $path);
         }
         return $this;
     }

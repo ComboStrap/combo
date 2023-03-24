@@ -279,4 +279,11 @@ class FetcherRaster extends IFetcherLocalImage
     {
         return self::CANONICAL;
     }
+
+    public function __toString()
+    {
+        return $this->getSourcePath()->__toString();
+    }
+
+
 }

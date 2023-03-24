@@ -93,11 +93,11 @@ class FeaturedRasterImage extends MetadataImage
 
     }
 
-    public function setParsedValue(WikiPath $path): FeaturedRasterImage
+    public function setParsedValue(string $path = null): FeaturedRasterImage
     {
         $store = $this->getWriteStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $store->setFromPersistentName(self::FEATURED_IMAGE_PARSED, $path->toAbsoluteId());
+            $store->setFromPersistentName(self::FEATURED_IMAGE_PARSED, $path);
         }
         return $this;
     }

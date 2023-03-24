@@ -406,7 +406,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * Snippets are only for HTML rendering
          * Otherwise, otherwise type rendering may override them
          */
-        if ($this->getMime()->toString() !== Mime::HTML) {
+        if (!in_array($this->getMime()->toString(), [Mime::XHTML, Mime::HTML])) {
             return;
         }
 

@@ -545,7 +545,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         }
                         try {
                             $renderDoc .= FetcherMarkup::confChild()
-                                ->setBuilderRequestedInstructions($iteratorHeaderInstructions)
+                                ->setRequestedInstructions($iteratorHeaderInstructions)
                                 ->setRequestedContextPath($contextPath)
                                 ->setRequestedMimeToXhtml()
                                 ->setIsDocument(false)
@@ -562,7 +562,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      */
                     try {
                         $renderDoc .= FetcherMarkup::confChild()
-                            ->setBuilderRequestedInstructions($templateHeader)
+                            ->setRequestedInstructions($templateHeader)
                             ->setRequestedContextPath($contextPath)
                             ->setRequestedMimeToXhtml()
                             ->setIsDocument(false)
@@ -575,7 +575,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     foreach ($rows as $row) {
                         try {
                             $renderDoc .= FetcherMarkup::confChild()
-                                ->setBuilderRequestedInstructions($templateMain)
+                                ->setRequestedInstructions($templateMain)
                                 ->setContextData($row)
                                 ->setRequestedContextPath($contextPath)
                                 ->setRequestedMimeToXhtml()
@@ -589,7 +589,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     }
                     try {
                         $renderDoc .= FetcherMarkup::confChild()
-                            ->setBuilderRequestedInstructions($templateFooter)
+                            ->setRequestedInstructions($templateFooter)
                             ->setRequestedContextPath($contextPath)
                             ->setRequestedMimeToXhtml()
                             ->setIsDocument(false)
@@ -608,7 +608,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     if (!empty($callStackFooterInstructions)) {
                         try {
                             $renderDoc .= FetcherMarkup::confChild()
-                                ->setBuilderRequestedInstructions($callStackFooterInstructions)
+                                ->setRequestedInstructions($callStackFooterInstructions)
                                 ->setRequestedContextPath($contextPath)
                                 ->setRequestedMimeToXhtml()
                                 ->setIsDocument(false)

@@ -77,19 +77,22 @@ class MarkupRenderUtility
 
     /**
      * @param $callStackHeaderInstructions
-     * @param $contextData - the page id used to render this instructions (it's not the global ID that represents the document, inside a document, for a dynamic component, you may loop through pages, this is the page id of the loop)
+     * @param $contextData - the context data if any
      * @return string|null
      * @throws ExceptionCompile
      */
     public static function renderInstructionsToXhtml($callStackHeaderInstructions, array $contextData = null): string
     {
-        return FetcherMarkup::confRoot()
-            ->setBuilderRequestedInstructions($callStackHeaderInstructions)
-            ->setContextData($contextData)
+
+        $builder = FetcherMarkup::confChild()
+            ->setRequestedInstructions($callStackHeaderInstructions)
             ->setIsDocument(false)
             ->setRequestedMimeToXhtml()
-            ->setRequestedContextPathWithDefault()
-            ->build()
+            ->setRequestedContextPathWithDefault();
+        if ($contextData !== null) {
+            $builder->setContextData($contextData);
+        }
+        return $builder->build()
             ->getFetchString();
     }
 

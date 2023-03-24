@@ -374,7 +374,7 @@ class FetcherMarkupBuilder
      * @param array $instructions
      * @return FetcherMarkupBuilder
      */
-    public function setBuilderRequestedInstructions(array $instructions): FetcherMarkupBuilder
+    public function setRequestedInstructions(array $instructions): FetcherMarkupBuilder
     {
         $this->builderRequestedInstructions = $instructions;
         return $this;

@@ -199,6 +199,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             ->build();
     }
 
+    /**
+     * Starts a child fetcher markup
+     * This is needed for instructions or markup run
+     * Why ? Because the snippets advertised during this run, need to be stored
+     * and we need to know the original request path that is in the parent run.
+     * @return FetcherMarkupBuilder
+     */
     public static function confChild(): FetcherMarkupBuilder
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();

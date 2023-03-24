@@ -79,9 +79,17 @@ class FeaturedImage extends MetadataImage
         $featuredSvgImage = FeaturedSvgImage::createFromResourcePage($contextPage);
         $featuredRasterImage = FeaturedRasterImage::createFromResourcePage($contextPage);
         try {
-            return $featuredSvgImage->getValueOrParsed();
+            return $featuredSvgImage->getValue();
         } catch (ExceptionNotFound $e) {
-            return $featuredRasterImage->getValueOrParsed();
+            try {
+                return $featuredRasterImage->getValue();
+            } catch (ExceptionNotFound $e) {
+                try {
+                    return $featuredSvgImage->getDefaultValue();
+                } catch (ExceptionNotFound $e) {
+                    return $featuredRasterImage->getDefaultValue();
+                }
+            }
         }
     }
 

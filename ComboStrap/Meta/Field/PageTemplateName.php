@@ -36,6 +36,13 @@ class PageTemplateName extends MetadataText
     const CONF_DEFAULT_NAME = "defaultLayoutName";
     const ROOT_ITEM_LAYOUT = "root-item";
 
+    /**
+     * App page
+     */
+    const APP_EDIT = "app-edit";
+    const APP_LOGIN = "app-login";
+    const APP_SEARCH = "app-search";
+
     public static function createFromPage(MarkupPath $page): PageTemplateName
     {
         return (new PageTemplateName())

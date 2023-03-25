@@ -100,9 +100,6 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
         switch ($ACT) {
             case ExecutionContext::PREVIEW_ACTION:
             case ExecutionContext::EDIT_ACTION:
-                ExecutionContext::getActualOrCreateFromEnv()
-                    ->getSnippetSystem()
-                    ->attachCssInternalStyleSheet("do-edit");
 
                 $markupPath = MarkupPath::createPageFromPathObject($this->getSourcePath());
                 if ($ACT === ExecutionContext::PREVIEW_ACTION && $markupPath->isSlot()) {
@@ -192,10 +189,13 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
         } catch (ExceptionNotFound $e) {
             global $ACT;
             switch ($ACT) {
-                case ExecutionContext::SEARCH_ACTION:
                 case ExecutionContext::EDIT_ACTION:
                 case ExecutionContext::PREVIEW_ACTION:
-                    return PageTemplateName::HAMBURGER_TEMPLATE_VALUE;
+                    return PageTemplateName::APP_EDIT;
+                case ExecutionContext::LOGIN_ACTION:
+                    return PageTemplateName::APP_LOGIN;
+                case ExecutionContext::SEARCH_ACTION:
+                    return PageTemplateName::APP_SEARCH;
                 default:
                     return PageTemplateName::MEDIAN_TEMPLATE_VALUE;
             }

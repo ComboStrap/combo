@@ -487,5 +487,10 @@ class SiteConfig
         return $this->getValue(PageTemplateSlot::CONF_PAGE_HEADER_NAME, PageTemplateSlot::CONF_PAGE_HEADER_NAME_DEFAULT);
     }
 
+    public function setConfDokuWiki(string $key, $value): SiteConfig
+    {
+        return $this->setConf($key,$value, self::GLOBAL_SCOPE);
+    }
+
 
 }

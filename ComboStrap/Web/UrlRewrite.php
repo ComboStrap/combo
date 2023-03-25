@@ -6,6 +6,8 @@ use ComboStrap\DokuWikiId;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
+use ComboStrap\PageUrlPath;
 use ComboStrap\Site;
 use ComboStrap\Web\Url;
 use ComboStrap\Web\UrlEndpoint;
@@ -81,74 +83,84 @@ class UrlRewrite
      */
     private static function pathRewrite(Url $url)
     {
-        $rewrite = Site::getUrlRewrite();
+
         try {
             $path = $url->getPath();
         } catch (ExceptionNotFound $e) {
             // no path, no rewrite
             return;
         }
-        switch ($rewrite) {
-            case self::WEB_SERVER_REWRITE:
 
-                switch ($path) {
-                    case UrlEndpoint::LIB_EXE_FETCH_PHP:
-                        try {
-                            $id = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER);
-                        } catch (ExceptionNotFound $e) {
-                            LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
-                            return;
-                        }
-                        $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                        $url->setPath(self::MEDIA_PREFIX . "/$idPath");
-                        break;
-                    case UrlEndpoint::LIB_EXE_DETAIL_PHP:
-                        try {
-                            $id = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER);
-                        } catch (ExceptionNotFound $e) {
-                            LogUtility::internalError("The media query should be present for a detail page fetch. No Url rewrite could be done.");
-                            return;
-                        }
-                        $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                        $url->setPath("/_detail/$idPath");
-                        break;
-                    case UrlEndpoint::DOKU_PHP:
+        $rewrite = Site::getUrlRewrite();
+        switch ($path) {
+            case UrlEndpoint::LIB_EXE_FETCH_PHP:
+                if ($rewrite !== self::WEB_SERVER_REWRITE) {
+                    return;
+                }
+                try {
+                    $dokuwikiId = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER);
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
+                    return;
+                }
+                $webUrlPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $dokuwikiId);
+                $url->setPath(self::MEDIA_PREFIX . "/$webUrlPath");
+                return;
+            case UrlEndpoint::LIB_EXE_DETAIL_PHP:
+                if ($rewrite !== self::WEB_SERVER_REWRITE) {
+                    return;
+                }
+                try {
+                    $dokuwikiId = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER);
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError("The media query should be present for a detail page fetch. No Url rewrite could be done.");
+                    return;
+                }
+                $webUrlPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $dokuwikiId);
+                $url->setPath("/_detail/$webUrlPath");
+                return;
+            case UrlEndpoint::DOKU_PHP:
+                try {
+                    $dokuwikiId = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
+                } catch (ExceptionNotFound $e) {
+                    // no id (case of action such as login, ...)
+                    return;
+                }
+
+                /**
+                 * Permanent Id Rewrite
+                 * The page url path will return the original dokuwiki id
+                 * if there is no configuration
+                 */
+                $urlId = PageUrlPath::createForPage(MarkupPath::createMarkupFromId($dokuwikiId))->getValueOrDefaultAsWikiId();
+
+                /**
+                 * Rewrite Processing
+                 */
+                switch ($rewrite) {
+                    case self::WEB_SERVER_REWRITE:
                         try {
                             $do = $url->getQueryPropertyValueAndRemoveIfPresent("do");
                             if (strpos($do, self::EXPORT_DO_PREFIX) === 0) {
                                 $exportFormat = substr($do, strlen(self::EXPORT_DO_PREFIX));
-                                $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
-                                $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                                $url->setPath(self::EXPORT_PATH_PREFIX . "/$exportFormat/$idPath");
+                                $webUrlPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $urlId);
+                                $url->setPath(self::EXPORT_PATH_PREFIX . "/$exportFormat/$webUrlPath");
                                 return;
                             }
                         } catch (ExceptionNotFound $e) {
                             // no do
                         }
-                        try {
-                            $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
-                            $idPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $id);
-                            $url->setPath("/$idPath");
-                            return;
-                        } catch (ExceptionNotFound $e) {
-                            // no id (case of action such as login, ...)
-                        }
+                        $webUrlPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $urlId);
+                        $url->setPath($webUrlPath);
+                        return;
+                    case self::VALUE_DOKU_REWRITE:
+                        $url->setPath("$path/$urlId");
+                        return;
+                    default:
+                        $url->setQueryParameter(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE, $urlId);
+                        return;
+                }
 
-                }
-                break;
-            case self::VALUE_DOKU_REWRITE:
-                if ($path === UrlEndpoint::DOKU_PHP) {
-                    try {
-                        $id = $url->getQueryPropertyValueAndRemoveIfPresent(DokuWikiId::DOKUWIKI_ID_ATTRIBUTE);
-                        $url->setPath("$path/$id");
-                    } catch (ExceptionNotFound $e) {
-                        LogUtility::internalError("The id should be present for a doku script. No Dokuwiki Url rewrite could be done.", self::CANONICAL);
-                    }
-                }
-                break;
-            case self::NO_REWRITE:
-            default:
-                break;
         }
 
     }

@@ -7,6 +7,7 @@ namespace ComboStrap;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataText;
 use ComboStrap\Meta\Api\MetadataWikiPath;
+use ComboStrap\Web\UrlRewrite;
 
 /**
  * Class PageUrlPath
@@ -14,6 +15,8 @@ use ComboStrap\Meta\Api\MetadataWikiPath;
  *
  *
  * The path (ie id attribute in the url) in a absolute format (ie with root)
+ *
+ * This is used in the {@link UrlRewrite} module where the path is rewritten
  *
  * url path: name for ns + slug (title) + page id
  * or
@@ -54,7 +57,7 @@ class PageUrlPath extends MetadataText
     public const CANONICAL = "page:url";
     const PROPERTY_NAME = "page-url-path";
 
-    public static function createForPage(MarkupPath $page)
+    public static function createForPage(MarkupPath $page): PageUrlPath
     {
         return (new PageUrlPath())
             ->setResource($page);
@@ -295,6 +298,11 @@ class PageUrlPath extends MetadataText
     static public function isOnForm(): bool
     {
         return true;
+    }
+
+    public function getValueOrDefaultAsWikiId(): string
+    {
+        return WikiPath::removeRootSepIfPresent($this->getValueOrDefault());
     }
 
 }

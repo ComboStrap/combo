@@ -909,16 +909,16 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
          * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
          */
         if ($this->isRootHomePage()) {
-            try {
-                return UrlEndpoint::createBaseUrl();
-            } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
-                LogUtility::error("The base url returns an error, we have returned an empty url for this root page. Error: {$e->getMessage()}");
-                return Url::createEmpty();
-            }
+            return UrlEndpoint::createBaseUrl();
         }
 
-        return UrlEndpoint::createDokuUrl()
-            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getUrlId());
+        try {
+            return UrlEndpoint::createDokuUrl()
+                ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getWikiId());
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::error("This markup path ($this) can not be accessed externaly");
+            return UrlEndpoint::createBaseUrl();
+        }
 
 
     }
@@ -1689,17 +1689,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
 
     /**
-     *
-     */
-    public function getUrlPath(): string
-    {
-
-        return $this->pageUrlPath->getValueOrDefault();
-
-    }
-
-
-    /**
      * @return string|null
      *
      * @throws ExceptionNotFound
@@ -1724,10 +1713,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
-    public
-    function getUrlId()
+    /**
+     * @return string - the id in the Url
+     */
+    public function getUrlId(): string
     {
-        return WikiPath::removeRootSepIfPresent($this->getUrlPath());
+        return $this->pageUrlPath->getValueOrDefaultAsWikiId();
     }
 
 
@@ -2015,6 +2006,10 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return self::TYPE;
     }
 
+    /**
+     * @return PageUrlPath
+     * @deprecated use {@link PageUrlPath} instead
+     */
     public
     function getUrlPathObject(): PageUrlPath
     {

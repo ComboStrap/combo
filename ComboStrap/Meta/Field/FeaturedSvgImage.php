@@ -64,42 +64,14 @@ class FeaturedSvgImage extends MetadataImage
         /**
          * Parsed Feature Images
          */
-        return $this->getParsedValue();
-
-    }
-
-    /**
-     * @throws ExceptionNotFound
-     */
-    public function getParsedValue(): WikiPath
-    {
-        /**
-         * @var MarkupPath $markupPath
-         */
-        $markupPath = $this->getResource();
-        $isIndex = $markupPath->isIndexPage();
-        if ($isIndex) {
-            $parsedValue = $this->getReadStore()->getFromPersistentName(FirstSvgImage::PROPERTY_NAME);
-        } else {
-            $parsedValue = $this->getReadStore()->getFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED);
-        }
+        $parsedValue = $this->getReadStore()->getFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED);
         if ($parsedValue === null) {
             throw new ExceptionNotFound();
         }
         return WikiPath::createMediaPathFromPath($parsedValue);
-    }
 
-    /**
-     * @throws ExceptionNotFound
-     */
-    public function getValueOrParsed(): WikiPath
-    {
-        try {
-            return $this->getValue();
-        } catch (ExceptionNotFound $e) {
-            return $this->getParsedValue();
-        }
     }
+    
 
     static public function getDrive(): string
     {

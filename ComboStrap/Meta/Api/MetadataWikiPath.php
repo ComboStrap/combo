@@ -19,7 +19,7 @@ abstract class MetadataWikiPath extends Metadata
 {
 
     /**
-     * @return string - the drive from where the path should be created
+     * @return string - the drive from where the path should be created (ie the poth string only is stored)
      */
     public abstract static function getDrive(): string;
 

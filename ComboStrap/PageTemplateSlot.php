@@ -33,6 +33,7 @@ class PageTemplateSlot
     public const CONF_PAGE_HEADER_NAME_DEFAULT = "slot_header";
     public const CONF_PAGE_FOOTER_NAME_DEFAULT = "slot_footer";
     public const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
+    const MAIN_TOC_ID = "main-toc";
 
 
     /**
@@ -90,12 +91,11 @@ class PageTemplateSlot
     }
 
     /**
-     * This function is static because it's also used to
-     * put a default template when creating a new slot
+     * This function is static because it's used to put a default template when creating a new slot
      * @param string $areaId
      * @return WikiPath
      */
-    public static function getDefaultElementContentPath(string $areaId): WikiPath
+    public static function getDefaultSlotContentPath(string $areaId): WikiPath
     {
         return WikiPath::createComboResource(":pages:$areaId.md");
     }
@@ -147,29 +147,10 @@ class PageTemplateSlot
         }
 
         /**
-         * Default content for element (such as header, ...)
+         * The default content is in the theme
          */
-        $requestedPage = MarkupPath::createPageFromPathObject($this->pageTemplate->getRequestedContextPath());
-        switch ($this->getName()) {
-            case self::PAGE_SIDE_ID:
-                try {
-                    $requestedPage->getPathObject()->getParent();
-                } catch (ExceptionNotFound $e) {
-                    // no parent page, no side bar
-                    throw new ExceptionNotFound("No page side for pages in the root directory.");
-                }
-                break;
-            case self::MAIN_HEADER_ID:
-                if ($requestedPage->isRootHomePage()) {
-                    throw new ExceptionNotFound("No $this for the home");
-                }
-                break;
-        }
-        $closestPath = self::getDefaultElementContentPath($this->getName());
-        if (!FileSystems::exists($closestPath)) {
-            throw new ExceptionNotFound("The default slot page for the area ($this) does not exist at ($closestPath)");
-        }
-        return $closestPath;
+        throw new ExceptionNotFound("No slot page for the area ($this) found");
+
 
     }
 

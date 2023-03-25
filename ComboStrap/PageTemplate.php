@@ -515,6 +515,12 @@ class PageTemplate
              * Slots
              */
             foreach ($this->getElementIds() as $elementId) {
+                if ($elementId === PageTemplateSlot::MAIN_TOC_ID) {
+                    /**
+                     * Main toc element is not a slot
+                     */
+                    continue;
+                }
                 try {
                     $slotFetcherMarkup = PageTemplateSlot::createFor($elementId, $this)
                         ->getMarkupFetcher();

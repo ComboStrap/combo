@@ -5,13 +5,15 @@
     {{> head-partial }}
 </head>
 <body class="{{body-classes}}">
-<div id="page-core" class="{{ layout-container-class }}">
-    <main id="main-content">
-        {{!-- redirection messages --}}
-        {{{ main-content-afterbegin-html }}}
-        <h1>{{h1}}</h1>
-        {{> toc-partial}}
-        {{{ main-content-html }}}
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <main id="page-main" class="col-md-8 mx-auto">
+        <header id="main-header">
+            {{{ main-header-html }}}
+        </header>
+        {{> toc-partial }}
+        <div id="main-content">
+            {{{ main-content-html }}}
+        </div>
     </main>
 </div>
 {{> body-beforeend-partial }}

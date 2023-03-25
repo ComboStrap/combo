@@ -4,3 +4,4 @@ elements:
     - 'main-header'
     - 'main-footer'
     - 'page-side'
+    - 'main-toc'

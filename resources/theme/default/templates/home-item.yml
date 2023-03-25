@@ -2,3 +2,4 @@ elements:
     - 'page-header'
     - 'page-footer'
     - 'main-footer'
+    - 'main-toc'

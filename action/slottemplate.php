@@ -47,7 +47,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
         $pageHeaderSlotName = SlotSystem::getPageHeaderSlotName();
         $toQualifiedId = $page->getPathObject()->toAbsoluteId();
         if ($toQualifiedId === ":$pageHeaderSlotName") {
-            $pageHeaderPath = PageTemplateSlot::getDefaultElementContentPath(PageTemplateSlot::PAGE_HEADER_ID);
+            $pageHeaderPath = PageTemplateSlot::getDefaultSlotContentPath(PageTemplateSlot::PAGE_HEADER_ID);
             try {
                 $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
                 $event->data["doreplace"] = false;
@@ -65,7 +65,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
 
         $pageFooterSlotName = SlotSystem::getPageFooterSlotName();
         if ($toQualifiedId === ":$pageFooterSlotName") {
-            $pageFooterPath = PageTemplateSlot::getDefaultElementContentPath(PageTemplateSlot::PAGE_FOOTER_ID);
+            $pageFooterPath = PageTemplateSlot::getDefaultSlotContentPath(PageTemplateSlot::PAGE_FOOTER_ID);
             try {
                 $event->data["tpl"] = FileSystems::getContent($pageFooterPath);
                 $event->data["doreplace"] = false;

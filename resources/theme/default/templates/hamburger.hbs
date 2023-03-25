@@ -4,8 +4,11 @@
 <body class="{{body-classes}}">
 {{>page-header-partial}}
 <div id="page-core" class="{{ layout-container-class }} position-relative">
-    <main id="main-content">
-        {{{ main-content-html }}}
+    <main id="page-main">
+        {{> toc-partial }}
+        <div id="main-content">
+            {{{ main-content-html }}}
+        </div>
     </main>
     {{> railbar-partial }}
 </div>

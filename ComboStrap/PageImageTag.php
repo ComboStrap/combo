@@ -4,8 +4,6 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Field\AncestorImage;
 use ComboStrap\Meta\Field\FeaturedImage;
-use Exception;
-use Mpdf\Gif\Image;
 use syntax_plugin_combo_iterator;
 
 
@@ -178,11 +176,11 @@ class PageImageTag
                     break;
                 case PageImageTag::FIRST_TYPE:
 
-                        try {
-                            $firstImagePath = FirstImage::createForPage($contextPage)->getValue();
-                        } catch (ExceptionNotFound $e) {
-                            continue 2;
-                        }
+                    try {
+                        $firstImagePath = FirstImage::createForPage($contextPage)->getValue();
+                    } catch (ExceptionNotFound $e) {
+                        continue 2;
+                    }
 
                     try {
                         $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($firstImagePath);

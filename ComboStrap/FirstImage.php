@@ -15,9 +15,9 @@ class FirstImage extends MetadataImage
 
     public const PROPERTY_NAME = "first-image";
 
-    public static function createForPage(ResourceCombo $resource): FirstRasterImage
+    public static function createForPage(ResourceCombo $resource): FirstImage
     {
-        return (new FirstRasterImage())
+        return (new FirstImage())
             ->setResource($resource);
     }
 

@@ -777,14 +777,7 @@ EOF;
             );
 
             $actualChildren = $outlineSection->getChildren();
-            /**
-             * On item page, the h1 and the featured image are
-             * captured and deleted by default to allow complex header layout
-             *
-             * Delete the parsed value (runtime works only on rendering)
-             */
-            FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue();
-            FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue();
+
             if ($captureHeaderMeta && $outlineSection->getLevel() === 0) {
                 // should be only one 1
                 if (count($actualChildren) === 1) {
@@ -878,6 +871,20 @@ EOF;
         $totalCalls = [];
         $sectionSequenceId = 0;
 
+        /**
+         * Header Metadata
+         *
+         * On template that have an header, the h1 and the featured image are
+         * captured and deleted by default to allow complex header layout
+         *
+         * Delete the parsed value (runtime works only on rendering)
+         * TODO: move that to the metadata rendering by adding attributes
+         *   because if the user changes the template, the parsing will not work
+         *   it would need to parse the document again
+         */
+        FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue();
+        FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue();
+
         $captureHeaderMeta = false;
         try {
             if ($this->markupPath !== null) {
@@ -896,10 +903,11 @@ EOF;
             // to Wiki Path should be good
         }
 
+
+
         /**
          * Transform and collect the calls in Instructions calls
          */
-
         $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $captureHeaderMeta);
 
         return array_map(function (Call $element) {

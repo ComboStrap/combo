@@ -843,38 +843,6 @@ class Site
 
 
     /**
-     * @throws ExceptionNotFound
-     */
-    public static function getLogoHtml(): string
-    {
-
-        $logoImagesPath = Site::getLogoImagesAsPath();
-        $tagAttributes = TagAttributes::createEmpty("identity")
-            ->addClassName("logo");
-        foreach ($logoImagesPath as $logoImagePath) {
-            try {
-                if (!Identity::isReader($logoImagePath->getWikiId())) {
-                    continue;
-                }
-                $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($logoImagePath)
-                    ->setRequestedHeight(72)
-                    ->setRequestedWidth(72);
-                if ($imageFetcher instanceof FetcherSvg) {
-                    $imageFetcher->setRequestedType(FetcherSvg::ICON_TYPE);
-                }
-                return MediaMarkup::createFromFetcher($imageFetcher)
-                    ->setLazyLoad(false)
-                    ->buildFromTagAttributes($tagAttributes)
-                    ->toHtml();
-            } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound|ExceptionCompile $e) {
-                LogUtility::msg("Error while rendering in HTML the logo $logoImagePath");
-            }
-
-        }
-        throw new ExceptionNotFound("No logo image could be found");
-    }
-
-    /**
      * @throws ExceptionCompile
      */
     private static function checkTemplateVersion()

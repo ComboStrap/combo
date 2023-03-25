@@ -88,6 +88,9 @@ class ExecutionContext
     const REGISTER_ACTION = "register";
     const RESEND_PWD_ACTION = "resendpwd";
     const PROFILE_ACTION = "profile";
+    const REVISIONS_ACTION = "revisions";
+    const DIFF_ACTION = "diff";
+    const INDEX_ACTION = "index";
 
 
     /**

@@ -42,6 +42,12 @@ class PageTemplateName extends MetadataText
     const APP_EDIT = "app-edit";
     const APP_LOGIN = "app-login";
     const APP_SEARCH = "app-search";
+    const APP_REGISTER = "app-register";
+    const APP_RESEND_PWD = "app-resend-pwd";
+    const APP_REVISIONS = "app-revisions";
+    const APP_DIFF = "app-diff";
+    const APP_INDEX = "app-index";
+    const APP_PROFILE = "app-profile";
 
     public static function createFromPage(MarkupPath $page): PageTemplateName
     {

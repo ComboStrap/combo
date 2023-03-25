@@ -9,6 +9,8 @@ use dokuwiki\Form\InputElement;
 class IdentityFormsHelper
 {
 
+    const CANONICAL = "identity-forms-helper";
+
     public static function toBoostrapInputElements(Form $form, string $formName)
     {
         for ($i = 0; $i < $form->elementCount(); $i++) {
@@ -106,15 +108,14 @@ class IdentityFormsHelper
          */
         $logoHtmlImgTag = "";
         if (
-            SiteConfig::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
-            &&
             $includeLogo === true
         ) {
             try {
-                $logoHtmlImgTag = Site::getLogoHtml();
+                $logoPath = self::getLogoPath();
             } catch (ExceptionNotFound $e) {
-                // ok
+                $logoPath = WikiPath::createComboResource(":images:home.svg");
             }
+            $logoHtmlImgTag = self::getLogoHtml($logoPath);
         }
         /**
          * Don't use `header` in place of
@@ -226,5 +227,59 @@ EOF;
         $form->getElementAt($resetButtonPosition)
             ->addClass("btn")
             ->addClass("btn-secondary");
+    }
+
+    /**
+     */
+    public static function getLogoHtml(WikiPath $logoImagePath): string
+    {
+
+        $tagAttributes = TagAttributes::createEmpty("identity")
+            ->addClassName("logo");
+
+        try {
+            $imageFetcher = IFetcherLocalImage::createImageFetchFromPath($logoImagePath)
+                ->setRequestedHeight(72)
+                ->setRequestedWidth(72);
+
+            if ($imageFetcher instanceof FetcherSvg) {
+                $imageFetcher->setRequestedType(FetcherSvg::ICON_TYPE);
+                $primaryColor = Site::getPrimaryColor();
+                if ($primaryColor !== null) {
+                    $imageFetcher->setRequestedColor($primaryColor);
+                }
+            }
+            $brand = Brand::create(Brand::CURRENT_BRAND);
+
+            $mediaMarkup = MediaMarkup::createFromFetcher($imageFetcher)
+                ->setLazyLoad(false)
+                ->setLinking(MediaMarkup::LINKING_NOLINK_VALUE)
+                ->buildFromTagAttributes($tagAttributes)
+                ->toHtml();
+            return <<<EOF
+<a href="{$brand->getBrandUrl()}" title="{$brand->getTitle()}">$mediaMarkup</a>
+EOF;
+        } catch (\Exception $e) {
+            LogUtility::error("Error while creating the logo html", self::CANONICAL, $e);
+            return "";
+        }
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getLogoPath(): WikiPath
+    {
+        $logoImagesPath = Site::getLogoImagesAsPath();
+        foreach ($logoImagesPath as $logoImagePath) {
+
+            if (!Identity::isReader($logoImagePath->getWikiId())) {
+                continue;
+            }
+            return $logoImagePath;
+
+        }
+        throw new ExceptionNotFound("No logo image could be found");
     }
 }

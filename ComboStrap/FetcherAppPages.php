@@ -17,8 +17,8 @@ use dokuwiki\ActionRouter;
 class FetcherAppPages extends IFetcherAbs implements IFetcherString
 {
 
-    const NAME = "identity";
-    const CANONICAL = "identity";
+    const NAME = "page-app";
+    const CANONICAL = "page-app";
 
     use FetcherTraitWikiPath;
 
@@ -60,6 +60,16 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
     public function getFetchString(): string
     {
 
+        $contextPath = $this->getSourcePath();
+        if($contextPath->hasRevision()) {
+            /**
+             * In the diff {@link ExecutionContext::DIFF_ACTION},
+             * the `rev` property is passed in the URL and we get a bad context
+             */
+            $contextPath = WikiPath::createMarkupPathFromId($contextPath->getWikiId());
+        }
+
+
         if (!$this->build) {
 
             $this->build = true;
@@ -71,7 +81,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
                 ->setRequestedLang($pageLang)
                 ->setRequestedEnableTaskRunner(false) // no page id
                 ->setRequestedTitle($title)
-                ->setRequestedContextPath($this->getSourcePath());
+                ->setRequestedContextPath($contextPath);
 
         }
 
@@ -100,8 +110,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
         switch ($ACT) {
             case ExecutionContext::PREVIEW_ACTION:
             case ExecutionContext::EDIT_ACTION:
-
-                $markupPath = MarkupPath::createPageFromPathObject($this->getSourcePath());
+                $markupPath = MarkupPath::createPageFromPathObject($contextPath);
                 if ($ACT === ExecutionContext::PREVIEW_ACTION && $markupPath->isSlot()) {
                     SlotSystem::sendContextPathMessage(SlotSystem::getContextPath());
                 }
@@ -194,10 +203,21 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
                     return PageTemplateName::APP_EDIT;
                 case ExecutionContext::LOGIN_ACTION:
                     return PageTemplateName::APP_LOGIN;
+                case ExecutionContext::REGISTER_ACTION:
+                    return PageTemplateName::APP_REGISTER;
+                case ExecutionContext::RESEND_PWD_ACTION:
+                    return PageTemplateName::APP_RESEND_PWD;
+                case ExecutionContext::REVISIONS_ACTION:
+                    return PageTemplateName::APP_REVISIONS;
+                case ExecutionContext::DIFF_ACTION:
+                    return PageTemplateName::APP_DIFF;
+                case ExecutionContext::INDEX_ACTION:
+                    return PageTemplateName::APP_INDEX;
+                case ExecutionContext::PROFILE_ACTION:
+                    return PageTemplateName::APP_PROFILE;
+                default:
                 case ExecutionContext::SEARCH_ACTION:
                     return PageTemplateName::APP_SEARCH;
-                default:
-                    return PageTemplateName::MEDIAN_TEMPLATE_VALUE;
             }
 
         }
@@ -221,6 +241,12 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
             case ExecutionContext::EDIT_ACTION:
             case ExecutionContext::PREVIEW_ACTION:
                 $label = "Editor";
+                break;
+            case ExecutionContext::DIFF_ACTION:
+                $label = "Diff";
+                break;
+            case ExecutionContext::REVISIONS_ACTION:
+                $label = "Log";
                 break;
         }
         return $label;

@@ -1206,4 +1206,14 @@ class WikiPath extends PathAbs
 
     }
 
+    public function hasRevision(): bool
+    {
+        try {
+            $this->getRevision();
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+    }
+
 }

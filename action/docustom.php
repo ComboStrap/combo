@@ -113,6 +113,9 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 case ExecutionContext::EDIT_ACTION:
                 case ExecutionContext::PREVIEW_ACTION:
                 case ExecutionContext::SEARCH_ACTION:
+                case ExecutionContext::INDEX_ACTION:
+                //case ExecutionContext::REVISIONS_ACTION:
+                //case ExecutionContext::DIFF_ACTION: needs styling
                     $action = self::getDoParameterValue(FetcherAppPages::NAME);
                     break;
             }

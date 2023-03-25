@@ -238,14 +238,14 @@ class Brand
     /**
      * Brand button title
      * @return string
-     * @var string $type - the button type
+     * @var ?string $type - the button type
      */
-    public function getTitle(string $type): ?string
+    public function getTitle(string $type = null): ?string
     {
         if ($this->name === self::CURRENT_BRAND) {
             return Site::getTitle();
         }
-        if ($this->brandDict !== null) {
+        if ($this->brandDict !== null && $type !== null) {
             if (isset($this->brandDict[$type])) {
                 return $this->brandDict[$type]["popup"];
             }

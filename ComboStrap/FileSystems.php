@@ -360,7 +360,7 @@ class FileSystems
     /**
      * @throws ExceptionCompile
      */
-    public static function createDirectoryIfNotExists(LocalPath $directoryPath)
+    public static function createDirectoryIfNotExists(Path $directoryPath)
     {
         if (!self::exists($directoryPath)){
             self::createDirectory($directoryPath);

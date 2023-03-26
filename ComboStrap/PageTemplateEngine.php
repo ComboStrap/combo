@@ -26,6 +26,12 @@ class PageTemplateEngine
      * @var LocalPath[]
      */
     private array $templateSearchDirectories;
+    /**
+     * This path are wiki path because
+     * they should be able to be accessed externally (fetched)
+     * @var WikiPath[]
+     */
+    private array $componentSearchDirectories;
 
     static public function createForTheme(string $themeName): PageTemplateEngine
     {
@@ -47,17 +53,22 @@ class PageTemplateEngine
              */
             $default = self::CONF_THEME_DEFAULT;
             /**
+             * @var WikiPath[] $componentsSearchDirectories
+             */
+            $componentsSearchDirectories = array(); // a list of directories where to search the component stylesheet
+            /**
              * @var LocalPath[] $templatesSearchDirectories
              */
             $templatesSearchDirectories = array(); // a list of directories where to search the template
             /**
-             * @var LocalPath[] $templatesSearchDirectories
+             * @var LocalPath[] $partialSearchDirectories
              */
             $partialSearchDirectories = array(); // a list of directories where to search the partials
             if ($themeName !== $default) {
-                $themeDirectory = self::getThemeHome()->resolve($themeName);
-                $themeTemplateDirectory = $themeDirectory->resolve("templates");
-                $themePartialsDirectory = $themeDirectory->resolve("partials");
+                $themeDirectory = self::getThemeHomeAsWikiPath()->resolve($themeName);
+                $themeTemplateDirectory = $themeDirectory->resolve("templates:")->toLocalPath();
+                $themePartialsDirectory = $themeDirectory->resolve("partials:")->toLocalPath();
+                $themeComponentsDirectory = $themeDirectory->resolve("components:");
                 if (PluginUtility::isTest()) {
                     try {
                         FileSystems::createDirectoryIfNotExists($themeTemplateDirectory);
@@ -77,7 +88,9 @@ class PageTemplateEngine
                 } else {
                     LogUtility::warning("The partials theme directory ($themeDirectory) does not exists");
                 }
-
+                if (FileSystems::exists($themeComponentsDirectory)) {
+                    $componentsSearchDirectories[] = $themeComponentsDirectory;
+                }
             }
 
             /**
@@ -86,6 +99,7 @@ class PageTemplateEngine
             $defaultTemplateDirectory = WikiPath::createComboResource(":theme:$default:templates")->toLocalPath();
             $templatesSearchDirectories[] = $defaultTemplateDirectory;
             $partialSearchDirectories[] = WikiPath::createComboResource(":theme:$default:partials")->toLocalPath();
+            $componentsSearchDirectories[] = WikiPath::createComboResource(":theme:$default:components");
 
             /**
              * Handlebars Files
@@ -112,6 +126,7 @@ class PageTemplateEngine
         $newPageTemplateEngine = new PageTemplateEngine();
         $newPageTemplateEngine->handleBars = $handleBars;
         $newPageTemplateEngine->templateSearchDirectories = $templatesSearchDirectories;
+        $newPageTemplateEngine->componentSearchDirectories = $componentsSearchDirectories;
         $executionContext->setRuntimeObject($handleBarsObjectId, $newPageTemplateEngine);
         return $newPageTemplateEngine;
 
@@ -191,7 +206,7 @@ class PageTemplateEngine
     public static function getThemes(): array
     {
         $theme = [self::CONF_THEME_DEFAULT];
-        $directories = FileSystems::getChildrenContainer(self::getThemeHome());
+        $directories = FileSystems::getChildrenContainer(self::getThemeHomeAsWikiPath());
         foreach ($directories as $directory) {
             try {
                 $theme[] = $directory->getLastName();
@@ -203,11 +218,11 @@ class PageTemplateEngine
     }
 
     /**
-     * @return LocalPath - where the theme should be stored
+     * @return WikiPath - where the theme should be stored
      */
-    private static function getThemeHome(): LocalPath
+    private static function getThemeHomeAsWikiPath(): WikiPath
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getDataDirectory()->resolve("combo")->resolve("theme");
+        return WikiPath::getComboCustomThemeHomeDirectory();
     }
 
 
@@ -272,15 +287,31 @@ EOF;
     /**
      * @throws ExceptionNotFound
      */
-    public function search(string $string): LocalPath
+    public function searchTemplateByName(string $name): LocalPath
     {
         foreach ($this->templateSearchDirectories as $templateSearchDirectory) {
-            $file = $templateSearchDirectory->resolve($string);
+            $file = $templateSearchDirectory->resolve($name);
             if (FileSystems::exists($file)) {
                 return $file;
             }
         }
-        throw new ExceptionNotFound("No file named $string found");
+        throw new ExceptionNotFound("No file named $name found");
+    }
+
+
+    public function getComponentStylePathByName(string $nameWithExtenson): WikiPath
+    {
+        $file = null;
+        foreach ($this->componentSearchDirectories as $componentSearchDirectory) {
+            $file = $componentSearchDirectory->resolve($nameWithExtenson);
+            if (FileSystems::exists($file)) {
+                return $file;
+            }
+        }
+        /**
+         * We return the last one that should be the default theme
+         */
+        return $file;
     }
 
 

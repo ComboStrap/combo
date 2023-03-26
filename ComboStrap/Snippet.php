@@ -441,26 +441,25 @@ class Snippet implements JsonSerializable
         return $this->path;
     }
 
-    public static function getInternalPathFromNameAndExtension($name, $extension, $baseDirectory = self::SNIPPET_BASE): WikiPath
+    public static function getInternalPathFromNameAndExtension($name, $extension): WikiPath
     {
 
         switch ($extension) {
             case self::EXTENSION_CSS:
                 $extension = "css";
-                $subDirectory = "style";
-                break;
+                return PageTemplateEngine::createFromContext()
+                    ->getComponentStylePathByName(strtolower($name) . ".$extension");
             case self::EXTENSION_JS:
                 $extension = "js";
                 $subDirectory = "js";
-                break;
+                return WikiPath::createComboResource(self::SNIPPET_BASE)
+                    ->resolve($subDirectory)
+                    ->resolve(strtolower($name) . ".$extension");
             default:
                 $message = "Unknown snippet type ($extension)";
                 throw new ExceptionRuntimeInternal($message);
-
         }
-        return WikiPath::createComboResource($baseDirectory)
-            ->resolve($subDirectory)
-            ->resolve(strtolower($name) . ".$extension");
+
     }
 
     public function hasSlot($slot): bool

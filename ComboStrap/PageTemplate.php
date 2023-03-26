@@ -76,7 +76,7 @@ class PageTemplate
      */
     public function getHtmlTemplatePath(): LocalPath
     {
-        return $this->getEngine()->search($this->templateName . "." . PageTemplateEngine::EXTENSION_HBS);
+        return $this->getEngine()->searchTemplateByName($this->templateName . "." . PageTemplateEngine::EXTENSION_HBS);
     }
 
     public function setTemplateString(string $templateString): PageTemplate
@@ -208,7 +208,7 @@ class PageTemplate
      */
     public function getCssPath(): LocalPath
     {
-        return $this->getEngine()->search("$this->templateName.css");
+        return $this->getEngine()->searchTemplateByName("$this->templateName.css");
     }
 
     /**
@@ -216,7 +216,7 @@ class PageTemplate
      */
     public function getJsPath(): LocalPath
     {
-        $jsPath = $this->getEngine()->search("$this->templateName.js");
+        $jsPath = $this->getEngine()->searchTemplateByName("$this->templateName.js");
         if (!FileSystems::exists($jsPath)) {
             throw new ExceptionNotFound("No js file");
         }
@@ -1049,7 +1049,7 @@ EOF;
             if (isset($this->templateDefinition)) {
                 return $this->templateDefinition;
             }
-            $file = $this->getEngine()->search("{$this->getTemplateName()}.yml");
+            $file = $this->getEngine()->searchTemplateByName("{$this->getTemplateName()}.yml");
             if (!FileSystems::exists($file)) {
                 return [];
             }

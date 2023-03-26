@@ -60,8 +60,11 @@ class WikiPath extends PathAbs
      *   combo>image:
      */
     const COMBO_DRIVE = "combo";
+    /**
+     * The home directory for all themes
+     */
+    const COMBO_DATA_THEME_DRIVE = "combo-theme";
     const CACHE_DRIVE = "cache";
-    const DRIVES = [self::COMBO_DRIVE, self::CACHE_DRIVE, self::MEDIA_DRIVE];
     const MARKUP_DEFAULT_TXT_EXTENSION = "txt";
     const MARKUP_MD_TXT_EXTENSION = "md";
     const REV_ATTRIBUTE = "rev";
@@ -69,6 +72,7 @@ class WikiPath extends PathAbs
     const CURRENT_PARENT_PATH_CHARACTER = "..";
     const CANONICAL = "wiki-path";
     const ALL_MARKUP_EXTENSIONS = [self::MARKUP_DEFAULT_TXT_EXTENSION, self::MARKUP_MD_TXT_EXTENSION];
+
 
     /**
      * @var string[]
@@ -437,6 +441,11 @@ class WikiPath extends PathAbs
         return self::createMediaPathFromPath($id, $rev);
     }
 
+    public static function getComboCustomThemeHomeDirectory(): WikiPath
+    {
+        return new WikiPath(self::NAMESPACE_SEPARATOR_DOUBLE_POINT, self::COMBO_DATA_THEME_DRIVE);
+    }
+
     /**
      * @throws ExceptionBadArgument
      */
@@ -629,6 +638,7 @@ class WikiPath extends PathAbs
             self::MEDIA_DRIVE => Site::getMediaDirectory(),
             self::MARKUP_DRIVE => Site::getPageDirectory(),
             self::COMBO_DRIVE => DirectoryLayout::getComboResourcesDirectory(),
+            self::COMBO_DATA_THEME_DRIVE => Site::getDataDirectory()->resolve("combo")->resolve("theme"),
             self::CACHE_DRIVE => Site::getCacheDirectory()
         ];
     }

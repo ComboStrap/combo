@@ -129,6 +129,41 @@ class MarkupRef
                 if (!in_array($this->url->getScheme(), $authorizedSchemes)) {
                     throw new ExceptionBadSyntax("The scheme ({$this->url->getScheme()}) of the URL ({$this->url}) is not authorized");
                 }
+                try {
+                    $isImage = FileSystems::getMime($this->url)->isImage();
+                } catch (ExceptionNotFound $e) {
+                    $isImage = false;
+                }
+                if ($isImage) {
+                    $properties = $this->url->getQueryProperties();
+                    if (count($properties) >= 1) {
+                        try {
+                            /**
+                             * The first parameter is the `Width X Height`
+                             */
+                            $widthAndHeight = array_key_first($properties);
+                            $xPosition = strpos($widthAndHeight, "x");
+                            if ($xPosition !== false) {
+                                $width = DataType::toInteger(substr($widthAndHeight, 0, $xPosition));
+                                if($width!==0) {
+                                    $this->url->addQueryParameter(Dimension::WIDTH_KEY, $width);
+                                }
+                                $height = DataType::toInteger(substr($widthAndHeight, $xPosition+1));
+                                $this->url->addQueryParameter(Dimension::HEIGHT_KEY,$height);
+                            } else {
+                                $width = DataType::toInteger($widthAndHeight);
+                                $this->url->addQueryParameter(Dimension::WIDTH_KEY,$width);
+                            }
+                            $this->url->deleteQueryParameter($widthAndHeight);
+                            if($this->url->hasProperty(MediaMarkup::LINKING_NOLINK_VALUE)){
+                                $this->url->addQueryParameter(MediaMarkup::LINKING_KEY,MediaMarkup::LINKING_NOLINK_VALUE);
+                                $this->url->deleteQueryParameter(MediaMarkup::LINKING_NOLINK_VALUE);
+                            }
+                        } catch (ExceptionBadArgument $e) {
+                            // not a number/integer
+                        }
+                    }
+                }
                 return;
             } catch (ExceptionBadSyntax $e) {
                 throw new ExceptionBadSyntax("The url string was not validated as an URL ($ref). Error: {$e->getMessage()}");

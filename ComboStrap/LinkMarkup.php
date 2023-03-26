@@ -654,7 +654,7 @@ EOF;
             case MarkupRef::WIKI_URI:
                 foreach ($this->getMarkupRef()->getUrl()->getQueryProperties() as $key => $value) {
                     if (!in_array($key, self::PROTECTED_URL_PROPERTY)) {
-                        $this->getMarkupRef()->getUrl()->removeQueryParameter($key);
+                        $this->getMarkupRef()->getUrl()->deleteQueryParameter($key);
                         if (!TagAttributes::isEmptyValue($value)) {
                             $this->stylingAttributes->addComponentAttributeValue($key, $value);
                         } else {

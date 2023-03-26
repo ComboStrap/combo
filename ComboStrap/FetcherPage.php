@@ -72,10 +72,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
 
         // the drive is not needed
-        $url->removeQueryParameter(WikiPath::DRIVE_ATTRIBUTE);
+        $url->deleteQueryParameter(WikiPath::DRIVE_ATTRIBUTE);
 
         // this is the default fetcher, no need to add it as parameter
-        $url->removeQueryParameter(IFetcher::FETCHER_KEY);
+        $url->deleteQueryParameter(IFetcher::FETCHER_KEY);
 
         return $url;
     }

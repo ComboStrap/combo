@@ -17,8 +17,9 @@ use syntax_plugin_combo_fragment;
  * Then we found
  * https://glidejs.com/
  *
- * If we need another, the <a href="https://themes.getbootstrap.com/preview/?theme_id=5348">purpose template</a>
- * send us to the popular https://swiperjs.com/
+ * If we need another,
+ * * https://swiperjs.com/ - <a href="https://themes.getbootstrap.com/preview/?theme_id=5348">purpose template</a>
+ * * https://github.com/ganlanyuan/tiny-slider - https://themes.getbootstrap.com/preview/?theme_id=92520
  *
  *
  */

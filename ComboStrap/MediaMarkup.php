@@ -203,7 +203,6 @@ class MediaMarkup
 
         /** @var Doku_Renderer_xhtml $renderer */
         try {
-
             $mediaMarkup = MediaMarkup::createFromCallStackArray($callStackArray);
         } catch (ExceptionCompile $e) {
             return $e->getMessage();
@@ -242,7 +241,6 @@ class MediaMarkup
          * Dokuwiki takes over
          */
         $mediaType = $mediaMarkup->getInternalExternalType();
-        $src = $mediaMarkup->getSrc();
         try {
             $title = $mediaMarkup->getLabel();
         } catch (ExceptionNotFound $e) {
@@ -265,14 +263,44 @@ class MediaMarkup
              * And there is therefore no fetcher available
              */
             $markupUrl = $mediaMarkup->getMarkupRef()->getUrl();
+
         } catch (ExceptionNotFound $e) {
             // the
             LogUtility::internalError("As the media markup is created from a markup in the syntax component, it should be available");
             return "";
         }
+
+        try {
+            $src = $mediaMarkup->getSrc();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("For an external markup, the src should not be empty", self::CANONICAL);
+            return "";
+        }
+        try {
+            $isImage = FileSystems::getMime($markupUrl)->isImage();
+        } catch (ExceptionNotFound $e) {
+            $isImage = false;
+        }
+        if ($isImage) {
+            /**
+             * We need to delete the
+             * wXh and other properties
+             * Dokuwiki does not accept it in its function
+             */
+            try {
+                $src = Url::createEmpty()
+                    ->setScheme($markupUrl->getScheme())
+                    ->setHost($markupUrl->getHost())
+                    ->setPath($markupUrl->getPath())
+                    ->toString();
+            } catch (ExceptionNotFound $e) {
+
+            }
+        }
         try {
             $width = $markupUrl->getQueryPropertyValue(Dimension::WIDTH_KEY);
-        } catch (ExceptionNotFound $e) {
+        } catch
+        (ExceptionNotFound $e) {
             $width = null;
         }
         try {
@@ -357,8 +385,8 @@ class MediaMarkup
     /**
      * Keep track of the metadata
      * @param array $data
-     * @return void
      * @param Doku_Renderer_metadata $renderer
+     * @return void
      */
     public static function metadata(array $data, Doku_Renderer_metadata $renderer)
     {

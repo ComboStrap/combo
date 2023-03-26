@@ -856,12 +856,12 @@ class Url extends PathAbs
      */
     public function setQueryParameter(string $key, string $value): Url
     {
-        $this->removeQueryParameter($key);
+        $this->deleteQueryParameter($key);
         $this->addQueryParameter($key, $value);
         return $this;
     }
 
-    public function removeQueryParameter(string $key)
+    public function deleteQueryParameter(string $key)
     {
         unset($this->query[$key]);
     }
@@ -920,4 +920,11 @@ class Url extends PathAbs
     {
         return new Url($uri);
     }
+
+    public function deleteQueryProperties(): Url
+    {
+        $this->query = new ArrayCaseInsensitive();;
+        return $this;
+    }
+
 }

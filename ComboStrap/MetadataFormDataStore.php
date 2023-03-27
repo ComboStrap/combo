@@ -57,5 +57,12 @@ class MetadataFormDataStore extends MetadataSingleArrayStore
         return $default;
     }
 
+    public function isHierarchicalTextBased(): bool
+    {
+        /**
+         * It's a list of field that is not hiearchical
+         */
+        return false;
+    }
 
 }

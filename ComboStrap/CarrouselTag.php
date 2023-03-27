@@ -19,7 +19,7 @@ use syntax_plugin_combo_fragment;
  *
  * If we need another,
  * * https://swiperjs.com/ - <a href="https://themes.getbootstrap.com/preview/?theme_id=5348">purpose template</a>
- * * https://github.com/ganlanyuan/tiny-slider - https://themes.getbootstrap.com/preview/?theme_id=92520
+ * * https://github.com/ganlanyuan/tiny-slider - https://themes.getbootstrap.com/preview/?theme_id=92520 - blogzine
  *
  *
  */

@@ -15,6 +15,7 @@ use ComboStrap\MetaManagerForm;
 use ComboStrap\PageTemplateEngine;
 use ComboStrap\Site;
 use ComboStrap\SlotSystem;
+use ComboStrap\Tag\BarTag;
 
 class PageTemplateName extends MetadataText
 {
@@ -23,7 +24,7 @@ class PageTemplateName extends MetadataText
     public const PROPERTY_NAME = "template";
     public const PROPERTY_NAME_OLD = "layout";
     public const HOLY_TEMPLATE_VALUE = "holy";
-    public const MEDIAN_TEMPLATE_VALUE = "median";
+    public const MEDIUM_TEMPLATE_VALUE = "medium";
     public const LANDING_TEMPLATE_VALUE = "landing";
     public const INDEX_TEMPLATE_VALUE = "index";
     public const HAMBURGER_TEMPLATE_VALUE = "hamburger";
@@ -34,20 +35,31 @@ class PageTemplateName extends MetadataText
      * to speed up test
      */
     const CONF_DEFAULT_NAME = "defaultLayoutName";
-    const ROOT_ITEM_LAYOUT = "root-item";
+
 
     /**
      * App page
      */
-    const APP_EDIT = "app-edit";
-    const APP_LOGIN = "app-login";
-    const APP_SEARCH = "app-search";
-    const APP_REGISTER = "app-register";
-    const APP_RESEND_PWD = "app-resend-pwd";
-    const APP_REVISIONS = "app-revisions";
-    const APP_DIFF = "app-diff";
-    const APP_INDEX = "app-index";
-    const APP_PROFILE = "app-profile";
+    const APP_PREFIX = "app-";
+    const APP_EDIT = self::APP_PREFIX . ExecutionContext::EDIT_ACTION;
+    const APP_LOGIN = self::APP_PREFIX . ExecutionContext::LOGIN_ACTION;
+    const APP_SEARCH = self::APP_PREFIX . ExecutionContext::SEARCH_ACTION;
+    const APP_REGISTER = self::APP_PREFIX . ExecutionContext::REGISTER_ACTION;
+    const APP_RESEND_PWD = self::APP_PREFIX . ExecutionContext::RESEND_PWD_ACTION;
+    const APP_REVISIONS = self::APP_PREFIX . ExecutionContext::REVISIONS_ACTION;
+    const APP_DIFF = self::APP_PREFIX . ExecutionContext::DIFF_ACTION;
+    const APP_INDEX = self::APP_PREFIX . ExecutionContext::INDEX_ACTION;
+    const APP_PROFILE = self::APP_PREFIX . ExecutionContext::PROFILE_ACTION;
+
+    /**
+     * @deprecated for {@link self::MEDIUM_TEMPLATE_VALUE}
+     * changed to medium (median has too much mathematics connotation)
+     * medium: halfway between two extremes
+     */
+    const MEDIAN_OLD_TEMPLATE = "median";
+    const HOLY_MEDIUM_LAYOUT = "holy-medium";
+    const INDEX_MEDIUM_LAYOUT = "index-medium";
+
 
     public static function createFromPage(MarkupPath $page): PageTemplateName
     {
@@ -79,8 +91,13 @@ class PageTemplateName extends MetadataText
             foreach ($directories as $directory) {
                 $files = FileSystems::getChildrenLeaf($directory);
                 foreach ($files as $file) {
+                    $lastNameWithoutExtension = $file->getLastNameWithoutExtension();
+                    if (strpos($lastNameWithoutExtension, self::APP_PREFIX) === 0) {
+                        continue;
+                    }
                     if ($file->getExtension() === PageTemplateEngine::EXTENSION_HBS) {
-                        $templateNames[] = $file->getLastNameWithoutExtension();
+
+                        $templateNames[] = $lastNameWithoutExtension;
                     }
                 }
             }
@@ -118,14 +135,20 @@ class PageTemplateName extends MetadataText
          * @var MarkupPath $page
          */
         $page = $this->getResource();
-        if ($page->isSlot()) {
-            return self::HAMBURGER_TEMPLATE_VALUE;
-        }
         if ($page->isRootHomePage()) {
+            /**
+             * Ultimattely a {@link self::LANDING_TEMPLATE_VALUE}
+             * but for that the user needs to add {@link BarTag}
+             *
+             */
             return self::HAMBURGER_TEMPLATE_VALUE;
         }
         if ($page->isRootItemPage()) {
-            return self::ROOT_ITEM_LAYOUT;
+            /**
+             * Home/Root item does not really belongs to the same
+             * namespace, we don't show therefore a sidebar
+             */
+            return self::INDEX_MEDIUM_LAYOUT;
         }
         try {
             switch ($page->getPathObject()->getLastNameWithoutExtension()) {
@@ -133,7 +156,7 @@ class PageTemplateName extends MetadataText
                 case SlotSystem::getMainHeaderSlotName():
                 case SlotSystem::getMainFooterSlotName():
                 case SlotSystem::getMainSideSlotName():
-                    return self::MEDIAN_TEMPLATE_VALUE;
+                    return self::HAMBURGER_TEMPLATE_VALUE;
                 case SlotSystem::getPageHeaderSlotName():
                 case SlotSystem::getPageFooterSlotName():
                     /**
@@ -150,6 +173,8 @@ class PageTemplateName extends MetadataText
         }
 
         /**
+         * Default by namespace
+         *
          * Calculate the possible template
          * prefix in order
          */
@@ -177,6 +202,9 @@ class PageTemplateName extends MetadataText
         $pageTemplateEngine = PageTemplateEngine::createFromContext();
 
 
+        /**
+         * Index pages
+         */
         if ($page->isIndexPage()) {
             foreach ($templatePrefixes as $templatePrefix) {
                 $templateName = "$templatePrefix-index";
@@ -207,6 +235,7 @@ class PageTemplateName extends MetadataText
         return self::PROPERTY_NAME;
     }
 
+
     /**
      * @return string
      */
@@ -234,6 +263,9 @@ class PageTemplateName extends MetadataText
         $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME);
         if ($value === null) {
             $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME_OLD);
+        }
+        if ($value === self::MEDIAN_OLD_TEMPLATE) {
+            $value = self::MEDIUM_TEMPLATE_VALUE;
         }
         parent::setFromStoreValueWithoutException($value);
         return $this;

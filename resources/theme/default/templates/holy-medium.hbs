@@ -1,15 +1,15 @@
 <html lang="{{lang}}">
 <head>
     <title>{{title}}</title>
-    {{>head-partial}}
+    {{> head-partial }}
+    {{> page-side-md-collapsable-head }}
 </head>
 <body class="{{body-classes}}">
-{{>page-header-partial}}
+{{> page-header-partial }}
 <div id="page-core" class="{{ layout-container-class }} position-relative">
-    <main class="col-md-8 mx-auto">
+    <main id="page-main" class="col-md-9 mx-auto">
         <header id="main-header">
-            <h1>{{ title }}</h1>
-            <p>{{#breadcrumb}}{{/breadcrumb}}</p>
+            {{{ main-header-html }}}
         </header>
         {{> toc-partial }}
         <div id="main-content">
@@ -19,9 +19,10 @@
             {{{ main-footer-html }}}
         </footer>
     </main>
-    {{>railbar-partial}}
+    {{> railbar-partial }}
 </div>
 {{>page-footer-partial}}
 {{>body-beforeend-partial}}
 </body>
 </html>
+

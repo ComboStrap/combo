@@ -24,7 +24,7 @@ To avoid this warning:
 
 `.parcelrc` was written to avoid double babel transpilation as dictated in
 the [doc](https://parceljs.org/languages/javascript/#usage-with-other-tools)
-It disable Babel transpilation in Parcel because Jest needs it also.
+It disables Babel transpilation in Parcel because Jest needs it also.
 
 #### Bootstrap
 
@@ -41,7 +41,7 @@ yarn add @popperjs/core --dev
 yarn add @popperjs/core --peer
 ```
 
-Then we set it as an [global alias](https://parceljs.org/features/dependency-resolution/#global-aliases) in `package.json`
+Then we set it as a [global alias](https://parceljs.org/features/dependency-resolution/#global-aliases) in `package.json`
 to create a bootstrap global variable at build time
 ```json
 {
@@ -68,7 +68,7 @@ See also the [bootstrap doc](https://getbootstrap.com/docs/5.0/getting-started/p
 
 #### Build / UMD
 
-We are not building a library (in parcel term, this is a node package to be used by other)
+We are not building a library (in parcel term, this is a node package to be used by others)
 
 The [entry](https://parceljs.org/features/targets/#entries) is defined in the `source`
 [package.json script](package.json)

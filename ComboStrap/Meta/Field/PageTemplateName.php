@@ -130,26 +130,15 @@ class PageTemplateName extends MetadataText
      */
     public function getDefaultValue(): string
     {
-
         /**
          * @var MarkupPath $page
          */
         $page = $this->getResource();
-        if ($page->isRootHomePage()) {
-            /**
-             * Ultimattely a {@link self::LANDING_TEMPLATE_VALUE}
-             * but for that the user needs to add {@link BarTag}
-             *
-             */
-            return self::HAMBURGER_TEMPLATE_VALUE;
-        }
-        if ($page->isRootItemPage()) {
-            /**
-             * Home/Root item does not really belongs to the same
-             * namespace, we don't show therefore a sidebar
-             */
-            return self::INDEX_MEDIUM_LAYOUT;
-        }
+
+        /**
+         * Slot first
+         * because they are also root item page
+         */
         try {
             switch ($page->getPathObject()->getLastNameWithoutExtension()) {
                 case SlotSystem::getSidebarName():
@@ -171,6 +160,24 @@ class PageTemplateName extends MetadataText
         } catch (ExceptionNotFound $e) {
             // No last name not installed
         }
+
+
+        if ($page->isRootHomePage()) {
+            /**
+             * Ultimattely a {@link self::LANDING_TEMPLATE_VALUE}
+             * but for that the user needs to add {@link BarTag}
+             *
+             */
+            return self::HAMBURGER_TEMPLATE_VALUE;
+        }
+        if ($page->isRootItemPage()) {
+            /**
+             * Home/Root item does not really belongs to the same
+             * namespace, we don't show therefore a sidebar
+             */
+            return self::INDEX_MEDIUM_LAYOUT;
+        }
+
 
         /**
          * Default by namespace

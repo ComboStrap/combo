@@ -11,9 +11,10 @@
     <main id="main-content">
         {{{ main-content-html }}}
     </main>
-    {{> railbar-partial }}
 </div>
 {{>page-footer-partial}}
+{{!-- Railbar at the end to paint over the footer. It happens when a page without a lot of content is shown such as a slot --}}
+{{> railbar-partial }}
 {{>body-beforeend-partial}}
 </body>
 </html>

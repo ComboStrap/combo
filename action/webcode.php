@@ -49,7 +49,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
             return;
         }
 
-        $group = "@" . action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME;
+        $group = "@" . Identity::CONF_DESIGNER_GROUP_NAME;
         $isMember = Identity::isMember($group);
         if ($isMember) {
             return;

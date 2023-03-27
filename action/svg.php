@@ -15,8 +15,6 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 {
 
 
-    const CONF_SVG_UPLOAD_GROUP_NAME = "svgUploadGroupName";
-
     public function register(Doku_Event_Handler $controller)
     {
 
@@ -55,7 +53,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
     public static function allowSvgIfAuthorized()
     {
         $isAdmin = Identity::isAdmin();
-        $isMember = Identity::isMember("@" . self::CONF_SVG_UPLOAD_GROUP_NAME);
+        $isMember = Identity::isMember("@" . Identity::CONF_DESIGNER_GROUP_NAME);
 
         if ($isAdmin || $isMember) {
             /**

@@ -184,13 +184,14 @@ $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getDocumentationHyperLink(Sha
 $lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - Load a svg only when they become visible");
 
 $lang[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Injection - Replace the image as svg in the HTML when downloaded to be add styling capabilities");
-$lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Security - The name of the group of users that can upload SVG");
+
 $lang[FetcherSvg::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
 $lang[FetcherSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");
 $lang[FetcherSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
 $lang[FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element deleted if empty");
 $lang[FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
 $lang[FetcherSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
+
 
 /**
  * Performance
@@ -314,3 +315,8 @@ $lang[SiteConfig::CONF_ENABLE_THEME_SYSTEM] = PluginUtility::getDocumentationHyp
 $lang[SiteConfig::REM_CONF] = PluginUtility::getDocumentationHyperLink(SiteConfig::REM_CANONICAL, "Responsive Font Sizes") . ' The default font size for your HTML pages';
 
 $lang[PageTemplateEngine::CONF_THEME] = PluginUtility::getDocumentationHyperLink(PageTemplateEngine::CANONICAL, "Theme") . ' Choose the theme applied to your app';
+
+/**
+ * Security
+ */
+$lang[Identity::CONF_DESIGNER_GROUP_NAME] = PluginUtility::getDocumentationHyperLink("designer", "Security - The name of the designer group. Users that can inject HTML, Javascript and SVG");

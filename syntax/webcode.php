@@ -34,7 +34,6 @@ use ComboStrap\TagAttributes;
 use ComboStrap\WikiPath;
 use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  * Webcode
@@ -160,7 +159,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = WebCodeTag::getDefaultAttributes();
 
                 // Parse and create the call stack array
-                $knownTypes = [];
+                $knownTypes = WebCodeTag::getKnownTypes();
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
                 $callStackArray = $tagAttributes->toCallStackArray();
 

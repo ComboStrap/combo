@@ -23,6 +23,7 @@
 use ComboStrap\Canonical;
 use ComboStrap\ContainerTag;
 use ComboStrap\IconDownloader;
+use ComboStrap\Identity;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PageType;
@@ -254,7 +255,7 @@ $conf["svgOptimizationEnable"] = 1;
 
 /**
  * The name of the group of user that can upload svg
- * {@link action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME}
+ * {@link Identity::CONF_DESIGNER_GROUP_NAME}
  */
 $conf["svgUploadGroupName"] = "";
 

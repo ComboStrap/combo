@@ -38,10 +38,13 @@ class WebCodeTag
     public const CODES_ATTRIBUTE = "codes";
     public const EXTERNAL_RESOURCES_ATTRIBUTE_DISPLAY = 'externalResources';
     public const USE_CONSOLE_ATTRIBUTE = "useConsole";
-    public const RENDERING_ONLY_RESULT = "onlyresult";
+    public const RENDERING_ONLY_RESULT_DEPRECATED = "onlyresult";
     public const CANONICAL = WebCodeTag::TAG;
     public const DOKUWIKI_LANG = 'dw';
     public const FRAMEBORDER_ATTRIBUTE = "frameborder";
+    /**
+     * @deprecated for type
+     */
     public const RENDERING_MODE_ATTRIBUTE = 'renderingmode';
     public const MARKIS = [WebCodeTag::MARKI_LANG, WebCodeTag::DOKUWIKI_LANG];
     public const EXTERNAL_RESOURCES_ATTRIBUTE_KEY = 'externalresources';
@@ -50,17 +53,25 @@ class WebCodeTag
      */
     public const MARKI_LANG = 'marki';
     public const IFRAME_BOOLEAN_ATTRIBUTE = "iframe";
+    const STORY_TYPE = "story";
+    const RESULT_TYPE = "result";
+    const INJECT_TYPE = "inject";
 
     public static function getClass(): string
     {
         return StyleUtility::addComboStrapSuffix(WebCodeTag::TAG);
     }
 
-    public static function getDefaultAttributes()
+    public static function getKnownTypes(): array
+    {
+        return [self::STORY_TYPE, self::RESULT_TYPE, self::INJECT_TYPE];
+    }
+
+    public static function getDefaultAttributes(): array
     {
         $defaultAttributes = array();
-        $defaultAttributes['width'] = '100%';
-        $defaultAttributes[WebCodeTag::RENDERING_MODE_ATTRIBUTE] = 'story';
+        $defaultAttributes[Dimension::WIDTH_KEY] = '100%';
+        // 'type': no default to see if it was set because the default now is dependent on the content
         // 'height' is set by the javascript if not set
         // 'width' and 'scrolling' gets their natural value
         return $defaultAttributes;
@@ -82,7 +93,18 @@ class WebCodeTag
          */
         $callStack = CallStack::createFromHandler($handler);
         $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-        $renderingMode = strtolower($openingTag->getAttribute(WebCodeTag::RENDERING_MODE_ATTRIBUTE));
+        $type = $openingTag->getType();
+        $renderingMode = $openingTag->getAttribute(WebCodeTag::RENDERING_MODE_ATTRIBUTE);
+        if ($renderingMode !== null) {
+            LogUtility::warning("The `renderingmode` attribute has been deprecated for the webcode `type` attribute.");
+            if ($type === null) {
+                $type = strtolower($renderingMode);
+            }
+        }
+        if ($type === WebCodeTag::RENDERING_ONLY_RESULT_DEPRECATED) {
+            LogUtility::warning("The `type` value (" . self::RENDERING_ONLY_RESULT_DEPRECATED . ") should be replaced by (" . self::RESULT_TYPE . ")");
+            $type = WebCodeTag::RESULT_TYPE;
+        }
 
         /**
          * The mime (ie xml,html, ...) and code content are in two differents
@@ -101,11 +123,11 @@ class WebCodeTag
             if (in_array($tagName, WebCodeTag::CODE_TAGS)) {
 
                 /**
-                 * Only rendering mode, we don't display the node
+                 * Only result or inject mode, we don't display the code
                  * on all node (enter, exit and unmatched)
                  */
-                if ($renderingMode == WebCodeTag::RENDERING_ONLY_RESULT) {
-                    $actualTag->addAttribute(Display::DISPLAY, "none");
+                if (in_array($type, [WebCodeTag::RESULT_TYPE, self::INJECT_TYPE])) {
+                    $actualTag->addAttribute(Display::DISPLAY, Display::DISPLAY_NONE_VALUE);
                 }
 
                 switch ($actualTag->getState()) {
@@ -145,7 +167,7 @@ class WebCodeTag
                         $codes[$actualCodeType] = $codes[$actualCodeType] . $codeContent;
 
                         // Check if a javascript console function is used, only if the flag is not set to true
-                        if (!$useConsole == true) {
+                        if (!$useConsole) {
                             if (in_array($actualCodeType, array('babel', 'javascript', 'html', 'xml'))) {
                                 // if the code contains 'console.'
                                 $result = preg_match('/' . 'console\.' . '/is', $codeContent);
@@ -163,6 +185,21 @@ class WebCodeTag
 
         }
 
+        /**
+         * By default, markup code
+         * is rendered inside the page
+         * We got less problem such as iframe overflow
+         * due to lazy loading, such as relative link, ...
+         */
+        if (
+            array_key_exists(WebCodeTag::MARKI_LANG, $codes)
+            && count($codes) === 1
+            && $openingTag->getAttribute(WebCodeTag::IFRAME_BOOLEAN_ATTRIBUTE) === null
+            && $openingTag->getType() === null
+        ) {
+            $openingTag->setType(self::INJECT_TYPE);
+        }
+
         return [
             WebCodeTag::CODES_ATTRIBUTE => $codes,
             WebCodeTag::USE_CONSOLE_ATTRIBUTE => $useConsole,
@@ -178,6 +215,11 @@ class WebCodeTag
 
         $codes = $data[WebCodeTag::CODES_ATTRIBUTE];
 
+        $type = $tagAttributes->getType();
+        if ($type === null) {
+            $type = self::STORY_TYPE;
+        }
+
         /**
          * Rendering mode is used in handle exit, we delete it
          * to not get it in the HTML output
@@ -189,8 +231,6 @@ class WebCodeTag
             return false;
         }
 
-        // Credits bar
-        $bar = '<div class="webcode-bar">';
 
         // Css
         PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(WebCodeTag::TAG);
@@ -198,29 +238,27 @@ class WebCodeTag
         // Mermaid code ?
         if (array_key_exists(MermaidTag::MERMAID_CODE, $codes)) {
             $mermaidCode = "";
-            foreach($codes as $codeKey => $code){
-                if($codeKey!==MermaidTag::MERMAID_CODE){
+            foreach ($codes as $codeKey => $code) {
+                if ($codeKey !== MermaidTag::MERMAID_CODE) {
                     LogUtility::error("The code type ($codeKey) was mixed with mermaid code in a webcode and this is not yet supported. The code was skipped");
                     continue;
                 }
                 $mermaidCode .= $code;
             }
-            $tagAttributes->addComponentAttributeValue(MermaidTag::MARKUP_CONTENT_ATTRIBUTE,$mermaidCode);
+            $tagAttributes->addComponentAttributeValue(MermaidTag::MARKUP_CONTENT_ATTRIBUTE, $mermaidCode);
             return MermaidTag::renderEnter($tagAttributes);
         }
 
-        // Dokuwiki Code ?
+        /**
+         * Dokuwiki Code
+         * (Just HTML)
+         */
         if (array_key_exists(WebCodeTag::MARKI_LANG, $codes)) {
 
             $markupCode = $codes[WebCodeTag::MARKI_LANG];
-            /**
-             * By default, markup code
-             * is rendered inside the page
-             * We got less problem such as iframe overflow
-             * due to lazy loading, such as relative link, ...
-             *
-             */
-            if (!$tagAttributes->hasComponentAttribute(WebCodeTag::IFRAME_BOOLEAN_ATTRIBUTE)) {
+
+
+            if ($type === self::INJECT_TYPE) {
                 /**
                  * the div is to be able to apply some CSS
                  * such as don't show editbutton on webcode
@@ -262,169 +300,107 @@ class WebCodeTag
                 // The markup is provided, we shouldn't have a bad state
                 LogUtility::internalError("We were unable to set the iframe URL. Error:{$e->getMessage()}", WebCodeTag::CANONICAL);
             }
+            return self::finishIframe($tagAttributes);
 
 
-        } else {
+        }
 
 
-            // Js, Html, Css
-            /** @noinspection JSUnresolvedLibraryURL */
+        /**
+         * Js Html Css language
+         */
+        if ($type === self::INJECT_TYPE) {
+            $htmlToInject = self::getCss($codes);
+            return $htmlToInject . self::getBodyHtmlAndJavascript($codes, false);
+        }
 
-            $head = <<<EOF
+        /** @noinspection JSUnresolvedLibraryURL */
+
+        $headIFrame = <<<EOF
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 <link id="normalize" rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css"/>
 EOF;
 
 
-            // External Resources such as css stylesheet or js
-            $externalResources = [];
-            if ($tagAttributes->hasComponentAttribute(WebCodeTag::EXTERNAL_RESOURCES_ATTRIBUTE_KEY)) {
-                $resources = $tagAttributes->getValueAndRemove(WebCodeTag::EXTERNAL_RESOURCES_ATTRIBUTE_KEY);
-                $externalResources = explode(",", $resources);
+        // External Resources such as css stylesheet or js
+        $externalResources = [];
+        if ($tagAttributes->hasComponentAttribute(WebCodeTag::EXTERNAL_RESOURCES_ATTRIBUTE_KEY)) {
+            LogUtility::warning("The (" . WebCodeTag::EXTERNAL_RESOURCES_ATTRIBUTE_KEY . ") has been deprecated. You should put your script/link in a code block with the `display` attribute set to `none`.");
+            $resources = $tagAttributes->getValueAndRemove(WebCodeTag::EXTERNAL_RESOURCES_ATTRIBUTE_KEY);
+            $externalResources = explode(",", $resources);
+        }
+
+        // Babel Preprocessor, if babel is used, add it to the external resources
+        if (array_key_exists('babel', $codes)) {
+            $babelMin = "https://unpkg.com/babel-standalone@6/babel.min.js";
+            // a load of babel invoke it (be sure to not have it twice
+            if (!(array_key_exists($babelMin, $externalResources))) {
+                $externalResources[] = $babelMin;
             }
+        }
 
-            // Babel Preprocessor, if babel is used, add it to the external resources
-            if (array_key_exists('babel', $codes)) {
-                $babelMin = "https://unpkg.com/babel-standalone@6/babel.min.js";
-                // a load of babel invoke it (be sure to not have it twice
-                if (!(array_key_exists($babelMin, $externalResources))) {
-                    $externalResources[] = $babelMin;
-                }
+        // Add the external resources
+        foreach ($externalResources as $externalResource) {
+            $pathInfo = pathinfo($externalResource);
+            $fileExtension = $pathInfo['extension'];
+            switch ($fileExtension) {
+                case 'css':
+                    $headIFrame .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$externalResource\"/>";
+                    break;
+                case 'js':
+                    $headIFrame .= "<script type=\"text/javascript\" src=\"$externalResource\"></script>";
+                    break;
             }
+        }
 
-            // Add the external resources
-            foreach ($externalResources as $externalResource) {
-                $pathInfo = pathinfo($externalResource);
-                $fileExtension = $pathInfo['extension'];
-                switch ($fileExtension) {
-                    case 'css':
-                        $head .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"$externalResource\"/>";
-                        break;
-                    case 'js':
-                        $head .= "<script type=\"text/javascript\" src=\"$externalResource\"></script>";
-                        break;
-                }
-            }
+        // WebConsole style sheet
+        $webcodeClass = WebCodeTag::getClass();
+        $cssUrl = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-iframe.css"))->getFetchUrl()->toHtmlString();
+        $headIFrame .= "<link class='$webcodeClass' rel=\"stylesheet\" type=\"text/css\" href=\"$cssUrl\"/>";
 
-            // WebConsole style sheet
-            $webcodeClass = WebCodeTag::getClass();
-            $cssUrl = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-iframe.css"))->getFetchUrl()->toHtmlString();
-            $head .= "<link class='$webcodeClass' rel=\"stylesheet\" type=\"text/css\" href=\"$cssUrl\"/>";
+        // A little margin to make it neater
+        // that can be overwritten via cascade
+        $headIFrame .= "<style class=\"$webcodeClass\">body { margin:10px } /* default margin */</style>";
 
-            // A little margin to make it neater
-            // that can be overwritten via cascade
-            $head .= "<style class=\"$webcodeClass\">body { margin:10px } /* default margin */</style>";
+        // The css
+        $headIFrame .= self::getCss($codes);
 
-            // The css
-            if (array_key_exists('css', $codes)) {
-                $head .= '<!-- The CSS code -->';
-                $head .= '<style>' . $codes['css'] . '</style>';
-            };
-
-            // The javascript console script should be first to handle console.log in the content
-            $useConsole = $data[WebCodeTag::USE_CONSOLE_ATTRIBUTE];
-            if ($useConsole) {
-                try {
-                    $url = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl()->toHtmlString();
-                    $head .= <<<EOF
+        // The javascript console script should be first to handle console.log in the content
+        $useConsole = $data[WebCodeTag::USE_CONSOLE_ATTRIBUTE];
+        if ($useConsole) {
+            try {
+                $url = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl()->toHtmlString();
+                $headIFrame .= <<<EOF
 <script class="$webcodeClass" type="text/javascript" src="$url"></script>
 EOF;
-                } catch (ExceptionNotFound $e) {
-                    LogUtility::error("The webcode console was not found");
-                }
+            } catch (ExceptionNotFound $e) {
+                LogUtility::error("The webcode console was not found");
+            }
 
-            }
-            $body = "";
-            if (array_key_exists('html', $codes)) {
-                $body .= '<!-- The HTML code -->';
-                $body .= $codes['html'];
-            }
-            // The javascript console area is based at the end of the HTML document
-            if ($useConsole) {
-
-                $body .= <<<EOF
-<!-- WebCode Console -->
-<div class="webcode-console-wrapper">
-    <p class="webConsoleTitle">Console Output:</p>
-    <div id="webCodeConsole"></div>
-</div>
-EOF;
-            }
-            // The javascript comes at the end because it may want to be applied on previous HTML element
-            // as the page load in the IO order, javascript must be placed at the end
-            if (array_key_exists('javascript', $codes)) {
-                /**
-                 * The user should escapes the following character * <, >, ", ', \, and &.
-                 * because they will interfere with the HTML parser
-                 *
-                 * The user should write `<\/script>` and note `</script>`
-                 */
-                $body .= '<!-- The Javascript code -->';
-                $body .= '<script class="webcode-javascript" type="text/javascript">' . $codes['javascript'] . '</script>';
-            }
-            if (array_key_exists('babel', $codes)) {
-                $body .= '<!-- The Babel code -->';
-                $body .= '<script type="text/babel">' . $codes['babel'] . '</script>';
-            }
-            $iframeSrcValue = <<<EOF
+        }
+        $body = self::getBodyHtmlAndJavascript($codes, $useConsole);
+        $iframeSrcValue = <<<EOF
 <html lang="en">
 <head>
 <title>Made by WebCode</title>
-$head
+$headIFrame
 </head>
 <body>
 $body
 </body>
 </html>
 EOF;
-            $tagAttributes->addOutputAttributeValue("srcdoc", $iframeSrcValue);
+        $tagAttributes->addOutputAttributeValue("srcdoc", $iframeSrcValue);
 
-            // Code bar with button
-            $bar .= '<div class="webcode-bar-item">' . PluginUtility::getDocumentationHyperLink(WebCodeTag::TAG, "Rendered by WebCode", false) . '</div>';
-            $bar .= '<div class="webcode-bar-item">' . self::addJsFiddleButton($codes, $externalResources, $useConsole, $tagAttributes->getValue("name")) . '</div>';
+        // Code bar with button
+        // Credits bar
+        $bar = '<div class="webcode-bar">';
+        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getDocumentationHyperLink(WebCodeTag::TAG, "Rendered by WebCode", false) . '</div>';
+        $bar .= '<div class="webcode-bar-item">' . self::addJsFiddleButton($codes, $externalResources, $useConsole, $tagAttributes->getValue("name")) . '</div>';
+        $bar .= '</div>';
 
+        return self::finishIframe($tagAttributes, $bar);
 
-        }
-
-        /**
-         * If there is no height
-         */
-        if (!$tagAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY)) {
-
-            /**
-             * Adjust the height attribute
-             * of the iframe element
-             * Any styling attribute would take over
-             *
-             * Note: CSS `height:auto` does not work in our case.
-             * It works only on element with a natural size (ie image)
-             * when loaded asynchronously but not when there is only text in the iframe
-             */
-            PluginUtility::getSnippetManager()->attachJavascriptFromComponentId(WebCodeTag::TAG);
-
-
-        }
-
-
-        /**
-         * The iframe does not have any width
-         * By default, we set it to 100% and it can be
-         * constraint with the `width` attributes that will
-         * set a a max-width
-         */
-        $tagAttributes->addStyleDeclarationIfNotSet("width", "100%");
-
-        /**
-         * FrameBorder
-         */
-        $frameBorder = $tagAttributes->getValueAndRemoveIfPresent(WebCodeTag::FRAMEBORDER_ATTRIBUTE);
-        if ($frameBorder !== null && $frameBorder == 0) {
-            $tagAttributes->addStyleDeclarationIfNotSet("border", "none");
-        }
-
-        $iFrameHtml = $tagAttributes->toHtmlEnterTag("iframe") . '</iframe>';
-        $bar .= '</div>'; // close the bar
-        return "<div class=\"webcode-wrapper\">" . $iFrameHtml . $bar . '</div>';
 
     }
 
@@ -514,5 +490,80 @@ EOF;
             '<button>Try the code</button>' .
             '</form>';
 
+    }
+
+    private static function finishIframe(TagAttributes $tagAttributes, string $bar = ""): string
+    {
+        /**
+         * The iframe does not have any width
+         * By default, we set it to 100% and it can be
+         * constraint with the `width` attributes that will
+         * set a a max-width
+         */
+        $tagAttributes->addStyleDeclarationIfNotSet("width", "100%");
+
+        /**
+         * FrameBorder
+         */
+        $frameBorder = $tagAttributes->getValueAndRemoveIfPresent(WebCodeTag::FRAMEBORDER_ATTRIBUTE);
+        if ($frameBorder !== null && $frameBorder == 0) {
+            $tagAttributes->addStyleDeclarationIfNotSet("border", "none");
+        }
+
+        $iFrameHtml = $tagAttributes->toHtmlEnterTag("iframe") . '</iframe>';
+        return "<div class=\"webcode-wrapper\">" . $iFrameHtml . $bar . '</div>';
+    }
+
+    /**
+     * Return the body
+     * @param $codes - the code to apply
+     * @param $useConsole - if the console area should be printed
+     * @return string - the html and javascript
+     */
+    private static function getBodyHtmlAndJavascript($codes, $useConsole): string
+    {
+
+        $body = "";
+        if (array_key_exists('html', $codes)) {
+            // The HTML code
+            $body .= $codes['html'];
+        }
+        // The javascript console area is based at the end of the HTML document
+        if ($useConsole) {
+
+            $body .= <<<EOF
+<!-- WebCode Console -->
+<div class="webcode-console-wrapper">
+    <p class="webConsoleTitle">Console Output:</p>
+    <div id="webCodeConsole"></div>
+</div>
+EOF;
+        }
+        // The javascript comes at the end because it may want to be applied on previous HTML element
+        // as the page load in the IO order, javascript must be placed at the end
+        if (array_key_exists('javascript', $codes)) {
+            /**
+             * The user should escapes the following character * <, >, ", ', \, and &.
+             * because they will interfere with the HTML parser
+             *
+             * The user should write `<\/script>` and note `</script>`
+             */
+            // The Javascript code
+            $body .= '<script class="webcode-javascript" type="text/javascript">' . $codes['javascript'] . '</script>';
+        }
+        if (array_key_exists('babel', $codes)) {
+            // The Babel code
+            $body .= '<script type="text/babel">' . $codes['babel'] . '</script>';
+        }
+        return $body;
+
+    }
+
+    private static function getCss($codes): string
+    {
+        if (array_key_exists('css', $codes)) {
+            return '<style>' . $codes['css'] . '</style>';
+        };
+        return "";
     }
 }

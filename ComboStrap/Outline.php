@@ -337,8 +337,13 @@ class Outline
                             throw new ExceptionRuntimeInternal("The node is not added multiple time, this error should not fired. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
                         }
                     } catch (ExceptionNotFound $e) {
-                        // no parent
-                        LogUtility::internalError("Due to the level logic, the actual section should have a parent");
+                        /**
+                         * no parent
+                         * May happen in preview (ie fragment)
+                         */
+                        if (!$this->isFragment) {
+                            LogUtility::internalError("Due to the level logic, the actual section should have a parent");
+                        }
                         try {
                             $this->actualSection->appendChild($newOutlineSection);
                         } catch (ExceptionBadState $e) {
@@ -882,8 +887,10 @@ EOF;
          *   because if the user changes the template, the parsing will not work
          *   it would need to parse the document again
          */
-        FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue();
-        FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue();
+        if ($this->markupPath !== null) {
+            FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue();
+            FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue();
+        }
 
         $captureHeaderMeta = false;
         try {
@@ -902,7 +909,6 @@ EOF;
         } catch (ExceptionCast $e) {
             // to Wiki Path should be good
         }
-
 
 
         /**

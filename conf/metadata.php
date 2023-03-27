@@ -237,7 +237,7 @@ $meta[SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT] = array('numeric');
 /**
  * Svg Upload Group Name
  */
-$meta[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = array('string');
+$meta[Identity::CONF_DESIGNER_GROUP_NAME] = array('string');
 
 /**
  * Svg The attribute that are deleted with the optimization

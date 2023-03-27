@@ -35,6 +35,7 @@ class Identity
 
     const FORM_IDENTITY_CLASS = "form-identity";
     public const FIELD_SET_TO_DELETE = ["fieldsetopen", "fieldsetclose"];
+    public const CONF_DESIGNER_GROUP_NAME = "combo-conf-006";
 
     /**
      * Is logged in

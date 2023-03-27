@@ -549,6 +549,9 @@ class PageTemplate
 
         } catch (ExceptionNotFound $e) {
             // no context path
+            if(isset($this->mainContent)) {
+                $model["main-content-html"] = $this->mainContent;
+            }
         }
 
 

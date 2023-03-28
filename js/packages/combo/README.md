@@ -1,16 +1,23 @@
-Library
-=======
+# Library
 
+## About
 * Parcel to bundle
 * Babel-preset to support ES module
 * Jest for test
 
-Configuration
-=============
+# Content
+The main entry is [combo.js](combo.js)
 
-### Babel
+The library contains:
+  * A Modal bootstrap fluent interface
+  * A Form creation from json data
+  * A Fetch wrapper
+  * A [Doku Url wrapper](DokuUrl.js)
+  * Utilities: Xml, Boolan, Html, Browser
 
-`.babelrc` was written as per the [Jest documentation](https://jestjs.io/docs/getting-started#using-babel).
+## Configuration
+
+
 
 ### Parcel
 

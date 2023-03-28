@@ -18,8 +18,9 @@ window.addEventListener("DOMContentLoaded", function () {
                  */
                 let qualityCall = "combo-backlink";
                 let html = await combo
-                    .createDokuRequest(qualityCall)
+                    .createAjaxUrl(qualityCall)
                     .setProperty("id", pageId)
+                    .toRequest()
                     .getText();
                 html = `<p>List of pages that link back to the page (${pageId}).</p>${html}`;
 

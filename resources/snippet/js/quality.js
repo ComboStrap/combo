@@ -19,8 +19,9 @@ window.addEventListener("DOMContentLoaded", function () {
                  */
                 let qualityCall = "combo-quality-message";
                 let html = await combo
-                    .createDokuRequest(qualityCall)
+                    .createAjaxUrl(qualityCall)
                     .setProperty("id", pageId)
+                    .toRequest()
                     .getText();
 
                 /**

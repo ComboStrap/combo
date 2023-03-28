@@ -39,18 +39,5 @@
     "peerDependencies": {
         "@popperjs/core": "2.10",
         "bootstrap": "5.1"
-    },
-    "jest": {
-        "setupFilesAfterEnv": [
-            "../../conf/JestExtend.js"
-        ],
-        "testEnvironment": "jsdom",
-        "testEnvironmentOptions": {
-            "userAgent": "Agent/007"
-        },
-        "testMatch": [
-            "**/__tests__/**/*.[jt]s?(x)",
-            "**/_test/js/*.test.[jt]s?(x)"
-        ]
     }
 }

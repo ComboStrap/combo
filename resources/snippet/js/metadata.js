@@ -18,8 +18,9 @@ window.addEventListener("DOMContentLoaded", function () {
 
             const viewerCallEndpoint = "combo-meta-viewer";
             let viewerCall = combo
-                .createDokuRequest(viewerCallEndpoint)
+                .createAjaxUrl(viewerCallEndpoint)
                 .setProperty("id", pageId)
+                .toRequest();
             let jsonFormMeta = await viewerCall.getJson();
 
 
@@ -37,7 +38,8 @@ window.addEventListener("DOMContentLoaded", function () {
             submitButton.addEventListener("click", async function (event) {
                 event.preventDefault();
                 let formData = new FormData(formHtmlElement);
-                let response = await combo.createDokuRequest(viewerCallEndpoint)
+                let response = await combo.createAjaxUrl(viewerCallEndpoint)
+                    .toRequest()
                     .setMethod("post")
                     .sendFormDataAsJson(formData);
                 modalViewer.reset();
@@ -120,8 +122,9 @@ window.addEventListener("DOMContentLoaded", function () {
              * Creating the form
              */
             let formMetadata = await combo
-                .createDokuRequest(metaManagerCall)
+                .createAjaxUrl(metaManagerCall)
                 .setProperty("id", pageId)
+                .toRequest()
                 .getJson();
             let formId = combo.toHtmlId(`${modalManagerId}-form`);
             let form = combo.createFormFromJson(formId, formMetadata);
@@ -151,7 +154,8 @@ window.addEventListener("DOMContentLoaded", function () {
             submitButton.addEventListener("click", async function (event) {
                 event.preventDefault();
                 let formData = new FormData(htmlFormElement);
-                let response = await combo.createDokuRequest(metaManagerCall)
+                let response = await combo.createAjaxUrl(metaManagerCall)
+                    .toRequest()
                     .setMethod("post")
                     .sendFormDataAsJson(formData);
                 managerModal.reset();

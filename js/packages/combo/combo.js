@@ -1,7 +1,7 @@
 import FormMeta from "./FormMeta";
 import Html from "./Html";
 import ComboModal from "./ComboModal";
-import {DokuAjaxRequest, DokuUrl} from "./DokuRequest";
+import {DokuUrl} from "./DokuUrl";
 import FormMetaField from "./FormMetaField";
 import ComboDate from "./ComboDate";
 
@@ -22,8 +22,9 @@ window['combo'] = class combo {
         ComboModal.resetAllModals();
     }
 
-    static createDokuRequest(callName) {
-        return DokuAjaxRequest.createDokuRequest(callName);
+
+    static createAjaxUrl(callName) {
+        return DokuUrl.createAjax(callName);
     }
 
     static getRunnerUrl() {

@@ -15,55 +15,21 @@
 </head>
 <body>
 <!--<div id="app"></div>-->
-<div class="container">
+<div class="container mt-5">
     <div>
-        <form class="form-signin">
-            <p>
-                <label for="inputEmail2" class="sr-only">Email address</label>
-                <input type="email" id="inputEmail2" class="form-control" placeholder="Email address" required=""
-                       autofocus="">
-                <button class="btn btn-lg btn-primary btn-block" type="submit">Subscribe</button>
-            </p>
+        <form class="row row-cols-1 row-cols-sm-2 g-3 align-items-center">
+            <div class="col">
+                <label for="inputEmail" class="visually-hidden">Enter your email</label>
+                <input type="email" id="inputEmail" class="form-control" placeholder="Enter your email"
+                       aria-describedby="inputEmail2" autocomplete="email" required>
+            </div>
+            <div class="col">
+                <button class="btn btn-primary" type="submit">Subscribe</button>
+            </div>
         </form>
     </div>
     <p></p>
-    <div>
-        <form class="row g-3 needs-validation mb-2" id="registrationForm" novalidate="">
-            <input type="hidden" name="listGuid" value="lis-w8OZSK2">
-            <div class="col-12 mb-2">
-                <label for="inputName" class="form-label h6">Your Name:</label>
-                <input type="text" class="form-control" placeholder="Joe" id="inputName" name="subscriberName"
-                       required="">
-                <div id="nameHelp" class="form-text">How people are calling you. Most people enters their firstname.
-                    <br>Your name is used in the greeting of letters.
-                </div>
-                <div class="valid-feedback">
-                    Looks good!
-                </div>
-                <div class="invalid-feedback">
-                    Please enter your name.
-                </div>
-            </div>
-            <div class="col-12 mb-2">
-                <label for="inputEmail" class="form-label h6">Your Email address:</label>
-                <input type="email" class="form-control" id="inputEmail" name="subscriberEmail"
-                       placeholder="joe@example.com" aria-describedby="emailHelp" required="">
-                <div id="emailHelp" class="form-text">The address where we should email you.</div>
-                <div class="invalid-feedback">
-                    Please enter a valid email.
-                </div>
-            </div>
-            <div class="col-12 mb-2">
-                <small class="text-muted">
-                    <b>Legal</b>: By clicking below to subscribe, you acknowledge that you have read and agree
-                    to the legal <a href="" target="_blank">terms and conditions</a> document.
-                </small>
-            </div>
-            <div class="col-12 col-md-4 mb-2">
-                <button type="submit" class="btn btn-primary">Subscribe</button>
-            </div>
-        </form>
-    </div>
+
 </div>
 <script type="module" src="/src/main.ts"></script>
 </body>

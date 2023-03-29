@@ -1,10 +1,12 @@
 # Component build
 
 
-## Build independent stand-alone files
+## About
 
-To build independent stand-alone files,
-we use the array form of Rollup options supported by the CLI
-to run Rollup several times.
+This package contains code used to create independant stand-alone files
+that may be imported with a script tag by Combostrap.
 
-See [2935](https://github.com/rollup/rollup/issues/2935)
+We can use import, export and the bundler `rollup` will
+create them via the `build` command.
+
+For more technical information, checks the [README javascript file](README-javascript.md)

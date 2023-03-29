@@ -1,37 +1,28 @@
 import {resolve} from 'path'
 import {defineConfig} from 'vite'
-import {chunkSplitPlugin} from 'vite-plugin-chunk-split';
+
+let pages = {
+    main: resolve(__dirname, 'index.html'),
+    subscribe: resolve(__dirname, 'pages/subscribe.html'),
+};
 
 export default defineConfig({
     build: {
-        rollupOptions: [
+        rollupOptions:
             {
                 // https://rollupjs.org/guide/en/#big-list-of-options
-                input: {
-                    main: resolve(__dirname, 'index.html'),
-                },
+                input: pages,
+                // make sure to externalize deps that shouldn't be bundled
+                // into your library
+                external: ['bootstrap'],
                 output: {
-                    // name of the output, the name is json key, not the name of the file
-                    entryFileNames: "[name].js",
-                    format: 'iife',
-                }
-            },
-            {
-                // https://rollupjs.org/guide/en/#big-list-of-options
-                input: {
-                    pages: resolve(__dirname, 'pages/index.html'),
-                },
-                output: {
-                    // name of the output, the name is json key, not the name of the file
-                    entryFileNames: "[name].js",
-                    format: 'iife',
+                    // Provide global variables to use in the UMD build
+                    // for externalized deps
+                    globals: {
+                        bootstrap: 'bootstrap',
+                    },
                 }
             }
-        ],
-    },
-    plugins: [
-        // chunkSplitPlugin({
-        //     strategy: 'unbundle',
-        // })
-    ]
+        ,
+    }
 })

@@ -3,33 +3,29 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Components</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
-            integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
-            crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
-            integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
-            crossorigin="anonymous"></script>
-    <title>Vite + TS</title>
+    <style>
+        .body-center {
+            margin: 0;
+            display: flex;
+            place-items: center;
+            min-width: 320px;
+            min-height: 100vh;
+        }
+    </style>
 </head>
-<body>
-<!--<div id="app"></div>-->
-<div class="container mt-5">
-    <div>
-        <form class="row row-cols-1 row-cols-sm-2 g-3 align-items-center subscribe-cs">
-            <div class="col">
-                <label for="inputEmail" class="visually-hidden">Enter your email</label>
-                <input type="email" id="inputEmail" class="form-control" placeholder="Enter your email"
-                       aria-describedby="inputEmail2" autocomplete="email" required>
-            </div>
-            <div class="col">
-                <button class="btn btn-primary" type="submit">Subscribe</button>
-            </div>
-        </form>
-    </div>
+<body class="body-center">
+
+<div class="col-4 mx-auto">
+    <h1>List of components</h1>
+    <ul>
+        <li>
+            <a href="/pages/subscribe.html">Subscribe</a>
+        </li>
+    </ul>
 </div>
-<script type="module" src="/src/main.ts"></script>
-<script src="/src/subscribe.js"></script>
+
 </body>
 </html>

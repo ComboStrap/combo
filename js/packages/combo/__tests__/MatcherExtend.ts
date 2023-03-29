@@ -4,24 +4,28 @@
  *
  *
  *
- * As explained in the [ExtendMatcher](https://jestjs.io/docs/expect#expectextendmatchers)
- * and [with a little bit of utility](https://jestjs.io/docs/expect#thisutils)
+ * As explained [here](https://vitest.dev/guide/extending-matchers.html)
+ *
  *
  * Intellij parse it and helps the diff
  *
- * Note that there is already a couple of library:
- *   * https://github.com/jest-community/awesome-jest
- *   * https://testing-library.com/docs/ecosystem-jest-dom/ (https://github.com/testing-library/jest-dom)
- *   *
  *
  */
 import {diff} from 'jest-diff';
-import Xml from "../packages/combo/Xml";
+import Xml from "combo/src/Xml";
 
-// adds special assertions like toHaveClass
-import '@testing-library/jest-dom'
+interface CustomMatchers<R = unknown> {
+    toEqualHtmlString(expected): R
+}
 
-expect.extend({
+declare global {
+    namespace Vi {
+        interface Assertion extends CustomMatchers {}
+        interface AsymmetricMatchersContaining extends CustomMatchers {}
+    }
+}
+
+export default {
 
     /**
      * Check that a HTML string is an HTML string
@@ -81,4 +85,4 @@ expect.extend({
 
 
     },
-});
+};

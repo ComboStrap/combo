@@ -1,5 +1,5 @@
 
-let logger;
+let logger: Logger;
 
 // KISS for now
 // Otherwise, see https://datacadamia.com/web/javascript/logger#library
@@ -12,7 +12,7 @@ export default class Logger {
         return logger;
     }
 
-    error(value){
+    error(value: string){
         console.error(value);
         /**
          * Removed by parcel when build

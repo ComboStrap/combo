@@ -1,10 +1,17 @@
 import Logger from "./Logger";
+import {AnyObject} from "./AnyObject";
 
 
 export default class FormMetaTab {
 
+    private readonly name: string;
+    private width: number | undefined;
+    private label: string | undefined;
+    private widthField: number | undefined;
+    private widthLabel: number | undefined;
 
-    constructor(name) {
+
+    constructor(name: string) {
         this.name = name;
     }
 
@@ -12,8 +19,9 @@ export default class FormMetaTab {
         return this.name;
     }
 
-    setWidth(width) {
+    setWidth(width: number) {
         this.width = width;
+        return this;
     }
 
     /**
@@ -23,11 +31,11 @@ export default class FormMetaTab {
         return this.width;
     }
 
-    static createFromJson(json) {
+    static createFromJson(json: AnyObject) {
         if (!json.hasOwnProperty("name")) {
             Logger.getLogger().error("A name property is mandatory to create a tab and was not found in the json provided")
         }
-        let name = json["name"];
+        let name = json["name"] as string;
         let tab = new FormMetaTab(name);
         for (let property in json) {
             if (!json.hasOwnProperty(property)) {
@@ -53,43 +61,43 @@ export default class FormMetaTab {
         return tab;
     }
 
-    setLabel(label) {
+    setLabel(label: string) {
         this.label = label;
         return this;
     }
 
-    getLabel(){
-        if(this.label===undefined){
+    getLabel() {
+        if (this.label === undefined) {
             return this.name;
         }
         return this.label;
     }
 
-    setWidthField(width) {
+    setWidthField(width: number) {
         this.widthField = width;
         return this;
     }
 
-    setWidthLabel(width) {
+    setWidthLabel(width: number) {
         this.widthLabel = width;
         return this;
     }
 
-    getLabelWidth(){
-        if(this.widthLabel===undefined){
+    getLabelWidth() {
+        if (this.widthLabel === undefined) {
             return 3;
         }
         return this.widthLabel;
     }
 
-    getFieldWidth(){
-        if(this.widthField===undefined){
+    getFieldWidth() {
+        if (this.widthField === undefined) {
             return 12 - this.getLabelWidth();
         }
         return this.widthField;
     }
 
-    static createFromName(name) {
+    static createFromName(name: string) {
         return new FormMetaTab(name);
     }
 }

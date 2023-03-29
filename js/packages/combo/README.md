@@ -6,7 +6,7 @@
 * Jest for test
 
 # Content
-The main entry is [combo.js](combo.js)
+The main entry is [combo.ts](combo.js)
 
 The library contains:
   * A Modal bootstrap fluent interface

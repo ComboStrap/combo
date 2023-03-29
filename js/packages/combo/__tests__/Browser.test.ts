@@ -1,11 +1,11 @@
-import Browser from "../Browser";
-
-
 /**
- * Jsdom in
- * Jest
- * https://github.com/jsdom/jsdom
+ * Jsdom in https://github.com/jsdom/jsdom
+ * Browser environment test
  */
+import Browser from "../src/Browser";
+import {expect, test} from "vitest";
+
+
 test('Browser environment', () => {
 
     expect(window).not.toBeNull();

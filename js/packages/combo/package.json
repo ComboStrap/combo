@@ -2,42 +2,20 @@
     "name": "combo",
     "version": "1.0.0",
     "description": "combo",
-    "types": "./dist/types.d.ts",
+    "types": "module",
     "private": true,
     "scripts": {
-        "watch": "parcel watch",
-        "build": "parcel build --target combo",
-        "test": "jest"
-    },
-    "devDependencies": {
-        "bootstrap": "5.1",
-        "@types/bootstrap": "5.1",
-        "@popperjs/core": "2.10",
-        "parcel": "2.0"
-    },
-    "alias": {
-        "bootstrap": {
-            "global": "bootstrap"
-        }
+        "build": "tsc && vite build",
+        "test": "vitest",
+        "coverage": "vitest run --coverage"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
     ],
-    "combo": "../../../resources/library/combo/combo.min.js",
-    "targets": {
-        "combo": {
-            "source": "./combo.js",
-            "context": "browser",
-            "outputFormat": "global",
-            "includeNodeModules": true,
-            "isLibrary": false
-        }
-    },
     "dependencies": {
-        "nanoid": "3.1"
-    },
-    "peerDependencies": {
+        "nanoid": "3.1",
         "@popperjs/core": "2.10",
+        "@types/bootstrap": "5.1",
         "bootstrap": "5.1"
     }
 }

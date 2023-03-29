@@ -1,4 +1,5 @@
-import Xml from "../Xml";
+import Xml from "../src/Xml";
+import {expect, test} from "vitest";
 
 
 test('Xml', () => {

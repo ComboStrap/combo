@@ -5,29 +5,47 @@
 import Html from "./Html";
 import {Modal, Tooltip, Tab} from "bootstrap";
 import Logger from "./Logger";
+import {MapString} from "./AnyObject";
+
+interface ModalMap {
+    [key: string]: ComboModal;
+}
 
 /**
  *
  * @type {Object.<string, ComboModal>}
  */
-let comboModals = {};
+let comboModals: ModalMap = {};
 
 export default class ComboModal {
 
 
-    footerButtons = [];
-    bodies = [];
+    /**
+     * HtmlElement or string
+     */
+    footerButtons: (string | HTMLElement)[] = [];
+    bodies: (string | HTMLElement)[] = [];
     isBuild = false;
-    bodyStyles = {};
-    dialogStyles = {};
+    bodyStyles: MapString = {};
+    dialogStyles: MapString = {};
     showFooter = true;
-    dialogClasses = [];
+    dialogClasses: string[] = [];
+    private readonly modalId: string;
+    private readonly modalRootHtmlElement: HTMLElement;
+    private headerText: string | undefined;
+    private isResetOnClose: boolean | undefined;
+    private closeButton: HTMLButtonElement | undefined;
+    private isCentered: boolean | undefined;
+    private callBack: (() => void) | undefined;
+    private bootStrapModal: Modal | null = null;
+    private modalContent: HTMLDivElement | undefined;
+    private modalBody: HTMLDivElement | undefined;
 
     /**
      * A valid HTML id
      * @param modalId
      */
-    constructor(modalId) {
+    constructor(modalId: string) {
 
         this.modalId = modalId;
         /**
@@ -51,7 +69,7 @@ export default class ComboModal {
 
     }
 
-    setHeader(headerText) {
+    setHeader(headerText: string) {
         this.headerText = headerText;
         return this;
     }
@@ -60,14 +78,14 @@ export default class ComboModal {
      * @param htmlBody
      * @return {ComboModal}
      */
-    addBody(htmlBody) {
+    addBody(htmlBody: string | HTMLElement) {
 
         this.bodies.push(htmlBody);
         return this;
 
     }
 
-    addBodyStyle(property, value) {
+    addBodyStyle(property: string, value: string) {
 
         this.bodyStyles[property] = value;
         return this;
@@ -79,14 +97,14 @@ export default class ComboModal {
         return this;
     }
 
-    addDialogStyle(property, value) {
+    addDialogStyle(property: string, value: string) {
 
         this.dialogStyles[property] = value;
         return this;
 
     }
 
-    addDialogClass(value) {
+    addDialogClass(value: string) {
 
         this.dialogClasses.push(value);
         return this;
@@ -106,7 +124,7 @@ export default class ComboModal {
      *
      * @type HTMLButtonElement|string htmlFooter
      */
-    addFooterButton(htmlFooter) {
+    addFooterButton(htmlFooter: HTMLButtonElement | string) {
 
         this.footerButtons.push(htmlFooter);
         return this;
@@ -122,6 +140,7 @@ export default class ComboModal {
         this.closeButton.innerHTML = label;
         let modal = this;
         this.closeButton.addEventListener("click", function () {
+            // @ts-ignore
             modal.bootStrapModal.hide();
         });
         this.addFooterButton(this.closeButton);
@@ -174,18 +193,20 @@ export default class ComboModal {
                      * https://getbootstrap.com/docs/5.0/components/modal/#toggle-between-modals
                      */
                     modal.dismissHide();
+                    // @ts-ignore
                     modal.callBack();
                 });
             }
         }
 
+        // @ts-ignore
         this.bootStrapModal.show();
 
 
     }
 
     dismissHide() {
-        if (this.bootStrapModal !== undefined) {
+        if (this.bootStrapModal !== null) {
             this.bootStrapModal.hide();
         }
     }
@@ -198,7 +219,7 @@ export default class ComboModal {
      *
      * @param {function} callBack
      */
-    setCallBackOnClose(callBack) {
+    setCallBackOnClose(callBack: () => void) {
         this.callBack = callBack;
         return this;
     }
@@ -208,7 +229,7 @@ export default class ComboModal {
      * Create a modal and return the modal content element
      * @return ComboModal
      */
-    static createFromId(modalId) {
+    static createFromId(modalId: string) {
         let modal = new ComboModal(modalId);
         comboModals[modalId] = modal;
         return modal;
@@ -218,7 +239,7 @@ export default class ComboModal {
      * @param modalId
      * @return {ComboModal}
      */
-    static getModal = function (modalId) {
+    static getModal = function (modalId: string) {
 
         if (modalId in comboModals) {
             return comboModals[modalId];
@@ -268,10 +289,11 @@ export default class ComboModal {
         return this.isBuild;
     }
 
-    setCentered(bool){
+    setCentered(bool: boolean) {
         this.isCentered = bool;
         return this;
     }
+
     resetIfBuild() {
         if (this.wasBuild()) {
             this.reset();
@@ -337,7 +359,7 @@ export default class ComboModal {
             }
             modalManagerDialog.style.setProperty(dialogStyleName, this.dialogStyles[dialogStyleName]);
         }
-        for (let dialogClass in this.dialogClasses){
+        for (let dialogClass in this.dialogClasses) {
             modalManagerDialog.classList.add(dialogClass);
         }
         this.modalRootHtmlElement.appendChild(modalManagerDialog);
@@ -395,11 +417,12 @@ export default class ComboModal {
             let type = typeof body;
             switch (type) {
                 case "string":
+                    // @ts-ignore
                     this.modalBody.insertAdjacentHTML('beforeend', body);
                     break;
                 default:
                 case "object":
-                    this.modalBody.appendChild(body);
+                    this.modalBody.appendChild(<Node>body);
                     break;
             }
         }
@@ -407,7 +430,7 @@ export default class ComboModal {
         /**
          * Footer button
          */
-        if(this.showFooter) {
+        if (this.showFooter) {
             let modalFooter = document.createElement("div");
             modalFooter.classList.add("modal-footer");
             this.modalContent.appendChild(modalFooter);
@@ -417,7 +440,7 @@ export default class ComboModal {
             }
 
             for (let footerButton of this.footerButtons) {
-                if (typeof footerButton === 'string' || footerButton instanceof String) {
+                if (typeof footerButton === "string") {
                     modalFooter.insertAdjacentHTML('beforeend', footerButton);
                 } else {
                     modalFooter.appendChild(footerButton);
@@ -433,7 +456,7 @@ export default class ComboModal {
     }
 
 
-    static getOrCreate(modalId) {
+    static getOrCreate(modalId: string) {
         let modal = ComboModal.getModal(modalId);
         if (modal === null) {
             modal = ComboModal.createFromId(modalId);

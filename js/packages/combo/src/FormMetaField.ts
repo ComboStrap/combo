@@ -1,6 +1,8 @@
 import Boolean from "./Boolean";
 import Logger from "./Logger";
 import Html from "./Html";
+import {AnyObject} from "./AnyObject";
+import DataType from "./DataType";
 
 
 /**
@@ -13,8 +15,8 @@ export default class FormMetaField {
 
     tab = "unknown";
     mutable = true;
-    values = [];
-    defaultValues = [];
+    values: string[] = [];
+    defaultValues: string[] = [];
     multiple = false;
 
     /**
@@ -28,11 +30,19 @@ export default class FormMetaField {
     static PARAGRAPH = "paragraph";
     static BOOLEAN = "boolean";
 
-    children = {};
+    children: AnyObject = {};
     static JSON = "json";
+    private readonly name: string;
+    private type: string | undefined;
+    private label: string | undefined;
+    private url: string | undefined;
+    private description: string | undefined;
+    private parent: FormMetaField | undefined;
+    private domainValues: any;
+    private width: number | undefined;
 
 
-    constructor(name) {
+    constructor(name: string) {
         this.name = name;
     }
 
@@ -57,7 +67,7 @@ export default class FormMetaField {
      * @param {string} type
      * @return {FormMetaField}
      */
-    setType(type) {
+    setType(type: string) {
         this.type = type;
         return this;
     }
@@ -68,7 +78,7 @@ export default class FormMetaField {
      * @param {string} label
      * @return {FormMetaField}
      */
-    setLabel(label) {
+    setLabel(label: string) {
         this.label = label;
         return this;
     }
@@ -79,7 +89,7 @@ export default class FormMetaField {
      * @param {string} url
      * @return {FormMetaField}
      */
-    setUrl(url) {
+    setUrl(url: string) {
         this.url = url;
         return this;
     }
@@ -90,7 +100,7 @@ export default class FormMetaField {
      * @param defaultValue
      * @return {FormMetaField}
      */
-    addValue(value, defaultValue) {
+    addValue(value: string, defaultValue: string) {
         this.values.push(value);
         this.defaultValues.push(defaultValue);
         return this;
@@ -133,18 +143,18 @@ export default class FormMetaField {
      * @param {FormMetaField} parent
      * @return {FormMetaField}
      */
-    static createFromJson(json, parent = null) {
+    static createFromJson(json: AnyObject, parent: FormMetaField | null = null) {
         if (!json.hasOwnProperty("name")) {
             Logger.getLogger().error("To create a form meta field, the name property is mandatory.");
         }
-        let name = json["name"];
+        let name: string = json["name"] as string;
         let formMetaField = FormMetaField.createFromName(name);
         if (parent != null) {
             formMetaField.setParent(parent);
         }
 
-        let value;
-        let valueDefault;
+        let value: any;
+        let valueDefault: any;
         for (let property in json) {
             if (!json.hasOwnProperty(property)) {
                 continue;
@@ -208,19 +218,19 @@ export default class FormMetaField {
                 if (valueDefaultElement !== undefined) {
                     formMetaField.addValue(element, valueDefaultElement);
                 } else {
-                    formMetaField.addValue(element);
+                    formMetaField.addValue(element, '');
                 }
             })
         }
         return formMetaField;
     }
 
-    setMultiple(multiple) {
+    setMultiple(multiple: boolean) {
         this.multiple = multiple;
         return this;
     }
 
-    setParent(parent) {
+    setParent(parent: FormMetaField) {
         this.parent = parent;
         return this;
     }
@@ -230,7 +240,7 @@ export default class FormMetaField {
      * @param name
      * @return {FormMetaField}
      */
-    static createFromName(name) {
+    static createFromName(name: string) {
         return new FormMetaField(name);
     }
 
@@ -238,7 +248,7 @@ export default class FormMetaField {
         return this.mutable;
     }
 
-    setTab(value) {
+    setTab(value: string) {
         this.tab = value;
         return this;
     }
@@ -247,12 +257,12 @@ export default class FormMetaField {
      *
      * @param {boolean} value
      */
-    setMutable(value) {
+    setMutable(value: any) {
         this.mutable = Boolean.toBoolean(value);
         return this;
     }
 
-    setDescription(value) {
+    setDescription(value: string | undefined) {
         this.description = value;
         return this;
     }
@@ -269,7 +279,7 @@ export default class FormMetaField {
         return this.domainValues;
     }
 
-    setDomainValues(value) {
+    setDomainValues(value: any[]) {
         if (!Array.isArray(value)) {
             console.error(`The domains values should be an array. (${value}) is not an array`);
             return;
@@ -280,10 +290,10 @@ export default class FormMetaField {
 
     /**
      *
-     * @param width - the width of the control, not of the label as it can be derived - in a tabular form, there is none, otherwise the {@link FormMetaTab.getWidth total width} of the tab minus this control width)
+     * @param width - the width of the control, not of the label as it can be derived - in a tabular form, there is none, otherwise the {@link FormMetaTab.getWidth total width} of the tab minus this control width)))
      * @return {FormMetaField}
      */
-    setControlWidth(width) {
+    setControlWidth(width: number) {
         this.width = width;
         return this;
     }
@@ -315,12 +325,12 @@ export default class FormMetaField {
         return Object.values(this.children);
     }
 
-    addChild(child) {
+    addChild(child: FormMetaField) {
         this.children[child.getName()] = child;
         return this;
     }
 
-    toHtmlLabel(forId, customClass) {
+    toHtmlLabel(forId: string, customClass?: string) {
         let label = this.getLabelAnchor();
         let classLabel;
         if (this.getType() === FormMetaField.BOOLEAN) {
@@ -328,13 +338,13 @@ export default class FormMetaField {
         } else {
             classLabel = "col-form-label";
         }
-        if(typeof customClass !== 'undefined'){
-            classLabel =`${customClass} ${classLabel}`
+        if (typeof customClass !== 'undefined') {
+            classLabel = `${customClass} ${classLabel}`
         }
         return `<label for="${forId}" class="${classLabel}">${label}</label>`
     }
 
-    toHtmlControl(id, value = null, defaultValue = null) {
+    toHtmlControl(id: string | number, value: any = null, defaultValue: any = null) {
 
         let metadataType = this.getType();
         let mutable = this.isMutable();
@@ -392,7 +402,7 @@ export default class FormMetaField {
             }
             // value
             if (!(defaultValue === null || defaultValue === undefined)) {
-                if (typeof defaultValue === 'string' || defaultValue instanceof String) {
+                if (DataType.isString(defaultValue)) {
                     // json data for instance
                     placeholderValue = Html.toEntities(defaultValue);
                 } else {
@@ -408,7 +418,7 @@ export default class FormMetaField {
             /**
              * With disable, the data is not in the form
              */
-            if (mutable !== undefined && mutable === false) {
+            if (mutable !== undefined && !mutable) {
                 disabled = "disabled";
             } else {
                 disabled = "";
@@ -454,7 +464,7 @@ export default class FormMetaField {
                 case FormMetaField.JSON:
                     htmlTag = "textarea";
                     if (value !== null) {
-                        if(typeof value === 'object'){
+                        if (typeof value === 'object') {
                             value = JSON.stringify(value, null, 2);
                         }
                         value = Html.toEntities(value);

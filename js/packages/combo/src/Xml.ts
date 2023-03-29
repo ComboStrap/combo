@@ -4,7 +4,7 @@ import Logger from "./Logger";
  * DOM Xml/Html parsing
  * https://w3c.github.io/DOM-Parsing/
  */
-let prettifyXsltProcessor;
+let prettifyXsltProcessor: XSLTProcessor;
 
 
 function initXslProcessor() {
@@ -25,15 +25,19 @@ function initXslProcessor() {
      * Only in the browser
      * @type {XSLTProcessor}
      */
-    let xsltProcessor = new XSLTProcessor();
+    prettifyXsltProcessor = new XSLTProcessor();
     let xslDocument = new DOMParser().parseFromString(xsl, 'application/xml');
-    xsltProcessor.importStylesheet(xslDocument);
+    prettifyXsltProcessor.importStylesheet(xslDocument);
+
 }
 
 export default class Xml {
+    private readonly xmlString: string;
+    private readonly xmlDoc: Document;
+    private readonly documentElement: Element;
 
 
-    constructor(xmlString, type) {
+    constructor(xmlString: string, type: DOMParserSupportedType) {
         this.xmlString = xmlString;
         /**
          * https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString
@@ -47,7 +51,11 @@ export default class Xml {
             Logger.getLogger().error(`Error (${errorNode.textContent}) while parsing the (${type}) string: ${this.xmlString}`);
         }
         if (type === "text/html") {
-            this.documentElement = this.xmlDoc.body.firstChild;
+            let firstChild = this.xmlDoc.body.firstChild;
+            if (!(firstChild instanceof Element)) {
+                throw new Error('The first child is not an element');
+            }
+            this.documentElement = firstChild;
         } else {
             this.documentElement = this.xmlDoc.documentElement
         }
@@ -79,7 +87,7 @@ export default class Xml {
 
     }
 
-    static createFromXmlString(xmlString) {
+    static createFromXmlString(xmlString: string) {
         return new Xml(xmlString, "application/xml")
     }
 
@@ -90,7 +98,7 @@ export default class Xml {
      * @param xmlString
      * @return {Xml}
      */
-    static createFromHtmlString(xmlString) {
+    static createFromHtmlString(xmlString: string) {
         return new Xml(xmlString, "text/html")
     }
 
@@ -101,7 +109,7 @@ export default class Xml {
      * @param level
      * @return {string[]}
      */
-    static walk(xmlElement, output = [], level = 0) {
+    static walk(xmlElement: Element, output: string[] = [], level = 0) {
 
         let prefix = "  ".repeat(level);
         // ToLowercase because the HTML DOMParser create uppercase node name on Node
@@ -133,7 +141,7 @@ export default class Xml {
                          * but enough for now
                          * @type {string}
                          */
-                        let textContent = child.textContent.trim();
+                        let textContent = child.textContent!.trim();
                         if (textContent) {
                             output.push(`${prefix}${textContent}`);
                         }
@@ -154,7 +162,7 @@ export default class Xml {
         return output;
     }
 
-    static print(xmlElement) {
+    static print(xmlElement: Element) {
         let output = this.walk(xmlElement);
         return output.join("\n")
     }

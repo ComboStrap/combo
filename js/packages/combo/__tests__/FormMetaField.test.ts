@@ -1,6 +1,9 @@
-import FormMetaField from "../FormMetaField";
-import Xml from "../Xml";
+import FormMetaField from "../src/FormMetaField";
+import Xml from "../src/Xml";
+import {expect, test} from "vitest";
+import extraMatchers from "./MatcherExtend"
 
+expect.extend(extraMatchers)
 
 test('Text field test', () => {
 

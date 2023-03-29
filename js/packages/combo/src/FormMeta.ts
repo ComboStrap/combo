@@ -4,6 +4,7 @@ import FormMetaField from "./FormMetaField";
 import FormMetaTab from "./FormMetaTab";
 import Html from "./Html";
 import Logger from "./Logger";
+import {AnyObject} from "./AnyObject";
 
 /**
  * Represent the top meta
@@ -11,17 +12,42 @@ import Logger from "./Logger";
  */
 export default class FormMeta {
 
-    formFields = {};
-    tabs = {};
+    formFields: AnyObject = {};
+    tabs: AnyObject = {};
     width = 8;
+    private readonly name: string;
+    private label: string | undefined;
+    private url: string | undefined;
+    private readonly getTabPaneId: ((tab: FormMetaTab) => string);
+    private readonly getTabNavId: ((tab: FormMetaTab) => string);
+    private readonly getControlId: ((id: any) => string);
 
 
-    constructor(id) {
+    constructor(formId: string) {
 
-        if (id == null) {
+        if (formId == null) {
             throw new Error("The if of the form should not be null");
         }
-        this.name = id;
+        this.name = formId;
+
+        /**
+         * Function Helpers that return ids
+         *
+         * We create them in the constructor to avoid typescript warning/error
+         * ie the method cannot be undefined
+         */
+        this.getControlId = function (id: string | number) {
+            let htmlId = Html.toHtmlId(id);
+            return `${formId}-control-${htmlId}`;
+        }
+        this.getTabNavId = function (tab: FormMetaTab) {
+            let htmlId = Html.toHtmlId(tab.getName());
+            return `${formId}-tab-nav-${htmlId}`;
+        }
+        this.getTabPaneId = function (tab: FormMetaTab) {
+            let htmlId = Html.toHtmlId(tab.getName());
+            return `${formId}-tab-pane-${htmlId}`;
+        }
     }
 
     /**
@@ -59,7 +85,7 @@ export default class FormMeta {
      * @param {Object} json
      * @return {FormMeta}
      */
-    static createFromJson(formId, json) {
+    static createFromJson(formId: string, json: AnyObject) {
         let form = FormMeta.createFromId(formId);
         for (let prop in json) {
             if (!json.hasOwnProperty(prop)) {
@@ -106,7 +132,7 @@ export default class FormMeta {
      * @param id
      * @return {FormMeta}
      */
-    static createFromId(id) {
+    static createFromId(id: string) {
         return new FormMeta(id);
     }
 
@@ -115,7 +141,7 @@ export default class FormMeta {
      * @param {FormMetaField} formField
      * @return {FormMeta}
      */
-    addFormField(formField) {
+    addFormField(formField: FormMetaField) {
         this.formFields[formField.getName()] = formField;
         // Be sure to have a tab for each field
         if (!this.tabs.hasOwnProperty(formField.getTab())) {
@@ -140,7 +166,7 @@ export default class FormMeta {
         return Object.values(this.tabs);
     }
 
-    addTab(formMetaTab) {
+    addTab(formMetaTab: FormMetaTab) {
         this.tabs[formMetaTab.getName()] = formMetaTab;
     }
 
@@ -148,7 +174,7 @@ export default class FormMeta {
         return this.getId();
     };
 
-    getFieldsForTab(tabName) {
+    getFieldsForTab(tabName: string) {
         return this.getFields().filter(e => e.getTab() === tabName);
     }
 
@@ -163,26 +189,8 @@ export default class FormMeta {
         let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
         let activeClass;
         let ariaSelected;
-        /**
-         * @param {FormMetaTab} tab
-         * @return string
-         */
-        this.getTabPaneId = function (tab) {
-            let htmlId = Html.toHtmlId(tab.getName());
-            return `${formId}-tab-pane-${htmlId}`;
-        }
-        /**
-         * @param {FormMetaTab} tab
-         * @return string
-         */
-        this.getTabNavId = function (/** @type {FormMetaTab}*/ tab) {
-            let htmlId = Html.toHtmlId(tab.getName());
-            return `${formId}-tab-nav-${htmlId}`;
-        }
-        this.getControlId = function (id) {
-            let htmlId = Html.toHtmlId(id);
-            return `${formId}-control-${htmlId}`;
-        }
+
+
         let tabsMeta = this.getTabs();
         let defaultTab = tabsMeta[0];
         for (let tab of tabsMeta) {
@@ -323,16 +331,16 @@ export default class FormMeta {
     }
 
 
-    setControlWidth(width) {
+    setControlWidth(width: number) {
         this.width = width;
         return this;
     }
 
-    setLabel(label) {
+    setLabel(label: string) {
         this.label = label;
     }
 
-    setUrl(url) {
+    setUrl(url: string) {
         this.url = url;
     }
 

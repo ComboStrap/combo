@@ -1,5 +1,8 @@
-import ComboModal from "../ComboModal";
+import ComboModal from "../src/ComboModal";
+import {expect, test} from "vitest";
+import customMarchers from "./MatcherExtend"
 
+expect.extend(customMarchers);
 
 test('Modal Simple Button', () => {
 

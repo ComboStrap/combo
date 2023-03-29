@@ -1,3 +1,4 @@
+import {AnyObject} from "./AnyObject";
 
 
 export default class Browser {
@@ -8,25 +9,25 @@ export default class Browser {
      * @param element
      * @return {boolean}
      */
-    static hasWindowGuard(element) {
+    static hasWindowGuard(element: Element) {
         if(!this.hasWindow(element)) {
             throw Error("The element has no window")
         }
     }
 
-    static hasWindow(element) {
+    static hasWindow(element: Element) {
         return !(!element ||
             !element.ownerDocument ||
             !element.ownerDocument.defaultView);
     }
 
-    static getWindow(element){
+    static getWindow(element: Element){
         this.hasWindowGuard(element);
         return element.ownerDocument.defaultView
     }
 
-    static formDataToObject(formData){
-        let obj = {};
+    static formDataToObject(formData: any){
+        let obj: AnyObject = {};
         for (let entry of formData) {
             let name = entry[0];
             let value = entry[1];

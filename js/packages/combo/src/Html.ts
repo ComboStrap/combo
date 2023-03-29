@@ -2,7 +2,7 @@ import {customAlphabet} from "nanoid";
 
 export default class Html {
 
-    static toHtmlId(s) {
+    static toHtmlId(s: string | number) {
         /**
          * A point is also replaced otherwise you
          * can't use the id as selector in CSS
@@ -22,7 +22,7 @@ export default class Html {
         return nanoid();
     }
 
-    static toEntities(text) {
+    static toEntities(text: string) {
         let entities = [];
         for (let i = 0; i < text.length; i++) {
             let entity = `&#${text.charCodeAt(i)};`

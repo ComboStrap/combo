@@ -4,17 +4,18 @@ import ComboModal from "./ComboModal";
 import {DokuUrl} from "./DokuUrl";
 import FormMetaField from "./FormMetaField";
 import ComboDate from "./ComboDate";
+import {AnyObject} from "./AnyObject";
 
-window['combo'] = class combo {
+export default class combo {
 
-    static toHtmlId(name) {
+    static toHtmlId(name: string | number) {
         return Html.toHtmlId(name)
     }
 
     static comboDate = ComboDate;
     static DokuUrl = DokuUrl;
 
-    static getOrCreateModal(id) {
+    static getOrCreateModal(id: string) {
         return ComboModal.getOrCreate(id);
     }
 
@@ -23,7 +24,7 @@ window['combo'] = class combo {
     }
 
 
-    static createAjaxUrl(callName) {
+    static createAjaxUrl(callName: string) {
         return DokuUrl.createAjax(callName);
     }
 
@@ -31,7 +32,7 @@ window['combo'] = class combo {
         return DokuUrl.createRunner();
     }
 
-    static createFormMetaField(name) {
+    static createFormMetaField(name: string) {
         return FormMetaField.createFromName(name);
     }
 
@@ -41,7 +42,7 @@ window['combo'] = class combo {
      * @param json
      * @return {FormMeta}
      */
-    static createFormFromJson(formId, json) {
+    static createFormFromJson(formId: string, json: AnyObject) {
         return FormMeta.createFromJson(formId, json);
     }
 

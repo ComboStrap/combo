@@ -15,12 +15,13 @@
 </head>
 <body>
 <div class="container mt-5">
-    <div class="subscribe-cs mx-auto" style="max-width: 500px;border:2px solid darkgrey">
-        <form class="row row-cols-1 row-cols-sm-2 g-3 align-items-center">
+    <div class="subscribe-cs mx-auto" style="max-width: 500px;">
+        <form class="row row-cols-1 row-cols-sm-2 g-3 align-items-center" action="https://tower.combostrap.com/combo/api/v1.0/list/registration">
             <div class="col">
                 <label for="inputEmail" class="visually-hidden">Enter your email</label>
-                <input type="email" id="inputEmail" class="form-control" placeholder="Enter your email"
-                       aria-describedby="inputEmail2" autocomplete="email" required>
+                <input type="hidden" name="listGuid" value="lis-w8OZSK2">
+                <input type="email" id="inputEmail" name="subscriberEmail" class="form-control" placeholder="Enter your email"
+                       aria-describedby="inputEmail" autocomplete="email" required>
             </div>
             <div class="col">
                 <button class="btn btn-primary" type="submit">Subscribe</button>

@@ -1,11 +1,12 @@
 export default class ComboDate {
+    private date: Date;
 
-    constructor(date) {
+    constructor(date: Date) {
         this.date = date;
     }
 
 
-    static createFromIso(isoString) {
+    static createFromIso(isoString: string) {
         let date = new Date(isoString);
         return new ComboDate(date)
     }

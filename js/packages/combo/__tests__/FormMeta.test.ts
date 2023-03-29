@@ -4,8 +4,9 @@
  */
 
 
-import FormMeta from "../FormMeta";
-import Xml from "../Xml";
+import FormMeta from "../src/FormMeta";
+import Xml from "../src/Xml";
+import {expect, test} from "vitest";
 
 /**
  * Test tabs and field children
@@ -87,6 +88,7 @@ test('Json to Form Object', () => {
                 }
         }
     };
+
     let formMeta = FormMeta.createFromJson(formId, formMetadata);
     expect(formMeta.getId()).toBe(formId);
     let fields = formMeta.getFields();
@@ -137,7 +139,7 @@ test('Json to Form Object', () => {
      * This test is a sort of snapshot test
      * where the snapshot is the form html in the heredoc
      */
-    let htmlForm = formMeta.toHtmlElement("formId")
+    let htmlForm = formMeta.toHtmlElement()
     /**
      * {@link Xml.createFromHtmlString} and not from {@link Xml.createFromXmlString}
      * because the form has an input element and therefore does not pass XML

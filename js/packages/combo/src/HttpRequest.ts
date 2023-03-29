@@ -15,12 +15,11 @@ export class HttpRequest {
 
 
     method = "GET";
+    private readonly url: URL;
 
 
-    /**
-     * @param {URL} url
-     */
-    constructor(url) {
+
+    constructor(url: URL) {
 
         this.url = url;
 
@@ -62,7 +61,7 @@ export class HttpRequest {
      * @param {string} method
      * @return {HttpRequest}
      */
-    setMethod(method) {
+    setMethod(method: string) {
         this.method = method.toUpperCase();
         return this;
     }
@@ -77,7 +76,7 @@ export class HttpRequest {
      * natively if the name of the input are
      * not suffixed with `[]` (shame)
      */
-    sendFormDataAsJson(formData) {
+    sendFormDataAsJson(formData: FormData) {
 
         return fetch(this.url.toString(), {
             method: this.method,

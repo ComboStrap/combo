@@ -1,4 +1,5 @@
 import {Modal} from "bootstrap";
+import {} from "combo";
 
 
 /**
@@ -18,8 +19,9 @@ Array.from(forms).forEach(form => {
         event.stopPropagation();
         if (form.checkValidity()) {
 
+            let url = new URL(form.getAttribute("action")!);
             let formData = new FormData(form);
-            let response = await fetch("/combo/api/v1.0/list/registration", {
+            let response = await fetch(url, {
                 body: formData,
                 cache: 'no-cache',
                 method: "post",
@@ -77,6 +79,7 @@ Array.from(forms).forEach(form => {
             } catch (e) {
                 // in case of network error
             }
+
             if (response.status !== 200) {
                 title = "Error";
                 if (typeof message === 'undefined') {

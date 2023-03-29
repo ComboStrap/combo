@@ -37,7 +37,7 @@ found [here](https://github.com/facebook/jest/blob/main/packages/jest-environmen
 
 ## Environment
 
-The test environment is set with the [JestExtend.js](../jest/JestExtend.js).
+The test environment is set with the [MatcherExtend.ts](../jest/JestExtend.js).
 
 ## Test-library
 

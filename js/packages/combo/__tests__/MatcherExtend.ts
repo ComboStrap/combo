@@ -12,7 +12,7 @@
  *
  */
 import {diff} from 'jest-diff';
-import Xml from "combo/src/Xml";
+import Xml from "../src/Xml";
 
 interface CustomMatchers<R = unknown> {
     toEqualHtmlString(expected): R

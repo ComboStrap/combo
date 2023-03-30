@@ -24,3 +24,7 @@ See:
 * `yarn build` will create the bundled modules in [dist](./dist)
 * `yarn preview` will start a static server to test the module integration on web pages
 * `yarn deploy` will test, build and copy the library to the resources combo library
+
+## Types
+
+https://www.typescriptlang.org/docs/handbook/declaration-files/dts-from-js.html

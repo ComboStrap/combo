@@ -22,6 +22,11 @@ export default class Html {
         return nanoid();
     }
 
+    static createRandomIdWithPrefix(prefix: string) {
+
+        return prefix + "-" + this.createRandomId();
+    }
+
     static toEntities(text: string) {
         let entities = [];
         for (let i = 0; i < text.length; i++) {

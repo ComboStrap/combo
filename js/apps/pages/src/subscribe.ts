@@ -1,5 +1,6 @@
 import {Modal} from "bootstrap";
-import {} from "combo";
+import Html from "combo/src/Html";
+
 
 
 /**
@@ -33,7 +34,7 @@ Array.from(forms).forEach(form => {
             /**
              * Modal
              */
-            let idResultModal = 'resultModal';
+            let idResultModal = Html.createRandomIdWithPrefix("subscribe");
             let modal = `
 <div class="modal fade" id="${idResultModal}" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
     <div class="modal-dialog">

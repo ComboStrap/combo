@@ -2,26 +2,27 @@
   "name": "combo",
   "version": "1.0.0",
   "description": "combo",
-  "types": "module",
+  "type": "module",
+  "types": "./dist/combo.d.ts",
   "files": [
     "dist"
   ],
-  "main": "./dist/combo.umd.js",
-  "module": "./dist/combo.mjs",
+  "main": "./dist/combo.umd.cjs",
+  "module": "./dist/combo.js",
   "exports": {
     ".": {
-      "import": "./dist/combo.mjs",
-      "require": "./dist/combo.umd.js"
+      "import": "./dist/combo.js",
+      "require": "./dist/combo.umd.cjs"
     }
   },
   "private": true,
   "scripts": {
     "preview": "vite preview --outDir .",
-    "build": "tsc && vite build",
-    "deploy": "test && build && cp dist/combo.umd.js ../../../resources/library/combo/combo.min.js || cp dist/combo.umd.js ../../../resources/library/combo/combo.min.js",
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "world": "echo hello world"
+    "build": "tsc && vite build && yarn types",
+    "deploy": "vitest run && yarn build && cp dist/combo.umd.cjs ../../../resources/library/combo/combo.min.js || cp dist/combo.umd.cjs ../../../resources/library/combo/combo.min.js",
+    "test": "vitest watch",
+    "types": "tsc --project tsconfig.types.json",
+    "coverage": "vitest run --coverage"
   },
   "browserslist": [
     "> 0.5%, last 2 versions, not dead"

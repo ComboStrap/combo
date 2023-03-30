@@ -4,7 +4,7 @@ import FormMetaField from "./FormMetaField";
 import FormMetaTab from "./FormMetaTab";
 import Html from "./Html";
 import Logger from "./Logger";
-import {AnyObject} from "./AnyObject";
+import {Interfaces} from "./Interfaces";
 
 /**
  * Represent the top meta
@@ -12,8 +12,8 @@ import {AnyObject} from "./AnyObject";
  */
 export default class FormMeta {
 
-    formFields: AnyObject = {};
-    tabs: AnyObject = {};
+    formFields: Interfaces = {};
+    tabs: Interfaces = {};
     width = 8;
     private readonly name: string;
     private label: string | undefined;
@@ -85,7 +85,7 @@ export default class FormMeta {
      * @param {Object} json
      * @return {FormMeta}
      */
-    static createFromJson(formId: string, json: AnyObject) {
+    static createFromJson(formId: string, json: Interfaces) {
         let form = FormMeta.createFromId(formId);
         for (let prop in json) {
             if (!json.hasOwnProperty(prop)) {

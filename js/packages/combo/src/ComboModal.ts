@@ -5,7 +5,7 @@
 import Html from "./Html";
 import {Modal, Tooltip, Tab} from "bootstrap";
 import Logger from "./Logger";
-import {MapString} from "./AnyObject";
+import {MapString} from "./Interfaces";
 
 interface ModalMap {
     [key: string]: ComboModal;

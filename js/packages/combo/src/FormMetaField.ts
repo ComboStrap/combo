@@ -1,7 +1,7 @@
 import Boolean from "./Boolean";
 import Logger from "./Logger";
 import Html from "./Html";
-import {AnyObject} from "./AnyObject";
+import {Interfaces} from "./Interfaces";
 import DataType from "./DataType";
 
 
@@ -30,7 +30,7 @@ export default class FormMetaField {
     static PARAGRAPH = "paragraph";
     static BOOLEAN = "boolean";
 
-    children: AnyObject = {};
+    children: Interfaces = {};
     static JSON = "json";
     private readonly name: string;
     private type: string | undefined;
@@ -143,7 +143,7 @@ export default class FormMetaField {
      * @param {FormMetaField} parent
      * @return {FormMetaField}
      */
-    static createFromJson(json: AnyObject, parent: FormMetaField | null = null) {
+    static createFromJson(json: Interfaces, parent: FormMetaField | null = null) {
         if (!json.hasOwnProperty("name")) {
             Logger.getLogger().error("To create a form meta field, the name property is mandatory.");
         }

@@ -1,4 +1,4 @@
-import {AnyObject} from "./AnyObject";
+import {Interfaces} from "./Interfaces";
 
 
 export default class Browser {
@@ -27,7 +27,7 @@ export default class Browser {
     }
 
     static formDataToObject(formData: any){
-        let obj: AnyObject = {};
+        let obj: Interfaces = {};
         for (let entry of formData) {
             let name = entry[0];
             let value = entry[1];

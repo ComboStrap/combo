@@ -1,5 +1,5 @@
 import Logger from "./Logger";
-import {AnyObject} from "./AnyObject";
+import {Interfaces} from "./Interfaces";
 
 
 export default class FormMetaTab {
@@ -31,7 +31,7 @@ export default class FormMetaTab {
         return this.width;
     }
 
-    static createFromJson(json: AnyObject) {
+    static createFromJson(json: Interfaces) {
         if (!json.hasOwnProperty("name")) {
             Logger.getLogger().error("A name property is mandatory to create a tab and was not found in the json provided")
         }

@@ -1,21 +1,33 @@
 {
-    "name": "combo",
-    "version": "1.0.0",
-    "description": "combo",
-    "types": "module",
-    "private": true,
-    "scripts": {
-        "build": "tsc && vite build",
-        "test": "vitest",
-        "coverage": "vitest run --coverage"
-    },
-    "browserslist": [
-        "> 0.5%, last 2 versions, not dead"
-    ],
-    "dependencies": {
-        "nanoid": "3.1",
-        "@popperjs/core": "2.10",
-        "@types/bootstrap": "5.1",
-        "bootstrap": "5.1"
+  "name": "combo",
+  "version": "1.0.0",
+  "description": "combo",
+  "types": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/combo.umd.js",
+  "module": "./dist/combo.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/combo.mjs",
+      "require": "./dist/combo.umd.js"
     }
+  },
+  "private": true,
+  "scripts": {
+    "preview": "vite preview --outDir .",
+    "build": "tsc && vite build",
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "browserslist": [
+    "> 0.5%, last 2 versions, not dead"
+  ],
+  "dependencies": {
+    "nanoid": "3.1",
+    "@popperjs/core": "2.10",
+    "@types/bootstrap": "5.1",
+    "bootstrap": "5.1"
+  }
 }

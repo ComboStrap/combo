@@ -8,8 +8,10 @@ export default defineConfig({
         lib: {
             // Could also be a dictionary or array of multiple entry points
             entry: resolve(__dirname, 'src/combo.ts'),
+            // global name in window
             name: 'combo',
-            // the proper extensions will be added
+            formats: ['umd', 'es'],
+            // the proper extensions are added
             fileName: 'combo',
         },
         // https://rollupjs.org/guide/en/#big-list-of-options
@@ -28,7 +30,7 @@ export default defineConfig({
             }
         ,
     },
-    test:{
+    test: {
         environment: "jsdom"
     }
 })

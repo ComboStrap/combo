@@ -1,4 +1,4 @@
-export interface AnyObject {
+export interface Interfaces {
     [key: string]: any;
 }
 

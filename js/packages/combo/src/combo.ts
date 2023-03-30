@@ -4,7 +4,7 @@ import ComboModal from "./ComboModal";
 import {DokuUrl} from "./DokuUrl";
 import FormMetaField from "./FormMetaField";
 import ComboDate from "./ComboDate";
-import {AnyObject} from "./AnyObject";
+import {Interfaces} from "./Interfaces";
 
 export default class combo {
 
@@ -42,7 +42,7 @@ export default class combo {
      * @param json
      * @return {FormMeta}
      */
-    static createFormFromJson(formId: string, json: AnyObject) {
+    static createFormFromJson(formId: string, json: Interfaces) {
         return FormMeta.createFromJson(formId, json);
     }
 

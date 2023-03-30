@@ -18,8 +18,10 @@
   "scripts": {
     "preview": "vite preview --outDir .",
     "build": "tsc && vite build",
+    "deploy": "test && build && cp dist/combo.umd.js ../../../resources/library/combo/combo.min.js || cp dist/combo.umd.js ../../../resources/library/combo/combo.min.js",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "world": "echo hello world"
   },
   "browserslist": [
     "> 0.5%, last 2 versions, not dead"

@@ -6,6 +6,7 @@ import FormMetaField from "./FormMetaField";
 import ComboDate from "./ComboDate";
 import {Interfaces} from "./Interfaces";
 
+export {Html, ComboModal};
 export default class combo {
 
     static toHtmlId(name: string | number) {

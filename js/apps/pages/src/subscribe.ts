@@ -1,7 +1,5 @@
-import {Modal} from "bootstrap";
-import Html from "combo/src/Html";
-
-
+import { Html } from "combo";
+import { ComboModal } from "combo";
 
 /**
  * Select all subscribe forms
@@ -35,73 +33,41 @@ Array.from(forms).forEach(form => {
              * Modal
              */
             let idResultModal = Html.createRandomIdWithPrefix("subscribe");
-            let modal = `
-<div class="modal fade" id="${idResultModal}" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="resultModalLabel">Thank you</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Message
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-`
-            document.body.insertAdjacentHTML('beforeend', modal);
+            let modal = ComboModal.getOrCreate(idResultModal);
+
             const button = event.target as HTMLButtonElement;
             let componentElement = button.closest(subscribeComponentSelector)!;
 
             let componentRect = componentElement.getBoundingClientRect();
-            // ! at the end to tell typescript that it's not null
-            let resultModalElement = document.getElementById(idResultModal)!;
             /**
              * Position the modal just below the button via the modal-content element
              */
-            let resultModalDialog = resultModalElement.firstElementChild! as HTMLDivElement;
+            let resultModalDialog = modal.getModalContentElement();
             resultModalDialog.style.margin = '0';
             resultModalDialog.style.left = componentRect.left + 'px';
             resultModalDialog.style.top = (componentRect.top + componentRect.height) + 'px';
 
-            const resultModal = new Modal(resultModalElement);
-            let title = "Success";
-            // ! at the end to tell typescript that it's not null
-            let modalCloseButton = resultModalElement.querySelector(".modal-footer button")! as HTMLButtonElement;
             let message;
-
             try {
                 let data = await response.json();
                 message = data.message;
             } catch (e) {
                 // in case of network error
             }
-
             if (response.status !== 200) {
-                title = "Error";
+                modal.setHeader("Error");
                 if (typeof message === 'undefined') {
                     message = "Sorry. The server seems to be down.";
                 }
-                modalCloseButton.onclick = function () {
-                    resultModal.hide();
-                };
             } else {
-
+                modal.setHeader("Success");
                 if (typeof message === 'undefined') {
                     message = "A validation email has been send. <br>Check your mailbox and click on the validation link.<br>If you don't find our email, check your spambox.";
                 }
             }
-
-            let resultModalLabel = resultModalElement.querySelector("#resultModalLabel")!;
-            resultModalLabel.innerHTML = title;
-
-            let resultModalBody = resultModalElement.querySelector(".modal-body")!;
-            resultModalBody.innerHTML = message;
-            resultModal.show();
+            modal
+                .addBody(message)
+                .show();
 
         }
     }, false)

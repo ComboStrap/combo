@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "combo",
   "type": "module",
-  "types": "./dist/combo.d.ts",
+  "types": "./dist/combo.js",
   "files": [
     "dist"
   ],

@@ -38,7 +38,7 @@ export default class ComboModal {
     private isCentered: boolean | undefined;
     private callBack: (() => void) | undefined;
     private bootStrapModal: Modal | null = null;
-    private modalContent: HTMLDivElement | undefined;
+    private readonly modalContent: HTMLDivElement ;
     private modalBody: HTMLDivElement | undefined;
 
     /**
@@ -66,6 +66,12 @@ export default class ComboModal {
             // modalRoot.setAttribute("tabindex", "-1");
             this.modalRootHtmlElement.setAttribute("aria-hidden", "true");
         }
+
+        /**
+         * Permits to the caller to get it before building it
+         */
+        this.modalContent = document.createElement("div");
+        this.modalContent.classList.add("modal-content");
 
     }
 
@@ -363,8 +369,6 @@ export default class ComboModal {
             modalManagerDialog.classList.add(dialogClass);
         }
         this.modalRootHtmlElement.appendChild(modalManagerDialog);
-        this.modalContent = document.createElement("div");
-        this.modalContent.classList.add("modal-content");
         modalManagerDialog.appendChild(this.modalContent);
 
         this.modalBody = document.createElement("div");
@@ -462,5 +466,9 @@ export default class ComboModal {
             modal = ComboModal.createFromId(modalId);
         }
         return modal;
+    }
+
+    getModalContentElement() {
+        return this.modalContent;
     }
 }

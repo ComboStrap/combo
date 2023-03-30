@@ -104,7 +104,6 @@ Array.from(forms).forEach(form => {
             resultModal.show();
 
         }
-        form.classList.add('was-validated')
     }, false)
 });
 

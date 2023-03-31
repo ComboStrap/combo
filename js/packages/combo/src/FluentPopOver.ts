@@ -2,9 +2,9 @@ import {Popover} from "bootstrap";
 
 
 /**
- * Popover enhances the title property of a html element
  *
- *
+ * Popover enhances the title popup functionality of a html element
+ * by showing a rich pop-up
  */
 export default class FluentPopOver {
 

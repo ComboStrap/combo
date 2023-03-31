@@ -17,6 +17,7 @@ export default class FluentPopOver {
     private trigger: Popover.Options['trigger'] = 'focus';
     private dismissOnNextClick: boolean = true;
     private title: string = '';
+    private withoutArrow: boolean = true;
 
     constructor(element: HTMLElement) {
 
@@ -57,6 +58,11 @@ export default class FluentPopOver {
         return this;
     }
 
+    setWithoutArrow() {
+        this.withoutArrow = true;
+        return this;
+    }
+
 
     public static createForElementWithId(id: string) {
         let elementById = document.getElementById(id);
@@ -74,7 +80,7 @@ export default class FluentPopOver {
 
     }
 
-    private build () {
+    private build() {
 
         if (typeof this.bootStrapPopOver !== 'undefined') {
             return this.bootStrapPopOver;
@@ -113,8 +119,18 @@ export default class FluentPopOver {
         options.content = this.content;
         options.title = this.title;
 
+        /**
+         * The popover html template
+         * used to create the popover
+         */
+        let templateArrow = '<div class="popover-arrow"></div>'
+        if (this.withoutArrow) {
+            templateArrow = '';
+        }
+        options.template = `<div class="popover" role="tooltip">${templateArrow}<h3 class="popover-header"></h3><div class="popover-body"></div></div>
+`
+
         let dataNamespace = this.getDataNamespace();
-        debugger;
         this.popoverRootHtmlElement.setAttribute(`data${dataNamespace}-toggle`, 'popover');
         this.popoverRootHtmlElement.setAttribute(`data${dataNamespace}-trigger`, this.trigger);
         this.popoverRootHtmlElement.setAttribute(`data${dataNamespace}-placement`, String(this.placement));
@@ -123,7 +139,6 @@ export default class FluentPopOver {
         this.popoverRootHtmlElement.setAttribute(`data${dataNamespace}-content`, this.content);
 
         this.bootStrapPopOver = new Popover(this.popoverRootHtmlElement, options);
-
 
 
         return this.bootStrapPopOver;

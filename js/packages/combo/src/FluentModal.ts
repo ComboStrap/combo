@@ -37,9 +37,10 @@ export default class FluentModal {
     private closeButton: HTMLButtonElement | undefined;
     private isCentered: boolean | undefined;
     private callBack: (() => void) | undefined;
-    private readonly bootStrapModal: Modal;
+    private bootStrapModal: Modal | undefined;
     private readonly modalContent: HTMLDivElement;
     private modalBody: HTMLDivElement | undefined;
+    private placementElement: HTMLElement | undefined;
 
     /**
      * A valid HTML id
@@ -74,27 +75,6 @@ export default class FluentModal {
         this.modalContent.classList.add("modal-content");
 
 
-        /**
-         * No need to use the global variable access mode (ie `bootstrap.Modal`)
-         * It's created at build time
-         * @type {Modal}
-         */
-        let bootStrapModal = Modal.getInstance(this.modalRootHtmlElement);
-        if (bootStrapModal !== null) {
-            this.bootStrapModal = bootStrapModal;
-        } else {
-            /**
-             * The bootstrap modal function
-             * can only be invoked when the body element has been defined
-             */
-            let options = {
-                "backdrop": true,
-                "keyboard": true,
-                "focus": true
-            };
-            this.bootStrapModal = new Modal(this.modalRootHtmlElement, options);
-        }
-
     }
 
     setHeader(headerText: string) {
@@ -118,6 +98,11 @@ export default class FluentModal {
         this.bodyStyles[property] = value;
         return this;
 
+    }
+
+    setPlacementBottomToElement(relativeElement: HTMLElement) {
+        this.placementElement = relativeElement;
+        return this;
     }
 
     noFooter() {
@@ -186,13 +171,6 @@ export default class FluentModal {
 
     show() {
 
-        if (this.modalRootHtmlElement == null) {
-            throw new Error("This modal has no HTML element, you can't use it anymore");
-        }
-
-        if (!this.isBuild) {
-            this.build();
-        }
 
         /**
          * Reset on close ?
@@ -212,30 +190,34 @@ export default class FluentModal {
         /**
          * Callback (Parent Child Relationship)
          */
-        if (this.callBack !== undefined) {
-            if (this.closeButton !== undefined) {
-                let modal = this;
-                this.closeButton.addEventListener("click", function () {
-                    /**
-                     * Two modals cannot be open at the same time
-                     * https://getbootstrap.com/docs/5.0/components/modal/#toggle-between-modals
-                     */
-                    modal.dismissHide();
-                    // @ts-ignore
-                    modal.callBack();
-                });
-            }
+        if (typeof this.callBack !== 'undefined' && typeof this.closeButton !== 'undefined') {
+
+            let modal = this;
+            // @ts-ignore
+            this.closeButton.addEventListener("click", function () {
+                /**
+                 * Two modals cannot be open at the same time
+                 * https://getbootstrap.com/docs/5.0/components/modal/#toggle-between-modals
+                 */
+                modal.dismissHide();
+
+                // @ts-ignore
+                modal.callBack();
+
+            })
+
         }
 
-        this.bootStrapModal.show();
+        this.build()
+            .show();
 
 
     }
 
     dismissHide() {
-        if (this.bootStrapModal !== null) {
-            this.bootStrapModal.hide();
-        }
+
+        this.build().hide();
+
     }
 
     getModalId() {
@@ -246,7 +228,10 @@ export default class FluentModal {
      *
      * @param {function} callBack
      */
-    setCallBackOnClose(callBack: () => void) {
+    setCallBackOnClose(callBack
+                           :
+                           () => void
+    ) {
         this.callBack = callBack;
         return this;
     }
@@ -266,7 +251,8 @@ export default class FluentModal {
      * @param modalId
      * @return {FluentModal}
      */
-    static getModal = function (modalId: string) {
+    static
+    getModal = function (modalId: string) {
 
         if (modalId in comboModals) {
             return comboModals[modalId];
@@ -316,7 +302,10 @@ export default class FluentModal {
         return this.isBuild;
     }
 
-    setCentered(bool: boolean) {
+    setCentered(bool
+                    :
+                    boolean
+    ) {
         this.isCentered = bool;
         return this;
     }
@@ -363,9 +352,31 @@ export default class FluentModal {
      */
     build() {
 
-        this.isBuild = true;
+        if (typeof this.bootStrapModal !== 'undefined') {
+            return this.bootStrapModal;
+        }
+        /**
+         * No need to use the global variable access mode (ie `bootstrap.Modal`)
+         * It's created at build time
+         * @type {Modal}
+         */
+        let bootStrapModal = Modal.getInstance(this.modalRootHtmlElement);
+        if (bootStrapModal !== null) {
+            this.bootStrapModal = bootStrapModal;
+            return bootStrapModal;
+        }
 
         document.body.appendChild(this.modalRootHtmlElement);
+
+        if (typeof this.placementElement !== 'undefined') {
+            let rect = this.placementElement.getBoundingClientRect();
+            this.modalRootHtmlElement.style.margin = '0';
+            this.modalRootHtmlElement.style.left = rect.left + 'px';
+            let offset = 5; // to not be on the bottom edge
+            this.modalRootHtmlElement.style.top = (rect.top + offset) + 'px';
+            this.modalRootHtmlElement.style.width = 'unset';
+            this.modalRootHtmlElement.style.height = 'unset';
+        }
 
         const modalManagerDialog = document.createElement("div");
         modalManagerDialog.classList.add(
@@ -401,7 +412,6 @@ export default class FluentModal {
             this.modalBody.style.setProperty(bodyStyleName, this.bodyStyles[bodyStyleName]);
         }
         this.modalContent.appendChild(this.modalBody);
-
 
         /**
          * Building the header
@@ -459,6 +469,22 @@ export default class FluentModal {
          */
         let tooltipSelector = `#${this.modalId} [data-bs-toggle="tooltip"]`;
         document.querySelectorAll(tooltipSelector).forEach(el => new Tooltip(el));
+
+        /**
+         * The bootstrap modal function can only be invoked at the end
+         * when the whole HTML and data properties have been defined
+         * (ie when the body element has been defined, ...)
+         *
+         * You can't modify it after
+         */
+        let options = {
+            "backdrop": true,
+            "keyboard": true,
+            "focus": true
+        };
+        this.bootStrapModal = new Modal(this.modalRootHtmlElement, options);
+        return this.bootStrapModal;
+
     }
 
 
@@ -470,7 +496,4 @@ export default class FluentModal {
         return modal;
     }
 
-    getModalContentElement() {
-        return this.modalContent;
-    }
 }

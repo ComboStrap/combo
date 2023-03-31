@@ -1,4 +1,4 @@
-/* global bootstrap */
+
 // noinspection ES6ConvertVarToLetConst
 window.combos = (function (module) {
 

@@ -1,5 +1,4 @@
-/* global combo */
-// noinspection JSUnresolvedVariable
+
 
 window.addEventListener("DOMContentLoaded", function () {
 
@@ -9,9 +8,15 @@ window.addEventListener("DOMContentLoaded", function () {
             metadataControlItem.addEventListener("click", async function (event) {
                 event.preventDefault();
 
+                const combo = /** @type {import('combo.d.ts')} */ (window.combo);
+                if(!('JSINFO' in window)){
+                    throw new Error("JSINFO is not available")
+                }
+                const JSINFO = window.JSINFO;
                 let pageId = JSINFO.id;
-                let modalBacklinkId = combo.toHtmlId(`combo-cache-${pageId}`);
-                let cacheModal = combo.getOrCreateModal(modalBacklinkId)
+                let modalBacklinkId = combo.Html.toHtmlId(`combo-cache-${pageId}`);
+                let cacheModal = combo.Modal
+                    .getOrCreate(modalBacklinkId)
                     .resetIfBuild()
                     .addDialogClass("modal-fullscreen-md-down");
 
@@ -65,11 +70,11 @@ window.addEventListener("DOMContentLoaded", function () {
                                 checkedBox = "checked";
                             }
                             let hitHtml = ` <input type="checkbox" class="form-check-input" disabled ${checkedBox}>`
-                            let mtime = combo.comboDate.createFromIso(result["mtime"]).toSqlTimestampString();
+                            let mtime = combo.Date.createFromIso(result["mtime"]).toSqlTimestampString();
                             let file = result["file"];
-                            let fileLabel = file.substr(file.indexOf(':') + 1, file.lastIndexOf('.') - 2);
+                            let fileLabel = file.substring(file.indexOf(':') + 1, file.lastIndexOf('.') - 2);
                             let fileUrl = combo.DokuUrl
-                                .createFetch(file,'cache')
+                                .createFetch(file, 'cache')
                                 .toString();
                             let fileAnchor = `<a href="${fileUrl}" target="_blank">${fileLabel}</a>`;
 

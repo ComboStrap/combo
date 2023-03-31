@@ -1,6 +1,6 @@
 import {HttpRequest} from "./HttpRequest";
 
-export class DokuUrl {
+export default class DokuUrl {
 
     static AJAX = "AJAX";
     static RUNNER = "RUNNER";
@@ -62,7 +62,7 @@ export class DokuUrl {
         return new HttpRequest(this.url);
     }
 
-    static createAjax(call: string) {
+    public static createAjax(call: string) {
         return (new DokuUrl(this.AJAX))
             .setProperty(DokuUrl.CALL, call);
     }

@@ -24,6 +24,7 @@ export default defineConfig({
                     globals: {
                         bootstrap: 'bootstrap',
                     },
+                    exports: 'named'
                 }
             }
         ,

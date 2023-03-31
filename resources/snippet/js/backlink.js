@@ -1,5 +1,4 @@
-/* global combo */
-// noinspection JSUnresolvedVariable
+
 
 window.addEventListener("DOMContentLoaded", function () {
 
@@ -8,9 +7,14 @@ window.addEventListener("DOMContentLoaded", function () {
             metadataControlItem.addEventListener("click", async function (event) {
                 event.preventDefault();
 
+                const combo = /** @type {import('combo.d.ts')} */ (window.combo);
+                if(!('JSINFO' in window)){
+                    throw new Error("JSINFO is not available")
+                }
+                const JSINFO = window.JSINFO;
                 let pageId = JSINFO.id;
-                let modalBacklinkId = combo.toHtmlId(`combo-backlink-${pageId}`);
-                let backlinkModal = combo.getOrCreateModal(modalBacklinkId)
+                let modalBacklinkId = combo.Html.toHtmlId(`combo-backlink-${pageId}`);
+                let backlinkModal = combo.Modal.getOrCreate(modalBacklinkId)
                     .addDialogClass("modal-fullscreen-md-down");
 
                 /**
@@ -18,7 +22,8 @@ window.addEventListener("DOMContentLoaded", function () {
                  */
                 let qualityCall = "combo-backlink";
                 let html = await combo
-                    .createAjaxUrl(qualityCall)
+                    .DokuUrl
+                    .createAjax(qualityCall)
                     .setProperty("id", pageId)
                     .toRequest()
                     .getText();

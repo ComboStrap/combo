@@ -2,7 +2,7 @@
 
 /* global DOKU_BASE */
 
-import ComboModal from "./ComboModal";
+import FluentModal from "./FluentModal";
 import Browser from "./Browser";
 
 
@@ -92,7 +92,7 @@ export class HttpRequest {
 
         let response = await fetch(this.url.toString(), {method: this.method});
         if (response.status !== 200) {
-            let modal = ComboModal.createTemporary()
+            let modal = FluentModal.createTemporary()
             modal.addBody(`Bad request:  the call ${this.url} to the backend sends back the following exit code` + response.status)
             modal.show();
         }

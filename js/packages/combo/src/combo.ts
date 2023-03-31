@@ -1,12 +1,21 @@
 import FormMeta from "./FormMeta";
 import Html from "./Html";
-import ComboModal from "./ComboModal";
+import FluentModal from "./FluentModal";
+import FluentPopOver from "./FluentPopOver";
 import {DokuUrl} from "./DokuUrl";
 import FormMetaField from "./FormMetaField";
 import ComboDate from "./ComboDate";
 import {Interfaces} from "./Interfaces";
 
-export {Html, ComboModal};
+/**
+ * Export to be able to import
+ * then by name
+ */
+export {Html, FluentModal, FluentPopOver};
+
+/**
+ * Export for components in umd
+ */
 export default class combo {
 
     static toHtmlId(name: string | number) {
@@ -15,13 +24,14 @@ export default class combo {
 
     static comboDate = ComboDate;
     static DokuUrl = DokuUrl;
+    static FluentPopOver = FluentPopOver;
 
     static getOrCreateModal(id: string) {
-        return ComboModal.getOrCreate(id);
+        return FluentModal.getOrCreate(id);
     }
 
     static removeAllModals() {
-        ComboModal.resetAllModals();
+        FluentModal.resetAllModals();
     }
 
 
@@ -51,7 +61,7 @@ export default class combo {
      * @return {ComboModal}
      */
     static createTemporaryModal() {
-        return ComboModal.createTemporary();
+        return FluentModal.createTemporary();
     }
 
 }

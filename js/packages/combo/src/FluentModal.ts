@@ -8,16 +8,16 @@ import Logger from "./Logger";
 import {MapString} from "./Interfaces";
 
 interface ModalMap {
-    [key: string]: ComboModal;
+    [key: string]: FluentModal;
 }
 
 /**
  *
- * @type {Object.<string, ComboModal>}
+ * @type {Object.<string, FluentModal>}
  */
 let comboModals: ModalMap = {};
 
-export default class ComboModal {
+export default class FluentModal {
 
 
     /**
@@ -37,8 +37,8 @@ export default class ComboModal {
     private closeButton: HTMLButtonElement | undefined;
     private isCentered: boolean | undefined;
     private callBack: (() => void) | undefined;
-    private bootStrapModal: Modal | null = null;
-    private readonly modalContent: HTMLDivElement ;
+    private readonly bootStrapModal: Modal;
+    private readonly modalContent: HTMLDivElement;
     private modalBody: HTMLDivElement | undefined;
 
     /**
@@ -73,6 +73,28 @@ export default class ComboModal {
         this.modalContent = document.createElement("div");
         this.modalContent.classList.add("modal-content");
 
+
+        /**
+         * No need to use the global variable access mode (ie `bootstrap.Modal`)
+         * It's created at build time
+         * @type {Modal}
+         */
+        let bootStrapModal = Modal.getInstance(this.modalRootHtmlElement);
+        if (bootStrapModal !== null) {
+            this.bootStrapModal = bootStrapModal;
+        } else {
+            /**
+             * The bootstrap modal function
+             * can only be invoked when the body element has been defined
+             */
+            let options = {
+                "backdrop": true,
+                "keyboard": true,
+                "focus": true
+            };
+            this.bootStrapModal = new Modal(this.modalRootHtmlElement, options);
+        }
+
     }
 
     setHeader(headerText: string) {
@@ -82,7 +104,7 @@ export default class ComboModal {
 
     /**
      * @param htmlBody
-     * @return {ComboModal}
+     * @return {FluentModal}
      */
     addBody(htmlBody: string | HTMLElement) {
 
@@ -118,7 +140,7 @@ export default class ComboModal {
     }
 
     /**
-     * @return {ComboModal}
+     * @return {FluentModal}
      */
     resetOnClose() {
         this.isResetOnClose = true;
@@ -155,7 +177,7 @@ export default class ComboModal {
 
     /**
      * Center the modal
-     * @return {ComboModal}
+     * @return {FluentModal}
      */
     centered() {
         this.isCentered = true;
@@ -205,7 +227,6 @@ export default class ComboModal {
             }
         }
 
-        // @ts-ignore
         this.bootStrapModal.show();
 
 
@@ -233,17 +254,17 @@ export default class ComboModal {
 
     /**
      * Create a modal and return the modal content element
-     * @return ComboModal
+     * @return FluentModal
      */
     static createFromId(modalId: string) {
-        let modal = new ComboModal(modalId);
+        let modal = new FluentModal(modalId);
         comboModals[modalId] = modal;
         return modal;
     }
 
     /**
      * @param modalId
-     * @return {ComboModal}
+     * @return {FluentModal}
      */
     static getModal = function (modalId: string) {
 
@@ -275,7 +296,7 @@ export default class ComboModal {
 
     /**
      *
-     * @return {ComboModal}
+     * @return {FluentModal}
      */
     static createTemporary() {
         return this.createFromId(Html.createRandomId());
@@ -383,25 +404,6 @@ export default class ComboModal {
 
 
         /**
-         * No need to use the global variable access mode (ie `bootstrap.Modal`)
-         * It's created at build time
-         * @type {Modal}
-         */
-        this.bootStrapModal = Modal.getInstance(this.modalRootHtmlElement);
-        if (this.bootStrapModal === null) {
-            /**
-             * The bootstrap modal function
-             * can only be invoked when the body element has been defined
-             */
-            let options = {
-                "backdrop": true,
-                "keyboard": true,
-                "focus": true
-            };
-            this.bootStrapModal = new Modal(this.modalRootHtmlElement, options);
-        }
-
-        /**
          * Building the header
          */
         if (this.headerText !== undefined) {
@@ -461,9 +463,9 @@ export default class ComboModal {
 
 
     static getOrCreate(modalId: string) {
-        let modal = ComboModal.getModal(modalId);
+        let modal = FluentModal.getModal(modalId);
         if (modal === null) {
-            modal = ComboModal.createFromId(modalId);
+            modal = FluentModal.createFromId(modalId);
         }
         return modal;
     }

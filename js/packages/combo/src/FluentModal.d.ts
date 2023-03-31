@@ -80,11 +80,6 @@ export default class ComboModal {
      * Delete all modals
      */
     static resetAllModals: () => void;
-    /**
-     *
-     * @return {ComboModal}
-     */
-    static createTemporary(): ComboModal;
     getElement(): HTMLElement;
     /**
      * Calling the {@link show} function will build the

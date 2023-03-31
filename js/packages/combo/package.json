@@ -22,15 +22,19 @@
     "deploy": "vitest run && yarn build && cp dist/combo.umd.cjs ../../../resources/library/combo/combo.min.js || cp dist/combo.umd.cjs ../../../resources/library/combo/combo.min.js",
     "test": "vitest watch",
     "types": "tsc --project tsconfig.types.json",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "watch": "vite build --watch"
   },
   "browserslist": [
     "> 0.5%, last 2 versions, not dead"
   ],
   "dependencies": {
-    "nanoid": "3.1",
     "@popperjs/core": "2.10",
     "@types/bootstrap": "5.1",
-    "bootstrap": "5.1"
+    "bootstrap": "5.1",
+    "nanoid": "3.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.5.16"
   }
 }

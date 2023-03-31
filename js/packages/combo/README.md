@@ -9,6 +9,18 @@ The library contains:
   * A [Doku Url wrapper](src/DokuUrl.ts)
   * Utilities: Xml, Boolan, Html, Browser
 
+## How to test it visually
+
+  * Create a page in [pages](pages)
+  * Start the build watch
+```bash
+yarn watch
+```
+  * Start the preview
+```bash
+yarn preview
+```
+
 ## Main
 
 The main entry is [combo.ts](src/combo.ts)

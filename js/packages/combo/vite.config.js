@@ -1,8 +1,6 @@
 import {resolve} from 'path'
 import {defineConfig} from 'vite'
 
-// build should copy
-// "../../../resources/library/combo/",
 export default defineConfig({
     build: {
         lib: {

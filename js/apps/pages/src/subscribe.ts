@@ -22,11 +22,7 @@ Array.from(forms).forEach(form => {
             let formData = new FormData(form);
             let response = await fetch(url, {
                 body: formData,
-                cache: 'no-cache',
                 method: "post",
-                mode: 'no-cors',
-                redirect: 'follow',
-                credentials: 'same-origin'
             });
 
             /**
@@ -54,6 +50,7 @@ Array.from(forms).forEach(form => {
             } catch (e) {
                 // in case of network error
             }
+            debugger;
             if (response.status !== 200) {
                 modal.setHeader("Error");
                 if (typeof message === 'undefined') {

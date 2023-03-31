@@ -1,4 +1,4 @@
-import ComboModal from "../src/ComboModal";
+import FluentModal from "../src/FluentModal";
 import {expect, test} from "vitest";
 import customMarchers from "./MatcherExtend"
 
@@ -6,7 +6,7 @@ expect.extend(customMarchers);
 
 test('Modal Simple Button', () => {
 
-    let modal = ComboModal.createFromId("modal-simple-button");
+    let modal = FluentModal.createFromId("modal-simple-button");
     try {
         let htmlBody = "<p>Body</p>";
         modal.addBody(htmlBody)
@@ -44,7 +44,7 @@ test('Modal creation/destruction test', () => {
      * @type {string}
      */
     let modalId = "modal-creation-destruction-test";
-    let modal = ComboModal.getOrCreate(modalId);
+    let modal = FluentModal.getOrCreate(modalId);
     try {
         let modalElement = document.getElementById(modalId);
         expect(modalElement).toBeNull();
@@ -56,7 +56,7 @@ test('Modal creation/destruction test', () => {
     /**
      * Rebuild it
      */
-    let secondModalInstantiation = ComboModal.getOrCreate(modalId);
+    let secondModalInstantiation = FluentModal.getOrCreate(modalId);
     secondModalInstantiation.show(); // add the modal in the DOM
     let modalElement = document.getElementById(modalId);
     expect(modalElement).not.toBeNull();
@@ -64,9 +64,9 @@ test('Modal creation/destruction test', () => {
     /**
      * GettingOrCreate / Showing twice
      * should not create two elements in the DOM
-     * @type {ComboModal}
+     * @type {FluentModal}
      */
-    let thirdModalInstantiation = ComboModal.getOrCreate(modalId);
+    let thirdModalInstantiation = FluentModal.getOrCreate(modalId);
     try {
         expect(thirdModalInstantiation).toBe(secondModalInstantiation);
         thirdModalInstantiation.show();
@@ -90,7 +90,7 @@ test('Modal creation/destruction/reset test', () => {
      * Should not give any error
      */
     let modalId = "modal-id-reset-show";
-    let modal = ComboModal.getOrCreate(modalId);
+    let modal = FluentModal.getOrCreate(modalId);
     modal.show();
     modal.reset();
     modal.show();

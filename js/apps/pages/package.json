@@ -5,13 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "rollup --config rollup.config.js --bundleConfigAsCjs",
-        "build-vite-bundle": "tsc && vite build",
-        "preview": "vite preview"
-    },
-    "devDependencies": {
-        "typescript": "^4.9.3",
-        "vite": "^4.2.0"
+        "build": "rollup --config rollup.config.js --bundleConfigAsCjs"
     },
     "dependencies": {
         "bootstrap": "5.0.1",

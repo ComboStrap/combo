@@ -15,14 +15,17 @@
         "clean": "turbo run clean && rm -rf node_modules"
     },
     "devDependencies": {
+        "@rollup/plugin-terser": "^0.4.0",
+        "@rollup/plugin-typescript": "^11.0.0",
         "@testing-library/dom": ">=8.11",
         "@testing-library/user-event": ">=13.5",
+        "jest-diff": "^29.5.0",
         "jsdom": ">=19.0",
+        "tslib": "^2.5.0",
         "turbo": "^1.2.9",
-        "typescript": "^5.0.2",
+        "typescript": "^5.0.3",
         "vite": "^4.2.1",
-        "vitest": "^0.29.8",
-        "jest-diff": "^29.5.0"
+        "vitest": "^0.29.8"
     },
     "dependencies": {}
 }

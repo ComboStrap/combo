@@ -1,10 +1,21 @@
 import {resolve} from 'path'
 import {defineConfig} from 'vite'
+import fs from "fs";
+import * as path from "path";
+
 
 let pages = {
-    main: resolve(__dirname, 'index.html'),
-    subscribe: resolve(__dirname, 'pages/subscribe.html'),
+    main: resolve(__dirname, 'index.html')
 };
+
+// Add the pages in the pages subdirectory
+let pagesFolder = resolve(__dirname, 'pages')
+fs
+    .readdirSync(pagesFolder)
+    .map(file => {
+        let fileWithoutExtension = path.basename(file, path.extname(file))
+        pages[fileWithoutExtension] = resolve(pagesFolder, file)
+    });
 
 export default defineConfig({
     build: {

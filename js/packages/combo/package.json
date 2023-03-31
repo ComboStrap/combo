@@ -3,23 +3,23 @@
   "version": "1.0.0",
   "description": "combo",
   "type": "module",
-  "types": "./dist/combo.js",
+  "types": "./dist/combo.d.ts",
   "files": [
     "dist"
   ],
-  "main": "./dist/combo.umd.cjs",
-  "module": "./dist/combo.js",
+  "main": "./dist/combo.js",
+  "module": "./dist/combo.es.js",
   "exports": {
     ".": {
-      "import": "./dist/combo.js",
-      "require": "./dist/combo.umd.cjs"
+      "import": "./dist/combo.es.js",
+      "require": "./dist/combo.js"
     }
   },
   "private": true,
   "scripts": {
     "preview": "vite preview --outDir .",
     "build": "tsc && vite build && yarn types",
-    "deploy": "vitest run && yarn build && cp dist/combo.umd.cjs ../../../resources/library/combo/combo.min.js || cp dist/combo.umd.cjs ../../../resources/library/combo/combo.min.js",
+    "deploy": "vitest run && yarn build && cp dist/combo.js ../../../resources/library/combo/combo.min.js || cp dist/combo.js ../../../resources/library/combo/combo.min.js",
     "test": "vitest watch",
     "types": "tsc --project tsconfig.types.json",
     "coverage": "vitest run --coverage",

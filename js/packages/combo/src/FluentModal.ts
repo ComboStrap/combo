@@ -40,7 +40,7 @@ export default class FluentModal {
     private bootStrapModal: Modal | undefined;
     private readonly modalContent: HTMLDivElement;
     private modalBody: HTMLDivElement | undefined;
-    private placementElement: HTMLElement | undefined;
+    private placementElement: Element | undefined;
 
     /**
      * A valid HTML id
@@ -99,8 +99,10 @@ export default class FluentModal {
         return this;
 
     }
-
-    setPlacementBottomToElement(relativeElement: HTMLElement) {
+    /**
+     * Position the modal just below this element
+     */
+    setPlacementBottomToElement(relativeElement: Element) {
         this.placementElement = relativeElement;
         return this;
     }

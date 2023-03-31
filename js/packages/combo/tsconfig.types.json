@@ -7,8 +7,8 @@
     "allowJs": true,
     // Generate d.ts files
     "declaration": true,
-    // This compiler run should
-    // only output d.ts files
+    // This compiler run should only output d.ts files
+    // to not overwrite the js file
     "emitDeclarationOnly": true,
     // Types should go into this directory.
     // Removing this would place the .d.ts files

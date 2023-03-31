@@ -7,8 +7,9 @@ We follow the [recommandations](https://vitejs.dev/guide/build.html#library-mode
 let package = {
     name: "my-lib",
     type: "module",
-    // path to the main types
+    // path to the main declaration types
     types: "...",
+    // output
     files: ["dist"], 
     // Entry-point for `require("my-package") in CJS
     main: "./dist/my-lib.umd.cjs",

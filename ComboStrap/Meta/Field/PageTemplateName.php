@@ -12,7 +12,7 @@ use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataText;
 use ComboStrap\MetaManagerForm;
-use ComboStrap\PageTemplateEngine;
+use ComboStrap\TemplateEngine;
 use ComboStrap\Site;
 use ComboStrap\SlotSystem;
 use ComboStrap\Tag\BarTag;
@@ -86,7 +86,7 @@ class PageTemplateName extends MetadataText
     {
         try {
             $templateNames = [];
-            $directories = PageTemplateEngine::createFromContext()
+            $directories = TemplateEngine::createFromContext()
                 ->getTemplateSearchDirectories();
             foreach ($directories as $directory) {
                 $files = FileSystems::getChildrenLeaf($directory);
@@ -95,7 +95,7 @@ class PageTemplateName extends MetadataText
                     if (strpos($lastNameWithoutExtension, self::APP_PREFIX) === 0) {
                         continue;
                     }
-                    if ($file->getExtension() === PageTemplateEngine::EXTENSION_HBS) {
+                    if ($file->getExtension() === TemplateEngine::EXTENSION_HBS) {
 
                         $templateNames[] = $lastNameWithoutExtension;
                     }
@@ -206,7 +206,7 @@ class PageTemplateName extends MetadataText
             $templatePrefixes = [];
         }
 
-        $pageTemplateEngine = PageTemplateEngine::createFromContext();
+        $pageTemplateEngine = TemplateEngine::createFromContext();
 
 
         /**

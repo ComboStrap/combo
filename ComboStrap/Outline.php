@@ -550,7 +550,7 @@ class Outline
                 if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";
                 } else {
-                    $mainContainerSelector = "#" . PageTemplateSlot::MAIN_CONTENT_ID;
+                    $mainContainerSelector = "#" . TemplateSlot::MAIN_CONTENT_ID;
                 }
                 /**
                  * Because the HTML file structure is not really fixed
@@ -896,9 +896,9 @@ EOF;
         try {
             if ($this->markupPath !== null) {
                 $contextPath = $this->markupPath->getPathObject()->toWikiPath();
-                $hasMainHeaderElement = PageTemplate::create()
+                $hasMainHeaderElement = TemplateForWebPage::create()
                     ->setRequestedContextPath($contextPath)
-                    ->hasElement(PageTemplateSlot::MAIN_HEADER_ID);
+                    ->hasElement(TemplateSlot::MAIN_HEADER_ID);
                 $isThemeSystemEnabled = ExecutionContext::getActualOrCreateFromEnv()
                     ->getConfig()
                     ->isThemeSystemEnabled();

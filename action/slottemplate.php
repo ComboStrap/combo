@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\PageTemplate;
+use ComboStrap\TemplateForWebPage;
 use ComboStrap\PluginUtility;
 use ComboStrap\SlotSystem;
 use ComboStrap\WikiPath;
@@ -8,7 +8,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FileSystems;
 use ComboStrap\FetcherPage;
-use ComboStrap\PageTemplateSlot;
+use ComboStrap\TemplateSlot;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Site;
@@ -47,7 +47,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
         $pageHeaderSlotName = SlotSystem::getPageHeaderSlotName();
         $toQualifiedId = $page->getPathObject()->toAbsoluteId();
         if ($toQualifiedId === ":$pageHeaderSlotName") {
-            $pageHeaderPath = PageTemplateSlot::getDefaultSlotContentPath(PageTemplateSlot::PAGE_HEADER_ID);
+            $pageHeaderPath = TemplateSlot::getDefaultSlotContentPath(TemplateSlot::PAGE_HEADER_ID);
             try {
                 $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
                 $event->data["doreplace"] = false;
@@ -65,7 +65,7 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
 
         $pageFooterSlotName = SlotSystem::getPageFooterSlotName();
         if ($toQualifiedId === ":$pageFooterSlotName") {
-            $pageFooterPath = PageTemplateSlot::getDefaultSlotContentPath(PageTemplateSlot::PAGE_FOOTER_ID);
+            $pageFooterPath = TemplateSlot::getDefaultSlotContentPath(TemplateSlot::PAGE_FOOTER_ID);
             try {
                 $event->data["tpl"] = FileSystems::getContent($pageFooterPath);
                 $event->data["doreplace"] = false;

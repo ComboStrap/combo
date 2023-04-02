@@ -101,7 +101,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             throw new ExceptionRuntimeInternal("The toc could not be created. Error:{$e->getMessage()}", self::CANONICAL, 1, $e);
         }
         try {
-            return PageTemplate::create()
+            return TemplateForWebPage::create()
                 ->setRequestedTemplateName($layoutName)
                 ->setRequestedContextPath($startMarkupWikiPath)
                 ->setRequestedTitle($title)

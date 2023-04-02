@@ -93,7 +93,7 @@ EOF;
      */
     public static function getPageFooterSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplateSlot::CONF_PAGE_FOOTER_NAME, PageTemplateSlot::CONF_PAGE_FOOTER_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(TemplateSlot::CONF_PAGE_FOOTER_NAME, TemplateSlot::CONF_PAGE_FOOTER_NAME_DEFAULT);
     }
 
     /**
@@ -109,7 +109,7 @@ EOF;
      */
     public static function getMainSideSlotName()
     {
-        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(PageTemplateSlot::CONF_PAGE_MAIN_SIDEKICK_NAME, PageTemplateSlot::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfValue(TemplateSlot::CONF_PAGE_MAIN_SIDEKICK_NAME, TemplateSlot::CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT);
     }
 
     /**

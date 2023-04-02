@@ -17,7 +17,7 @@ use Symfony\Component\Yaml\Yaml;
  * It's used by Fetcher that creates pages such
  * as {@link FetcherPage}, {@link FetcherMarkupWebcode} or {@link FetcherPageBundler}
  */
-class PageTemplate
+class TemplateForWebPage
 {
 
 
@@ -50,14 +50,14 @@ class PageTemplate
     private string $requestedTheme;
 
 
-    public static function create(): PageTemplate
+    public static function create(): TemplateForWebPage
     {
-        return new PageTemplate();
+        return new TemplateForWebPage();
     }
 
-    public static function config(): PageTemplate
+    public static function config(): TemplateForWebPage
     {
-        return new PageTemplate();
+        return new TemplateForWebPage();
     }
 
     public static function getPoweredBy(): string
@@ -76,16 +76,16 @@ class PageTemplate
      */
     public function getHtmlTemplatePath(): LocalPath
     {
-        return $this->getEngine()->searchTemplateByName($this->templateName . "." . PageTemplateEngine::EXTENSION_HBS);
+        return $this->getEngine()->searchTemplateByName($this->templateName . "." . TemplateEngine::EXTENSION_HBS);
     }
 
-    public function setTemplateString(string $templateString): PageTemplate
+    public function setTemplateString(string $templateString): TemplateForWebPage
     {
         $this->templateString = $templateString;
         return $this;
     }
 
-    public function setModel(array $model): PageTemplate
+    public function setModel(array $model): TemplateForWebPage
     {
         $this->model = $model;
         return $this;
@@ -143,7 +143,7 @@ class PageTemplate
              * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
              * <!doctype html>
              */
-            return $pageTemplateEngine->render($template, $model);
+            return $pageTemplateEngine->renderWebPage($template, $model);
 
 
         } finally {
@@ -228,7 +228,7 @@ class PageTemplate
         return $this->hadMessages;
     }
 
-    public function setRequestedTheme(string $themeName): PageTemplate
+    public function setRequestedTheme(string $themeName): TemplateForWebPage
     {
         $this->requestedTheme = $themeName;
         return $this;
@@ -247,7 +247,7 @@ class PageTemplate
      */
     private function checkCharSetMeta(XmlElement $head)
     {
-        $charsetValue = PageTemplate::UTF_8_CHARSET_VALUE;
+        $charsetValue = TemplateForWebPage::UTF_8_CHARSET_VALUE;
         try {
             $metaCharset = $head->querySelector("meta[charset]");
             $charsetActualValue = $metaCharset->getAttribute("charset");
@@ -515,14 +515,14 @@ class PageTemplate
              * Slots
              */
             foreach ($this->getElementIds() as $elementId) {
-                if ($elementId === PageTemplateSlot::MAIN_TOC_ID) {
+                if ($elementId === TemplateSlot::MAIN_TOC_ID) {
                     /**
                      * Main toc element is not a slot
                      */
                     continue;
                 }
                 try {
-                    $slotFetcherMarkup = PageTemplateSlot::createFor($elementId, $this)
+                    $slotFetcherMarkup = TemplateSlot::createFor($elementId, $this)
                         ->getMarkupFetcher();
                     $model["$elementId-html"] = $slotFetcherMarkup->getFetchString();
                 } catch (ExceptionNotFound $e) {
@@ -708,7 +708,7 @@ class PageTemplate
     }
 
     public
-    function setMainContent(string $mainContent): PageTemplate
+    function setMainContent(string $mainContent): TemplateForWebPage
     {
         $this->mainContent = $mainContent;
         return $this;
@@ -877,7 +877,7 @@ EOF;
 
         // no more 1x1 px image because of ad blockers
         return TagAttributes::createEmpty()
-            ->addOutputAttributeValue("id", PageTemplate::TASK_RUNNER_ID)
+            ->addOutputAttributeValue("id", TemplateForWebPage::TASK_RUNNER_ID)
             ->addClassName("d-none")
             ->addOutputAttributeValue('width', 2)
             ->addOutputAttributeValue('height', 1)
@@ -953,7 +953,7 @@ EOF;
 
 
     public
-    function setRequestedTemplateName(string $templateName): PageTemplate
+    function setRequestedTemplateName(string $templateName): TemplateForWebPage
     {
         $this->templateName = $templateName;
         return $this;
@@ -962,10 +962,10 @@ EOF;
     /**
      * Add or not the task runner / web bug call
      * @param bool $b
-     * @return PageTemplate
+     * @return TemplateForWebPage
      */
     public
-    function setRequestedEnableTaskRunner(bool $b): PageTemplate
+    function setRequestedEnableTaskRunner(bool $b): TemplateForWebPage
     {
         $this->requestedEnableTaskRunner = $b;
         return $this;
@@ -974,10 +974,10 @@ EOF;
 
     /**
      * @param Lang $requestedLang
-     * @return PageTemplate
+     * @return TemplateForWebPage
      */
     public
-    function setRequestedLang(Lang $requestedLang): PageTemplate
+    function setRequestedLang(Lang $requestedLang): TemplateForWebPage
     {
         $this->requestedLang = $requestedLang;
         return $this;
@@ -985,10 +985,10 @@ EOF;
 
     /**
      * @param string $requestedTitle
-     * @return PageTemplate
+     * @return TemplateForWebPage
      */
     public
-    function setRequestedTitle(string $requestedTitle): PageTemplate
+    function setRequestedTitle(string $requestedTitle): TemplateForWebPage
     {
         $this->requestedTitle = $requestedTitle;
         return $this;
@@ -997,24 +997,24 @@ EOF;
     /**
      * Delete the social head tags
      * @param bool $deleteSocialHeads
-     * @return PageTemplate
+     * @return TemplateForWebPage
      */
     public
-    function setDeleteSocialHeadTags(bool $deleteSocialHeads): PageTemplate
+    function setDeleteSocialHeadTags(bool $deleteSocialHeads): TemplateForWebPage
     {
         $this->deleteSocialHeads = $deleteSocialHeads;
         return $this;
     }
 
     public
-    function setRequestedContextPath(WikiPath $contextPath): PageTemplate
+    function setRequestedContextPath(WikiPath $contextPath): TemplateForWebPage
     {
         $this->requestedContextPath = $contextPath;
         return $this;
     }
 
     public
-    function setToc(Toc $toc): PageTemplate
+    function setToc(Toc $toc): TemplateForWebPage
     {
         $this->toc = $toc;
         return $this;
@@ -1034,14 +1034,14 @@ EOF;
     }
 
     private
-    function getEngine(): PageTemplateEngine
+    function getEngine(): TemplateEngine
     {
         if ($this->isTemplateStringExecutionMode()) {
-            return PageTemplateEngine::createForString();
+            return TemplateEngine::createForString();
 
         } else {
             $theme = $this->getTheme();
-            return PageTemplateEngine::createForTheme($theme);
+            return TemplateEngine::createForTheme($theme);
         }
     }
 

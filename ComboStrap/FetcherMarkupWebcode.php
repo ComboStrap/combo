@@ -134,7 +134,7 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
         $title = $this->getRequestedTitle();
 
 
-        $html = PageTemplate::create()
+        $html = TemplateForWebPage::create()
             ->setRequestedTitle($title)
             ->setRequestedTemplateName(PageTemplateName::BLANK_TEMPLATE_VALUE)
             ->setRequestedEnableTaskRunner(false)

@@ -7,7 +7,7 @@ namespace ComboStrap;
 /**
  * This class represents a page layout slots
  */
-class PageTemplateSlot
+class TemplateSlot
 {
     public const SLOT_IDS = [
         self::PAGE_SIDE_ID,
@@ -37,9 +37,9 @@ class PageTemplateSlot
 
 
     /**
-     * @var PageTemplate - the page layout of this page element
+     * @var TemplateForWebPage - the page layout of this page element
      */
-    private PageTemplate $pageTemplate;
+    private TemplateForWebPage $pageTemplate;
     /**
      * @var FetcherMarkup - the fetcher if this is a slot and has a page fragment source
      */
@@ -47,7 +47,7 @@ class PageTemplateSlot
     private string $slotId;
 
 
-    public function __construct(string $slotId, PageTemplate $pageTemplate)
+    public function __construct(string $slotId, TemplateForWebPage $pageTemplate)
     {
 
         $this->slotId = $slotId;
@@ -59,9 +59,9 @@ class PageTemplateSlot
 
     }
 
-    public static function createFor(string $slotId, PageTemplate $pageTemplate): PageTemplateSlot
+    public static function createFor(string $slotId, TemplateForWebPage $pageTemplate): TemplateSlot
     {
-        return new PageTemplateSlot($slotId, $pageTemplate);
+        return new TemplateSlot($slotId, $pageTemplate);
     }
 
 

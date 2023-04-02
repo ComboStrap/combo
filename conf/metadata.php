@@ -27,7 +27,7 @@ use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
-use ComboStrap\PageTemplateEngine;
+use ComboStrap\TemplateEngine;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
 use ComboStrap\Prism;
@@ -409,5 +409,5 @@ $meta[SiteConfig::REM_CONF] = array('numeric');
 /**
  * Theme
  */
-$themes = PageTemplateEngine::getThemes();
-$meta[PageTemplateEngine::CONF_THEME] = array('multichoice', '_choices' => $themes);;
+$themes = TemplateEngine::getThemes();
+$meta[TemplateEngine::CONF_THEME] = array('multichoice', '_choices' => $themes);;

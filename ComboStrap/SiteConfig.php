@@ -415,7 +415,7 @@ class SiteConfig
 
     public function getTheme(): string
     {
-        return $this->getValue(PageTemplateEngine::CONF_THEME, PageTemplateEngine::CONF_THEME_DEFAULT);
+        return $this->getValue(TemplateEngine::CONF_THEME, TemplateEngine::CONF_THEME_DEFAULT);
     }
 
     /**
@@ -478,13 +478,13 @@ class SiteConfig
 
     public function setTheme(string $themeName): SiteConfig
     {
-        $this->setConf(PageTemplateEngine::CONF_THEME, $themeName);
+        $this->setConf(TemplateEngine::CONF_THEME, $themeName);
         return $this;
     }
 
     public function getPageHeaderSlotName()
     {
-        return $this->getValue(PageTemplateSlot::CONF_PAGE_HEADER_NAME, PageTemplateSlot::CONF_PAGE_HEADER_NAME_DEFAULT);
+        return $this->getValue(TemplateSlot::CONF_PAGE_HEADER_NAME, TemplateSlot::CONF_PAGE_HEADER_NAME_DEFAULT);
     }
 
     public function setConfDokuWiki(string $key, $value): SiteConfig

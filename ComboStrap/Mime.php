@@ -103,7 +103,7 @@ class Mime
             case MarkupRenderer::METADATA_EXTENSION:
                 // text storage, array memory
                 return new Mime("text/meta");
-            case PageTemplateEngine::EXTENSION_HBS:
+            case TemplateEngine::EXTENSION_HBS:
                 // handlebars
                 return new Mime("text/hbs");
             default:

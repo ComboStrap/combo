@@ -9,6 +9,7 @@ use ComboStrap\Tag\BoxTag;
 use ComboStrap\Tag\FollowTag;
 use ComboStrap\Tag\MermaidTag;
 use ComboStrap\Tag\ShareTag;
+use ComboStrap\Tag\SubscribeTag;
 use ComboStrap\Tag\TableTag;
 use ComboStrap\Tag\WebCodeTag;
 use ComboStrap\TagAttribute\Hero;
@@ -17,6 +18,7 @@ use Doku_Renderer;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use DokuWiki_Syntax_Plugin;
+use Mpdf\Tag\Sub;
 use renderer_plugin_combo_analytics;
 use renderer_plugin_combo_xml;
 use syntax_plugin_combo_code;
@@ -832,6 +834,9 @@ class XmlTagProcessing
                         return true;
                     case MediaMarkup::TAG:
                         $renderer->doc .= MediaMarkup::renderSpecial($data, $renderer);
+                        return true;
+                    case SubscribeTag::LOGICAL_TAG:
+                        $renderer->doc .= SubscribeTag::renderEnterXhtml($tagAttributes);
                         return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

@@ -23,7 +23,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     private MarkupPath $requestedMarkupPath;
     private string $requestedLayoutName;
-    private PageTemplate $pageTemplate;
+    private TemplateForWebPage $pageTemplate;
     private FetcherCache $fetcherCache;
 
 
@@ -215,7 +215,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $title = PageTitle::createForMarkup($this->getRequestedPage())->getValueOrDefault();
 
         $layoutName = $this->getRequestedTemplateOrDefault();
-        $this->pageTemplate = PageTemplate::create()
+        $this->pageTemplate = TemplateForWebPage::create()
             ->setRequestedTemplateName($layoutName)
             ->setRequestedContextPath($this->getRequestedPath())
             ->setRequestedLang($pageLang)

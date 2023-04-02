@@ -26,7 +26,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
     private bool $build = false;
 
 
-    private PageTemplate $pageLayout;
+    private TemplateForWebPage $pageLayout;
 
 
     /**
@@ -76,7 +76,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
             $pageLang = Site::getLangObject();
             $title = $this->getLabel();
 
-            $this->pageLayout = PageTemplate::create()
+            $this->pageLayout = TemplateForWebPage::create()
                 ->setRequestedTemplateName($this->getRequestedTemplateOrDefault())
                 ->setRequestedLang($pageLang)
                 ->setRequestedEnableTaskRunner(false) // no page id

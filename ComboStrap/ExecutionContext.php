@@ -136,10 +136,10 @@ class ExecutionContext
     private array $executingMarkupHandlerStack = [];
 
     /**
-     * @var PageTemplate - the page template fetcher running (when a fetcher creates a page, it would uses this fetcher)
+     * @var TemplateForWebPage - the page template fetcher running (when a fetcher creates a page, it would uses this fetcher)
      * This class is called by the main fetcher to create a page
      */
-    private PageTemplate $executingPageTemplate;
+    private TemplateForWebPage $executingPageTemplate;
     private string $creationTime;
 
 
@@ -215,7 +215,7 @@ class ExecutionContext
      * @param string $requestedId
      * @return ExecutionContext
      * @deprecated use {@link self::setDefaultContextPath()} if you want to set a context path
-     * without using a {@link PageTemplate} or {@link FetcherMarkup}
+     * without using a {@link TemplateForWebPage} or {@link FetcherMarkup}
      */
     public static function getOrCreateFromRequestedWikiId(string $requestedId): ExecutionContext
     {
@@ -417,7 +417,7 @@ class ExecutionContext
                  * Case when the main handler
                  * run the main content before
                  * to inject it in the template page
-                 * {@link PageTemplate::render()}
+                 * {@link TemplateForWebPage::render()}
                  */
                 return $this->getExecutingMarkupHandler()
                     ->getRequestedContextPath();
@@ -973,7 +973,7 @@ class ExecutionContext
      * The page global context object
      * @throws ExceptionNotFound
      */
-    public function getExecutingPageTemplate(): PageTemplate
+    public function getExecutingPageTemplate(): TemplateForWebPage
     {
         if (isset($this->executingPageTemplate)) {
             return $this->executingPageTemplate;
@@ -985,10 +985,10 @@ class ExecutionContext
      * Set the page template that is executing.
      * It's the context object for all page related
      * (mostly header event)
-     * @param PageTemplate $pageTemplate
+     * @param TemplateForWebPage $pageTemplate
      * @return $this
      */
-    public function setExecutingPageTemplate(PageTemplate $pageTemplate): ExecutionContext
+    public function setExecutingPageTemplate(TemplateForWebPage $pageTemplate): ExecutionContext
     {
         $this->executingPageTemplate = $pageTemplate;
         return $this;

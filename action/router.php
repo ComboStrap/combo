@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 
 
 use ComboStrap\DatabasePageRow;
@@ -28,6 +28,7 @@ use ComboStrap\Sqlite;
 use ComboStrap\Web\Url;
 use ComboStrap\WikiPath;
 
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class action_plugin_combo_url

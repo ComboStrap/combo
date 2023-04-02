@@ -185,7 +185,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     /**
      * Use mostly in test
-     * The coutnerpart of {@link \TestUtility::renderText2XhtmlWithoutP()}
+     * The coutnerpart of {@link \ComboStrap\Test\TestUtility::renderText2XhtmlWithoutP()}
      * @throws ExceptionNotExists
      */
     public static function createStandaloneExecutionFromStringMarkupToXhtml(string $markup): FetcherMarkup

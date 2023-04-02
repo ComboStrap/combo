@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 
-use BrowserRunner;
+use ComboStrap\Test\BrowserRunner;
 use ComboStrap\Xml\XmlDocument;
 use Exception;
 use TestRequest;

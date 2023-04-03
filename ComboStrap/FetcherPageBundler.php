@@ -217,7 +217,8 @@ EOF;
                 HeadingTag::TYPE_OUTLINE,
                 null,
                 null,
-                0
+                null,
+                \syntax_plugin_combo_xmlblocktag::TAG
             );
             $title = PageTitle::createForMarkup($outline->getMarkupPath())->getValueOrDefault();
             $unmatchedHeading = Call::createComboCall(
@@ -226,12 +227,19 @@ EOF;
                 [],
                 null,
                 $title,
-                $title
+                $title,
+                null,
+                \syntax_plugin_combo_xmlblocktag::TAG
             );
             $exitHeading = Call::createComboCall(
                 HeadingTag::HEADING_TAG,
                 DOKU_LEXER_EXIT,
-                array(HeadingTag::LEVEL => 1)
+                array(HeadingTag::LEVEL => 1),
+                null,
+                null,
+                null,
+                null,
+                \syntax_plugin_combo_xmlblocktag::TAG
             );
             $h1Section = OutlineSection::createFromEnterHeadingCall($enterHeading)
                 ->addHeaderCall($unmatchedHeading)

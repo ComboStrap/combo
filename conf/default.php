@@ -257,7 +257,7 @@ $conf["svgOptimizationEnable"] = 1;
  * The name of the group of user that can upload svg
  * {@link Identity::CONF_DESIGNER_GROUP_NAME}
  */
-$conf["svgUploadGroupName"] = "";
+$conf["combo-conf-006"] = "";
 
 /**
  * Svg Optimization

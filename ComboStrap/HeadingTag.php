@@ -213,11 +213,10 @@ class HeadingTag
      * @param string $context
      * @param TagAttributes $tagAttributes
      * @param Doku_Renderer_xhtml $renderer
-     * @param integer $pos
-     * @return string|void
+     * @param int|null $pos - null if the call was generated
+     * @return void
      */
-    public
-    static function processRenderEnterXhtml(string $context, TagAttributes $tagAttributes, Doku_Renderer_xhtml &$renderer, int $pos)
+    public static function processRenderEnterXhtml(string $context, TagAttributes $tagAttributes, Doku_Renderer_xhtml &$renderer, ?int $pos)
     {
 
         /**

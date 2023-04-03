@@ -277,7 +277,10 @@ class PageImageTag
 
     public static function getDefaultAttributes(): array
     {
-        return [MediaMarkup::LINKING_KEY => MediaMarkup::LINKING_NOLINK_VALUE];
+        return [
+            MediaMarkup::LINKING_KEY => MediaMarkup::LINKING_NOLINK_VALUE,
+            TagAttributes::TYPE_KEY => self::FEATURED
+        ];
     }
 
     private static function getOrderOfPreference(TagAttributes $tagAttributes): array

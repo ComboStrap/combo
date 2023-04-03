@@ -42,7 +42,12 @@ class OutlineSection extends TreeNode
     {
         $this->headingEnterCall = $headingEnterCall;
         if ($headingEnterCall !== null) {
-            $this->startFileIndex = $headingEnterCall->getFirstMatchedCharacterPosition();
+            $position = $headingEnterCall->getFirstMatchedCharacterPosition();
+            if($position===null){
+                $this->startFileIndex = 0;
+            } else {
+                $this->startFileIndex = $position;
+            }
             $this->addHeaderCall($headingEnterCall);
         } else {
             $this->startFileIndex = 0;

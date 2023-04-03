@@ -438,8 +438,6 @@ class ExecutionContext
                  * * `id` may be asked by acl to determine the right
                  * * ...
                  */
-
-
                 global $INPUT;
                 $inputId = $INPUT->str("id");
                 if (!empty($inputId)) {

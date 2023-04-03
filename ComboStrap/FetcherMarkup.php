@@ -442,7 +442,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     public
     function loadSnippets(): array
     {
-        $data = $this->getSnippetCacheStore()->retrieveCache();
+
+        $snippetCacheStore = $this->getSnippetCacheStore();
+        $data = $snippetCacheStore->retrieveCache();
         $nativeSnippets = [];
         if (!empty($data)) {
             $jsonDecodeSnippets = json_decode($data, true);

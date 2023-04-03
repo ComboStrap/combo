@@ -121,7 +121,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             if (!$snippet->hasHtmlOutputAlreadyOccurred()) {
                 try {
                     $tag = $snippet->toDokuWikiArray();
-                } catch (ExceptionBadState|ExceptionNotFound $e) {
+                } catch (\Exception $e) {
                     LogUtility::error("We couldn't get the attributes of the snippet ($snippet). It has been skipped. Error: {$e->getMessage()}", self::CANONICAL);
                     continue;
                 }

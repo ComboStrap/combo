@@ -1054,7 +1054,7 @@ class FetcherSvg extends IFetcherLocalImage
                      * They are not the width and height of the icon but
                      * the width and height of the viewbox
                      */
-                    LogUtility::info("An icon or tile is defined as having the same dimension but the width ($targetWidth) is different from the height ($targetHeight). The icon will be cropped.");
+                    LogUtility::info("An icon or tile is defined as having the same dimension but the svg ($this) has a target width of ($targetWidth) that is different from the target height ($targetHeight). The icon will be cropped.");
                 }
 
                 break;

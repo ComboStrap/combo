@@ -2134,7 +2134,18 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         $executingPath = $this->getPathObject();
-        $contextPath = $executionContext->getRequestedPath();
+        $markupPath = MarkupPath::createPageFromPathObject($executingPath);
+        if (!$markupPath->isSlot()) {
+            $contextPath = $executionContext->getRequestedPath();
+        } else {
+            try {
+                $markupContextPath = SlotSystem::getContextPath();
+                SlotSystem::sendContextPathMessage($markupContextPath);
+                $contextPath = $markupContextPath->toWikiPath();
+            } catch (\Exception $e) {
+                $contextPath = $executionContext->getRequestedPath();
+            }
+        }
         return FetcherMarkup::confRoot()
             ->setRequestedMimeToXhtml()
             ->setRequestedContextPath($contextPath)
@@ -2142,7 +2153,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             ->build();
     }
 
-    public function isRootItemPage(): bool
+    public
+    function isRootItemPage(): bool
     {
         try {
             if ($this->isIndexPage()) {
@@ -2158,7 +2170,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         }
     }
 
-    private function getPrimaryFooterPage(): ?MarkupPath
+    private
+    function getPrimaryFooterPage(): ?MarkupPath
     {
         $nearest = page_findnearest(SlotSystem::getMainFooterSlotName());
         if ($nearest === false) {
@@ -2171,7 +2184,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * Set the page path to an index page for a directory path
      * @return void
      */
-    private function setCorrectPathForDirectoryToIndexPage(): void
+    private
+    function setCorrectPathForDirectoryToIndexPage(): void
     {
 
 
@@ -2213,7 +2227,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
-    public function getUidObject(): Metadata
+    public
+    function getUidObject(): Metadata
     {
         if ($this->uidObject === null) {
             try {
@@ -2284,7 +2299,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return $this->path->getHost();
     }
 
-    public function __toString(): string
+    public
+    function __toString(): string
     {
         return $this->path->__toString();
     }
@@ -2293,7 +2309,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
      */
-    public static function createFromUri(string $uri): MarkupPath
+    public
+    static function createFromUri(string $uri): MarkupPath
     {
         $path = FileSystems::createPathFromUri($uri);
         return new MarkupPath($path);

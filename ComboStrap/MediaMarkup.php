@@ -646,7 +646,11 @@ class MediaMarkup
         try {
             return $this->getLazyLoadMethod();
         } catch (ExceptionNotFound $e) {
-            return self::LAZY_LOAD_METHOD_LOZAD_VALUE;
+            /**
+             * With lozad as default, in a template,
+             * it would not work as the script would not be added
+             */
+            return self::LAZY_LOAD_METHOD_HTML_VALUE;
         }
 
     }

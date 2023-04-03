@@ -23,7 +23,6 @@ class PageImageTag
         PageImageTag::VIGNETTE_TYPE,
         PageImageTag::LOGO_TYPE
     ];
-    public const ORDER_OF_PREFERENCE = "order";
     public const ANCESTOR_TYPE = "ancestor";
     public const TAG = "pageimage";
     public const FEATURED = "featured";
@@ -56,22 +55,6 @@ class PageImageTag
          * Page Image Order Calculation
          */
         $type = $tagAttributes->getComponentAttributeValue(TagAttributes::TYPE_KEY, PageImageTag::FEATURED);
-        // the type is first
-        $orderOfPreference[] = $type;
-        // then the default one
-        $default = $tagAttributes->getValueAndRemoveIfPresent(PageImageTag::DEFAULT_ATTRIBUTE);
-        if ($default === null) {
-            $defaultOrderOfPreference = PageImageTag::DEFAULT_ORDER;
-        } else {
-            $defaultOrderOfPreference = explode("|", $default);
-        }
-        foreach ($defaultOrderOfPreference as $defaultImageOrder) {
-            if ($defaultImageOrder === $type) {
-                continue;
-            }
-            $orderOfPreference[] = $defaultImageOrder;
-        }
-
 
         /**
          * Context
@@ -85,8 +68,7 @@ class PageImageTag
 
         return array(
             PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-            PluginUtility::CONTEXT => $context,
-            PageImageTag::ORDER_OF_PREFERENCE => $orderOfPreference
+            PluginUtility::CONTEXT => $context
         );
     }
 
@@ -110,7 +92,7 @@ class PageImageTag
         /**
          * Image Order of precedence
          */
-        $order = $data[PageImageTag::ORDER_OF_PREFERENCE];
+        $order = self::getOrderOfPreference($tagAttributes);
         $imageFetcher = null;
         foreach ($order as $pageImageProcessing) {
             switch ($pageImageProcessing) {
@@ -296,6 +278,27 @@ class PageImageTag
     public static function getDefaultAttributes(): array
     {
         return [MediaMarkup::LINKING_KEY => MediaMarkup::LINKING_NOLINK_VALUE];
+    }
+
+    private static function getOrderOfPreference(TagAttributes $tagAttributes): array
+    {
+        // the type is first
+        $type = $tagAttributes->getType();
+        $orderOfPreference[] = $type;
+        // then the default one
+        $default = $tagAttributes->getValueAndRemoveIfPresent(PageImageTag::DEFAULT_ATTRIBUTE);
+        if ($default === null) {
+            $defaultOrderOfPreference = PageImageTag::DEFAULT_ORDER;
+        } else {
+            $defaultOrderOfPreference = explode("|", $default);
+        }
+        foreach ($defaultOrderOfPreference as $defaultImageOrder) {
+            if ($defaultImageOrder === $type) {
+                continue;
+            }
+            $orderOfPreference[] = $defaultImageOrder;
+        }
+        return $orderOfPreference;
     }
 
 }

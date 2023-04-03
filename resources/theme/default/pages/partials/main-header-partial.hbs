@@ -1,0 +1,10 @@
+{{#if main-header-html}}
+    {{{ main-header-html }}}
+{{else}}
+    <h1>{{ h1 }}</h1>
+    {{#if lead}}
+        <div class="lead">{{lead}}</div>
+    {{/if}}
+    {{#breadcrumb}}{{/breadcrumb}}
+    {{#page-image 'featured height="250" ratio="21:9" linking="default" default="icon|ancestor|logo" zoom="-10"'}}{{/page-image}}
+{{/if}}

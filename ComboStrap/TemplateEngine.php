@@ -214,6 +214,19 @@ class TemplateEngine
                 return BreadcrumbTag::toBreadCrumbHtml($tagAttributes);
             }
         );
+
+        /**
+         * Page Image
+         */
+        $handleBars->addHelper("page-image",
+            function ($template, Context $context, $args, $source) {
+                $attributes = $context->get($args);
+                $knownType = PageImageTag::TYPES;
+                $default = PageImageTag::getDefaultAttributes();
+                $tagAttributes = TagAttributes::createFromTagMatch("<page-image $attributes/>", $default, $knownType);
+                return PageImageTag::render($tagAttributes,[]);
+            }
+        );
     }
 
     public static function createForDefaultTheme(): TemplateEngine

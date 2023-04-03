@@ -57,6 +57,11 @@ class ExecutionContext
      */
     const SHOW_ACTION = "show";
     const EDIT_ACTION = "edit";
+    /**
+     * Preview is also used to
+     * set the {@link FetcherMarkup::isFragment()}
+     * processing to fragment
+     */
     const PREVIEW_ACTION = "preview";
     const ADMIN_ACTION = "admin";
     const DRAFT_ACTION = "draft";

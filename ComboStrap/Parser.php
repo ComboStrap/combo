@@ -22,7 +22,10 @@ class Parser
             $ID = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getDefaultContextPath()->getWikiId();
         }
         try {
-            $ACT = "show";
+            /**
+             * Fragment
+             */
+            $ACT = ExecutionContext::PREVIEW_ACTION;
             $modes = p_get_parsermodes();
             $handler = new Doku_Handler();
             $parser = new \dokuwiki\Parsing\Parser($handler);

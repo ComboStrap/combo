@@ -92,8 +92,8 @@ class action_plugin_combo_instructionspostprocessing extends DokuWiki_Action_Plu
 
                 /**
                  * In preview mode, this is always a `fragment run`
-                 * (otherwise we get warning on the outline because
-                 * the heading should start with heading 1 or 2, not 3)
+                 * * otherwise we get warning on the outline because the heading should start with heading 1 or 2, not 3
+                 * * and this is used in {@link \ComboStrap\Parser::parseMarkupToHandler()}
                  */
                 if ($executionContext->getExecutingAction() !== ExecutionContext::PREVIEW_ACTION) {
 
@@ -118,7 +118,7 @@ class action_plugin_combo_instructionspostprocessing extends DokuWiki_Action_Plu
             $callStack = CallStack::createFromHandler($handler);
             // no outline or edit button for dynamic rendering
             // but closing of atx heading
-            $handler->calls = Outline::createFromCallStack($callStack, null, $isFragment)
+            $handler->calls = Outline::createFromCallStack($callStack, null, true)
                 ->toFragmentInstructionCalls();
             return;
         }

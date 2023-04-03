@@ -407,6 +407,14 @@ class FetcherMarkupBuilder
         return $this;
     }
 
+    /**
+     * Determins if the run is a fragment or document execution
+     *
+     * Note: in dokuwiki term, a {@link ExecutionContext::PREVIEW_ACTION}
+     * preview action is a fragment
+     *
+     * @return bool true if this is a document execution
+     */
     private function getIsDocumentExecution(): bool
     {
 

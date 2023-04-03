@@ -37,12 +37,15 @@ class SubscribeTag
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         $snippetSystem = $executionContext->getSnippetSystem();
         $snippetSystem->attachJavascriptComboLibrary();
-        $snippetSystem->attachJavascriptFromComponentId(self::LOGICAL_TAG)
+        $subscribeTag = self::LOGICAL_TAG;
+        $snippetSystem->attachJavascriptFromComponentId($subscribeTag)
             ->setFormat(Snippet::IIFE_FORMAT);
 
-        $success = TemplateForComponent::create(self::LOGICAL_TAG . "-success")->render([]);
+        $success = TemplateForComponent::create($subscribeTag . "-success")->render([]);
         $data['list-value'] = $attributes->getValueAndRemove(self::LIST_ID_ATTRIBUTE);
         $data['list-name'] = "listGuid";
+        $data['email-name'] = "subscriberEmail";
+        $data['email-id'] = $executionContext->getIdManager()->generateNewHtmlIdForComponent("$subscribeTag-email");
         $data['action'] = "https://tower.combostrap.com/combo/api/v1.0/list/registration";
         $data['success-content'] = $success;
         try {
@@ -50,7 +53,7 @@ class SubscribeTag
         } catch (ExceptionNotFound $e) {
             // none
         }
-        $form = TemplateForComponent::create(self::LOGICAL_TAG . "-form")->render($data);
+        $form = TemplateForComponent::create($subscribeTag . "-form")->render($data);
         return $attributes->toHtmlEnterTag("div") . $form . '</div>';
     }
 

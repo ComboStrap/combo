@@ -34,6 +34,7 @@ before_script:
     # - set | grep TRAVIS # env variable
     - bash .travis-boot.sh
     - bash boot.sh
+    # to install jsdom and execute a page for the test
     - npm install --global yarn
     - yarn
 

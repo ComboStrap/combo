@@ -1,0 +1,9 @@
+{
+    "name": "combo-test",
+    "version": "1.0.0",
+    "description": "Jsdom is used to execute pages in test",
+    "private": true,
+    "devDependencies": {
+        "jsdom": "^21.1.1"
+    }
+}

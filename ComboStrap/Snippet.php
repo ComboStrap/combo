@@ -88,6 +88,11 @@ class Snippet implements JsonSerializable
     public const SNIPPET_BASE = ":snippet"; // quick internal snippet
     public const CONF_USE_CDN_DEFAULT = 1;
 
+    const RAW_FORMAT = "raw";
+    const IIFE_FORMAT = "iife";
+    const ES_FORMAT = "es";
+    const UMD_FORMAT = "umd";
+
 
     /**
      * @var bool
@@ -137,6 +142,7 @@ class Snippet implements JsonSerializable
      * It will be outputted only once.
      */
     private bool $hasHtmlOutputOccurred = false;
+    private string $format = self::RAW_FORMAT;
 
     /**
      * @param Path $path - path mandatory because it's the path of fetch and it's the storage format
@@ -947,7 +953,7 @@ class Snippet implements JsonSerializable
                 if ($this->shouldBeInlined()) {
 
                     try {
-                        $tagAttributes->setInnerText($this->getInternalInlineAndFileContent());
+                        $tagAttributes->setInnerText($this->getInnerHtml());
                         return $tagAttributes;
                     } catch (ExceptionNotFound $e) {
                         throw new ExceptionBadState("The internal js snippet ($this) has no content. Skipped", self::CANONICAL);
@@ -1062,7 +1068,7 @@ class Snippet implements JsonSerializable
     {
         try {
             $tagAttributes = $this->toTagAttributes();
-        } catch (ExceptionBadState|ExceptionNotFound $e) {
+        } catch (\Exception $e) {
             throw new ExceptionRuntimeInternal("We couldn't output the snippet ($this). Error: {$e->getMessage()}", self::CANONICAL, $e);
         }
         $htmlElement = $this->getHtmlTag();
@@ -1111,6 +1117,39 @@ class Snippet implements JsonSerializable
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * The format
+     * for javascript as specified by [rollup](https://rollupjs.org/configuration-options/#output-format)
+     * @param string $format
+     * @return Snippet
+     */
+    public function setFormat(string $format): Snippet
+    {
+        $this->format = $format;
+        return $this;
+    }
+
+    /**
+     * Retrieve the content and wrap it if necessary
+     * to define the execution time
+     * (ie there is no `defer` option for inline html
+     * @throws ExceptionNotFound
+     */
+    private function getInnerHtml(): string
+    {
+        $internal = $this->getInternalInlineAndFileContent();
+        if (
+            $this->getExtension() === self::EXTENSION_JS
+            && $this->format === self::IIFE_FORMAT
+            && $this->getCritical() === false
+        ) {
+            $internal = <<<EOF
+window.addEventListener('load', function () { $internal });
+EOF;
+        }
+        return $internal;
     }
 
 

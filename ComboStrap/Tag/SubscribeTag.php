@@ -11,6 +11,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
 use ComboStrap\Site;
+use ComboStrap\Snippet;
 use ComboStrap\Template\TemplateForComponent;
 use ComboStrap\TemplateEngine;
 use ComboStrap\TagAttribute\Hero;
@@ -35,7 +36,7 @@ class SubscribeTag
 
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         $snippetSystem = $executionContext->getSnippetSystem();
-        $snippetSystem->attachJavascriptComboLibrary();
+        $snippetSystem->attachJavascriptComboLibrary()->setFormat(Snippet::IIFE_FORMAT);
         $snippetSystem->attachJavascriptFromComponentId(self::LOGICAL_TAG);
 
         $success = TemplateForComponent::create(self::LOGICAL_TAG . "-success")->render([]);

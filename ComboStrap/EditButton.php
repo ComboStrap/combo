@@ -301,7 +301,9 @@ class EditButton
                     ->addOutputAttributeValue("type", "hidden");
                 $hiddenInputs .= $inputAttributes->toHtmlEmptyTag("input");
             }
-            $url = $page->getUrlWhereIdIs(PageUrlType::CONF_VALUE_PAGE_PATH);
+            $url = $page->getUrl()
+                ->withoutRewrite()
+                ->toHtmlString();
             $classPageEdit = StyleUtility::addComboStrapSuffix(self::CLASS_SUFFIX);
 
             /**
@@ -311,7 +313,7 @@ class EditButton
             $editTableClass = "editbutton_{$target}";
             return <<<EOF
 <div class="$classPageEdit $editTableClass">
-    <form id="$formId" method="post" action="{$url->toHtmlString()}">
+    <form id="$formId" method="post" action="{$url}">
     $hiddenInputs
     <input name="do" type="hidden" value="edit"/>
     <button type="submit" title="$message">
@@ -401,7 +403,6 @@ EOF;
 
     /**
      *
-     * @throws ExceptionNotFound - no wiki id found
      */
     private function getWikiId(): string
     {

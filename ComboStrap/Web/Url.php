@@ -79,6 +79,10 @@ class Url extends PathAbs
      */
     private $url;
     private ?int $port = null;
+    /**
+     * @var bool - does the URL rewrite occurs
+     */
+    private bool $withRewrite = true;
 
 
     /**
@@ -676,7 +680,11 @@ class Url extends PathAbs
 
     }
 
-    public function toString($ampersand = Url::AMPERSAND_CHARACTER): string
+    /**
+     * @param string $ampersand
+     * @return string
+     */
+    public function toString(string $ampersand = Url::AMPERSAND_CHARACTER): string
     {
 
         try {
@@ -739,7 +747,9 @@ class Url extends PathAbs
                  * Url Rewrite
                  * Absolute vs Relative, __media, ...
                  */
-                UrlRewrite::rewrite($this);
+                if($this->withRewrite) {
+                    UrlRewrite::rewrite($this);
+                }
                 /**
                  * Rewrite may have set a default scheme
                  * We read it again
@@ -825,7 +835,7 @@ class Url extends PathAbs
         return $this;
     }
 
-    public function toHtmlString()
+    public function toHtmlString(): string
     {
         return $this->toString(Url::AMPERSAND_URL_ENCODED_FOR_HTML);
     }
@@ -924,6 +934,12 @@ class Url extends PathAbs
     public function deleteQueryProperties(): Url
     {
         $this->query = new ArrayCaseInsensitive();;
+        return $this;
+    }
+
+    public function withoutRewrite(): Url
+    {
+        $this->withRewrite = false;
         return $this;
     }
 

@@ -923,16 +923,6 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     }
 
-    public function getUrlWhereIdIs($type = null): Url
-    {
-        if ($type === null) {
-            return $this->getCanonicalUrl();
-        }
-        $pageUrlId = WikiPath::removeRootSepIfPresent(PageUrlPath::createForPage($this)
-            ->getUrlPathFromType($type));
-        return UrlEndpoint::createDokuUrl()
-            ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $pageUrlId);
-    }
 
 
     /**
@@ -2291,7 +2281,8 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     function getUrl(): Url
     {
-        return $this->path->getUrl();
+        return FetcherPage::createPageFetcherFromMarkupPath($this)
+            ->getFetchUrl();
     }
 
     function getHost(): string

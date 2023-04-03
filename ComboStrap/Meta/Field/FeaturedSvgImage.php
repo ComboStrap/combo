@@ -3,7 +3,7 @@
 namespace ComboStrap\Meta\Field;
 
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FirstSvgImage;
+use ComboStrap\FirstSvgIllustration;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;

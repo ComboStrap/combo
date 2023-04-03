@@ -15,7 +15,7 @@ use ComboStrap\ExecutionContext;
 use ComboStrap\FeaturedIcon;
 use ComboStrap\FirstImage;
 use ComboStrap\FirstRasterImage;
-use ComboStrap\FirstSvgImage;
+use ComboStrap\FirstSvgIllustration;
 use ComboStrap\Label;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;

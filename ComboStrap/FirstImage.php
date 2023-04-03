@@ -50,7 +50,7 @@ class FirstImage extends MetadataImage
     {
         $contextPage = $this->getResource();
         try {
-            return FirstSvgImage::createForPage($contextPage)->getValue();
+            return FirstSvgIllustration::createForPage($contextPage)->getValue();
         } catch (ExceptionNotFound $e) {
             return FirstRasterImage::createForPage($contextPage)->getValue();
         }

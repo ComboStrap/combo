@@ -21,7 +21,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\FirstImage;
 use ComboStrap\FirstRasterImage;
-use ComboStrap\FirstSvgImage;
+use ComboStrap\FirstSvgIllustration;
 use ComboStrap\FeaturedIcon;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;

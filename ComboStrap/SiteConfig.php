@@ -492,5 +492,17 @@ class SiteConfig
         return $this->setConf($key,$value, self::GLOBAL_SCOPE);
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getPrimaryColor(): ColorRgb
+    {
+        $primaryColor = Site::getPrimaryColor();
+        if($primaryColor===null){
+            throw new ExceptionNotFound();
+        }
+        return $primaryColor;
+    }
+
 
 }

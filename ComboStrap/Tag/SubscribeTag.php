@@ -36,15 +36,20 @@ class SubscribeTag
 
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         $snippetSystem = $executionContext->getSnippetSystem();
-        $snippetSystem->attachJavascriptComboLibrary()->setFormat(Snippet::IIFE_FORMAT);
-        $snippetSystem->attachJavascriptFromComponentId(self::LOGICAL_TAG);
+        $snippetSystem->attachJavascriptComboLibrary();
+        $snippetSystem->attachJavascriptFromComponentId(self::LOGICAL_TAG)
+            ->setFormat(Snippet::IIFE_FORMAT);
 
         $success = TemplateForComponent::create(self::LOGICAL_TAG . "-success")->render([]);
         $data['list-value'] = $attributes->getValueAndRemove(self::LIST_ID_ATTRIBUTE);
         $data['list-name'] = "listGuid";
         $data['action'] = "https://tower.combostrap.com/combo/api/v1.0/list/registration";
         $data['success-content'] = $success;
-        $data['primary-color'] = Site::getPrimaryColor()->toCssValue();
+        try {
+            $data['primary-color'] = $executionContext->getConfig()->getPrimaryColor()->toCssValue();
+        } catch (ExceptionNotFound $e) {
+            // none
+        }
         $form = TemplateForComponent::create(self::LOGICAL_TAG . "-form")->render($data);
         return $attributes->toHtmlEnterTag("div") . $form . '</div>';
     }

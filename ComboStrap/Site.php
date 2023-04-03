@@ -352,7 +352,7 @@ class Site
                 $image = FetcherRaster::createImageRasterFetchFromId($pngLogo);
             } catch (ExceptionCompile $e) {
                 if (!($e instanceof ExceptionNotExists)) {
-                    LogUtility::error("Error while getting the log as raster image: The png logo ($pngLogo) returns an error. {$e->getMessage()}", self::CANONICAL,$e);
+                    LogUtility::error("Error while getting the log as raster image: The png logo ($pngLogo) returns an error. {$e->getMessage()}", self::CANONICAL, $e);
                 }
                 continue;
             }
@@ -674,6 +674,11 @@ class Site
         self::setConf(ColorRgb::PRIMARY_COLOR_CONF, $primaryColorValue);
     }
 
+    /**
+     * @param $default
+     * @return ColorRgb|null
+     * @deprecated use {@link SiteConfig::getPrimaryColor()} instead
+     */
     public static function getPrimaryColor($default = null): ?ColorRgb
     {
         $value = self::getPrimaryColorValue($default);
@@ -684,8 +689,7 @@ class Site
         }
         try {
             return ColorRgb::createFromString($value);
-        } catch
-        (ExceptionCompile $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The primary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
             return null;
         }

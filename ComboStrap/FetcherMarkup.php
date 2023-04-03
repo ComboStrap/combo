@@ -862,17 +862,19 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public function getSnippetsForComponent(string $componentId): array
     {
-        $snippets = [];
-        foreach ($this->getSnippets() as $snippet) {
+
+        $snippets = $this->getSnippets();
+        $snippetsForComponent = [];
+        foreach ($snippets as $snippet) {
             try {
                 if ($snippet->getComponentId() === $componentId) {
-                    $snippets[] = $snippet;
+                    $snippetsForComponent[] = $snippet;
                 }
             } catch (ExceptionNotFound $e) {
                 //
             }
         }
-        return $snippets;
+        return $snippetsForComponent;
 
     }
 

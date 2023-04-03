@@ -873,7 +873,10 @@ class Snippet implements JsonSerializable
     }
 
     /**
+     * @return array
+     * @throws ExceptionBadArgument
      * @throws ExceptionBadState - an error where for instance an inline script does not have any content
+     * @throws ExceptionCast
      * @throws ExceptionNotFound - an error where the source was not found
      */
     public function toDokuWikiArray(): array
@@ -994,7 +997,7 @@ class Snippet implements JsonSerializable
                 if ($this->shouldBeInlined()) {
 
                     try {
-                        $tagAttributes->setInnerText($this->getInternalInlineAndFileContent());
+                        $tagAttributes->setInnerText($this->getInnerHtml());
                         return $tagAttributes;
                     } catch (ExceptionNotFound $e) {
                         throw new ExceptionNotFound("The internal css snippet ($this) has no content.", self::CANONICAL);

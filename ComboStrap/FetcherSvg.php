@@ -984,13 +984,18 @@ class FetcherSvg extends IFetcherLocalImage
              * Cropping First
              * Before appying the zoom
              */
+
             $viewBoxWidth = $this->getIntrinsicWidth();
             $viewBoxHeight = $this->getIntrinsicHeight();
-            if ($viewBoxWidth > $targetWidth) {
-                $viewBoxWidth = $targetWidth;
-            }
-            if ($viewBoxHeight > $targetHeight) {
-                $viewBoxHeight = $targetHeight;
+            $targetAspectRatio = $this->getTargetAspectRatio();
+            if ($targetAspectRatio > 1 && $viewBoxWidth >= $viewBoxHeight) {
+                // Height crop
+                // Width is greater than height
+                $viewBoxHeight = self::round($viewBoxWidth / $targetAspectRatio);
+            } else {
+                // Height is greater than width
+                // Width crop
+                $viewBoxWidth = self::round($viewBoxHeight / $targetAspectRatio);
             }
 
             /**

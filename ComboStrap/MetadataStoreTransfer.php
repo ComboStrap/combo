@@ -77,7 +77,7 @@ class MetadataStoreTransfer
             try {
                 $metadataObject = Meta\Api\MetadataSystem::getForName($originalMetaKey);
             } catch (ExceptionNotFound $e) {
-                LogUtility::error("The meta ($originalMetaKey) was not found", self::CANONICAL, $e);
+                LogUtility::warning("The meta ($originalMetaKey) was not found", self::CANONICAL, $e);
                 continue;
             }
 

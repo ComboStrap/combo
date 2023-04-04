@@ -1,8 +1,11 @@
 <?php
 
-use ComboStrap\BrandColors;
+use ComboStrap\BrandingColors;
 use ComboStrap\ColorRgb;
+use ComboStrap\ColorSystem;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -41,17 +44,19 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
 
     public static function getOpenTagHighlight(string $tag): string
     {
+        $config = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
         $htmlTag = self::HTML_TAG;
-        if (!Site::isBrandingColorInheritanceEnabled()) {
+        if (!$config->isBrandingColorInheritanceEnabled()) {
             return "<$htmlTag>";
         }
-        $primaryColor = Site::getPrimaryColor();
-        if ($primaryColor === null) {
+        try {
+            $primaryColor = $config->getPrimaryColor();
+        } catch (ExceptionNotFound $e) {
             return "<$htmlTag>";
         }
         $tagAttributes = TagAttributes::createEmpty($tag);
         try {
-            $colorRgb = BrandColors::toBackgroundColor($primaryColor);
+            $colorRgb = ColorSystem::toBackgroundColor($primaryColor);
             $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
                 ->toRgbHex());
         } catch (ExceptionCompile $e) {

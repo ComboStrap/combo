@@ -265,12 +265,13 @@ class Brand
         }
 
         // Unknown or current brand / unknown color
-        $primaryColor = Site::getPrimaryColor();
-        if ($primaryColor !== null) {
-            return $primaryColor;
+        try {
+            return ExecutionContext::getExecutionContext()
+                ->getConfig()
+                ->getPrimaryColor();
+        } catch (ExceptionNotFound $e) {
+            return null;
         }
-
-        return null;
 
     }
 

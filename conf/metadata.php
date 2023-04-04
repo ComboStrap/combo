@@ -9,6 +9,7 @@ use ComboStrap\AdsUtility;
 use ComboStrap\Api\QualityMessageHandler;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
+use ComboStrap\BrandingColors;
 use ComboStrap\Breakpoint;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
@@ -344,9 +345,9 @@ $meta[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = array("onoff"
 /**
  * Branding Colors
  */
-$meta[ColorRgb::PRIMARY_COLOR_CONF] = array("string");
+$meta[BrandingColors::PRIMARY_COLOR_CONF] = array("string");
 $meta[ColorRgb::SECONDARY_COLOR_CONF] = array("string");
-$meta[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = array("onoff");
+$meta[BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = array("onoff");
 
 /**
  * Highlight

@@ -20,6 +20,7 @@
  */
 
 
+use ComboStrap\BrandingColors;
 use ComboStrap\Canonical;
 use ComboStrap\ContainerTag;
 use ComboStrap\IconDownloader;

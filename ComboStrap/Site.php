@@ -669,9 +669,16 @@ class Site
         self::setTagLine($description);
     }
 
+    /**
+     * @param string $primaryColorValue
+     * @return void
+     * @deprecated
+     */
     public static function setPrimaryColor(string $primaryColorValue)
     {
-        self::setConf(ColorRgb::PRIMARY_COLOR_CONF, $primaryColorValue);
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->setPrimaryColor($primaryColorValue);
     }
 
     /**
@@ -681,17 +688,12 @@ class Site
      */
     public static function getPrimaryColor($default = null): ?ColorRgb
     {
-        $value = self::getPrimaryColorValue($default);
-        if (
-            $value === null ||
-            (trim($value) === "")) {
-            return null;
-        }
         try {
-            return ColorRgb::createFromString($value);
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("The primary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
-            return null;
+            return ExecutionContext::getActualOrCreateFromEnv()
+                ->getConfig()
+                ->getPrimaryColor();
+        } catch (ExceptionNotFound $e) {
+            return $default;
         }
     }
 
@@ -716,69 +718,21 @@ class Site
 
     public static function unsetPrimaryColor()
     {
-        self::setConf(ColorRgb::PRIMARY_COLOR_CONF, null);
+        self::setConf(BrandingColors::PRIMARY_COLOR_CONF, null);
     }
 
-
-    public static function isBrandingColorInheritanceEnabled(): bool
-    {
-        return SiteConfig::getConfValue(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
-    }
-
-
-    public static function enableBrandingColorInheritance()
-    {
-        self::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, 1);
-    }
-
-    public static function setBrandingColorInheritanceToDefault()
-    {
-        self::setConf(ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT);
-    }
-
-    public static function getPrimaryColorForText(string $default = null): ?ColorRgb
-    {
-        $primaryColor = self::getPrimaryColor($default);
-        if ($primaryColor === null) {
-            return null;
-        }
-        try {
-            return $primaryColor
-                ->toHsl()
-                ->setSaturation(30)
-                ->setLightness(40)
-                ->toRgb()
-                ->toMinimumContrastRatioAgainstWhite();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while calculating the primary text color. {$e->getMessage()}");
-            return null;
-        }
-    }
 
     /**
-     * More lightness than the text
-     * @return ColorRgb|null
+     * @return bool
+     * @deprecated
      */
-    public static function getPrimaryColorTextHover(): ?ColorRgb
+    public static function isBrandingColorInheritanceEnabled(): bool
     {
-
-        $primaryColor = self::getPrimaryColor();
-        if ($primaryColor === null) {
-            return null;
-        }
-        try {
-            return $primaryColor
-                ->toHsl()
-                ->setSaturation(88)
-                ->setLightness(53)
-                ->toRgb()
-                ->toMinimumContrastRatioAgainstWhite();
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("Error while calculating the secondary text color. {$e->getMessage()}");
-            return null;
-        }
-
+        return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->isBrandingColorInheritanceEnabled();
     }
+
+
+
 
 
     /**
@@ -787,7 +741,7 @@ class Site
      */
     public static function getPrimaryColorValue($default = null): ?string
     {
-        $value = SiteConfig::getConfValue(ColorRgb::PRIMARY_COLOR_CONF, $default);
+        $value = SiteConfig::getConfValue(BrandingColors::PRIMARY_COLOR_CONF, $default);
         if ($value !== null && trim($value) !== "") {
             return $value;
         }

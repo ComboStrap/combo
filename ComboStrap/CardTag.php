@@ -23,7 +23,6 @@ class CardTag
     const LOGICAL_TAG = self::CARD_TAG;
 
 
-
     public static function handleEnter(TagAttributes $tagAttributes, \Doku_Handler $handler): array
     {
 
@@ -86,13 +85,17 @@ class CardTag
 
             $tagName = $actualCall->getTagName();
             $imageTag = "image";
+            $tagImage = null;
             if (in_array($tagName, Call::IMAGE_TAGS)) {
+                $tagImage = $tagName;
                 $tagName = $imageTag;
             }
             switch ($tagName) {
                 case $imageTag:
                     $actualCall->addClassName("card-img-top");
-                    $actualCall->setType(FetcherSvg::ILLUSTRATION_TYPE);
+                    if ($tagImage !== PageImageTag::MARKUP) {
+                        $actualCall->setType(FetcherSvg::ILLUSTRATION_TYPE);
+                    }
                     $actualCall->addAttribute(MediaMarkup::LINKING_KEY, MediaMarkup::LINKING_NOLINK_VALUE);
                     if (!$actualCall->hasAttribute(Dimension::RATIO_ATTRIBUTE)) {
                         $actualCall->addAttribute(Dimension::RATIO_ATTRIBUTE, "16:9");

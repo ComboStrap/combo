@@ -2,14 +2,30 @@
 
 namespace ComboStrap;
 
-class BrandColors
+/**
+ * Branding colors are the primary and secondary colors of the web site
+ * (for now)
+ *
+ * Don't confuse with {@link Brand}
+ */
+class BrandingColors
 {
+
+    /**
+     * Do we set also the branding color on
+     * other elements ?
+     */
+    public const BRANDING_COLOR_INHERITANCE_ENABLE_CONF = "brandingColorInheritanceEnable";
+    public const BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT = 1;
+    public const PRIMARY_COLOR_CONF = "primaryColor";
+
+    const CANONICAL = "branding-colors";
 
     public static function getCssFormControlFocusColor(ColorRgb $primaryColor): string
     {
 
         try {
-            $colorRgb = self::toBackgroundColor($primaryColor);
+            $colorRgb = ColorSystem::toBackgroundColor($primaryColor);
         } catch (ExceptionCompile $e) {
             LogUtility::msg("Error on background color calculation");
             return "";
@@ -29,16 +45,5 @@ EOF;
 
     }
 
-    /**
-     *
-     * @throws ExceptionCompile when the color could not be calculated
-     */
-    public static function toBackgroundColor(ColorRgb $primaryColor): ColorRgb
-    {
-        return $primaryColor
-            ->toHsl()
-            ->setLightness(98)
-            ->toRgb()
-            ->toMinimumContrastRatioAgainstWhite(1.1, 1);
-    }
+
 }

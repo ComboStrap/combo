@@ -52,11 +52,6 @@ class PageImageTag
     {
 
         /**
-         * Page Image Order Calculation
-         */
-        $type = $tagAttributes->getComponentAttributeValue(TagAttributes::TYPE_KEY, PageImageTag::FEATURED);
-
-        /**
          * Context
          */
         $callStack = CallStack::createFromHandler($handler);

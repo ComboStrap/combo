@@ -6,6 +6,7 @@ use ComboStrap\AdsUtility;
 use ComboStrap\Api\QualityMessageHandler;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
+use ComboStrap\BrandingColors;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
 use ComboStrap\ContainerTag;
@@ -278,9 +279,9 @@ $lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = PluginUtility
 /**
  * Colors
  */
-$lang[ColorRgb::PRIMARY_COLOR_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
+$lang[BrandingColors::PRIMARY_COLOR_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
 $lang[ColorRgb::SECONDARY_COLOR_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
-$lang[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Enable or disable the branding colors inheritance");
+$lang[BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Enable or disable the branding colors inheritance");
 
 /**
  * Highlight

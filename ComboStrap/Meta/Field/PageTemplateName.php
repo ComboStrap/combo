@@ -145,7 +145,7 @@ class PageTemplateName extends MetadataText
                 case SlotSystem::getMainHeaderSlotName():
                 case SlotSystem::getMainFooterSlotName():
                 case SlotSystem::getMainSideSlotName():
-                    return self::HAMBURGER_TEMPLATE_VALUE;
+                    return self::INDEX_MEDIUM_LAYOUT;
                 case SlotSystem::getPageHeaderSlotName():
                 case SlotSystem::getPageFooterSlotName():
                     /**

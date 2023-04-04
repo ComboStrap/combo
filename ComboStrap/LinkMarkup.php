@@ -172,13 +172,17 @@ class LinkMarkup
          * We choose the gray/tone rendering to be close to black
          * the color of the text
          */
-        $primaryColor = Site::getPrimaryColor();
+        try {
+            $primaryColor = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getPrimaryColor();
+        } catch (ExceptionNotFound $e) {
+            $primaryColor = null;
+        }
         if (Site::isBrandingColorInheritanceEnabled() && $primaryColor !== null) {
 
-            $primaryColorText = Site::getPrimaryColorForText();
-            $primaryColorHoverText = Site::getPrimaryColorTextHover();
-            if ($primaryColorText !== null) {
-                $aCss = <<<EOF
+            $primaryColorText = ColorSystem::toTextColor($primaryColor);
+            $primaryColorHoverText = ColorSystem::toTextHoverColor($primaryColor);
+
+            $aCss = <<<EOF
 main a {
     color: {$primaryColorText->toRgbHex()};
 }
@@ -186,8 +190,8 @@ main a:hover {
     color: {$primaryColorHoverText->toRgbHex()};
 }
 EOF;
-                SnippetSystem::getFromContext()->attachCssInternalStylesheet(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
-            }
+            SnippetSystem::getFromContext()->attachCssInternalStylesheet(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
+
         }
 
 

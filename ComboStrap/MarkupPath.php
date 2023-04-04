@@ -2124,21 +2124,21 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     {
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         $executingPath = $this->getPathObject();
-        $markupPath = MarkupPath::createPageFromPathObject($executingPath);
-        if (!$markupPath->isSlot()) {
-            $contextPath = $executionContext->getRequestedPath();
-        } else {
+        $requestedPath = $executionContext->getRequestedPath();
+        $requestedMarkupPath = MarkupPath::createPageFromPathObject($requestedPath);
+
+        if ($requestedMarkupPath->isSlot()) {
             try {
                 $markupContextPath = SlotSystem::getContextPath();
                 SlotSystem::sendContextPathMessage($markupContextPath);
-                $contextPath = $markupContextPath->toWikiPath();
+                $requestedPath = $markupContextPath->toWikiPath();
             } catch (\Exception $e) {
-                $contextPath = $executionContext->getRequestedPath();
+                // should not
             }
         }
         return FetcherMarkup::confRoot()
             ->setRequestedMimeToXhtml()
-            ->setRequestedContextPath($contextPath)
+            ->setRequestedContextPath($requestedPath)
             ->setRequestedExecutingPath($executingPath)
             ->build();
     }

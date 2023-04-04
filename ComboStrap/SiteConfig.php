@@ -497,11 +497,43 @@ class SiteConfig
      */
     public function getPrimaryColor(): ColorRgb
     {
-        $primaryColor = Site::getPrimaryColor();
-        if($primaryColor===null){
+        $value = Site::getPrimaryColorValue();
+        if (
+            $value === null ||
+            (trim($value) === "")) {
             throw new ExceptionNotFound();
         }
-        return $primaryColor;
+        try {
+            return ColorRgb::createFromString($value);
+        } catch (ExceptionCompile $e) {
+            LogUtility::msg("The primary color value configuration ($value) is not valid. Error: {$e->getMessage()}");
+            throw new ExceptionNotFound();
+        }
+    }
+
+    public function setPrimaryColor(string $primaryColorValue): SiteConfig
+    {
+        self::setConf(BrandingColors::PRIMARY_COLOR_CONF, $primaryColorValue);
+        return $this;
+    }
+
+    public function getPrimaryColorOrDefault(string $defaultColor): ColorRgb
+    {
+        try {
+            return $this->getPrimaryColor();
+        } catch (ExceptionNotFound $e) {
+            try {
+                return ColorRgb::createFromString($defaultColor);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("The default color $defaultColor is not a color string.",self::CANONICAL, $e);
+                return ColorRgb::getDefaultPrimary();
+            }
+        }
+    }
+
+    public function isBrandingColorInheritanceEnabled(): bool
+    {
+        return SiteConfig::getConfValue(BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
     }
 
 

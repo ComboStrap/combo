@@ -3,6 +3,9 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\BrandingColors;
+use ComboStrap\ColorSystem;
+use ComboStrap\ExecutionContext;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
@@ -43,8 +46,9 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
                 break;
             case "admin":
                 $defaultColor = "black";
-                $iconColor = Site::getPrimaryColor($defaultColor);
-                $colorText = Site::getPrimaryColorForText($defaultColor);
+                $config = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
+                $iconColor = $config->getPrimaryColorOrDefault($defaultColor);
+                $colorText = ColorSystem::toTextColor($iconColor);
                 $css = <<<EOF
 ul.admin_tasks, ul.admin_plugins {
     list-style: none;

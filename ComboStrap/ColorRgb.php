@@ -208,7 +208,6 @@ class ColorRgb
     const PRIMARY_VALUE = "primary";
     const SECONDARY_VALUE = "secondary";
 
-    const PRIMARY_COLOR_CONF = "primaryColor";
     const SECONDARY_COLOR_CONF = "secondaryColor";
     const BRANDING_COLOR_CANONICAL = "branding-colors";
     public const BACKGROUND_COLOR = "background-color";
@@ -220,13 +219,6 @@ class ColorRgb
     const VALUE_TYPE_RESET = "reset";
     const VALUE_TYPE_CSS_NAME = "css-name";
     const VALUE_TYPE_UNKNOWN_NAME = "unknown-name";
-
-    /**
-     * Do we set also the branding color on
-     * other elements ?
-     */
-    const BRANDING_COLOR_INHERITANCE_ENABLE_CONF = "brandingColorInheritanceEnable";
-    const BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT = 1;
 
     /**
      * Minimum recommended ratio by the w3c
@@ -283,6 +275,19 @@ class ColorRgb
     }
 
     /**
+     * @return ColorRgb - the default primary color in case of any errors
+     * Used only in case of errors
+     */
+    public static function getDefaultPrimary(): ColorRgb
+    {
+        try {
+            return self::createFromHex("#0d6efd");
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionRuntimeInternal("It should not happen as the rbg channles are handwritten");
+        }
+    }
+
+    /**
      * Same round instructions than SCSS to be able to do the test
      * have value as bootstrap
      * @param float $value
@@ -323,15 +328,18 @@ class ColorRgb
 
     /**
      * Utility function to get black
-     * @throws ExceptionCompile
      */
     public static function getBlack(): ColorRgb
     {
 
-        return (new ColorRgb())
-            ->setName("black")
-            ->setRgbChannels([0, 0, 0])
-            ->setNameType(self::VALUE_TYPE_CSS_NAME);
+        try {
+            return (new ColorRgb())
+                ->setName("black")
+                ->setRgbChannels([0, 0, 0])
+                ->setNameType(self::VALUE_TYPE_CSS_NAME);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionRuntimeInternal("It should not happen as the rbg channles are handwritten");
+        }
 
     }
 

@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpComposerExtensionStubsInspection */
+<?php
 
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
@@ -20,8 +20,6 @@ use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\Xml\XmlElement;
-use ComboStrap\Xml\XmlSystems;
 use DOMAttr;
 use DOMDocument;
 use DOMElement;
@@ -31,7 +29,15 @@ use LibXMLError;
 use PhpCss;
 
 
-
+/**
+ * A xml document that follows the Web Api interface.
+ *
+ * Note Dokuwiki now uses since [jack_jackrum](https://www.dokuwiki.org/changes#release_2023-04-04_jack_jackrum):
+ * the [dom-wrapper](https://github.com/scotteh/php-dom-wrapper)
+ * that follow the Jquery API and uses [css-selector](https://symfony.com/doc/current/components/css_selector.html)
+ * to get Xpath expression from Css selector
+ *
+ */
 class XmlDocument
 {
     const HTML_TYPE = "html";
@@ -574,7 +580,7 @@ class XmlDocument
 
     }
 
-    public function diff(XmlDocument $rightDocument)
+    public function diff(XmlDocument $rightDocument): string
     {
         $error = "";
         XmlSystems::diffNode($this->getDomDocument(), $rightDocument->getDomDocument(), $error);
@@ -674,7 +680,7 @@ class XmlDocument
     public function removeAttributeValue(string $attributeName, DOMElement $nodeElement)
     {
         $attr = $nodeElement->getAttributeNode($attributeName);
-        if ($attr == false) {
+        if (!$attr) {
             return;
         }
         $result = $nodeElement->removeAttributeNode($attr);

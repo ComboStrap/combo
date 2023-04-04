@@ -35,6 +35,16 @@
         if (bodyElementWasChanged) {
             return;
         }
+        // Case on mobile when the menu is expanded
+        // in this case, we don't calculate the offset
+        // otherwise it would take the height of the menu bar
+        let activeElement = document.activeElement;
+        if(
+            activeElement.classList.contains('navbar-toggler')
+            && activeElement.getAttribute("aria-expanded")==="true"
+        ){
+            return;
+        }
         bodyElementWasChanged = true;
 
         /**

@@ -63,6 +63,11 @@ class SearchTag
         if ($bootStrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
             $visuallyHidden = "visually-hidden";
         }
+        if($bootStrapVersion===Bootstrap::BootStrapFourMajorVersion){
+            $formInlineClass = "form-inline";
+        } else {
+            $formInlineClass = "d-flex align-middle mb-0";
+        }
         $valueKeyProp = "";
         if ($ACT == 'search') $valueKeyProp = ' value="' . htmlspecialchars($QUERY) . '" ';
         $browserAutoComplete = 'on';
@@ -78,7 +83,7 @@ class SearchTag
     accept-charset="utf-8"
     method="get"
     role="search"
-    class="$tagClass form-inline $extraClass"
+    class="$tagClass $formInlineClass $extraClass"
     >
 <input type="hidden" name="do" value="search" />
 <input type="hidden" name="id" value="$id" />

@@ -10,6 +10,7 @@
         "ext-json": "*",
         "ext-gd": "*",
         "ext-intl": "*",
+        "ext-libxml": "*",
         "antlr/antlr4-php-runtime": "0.5.1",
         "php-webdriver/webdriver": "^1.12",
         "salesforce/handlebars-php": "^3.0",

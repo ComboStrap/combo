@@ -1138,5 +1138,15 @@ class ExecutionContext
         }
     }
 
+    public function hasExecutingMarkupHandler(): bool
+    {
+        try {
+            $this->getExecutingMarkupHandler();
+            return true;
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+    }
+
 
 }

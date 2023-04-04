@@ -84,6 +84,7 @@ class MarkupRenderUtility
     public static function renderInstructionsToXhtml($callStackHeaderInstructions, array $contextData = null): string
     {
 
+
         $builder = FetcherMarkup::confChild()
             ->setRequestedInstructions($callStackHeaderInstructions)
             ->setIsDocument(false)

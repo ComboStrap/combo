@@ -403,14 +403,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
 
         /**
-         * Snippets are only for HTML rendering
-         * Otherwise, otherwise type rendering may override them
-         */
-        if (!in_array($this->getMime()->toString(), [Mime::XHTML, Mime::HTML])) {
-            return;
-        }
-
-        /**
          * Snippet
          */
         $snippets = $this->getSnippets();
@@ -618,23 +610,35 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
 
         /**
-         * Cache output dependencies
+         * Snippets and cache dependencies are only for HTML rendering
+         * Otherwise, otherwise other type rendering may override them
+         * (such as analtyical json, ...)
          */
-        $this->outputCacheDependencies->storeDependencies();
+        if (in_array($this->getMime()->toString(), [Mime::XHTML, Mime::HTML])) {
 
-        /**
-         * We make the Snippet store to Html store an atomic operation
-         *
-         * Why ? Because if the rendering of the page is stopped,
-         * the cache of the HTML page may be stored but not the cache of the snippets
-         * leading to a bad page because the next rendering will see then no snippets.
-         */
-        try {
-            $this->storeSnippets();
-        } catch (Exception $e) {
-            // if any write os exception
-            LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
-            $this->removeSnippets();
+            /**
+             * We make the Snippet store to Html store an atomic operation
+             *
+             * Why ? Because if the rendering of the page is stopped,
+             * the cache of the HTML page may be stored but not the cache of the snippets
+             * leading to a bad page because the next rendering will see then no snippets.
+             */
+            try {
+                $this->storeSnippets();
+            } catch (Exception $e) {
+                // if any write os exception
+                LogUtility::msg("Error while storing the xhtml content: {$e->getMessage()}");
+                $this->removeSnippets();
+            }
+
+            /**
+             * Cache output dependencies
+             * Reroute the cache output by runtime dependencies
+             * set during processing
+             */
+            $this->outputCacheDependencies->storeDependencies();
+            $this->outputCacheDependencies->rerouteCacheDestination($this->contentCache);
+
         }
 
         /**
@@ -645,11 +649,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
          * {{@link CacheParser::storeCache()}
          * because it uses the protected parameter `__nocache`
          * that will disallow the storage
-         *
-         * Reroute the cache output by runtime dependencies
-         * set during processing
          */
-        $this->outputCacheDependencies->rerouteCacheDestination($this->contentCache);
         io_saveFile($this->contentCache->cache, $this->fetchString);
 
         return $this;

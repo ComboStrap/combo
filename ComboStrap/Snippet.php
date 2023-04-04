@@ -60,9 +60,10 @@ class Snippet implements JsonSerializable
     const JSON_HTML_ATTRIBUTES_PROPERTY = "attributes";
 
     /**
-     * Not all snippet comes from a markup
+     * Not all snippet comes from a component markup
      * * a menu item may want to add a snippet on a dynamic page
      * * a snippet may be added just from the head html meta (for anaytics purpose)
+     * * the global css variables
      * TODO: it should be migrated to the {@link TemplateForWebPage}, ie the request scope is the template scope
      *    has, these is this object that creates pages
      */

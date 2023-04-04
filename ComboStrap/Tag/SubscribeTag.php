@@ -42,6 +42,7 @@ class SubscribeTag
         $subscribeTag = self::LOGICAL_TAG;
         $snippetSystem->attachJavascriptFromComponentId($subscribeTag)
             ->setFormat(Snippet::IIFE_FORMAT);
+        $snippetSystem->attachCssInternalStyleSheet($subscribeTag);
 
         $success = TemplateForComponent::create($subscribeTag . "-success")->render([]);
         $data['list-value'] = $attributes->getValueAndRemove(self::LIST_ID_ATTRIBUTE);

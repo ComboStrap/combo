@@ -388,6 +388,8 @@ class TemplateForWebPage
     function getModel(): array
     {
 
+        $executionConfig = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
+
         /**
          * Mandatory HTML attributes
          */
@@ -407,7 +409,7 @@ class TemplateForWebPage
         /**
          * The width of the layout
          */
-        $container = SiteConfig::getConfValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
+        $container = $executionConfig->getValue(ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF, ContainerTag::DEFAULT_LAYOUT_CONTAINER_DEFAULT_VALUE);
         $containerClass = ContainerTag::getClassName($container);
         $model["layout-container-class"] = $containerClass;
 
@@ -416,7 +418,7 @@ class TemplateForWebPage
          * The rem
          */
         try {
-            $model["rem-size"] = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getRemFontSize();
+            $model["rem-size"] = $executionConfig->getRemFontSize();
         } catch (ExceptionNotFound $e) {
             // ok none
         }
@@ -470,9 +472,15 @@ class TemplateForWebPage
             }
 
             /**
-             * Colors
+             * Css Variables Colors
+             * Added for now in `head-partial.hbs`
              */
-            $model['primary-color'] = Site::getPrimaryColor();
+            try {
+                $model[BrandingColors::PRIMARY_COLOR_TEMPLATE_ATTRIBUTE] = $executionConfig->getPrimaryColor();
+            } catch (ExceptionNotFound $e) {
+                // not found
+                $model[BrandingColors::PRIMARY_COLOR_TEMPLATE_ATTRIBUTE] = null;
+            }
             $model['secondary-color'] = Site::getSecondaryColor();
 
             /**

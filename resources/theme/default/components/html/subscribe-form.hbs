@@ -1,17 +1,14 @@
-<form class="row g-3 align-items-center" action="{{ action }}"
+<form action="{{ action }}"
       data-success-content="{{ success-content }}"
       data-success-header="Hurray!"
 >
-    <div class="col col-12 col-sm-8">
-        <label for="{{ email-id }}" class="visually-hidden">Enter your email</label>
-        <input type="hidden" name="{{ list-name }}" value="{{ list-value }}"/>
-        <input type="email" id="{{ email-id }}" name="{{ email-name }}" class="form-control" placeholder="Your email" autocomplete="email" required="required"/>
-    </div>
-    <div class="col col-12 col-sm-4">
-        {{#if primary-color}}
-            <button class="btn" type="submit" style="color:#fff;background-color:{{ primary-color }};border-color:{{ primary-color }}">Subscribe</button>
-        {{else}}
-            <button class="btn btn-primary" type="submit" style="color:{{ primary-color }}">Subscribe</button>
-        {{/if}}
-    </div>
+    <label for="{{ email-id }}" class="visually-hidden">Enter your email</label>
+    <input type="hidden" name="{{ list-name }}" value="{{ list-value }}"/>
+    <input type="email" id="{{ email-id }}" name="{{ email-name }}" class="form-control" placeholder="Your email"
+           autocomplete="email" required="required"/>
+    {{!--The variable are needed for bootstrap prior to 5.1.3--}}
+    <button class="btn btn-primary" type="submit"
+            style="color:#fff;background-color:var(--bs-btn-bg);border-color:var(--bs-btn-border-color)">Subscribe
+    </button>
+
 </form>

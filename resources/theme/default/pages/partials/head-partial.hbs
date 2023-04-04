@@ -8,4 +8,15 @@
         }
     </style>
 {{/if}}
-
+{{#if primary-color}}
+    {{!-- The bootstrap css variables, a start --}}
+    <style>
+        :root {
+            --bs-primary: {{primary-color}};
+        }
+        .btn-primary {
+            --bs-btn-bg: {{primary-color}};
+            --bs-btn-border-color: {{primary-color}};
+        }
+    </style>
+{{/if}}

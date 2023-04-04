@@ -21,6 +21,12 @@ class BrandingColors
 
     const CANONICAL = "branding-colors";
 
+    /**
+     * The attribute used in the model template data
+     * (used for css variables and other colors transformation)
+     */
+    const PRIMARY_COLOR_TEMPLATE_ATTRIBUTE = 'primary-color';
+
     public static function getCssFormControlFocusColor(ColorRgb $primaryColor): string
     {
 

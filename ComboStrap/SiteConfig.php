@@ -533,7 +533,7 @@ class SiteConfig
 
     public function isBrandingColorInheritanceEnabled(): bool
     {
-        return SiteConfig::getConfValue(BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
+        return $this->getValue(BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
     }
 
 

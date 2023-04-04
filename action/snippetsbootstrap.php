@@ -59,9 +59,11 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
 
 
         $newHeaderTypes = array();
+
         $bootstrap = Bootstrap::getFromContext();
         $bootStrapMajorVersion = $bootstrap->getMajorVersion();
         $eventHeaderTypes = $event->data;
+        $executionContextConfig = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
         foreach ($eventHeaderTypes as $headTagName => $headTagsAsArray) {
             switch ($headTagName) {
 
@@ -74,7 +76,7 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
 
                     // preload all CSS is an heresy as it creates a FOUC (Flash of non-styled element)
                     // but we know it only now and this is fun to experience for the user
-                    $cssPreloadConf = SiteConfig::getConfValue(self::CONF_PRELOAD_CSS, self::CONF_PRELOAD_CSS_DEFAULT);
+                    $cssPreloadConf = $executionContextConfig->getValue(self::CONF_PRELOAD_CSS, self::CONF_PRELOAD_CSS_DEFAULT);
                     $newLinkData = array();
                     foreach ($headTagsAsArray as $linkData) {
                         switch ($linkData['rel']) {

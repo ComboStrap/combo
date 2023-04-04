@@ -42,7 +42,11 @@ class SearchTag
         PluginUtility::getSnippetManager()->attachJavascriptFromComponentId(self::SNIPPET_ID, "var DOKU_BASE='$dokuBase';");
         PluginUtility::getSnippetManager()->attachJavascriptFromComponentId(self::SNIPPET_ID);
 
-        $extraClass = $tagAttributes->getClass("");
+        try {
+            $extraClass = $tagAttributes->getClass("");
+        } catch (ExceptionNull $e) {
+            $extraClass = "";
+        }
 
         try {
             $id = WikiPath::createRequestedPagePathFromRequest()->getWikiId();

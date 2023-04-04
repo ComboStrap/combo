@@ -30,6 +30,8 @@ class SubscribeTag
     const LOGICAL_TAG = "subscribe";
     const LIST_ID_ATTRIBUTE = "list-id";
 
+    const SIDE_BY_SIDE_TYPE = "side-by-side";
+
 
     public static function renderEnterXhtml(TagAttributes $attributes): string
     {

@@ -113,7 +113,7 @@ class MetadataDbStore extends MetadataStoreAbs implements MetadataStore
 
         } else {
 
-            $pageMetaFromFileSystem = MarkupPath::createPageFromQualifiedId($resource->getPathObject()->toAbsoluteId());
+            $pageMetaFromFileSystem = MarkupPath::createPageFromAbsoluteId($resource->getPathObject()->toAbsoluteId());
             $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($pageMetaFromFileSystem);
             $pageMetaFromFileSystem->setReadStore($fsStore);
 

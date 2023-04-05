@@ -260,7 +260,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
-    static function createPageFromQualifiedId($qualifiedPath): MarkupPath
+    static function createPageFromAbsoluteId($qualifiedPath): MarkupPath
     {
         $path = WikiPath::createMarkupPathFromId($qualifiedPath);
         return new MarkupPath($path);

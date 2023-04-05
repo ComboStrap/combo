@@ -153,7 +153,7 @@ class PageId extends MetadataText
                      * We think that the page was moved from the file system
                      * and we return the page id
                      */
-                    $pageDbValue = MarkupPath::createPageFromQualifiedId($pathDbValue);
+                    $pageDbValue = MarkupPath::createPageFromAbsoluteId($pathDbValue);
                     if (!FileSystems::exists($pageDbValue->getPathObject())) {
                         return parent::setFromStoreValueWithoutException($value);
                     }

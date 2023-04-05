@@ -476,3 +476,4 @@ $conf['combo-conf-003'] = 4;
  * {@link \ComboStrap\TemplateEngine::CONF_THEME_DEFAULT}
  */
 $conf['combo-conf-005'] = 'default';
+

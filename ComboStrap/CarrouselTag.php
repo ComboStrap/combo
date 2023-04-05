@@ -48,8 +48,8 @@ class CarrouselTag
         while ($actualCall = $callStack->next()) {
             if ($actualCall->getState() === DOKU_LEXER_SPECIAL && in_array($actualCall->getTagName(), Call::IMAGE_TAGS)) {
                 $actualCall->addAttribute(
-                    MediaMarkup::LAZY_LOAD_METHOD,
-                    MediaMarkup::LAZY_LOAD_METHOD_HTML_VALUE
+                    LazyLoad::LAZY_LOAD_METHOD,
+                    LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE
                 );
             }
         }

@@ -259,7 +259,7 @@ class RasterImageLink extends ImageLink
              */
             $lazyLoadMethod = $this->mediaMarkup->getLazyLoadMethodOrDefault();
             switch ($lazyLoadMethod) {
-                case MediaMarkup::LAZY_LOAD_METHOD_HTML_VALUE:
+                case LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE:
                     $attributes->addOutputAttributeValue("src", $srcValue);
                     if (!empty($srcSet)) {
                         // it the image is small, no srcset for instance
@@ -268,7 +268,7 @@ class RasterImageLink extends ImageLink
                     $attributes->addOutputAttributeValue("loading", "lazy");
                     break;
                 default:
-                case MediaMarkup::LAZY_LOAD_METHOD_LOZAD_VALUE:
+                case LazyLoad::LAZY_LOAD_METHOD_LOZAD_VALUE:
                     /**
                      * Snippet Lazy loading
                      */

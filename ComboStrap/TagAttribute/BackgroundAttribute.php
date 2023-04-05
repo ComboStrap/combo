@@ -10,6 +10,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionInternal;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherSvg;
+use ComboStrap\LazyLoad;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Opacity;
@@ -266,7 +267,7 @@ class BackgroundAttribute
         /**
          * This attributes should no be taken
          */
-        $mediaCallStackArray[MediaMarkup::LINKING_KEY] = MediaMarkup::LAZY_LOAD_METHOD_NONE_VALUE;
+        $mediaCallStackArray[MediaMarkup::LINKING_KEY] = LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
         $mediaCallStackArray[Align::ALIGN_ATTRIBUTE] = null;
         $mediaCallStackArray[TagAttributes::TITLE_KEY] = null; // not sure why
         return $mediaCallStackArray;

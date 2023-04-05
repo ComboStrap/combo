@@ -76,15 +76,6 @@ class MediaMarkup
     const CANONICAL = "media";
 
     /**
-     * The method on how to lazy load resources (Ie media)
-     */
-    public const LAZY_LOAD_METHOD = "lazy";
-    public const LAZY_LOAD_METHOD_HTML_VALUE = "html-attribute";
-    public const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
-    public const LAZY_LOAD_METHOD_NONE_VALUE = "none";
-    const LAZY_LOAD_METHOD_DEFAULT = self::LAZY_LOAD_METHOD_LOZAD_VALUE;
-
-    /**
      * This attributes does not apply
      * to a fetch (URL)
      * They are only for the tag (img, svg, ...)
@@ -646,11 +637,10 @@ class MediaMarkup
         try {
             return $this->getLazyLoadMethod();
         } catch (ExceptionNotFound $e) {
-            /**
-             * With lozad as default, in a {@link TemplateForWebPage},
-             * it would not work as the script would not be added
-             */
-            return self::LAZY_LOAD_METHOD_HTML_VALUE;
+
+            return ExecutionContext::getActualOrCreateFromEnv()
+                ->getConfig()
+                ->getValue(LazyLoad::LAZY_LOAD_METHOD_CONF,LazyLoad::LAZY_LOAD_METHOD_DEFAULT) ;
         }
 
     }
@@ -668,7 +658,7 @@ class MediaMarkup
     public function isLazy(): bool
     {
 
-        return $this->getLazyLoadMethod() !== self::LAZY_LOAD_METHOD_NONE_VALUE;
+        return $this->getLazyLoadMethod() !== LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
 
     }
 
@@ -691,9 +681,9 @@ class MediaMarkup
     public function setLazyLoad(bool $true): MediaMarkup
     {
         if ($true) {
-            $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_DEFAULT;
+            $this->lazyLoadMethod = LazyLoad::LAZY_LOAD_METHOD_DEFAULT;
         } else {
-            $this->lazyLoadMethod = self::LAZY_LOAD_METHOD_NONE_VALUE;
+            $this->lazyLoadMethod = LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
         }
         return $this;
     }
@@ -739,7 +729,7 @@ class MediaMarkup
         if ($align !== null) {
             $this->setAlign($align);
         }
-        $lazy = $tagAttributes->getValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+        $lazy = $tagAttributes->getValueAndRemoveIfPresent(LazyLoad::LAZY_LOAD_METHOD);
         if ($lazy !== null) {
             $this->setLazyLoadMethod($lazy);
         }
@@ -845,7 +835,7 @@ class MediaMarkup
             // ok
         }
         try {
-            $this->lazyLoadMethod = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent(self::LAZY_LOAD_METHOD);
+            $this->lazyLoadMethod = $fetchUrl->getQueryPropertyValueAndRemoveIfPresent(LazyLoad::LAZY_LOAD_METHOD);
         } catch (ExceptionNotFound $e) {
             // ok
         }

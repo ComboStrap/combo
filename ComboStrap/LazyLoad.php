@@ -45,6 +45,24 @@ class LazyLoad
     const CANONICAL = "lazy";
     const DEFAULT_COLOR = "#cbf1ea";
 
+    public const LAZY_LOAD_METHOD_HTML_VALUE = "html";
+    public const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
+
+    /**
+     * With lozad as default, in a {@link TemplateForWebPage},
+     * it would not work as the script would not be added
+     */
+    public const LAZY_LOAD_METHOD_DEFAULT = LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE;
+    /**
+     * The method on how to lazy load resources (Ie media)
+     */
+    public const LAZY_LOAD_METHOD = "lazy";
+    public const LAZY_LOAD_METHOD_NONE_VALUE = "none";
+    /**
+     * Used internal for now on test
+     */
+    const LAZY_LOAD_METHOD_CONF = "internal-lazy-load-method-combo";
+
     /**
      * Used to select all lazy loaded
      * resources and load them before print

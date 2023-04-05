@@ -411,4 +411,6 @@ $meta[SiteConfig::REM_CONF] = array('numeric');
  * Theme
  */
 $themes = TemplateEngine::getThemes();
-$meta[TemplateEngine::CONF_THEME] = array('multichoice', '_choices' => $themes);;
+$meta[TemplateEngine::CONF_THEME] = array('multichoice', '_choices' => $themes);
+
+

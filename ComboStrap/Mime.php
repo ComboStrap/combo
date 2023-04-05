@@ -89,6 +89,9 @@ class Mime
                 return new Mime(Mime::PNG);
             case "css":
                 return new Mime(Mime::CSS);
+            case "jpg":
+            case "jpeg":
+                return new Mime(Mime::JPEG);
             case "webp":
                 return new Mime(Mime::WEBP);
             case "bmp":

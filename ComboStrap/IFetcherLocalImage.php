@@ -63,7 +63,7 @@ abstract class IFetcherLocalImage extends FetcherImage implements IFetcherSource
         try {
             return FileSystems::getCacheBuster($this->getSourcePath());
         } catch (ExceptionNotFound $e) {
-            LogUtility::internalError("The fact that the file exists, is already checked at construction time, it should not happen", FetcherImage::CANONICAL);
+            // file does not exists
             return strval((new \DateTime())->getTimestamp());
         }
     }

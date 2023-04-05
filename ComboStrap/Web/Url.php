@@ -9,6 +9,7 @@ use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotEquals;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\FetcherRawLocalPath;
@@ -747,7 +748,7 @@ class Url extends PathAbs
                  * Url Rewrite
                  * Absolute vs Relative, __media, ...
                  */
-                if($this->withRewrite) {
+                if ($this->withRewrite) {
                     UrlRewrite::rewrite($this);
                 }
                 /**

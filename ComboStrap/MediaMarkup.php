@@ -86,7 +86,8 @@ class MediaMarkup
         Hover::ON_HOVER_ATTRIBUTE,
         Animation::ON_VIEW_ATTRIBUTE,
         Shadow::SHADOW_ATT,
-        Opacity::OPACITY_ATTRIBUTE
+        Opacity::OPACITY_ATTRIBUTE,
+        TagAttributes::CLASS_KEY,
     ];
 
     /**

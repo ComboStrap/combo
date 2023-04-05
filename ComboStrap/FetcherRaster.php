@@ -28,6 +28,7 @@ class FetcherRaster extends IFetcherLocalImage
     }
 
     const CANONICAL = "raster";
+    const FAKE_LENGTH_FOR_BROKEN_IMAGES = 10;
 
 
     private int $imageWidth;
@@ -137,14 +138,20 @@ class FetcherRaster extends IFetcherLocalImage
      * We therefore needs the intrinsic dimension (height and weight)
      *
      * @throws ExceptionBadSyntax - if the path is not valid image format
-     * @throws ExceptionNotExists|ExceptionCast - if the image does not exists
      */
     private
     function analyzeImageIfNeeded()
     {
 
         if (!FileSystems::exists($this->getSourcePath())) {
-            throw new ExceptionNotExists("The path ({$this->getSourcePath()}) does not exists");
+            // The user may type a bad path
+            // We don't throw as we want to be able to build
+            LogUtility::warning("The path ({$this->getSourcePath()}) does not exists");
+            // broken image in the browser does not have any dimension
+            // todo: https://bitsofco.de/styling-broken-images/
+            $this->imageWidth = self::FAKE_LENGTH_FOR_BROKEN_IMAGES;
+            $this->imageWeight = self::FAKE_LENGTH_FOR_BROKEN_IMAGES;
+            return;
         }
 
         /**

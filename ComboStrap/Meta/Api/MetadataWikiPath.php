@@ -4,6 +4,7 @@
 namespace ComboStrap\Meta\Api;
 
 use ComboStrap\DataType;
+use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\LogUtility;
 use ComboStrap\WikiPath;
@@ -114,7 +115,22 @@ abstract class MetadataWikiPath extends Metadata
         }
 
         $value = WikiPath::toValidAbsolutePath($value);
-        $this->value = WikiPath::createFromPath($value, $this->getDrive());
+
+        $drive = $this->getDrive();
+        if ($drive === WikiPath::MARKUP_DRIVE) {
+            /**
+             * For a Markup drive, a file path should have an extension
+             * What fucked up is fucked up
+             */
+            try {
+                $this->value = WikiPath::createMarkupPathFromPath($value);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("This is not a relative path, we should not get this error");
+                $this->value = WikiPath::createFromPath($value, $drive);
+            }
+        } else {
+            $this->value = WikiPath::createFromPath($value, $drive);
+        }
         return $this;
 
     }

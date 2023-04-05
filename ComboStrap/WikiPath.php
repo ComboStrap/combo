@@ -241,6 +241,10 @@ class WikiPath extends PathAbs
 
 
     /**
+     * For a Markup drive path, a file path should have an extension
+     * if it's not a namespace
+     *
+     * This function checks that
      *
      * @param string $parameterPath - the path in a wiki form that may be relative - if the path is blank, it's the current markup (the requested markup)
      * @param string|null $rev - the revision (ie timestamp in number format)
@@ -1131,7 +1135,6 @@ class WikiPath extends PathAbs
         /**
          * File path
          */
-        $filePathString = $this->absolutePath;
         $isNamespacePath = self::isNamespacePath($this->absolutePath);
         if ($isNamespacePath) {
             /**
@@ -1191,7 +1194,7 @@ class WikiPath extends PathAbs
                         } elseif (file_exists($filePathString . '.bz2')) {
                             $filePathString .= '.bz2';
                         } else {
-                            //file doesnt exist yet, so we take the configured extension
+                            // File doesnt exist yet, so we take the configured extension
                             $filePathString .= '.' . $conf['compression'];
                         }
                     }

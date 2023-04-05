@@ -30,9 +30,14 @@ class SvgImageLink extends ImageLink
 
     /**
      * Svg Injection
-     * For now, it just mess with the dom, disabled by default
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
+    /**
+     * Svg Injection Default
+     * For now, there is a FOUC when the svg is visible,
+     * The image does away, the layout shift, the image comes back, the layout shift
+     * We disabled it by default then
+     */
     const CONF_SVG_INJECTION_ENABLE_DEFAULT = 0;
     const TAG = "svg";
 
@@ -51,7 +56,7 @@ class SvgImageLink extends ImageLink
 
     /**
      * @throws ExceptionBadArgument
-     * @throws ExceptionNotFound
+     * @throws ExceptionBadSyntax
      */
     private function createImgHTMLTag(): string
     {

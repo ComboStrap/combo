@@ -30,12 +30,13 @@ class SvgImageLink extends ImageLink
 
     /**
      * Svg Injection
+     * For now, it just mess with the dom, disabled by default
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
+    const CONF_SVG_INJECTION_ENABLE_DEFAULT = 0;
     const TAG = "svg";
 
 
-    private ?FetcherSvg $svgFetch = null;
 
     /**
      * @throws ExceptionBadSyntax
@@ -60,7 +61,7 @@ class SvgImageLink extends ImageLink
 
         $svgInjection = ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()
-            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE,0);
+            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE,self::CONF_SVG_INJECTION_ENABLE_DEFAULT);
 
         /**
          * Snippet

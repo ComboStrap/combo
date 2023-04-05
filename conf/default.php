@@ -244,9 +244,9 @@ $conf["defaultShadowLevel"] = "medium";
 $conf["svgLazyLoadEnable"] = 1;
 
 /**
- * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_SVG_INJECTION_ENABLE}
+ * Injection {@link \ComboStrap\SvgImageLink::CONF_SVG_INJECTION_ENABLE}
  */
-$conf["svgInjectionEnable"] = 1;
+$conf["svgInjectionEnable"] = 0;
 
 /**
  * Svg Optimization Disable {@link \ComboStrap\SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE}

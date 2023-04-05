@@ -88,6 +88,8 @@ class XmlElement
         foreach ($this->domElement->childNodes as $childNode) {
             if ($childNode instanceof DOMText) {
                 $childNodes[] = $childNode->nodeValue;
+            } else {
+                $childNodes[] = implode('', XmlElement::create($childNode, $this->document)->getChildrenNodeTextValues());
             }
         }
         return $childNodes;
@@ -370,7 +372,11 @@ class XmlElement
 
     public function getInnerText(): string
     {
-        return implode('', $this->getChildrenNodeTextValues());
+        if ($this->hasChildrenElement()) {
+            return implode('', $this->getChildrenNodeTextValues());
+        } else {
+            return $this->domElement->nodeValue;
+        }
     }
 
     public function getInnerTextWithoutCdata()

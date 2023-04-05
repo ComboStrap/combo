@@ -8,6 +8,7 @@ use ComboStrap\HttpResponseStatus;
 use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
+use ComboStrap\PluginUtility;
 use ComboStrap\SiteConfig;
 use ComboStrap\Web\Url;
 
@@ -142,8 +143,14 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 ->end();
         } catch (\Exception $e) {
 
+
+            $reporterMessage = "An error has occurred during the execution of the action ($action)";
             $html = ExceptionReporter::createForException($e)
-                ->getHtmlPage("An error has occurred during the execution of the action ($action)");
+                ->getHtmlPage($reporterMessage);
+            if(PluginUtility::isDevOrTest()) {
+                // Permits to throw the error to get the stack trace
+                LogUtility::warning($reporterMessage, self::TEMPLATE_CANONICAL, $e);
+            }
             $executionContext->response()
                 ->setException($e)
                 ->setBody($html, Mime::getHtml())

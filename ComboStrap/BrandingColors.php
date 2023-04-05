@@ -26,6 +26,16 @@ class BrandingColors
      * (used for css variables and other colors transformation)
      */
     const PRIMARY_COLOR_TEMPLATE_ATTRIBUTE = 'primary-color';
+    /**
+     * A color that is derived from the primary color
+     * where the contrast is good enought for reading
+     */
+    const PRIMARY_COLOR_TEXT_ATTRIBUTE = "primary-color-text";
+    /**
+     * The text color with a little bit more lightness
+     */
+    const PRIMARY_COLOR_TEXT_HOVER_ATTRIBUTE = "primary-color-text-hover";
+    public const SECONDARY_COLOR_TEMPLATE_ATTRIBUTE = 'secondary-color';
 
     public static function getCssFormControlFocusColor(ColorRgb $primaryColor): string
     {

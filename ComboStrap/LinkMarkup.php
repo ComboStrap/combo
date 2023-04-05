@@ -181,14 +181,15 @@ class LinkMarkup
 
             $primaryColorText = ColorSystem::toTextColor($primaryColor);
             $primaryColorHoverText = ColorSystem::toTextHoverColor($primaryColor);
-
+            /**
+             * There is also a link primary
+             * https://getbootstrap.com/docs/5.2/helpers/colored-links/
+             */
             $aCss = <<<EOF
-main a {
-    color: {$primaryColorText->toRgbHex()};
-}
-main a:hover {
-    color: {$primaryColorHoverText->toRgbHex()};
-}
+.link-primary { color: {$primaryColorText->toRgbHex()}; }
+.link-primary:hover { color: {$primaryColorHoverText->toRgbHex()}; }
+main a { color: {$primaryColorText->toRgbHex()}; }
+main a:hover { color: {$primaryColorHoverText->toRgbHex()}; }
 EOF;
             SnippetSystem::getFromContext()->attachCssInternalStylesheet(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
 

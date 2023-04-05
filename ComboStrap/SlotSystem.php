@@ -5,7 +5,7 @@ namespace ComboStrap;
 class SlotSystem
 {
 
-    const CANONICAL = "slot-systen";
+    const CANONICAL = "slot-system";
 
     /**
      * A slot should never run in its own path as context path
@@ -59,24 +59,15 @@ EOF;
     public static function getSlotNames(): array
     {
 
-        try {
-            return [
-                self::getSidebarName(),
-                self::getPageHeaderSlotName(),
-                self::getPageFooterSlotName(),
-                self::getMainHeaderSlotName(),
-                self::getMainFooterSlotName(),
-                self::getMainSideSlotName()
-            ];
-        } catch (ExceptionCompile $e) {
-            LogUtility::msg("An error has occurred while retrieving the name of the secondary slots. Error: {$e->getMessage()}");
-            // We known at least this one
-            return [
-                self::getSidebarName(),
-                self::getMainHeaderSlotName(),
-                self::getMainFooterSlotName()
-            ];
-        }
+
+        return [
+
+            self::getPageHeaderSlotName(),
+            self::getSidebarName(),
+            self::getPageFooterSlotName(),
+            self::getMainHeaderSlotName(),
+            self::getMainFooterSlotName()
+        ];
 
 
     }
@@ -97,7 +88,7 @@ EOF;
     }
 
     /**
-     * @deprecated
+     *
      */
     public static function getPageHeaderSlotName()
     {

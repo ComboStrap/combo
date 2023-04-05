@@ -536,5 +536,17 @@ class SiteConfig
         return $this->getValue(BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF, BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF_DEFAULT) === 1;
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getSecondaryColor(): ColorRgb
+    {
+        $secondaryColor = Site::getSecondaryColor();
+        if($secondaryColor===null){
+            throw new ExceptionNotFound();
+        }
+        return $secondaryColor;
+    }
+
 
 }

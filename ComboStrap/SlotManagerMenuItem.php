@@ -110,10 +110,10 @@ class SlotManagerMenuItem extends AbstractItem
                     $label = "Page Sidebar";
                     break;
                 case SlotSystem::getMainHeaderSlotName():
-                    $label = "Main Header";
+                    $label = "Content Header";
                     break;
                 case SlotSystem::getMainFooterSlotName():
-                    $label = "Main Footer";
+                    $label = "Content Footer";
                     break;
                 case SlotSystem::getPageFooterSlotName():
                     $label = "Page Footer";

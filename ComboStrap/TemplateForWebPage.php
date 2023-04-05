@@ -476,12 +476,21 @@ class TemplateForWebPage
              * Added for now in `head-partial.hbs`
              */
             try {
-                $model[BrandingColors::PRIMARY_COLOR_TEMPLATE_ATTRIBUTE] = $executionConfig->getPrimaryColor();
+                $primaryColor = $executionConfig->getPrimaryColor();
+                $model[BrandingColors::PRIMARY_COLOR_TEMPLATE_ATTRIBUTE] = $primaryColor->toCssValue();
+                $model[BrandingColors::PRIMARY_COLOR_TEXT_ATTRIBUTE] = ColorSystem::toTextColor($primaryColor);
+                $model[BrandingColors::PRIMARY_COLOR_TEXT_HOVER_ATTRIBUTE] = ColorSystem::toTextHoverColor($primaryColor);
             } catch (ExceptionNotFound $e) {
                 // not found
                 $model[BrandingColors::PRIMARY_COLOR_TEMPLATE_ATTRIBUTE] = null;
             }
-            $model['secondary-color'] = Site::getSecondaryColor();
+            try {
+                $secondaryColor = $executionConfig->getSecondaryColor();
+                $model[BrandingColors::SECONDARY_COLOR_TEMPLATE_ATTRIBUTE] = $secondaryColor->toCssValue();
+            } catch (ExceptionNotFound $e) {
+                // not found
+            }
+
 
             /**
              * Main

@@ -181,18 +181,20 @@ class LdJson extends MetadataJson
         if ($value === null) {
             $resourceCombo = $this->getResource();
             if (($resourceCombo instanceof MarkupPath)) {
-                // Deprecated, old organization syntax
-                if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
-                    $store = $this->getReadStore();
-                    $metadata = $store->getFromPersistentName(self::OLD_ORGANIZATION_PROPERTY);
-                    if ($metadata !== null) {
-                        $organization = array(
-                            "organization" => $metadata
-                        );
-                        $ldJsonOrganization = $this->mergeWithDefaultValueAndGet($organization);
-                        $value = Json::createFromArray($ldJsonOrganization)->toPrettyJsonString();
-                    }
-
+                /**
+                 * Deprecated, old organization syntax
+                 * We could add this predicate
+                 * $resourceCombo->getTypeOrDefault() === {@link PageType::ORGANIZATION_TYPE}
+                 * but we don't want to lose any data
+                 */
+                $store = $this->getReadStore();
+                $metadata = $store->getFromPersistentName(self::OLD_ORGANIZATION_PROPERTY);
+                if ($metadata !== null) {
+                    $organization = array(
+                        "organization" => $metadata
+                    );
+                    $ldJsonOrganization = $this->mergeWithDefaultValueAndGet($organization);
+                    $value = Json::createFromArray($ldJsonOrganization)->toPrettyJsonString();
                 }
             }
         }
@@ -460,4 +462,6 @@ class LdJson extends MetadataJson
     {
         return true;
     }
+
+
 }

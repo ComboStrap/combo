@@ -347,17 +347,15 @@ class Site
     public static function getLogoAsRasterImage(): FetcherRaster
     {
         foreach (self::PNG_LOGO_IDS as $pngLogo) {
-
-            try {
-                $image = FetcherRaster::createImageRasterFetchFromId($pngLogo);
-            } catch (ExceptionCompile $e) {
-                if (!($e instanceof ExceptionNotExists)) {
-                    LogUtility::error("Error while getting the log as raster image: The png logo ($pngLogo) returns an error. {$e->getMessage()}", self::CANONICAL, $e);
-                }
+            $pngLogoPath = WikiPath::createMediaPathFromId($pngLogo);
+            if (!FileSystems::exists($pngLogoPath)) {
                 continue;
             }
-            if (FileSystems::exists($image->getSourcePath())) {
-                return $image;
+            try {
+                return FetcherRaster::createImageRasterFetchFromPath($pngLogoPath);
+            } catch (ExceptionCompile $e) {
+                LogUtility::error("Error while getting the log as raster image: The png logo ($pngLogo) returns an error. {$e->getMessage()}", self::CANONICAL, $e);
+                continue;
             }
         }
         throw new ExceptionNotFound("No raster logo image was found");
@@ -730,9 +728,6 @@ class Site
     {
         return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->isBrandingColorInheritanceEnabled();
     }
-
-
-
 
 
     /**

@@ -107,7 +107,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
                 ->setRequestedTitle($title)
                 ->setRequestedLang($lang)
                 ->setToc($toc)
-                ->setDeleteSocialHeadTags(true)
+                ->setIsSocial(false)
                 ->setRequestedEnableTaskRunner(false)
                 ->setMainContent($mainContent)
                 ->render();

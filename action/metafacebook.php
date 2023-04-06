@@ -1,7 +1,7 @@
 <?php
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\ExecutionContext;
 use ComboStrap\SiteConfig;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionCompile;
@@ -67,22 +67,14 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
     function metaFacebookProcessing($event)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $ID is null for media
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+            $templateForWebPage = $executionContext->getExecutingPageTemplate();
+        } catch (ExceptionNotFound $e) {
             return;
         }
 
-
-        $page = MarkupPath::createMarkupFromId($ID);
-        if (!$page->exists()) {
-            return;
-        }
-
-        /**
-         * No social for bars
-         */
-        if ($page->isSlot()) {
+        if (!$templateForWebPage->isSocial()) {
             return;
         }
 
@@ -91,6 +83,12 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          * "og:url" is already created in the {@link action_plugin_combo_metacanonical}
          * "og:description" is already created in the {@link action_plugin_combo_metadescription}
          */
+        try {
+            $requestedPath = $templateForWebPage->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            return;
+        }
+        $page = MarkupPath::createPageFromPathObject($requestedPath);
         $facebookMeta = array(
             "og:title" => StringUtility::truncateString($page->getTitleOrDefault(), 70)
         );
@@ -100,7 +98,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $facebookMeta["og:description"] = $descriptionOrElseDokuWiki;
         }
 
-        $title = Site::getTitle();
+
+        $title = Site::getName();
         if (!empty($title)) {
             $facebookMeta["og:site_name"] = $title;
         }

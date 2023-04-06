@@ -21,6 +21,13 @@ class TemplateForWebPage
 {
 
 
+    /**
+     * An internal configuration
+     * to tell if the page is social
+     * (ie seo, search engine, friendly)
+     */
+    const CONF_INTERNAL_IS_SOCIAL = "web-page-is-social";
+
     private array $templateDefinition;
     const CANONICAL = "template";
 
@@ -42,7 +49,7 @@ class TemplateForWebPage
     private WikiPath $requestedContextPath;
     private Lang $requestedLang;
     private Toc $toc;
-    private bool $deleteSocialHeads = false;
+    private bool $isSocial;
     private string $mainContent;
     private string $templateString;
     private array $model;
@@ -237,6 +244,29 @@ class TemplateForWebPage
     public function hasElement(string $elementId): bool
     {
         return in_array($elementId, $this->getElementIds());
+    }
+
+    public function isSocial(): bool
+    {
+        if (!isset($this->isSocial)) {
+            try {
+                $path = $this->getRequestedContextPath();
+                if(!FileSystems::exists($path)){
+                    return false;
+                }
+                $markup = MarkupPath::createPageFromPathObject($path);
+                if ($markup->isSlot()) {
+                    // slot are not social
+                    return false;
+                }
+            } catch (ExceptionNotFound $e) {
+                // not a path run
+            }
+            return ExecutionContext::getActualOrCreateFromEnv()
+                ->getConfig()
+                ->getBooleanValue(self::CONF_INTERNAL_IS_SOCIAL, true);
+        }
+        return $this->isSocial;
     }
 
 
@@ -566,7 +596,7 @@ class TemplateForWebPage
 
         } catch (ExceptionNotFound $e) {
             // no context path
-            if(isset($this->mainContent)) {
+            if (isset($this->mainContent)) {
                 $model["main-content-html"] = $this->mainContent;
             }
         }
@@ -953,7 +983,7 @@ EOF;
          * To delete the not needed headers for an export
          * such as manifest, alternate, ...
          */
-        if ($this->deleteSocialHeads) {
+        if (!$this->isSocial()) {
             global $EVENT_HANDLER;
             $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'deleteSocialHeadTags');
         }
@@ -1013,13 +1043,13 @@ EOF;
 
     /**
      * Delete the social head tags
-     * @param bool $deleteSocialHeads
+     * @param bool $isSocial
      * @return TemplateForWebPage
      */
     public
-    function setDeleteSocialHeadTags(bool $deleteSocialHeads): TemplateForWebPage
+    function setIsSocial(bool $isSocial): TemplateForWebPage
     {
-        $this->deleteSocialHeads = $deleteSocialHeads;
+        $this->isSocial = $isSocial;
         return $this;
     }
 

@@ -97,8 +97,11 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
 
         try {
-            $page = MarkupPath::createPageFromPathObject($executionContext->getExecutingPageTemplate()
-                ->getRequestedContextPath());
+            $templateForWebPage = $executionContext->getExecutingPageTemplate();
+            if(!$templateForWebPage->isSocial()){
+                return;
+            }
+            $page = MarkupPath::createPageFromPathObject($templateForWebPage->getRequestedContextPath());
         } catch (ExceptionNotFound $e) {
             return;
         }
@@ -169,7 +172,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         try {
             $twitterMeta[self::META_IMAGE] = FetcherRaster::createImageFetchFromPath($twitterImagePath)->getFetchUrl()->toAbsoluteUrlString();
         } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
-            LogUtility::error("Error with the twitter image url. ".$e->getMessage(), self::CANONICAL, $e);
+            LogUtility::error("Error with the twitter image url. " . $e->getMessage(), self::CANONICAL, $e);
             return;
         }
 

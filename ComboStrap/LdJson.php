@@ -388,19 +388,21 @@ class LdJson extends MetadataJson
                 }
 
                 $ldJson["description"] = $eventDescription;
-                $startDate = $page->getStartDateAsString();
-                if ($startDate === null) {
+                try {
+                    $startDate = $page->getStartDate();
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The date_start metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
-                $ldJson["startDate"] = $page->getStartDateAsString();
+                $ldJson["startDate"] = $startDate->format(Iso8601Date::getFormat());
 
-                $endDate = $page->getEndDateAsString();
-                if ($endDate === null) {
+                try {
+                    $endDate = $page->getEndDate();
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The date_end metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
-                $ldJson["endDate"] = $page->getEndDateAsString();
+                $ldJson["endDate"] = $endDate->format(Iso8601Date::getFormat());
 
 
                 self::addImage($ldJson, $page);

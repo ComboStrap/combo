@@ -1115,23 +1115,17 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
         return $this->getPublishedTime() !== null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
     }
 
+
+    /**
+     * @throws ExceptionNotFound
+     */
     public
-    function getEndDateAsString(): ?string
+    function getEndDate(): DateTime
     {
-        return $this->getEndDate() !== null ? $this->getEndDate()->format(Iso8601Date::getFormat()) : null;
+        return $this->endDate->getValue();
     }
 
-    public
-    function getEndDate(): ?DateTime
-    {
-        return $this->endDate->getValueFromStore();
-    }
 
-    public
-    function getStartDateAsString(): ?string
-    {
-        return $this->getStartDate() !== null ? $this->getStartDate()->format(Iso8601Date::getFormat()) : null;
-    }
 
     /**
      * @throws ExceptionNotFound
@@ -1139,7 +1133,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     public
     function getStartDate(): DateTime
     {
-        return $this->startDate->getValueFromStore();
+        return $this->startDate->getValue();
     }
 
     /**

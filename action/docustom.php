@@ -1,12 +1,16 @@
 <?php
 
+use ComboStrap\DokuwikiId;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionReporter;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherAppPages;
 use ComboStrap\FetcherPage;
+use ComboStrap\FileSystems;
 use ComboStrap\HttpResponseStatus;
 use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
 use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
 use ComboStrap\SiteConfig;
@@ -105,6 +109,16 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
         if (self::isThemeSystemEnabled()) {
             switch ($action) {
                 case "show":
+                    try {
+                        $id = Url::createFromGetOrPostGlobalVariable()->getPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
+                    } catch (ExceptionNotFound $e) {
+                        // should not happen but yeah
+                        return;
+                    }
+                    $path = MarkupPath::createMarkupFromId($id);
+                    if (!FileSystems::exists($path)) {
+                        return;
+                    }
                     $action = self::getDoParameterValue(FetcherPage::NAME);
                     break;
                 case ExecutionContext::LOGIN_ACTION:
@@ -115,8 +129,8 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                 case ExecutionContext::PREVIEW_ACTION:
                 case ExecutionContext::SEARCH_ACTION:
                 case ExecutionContext::INDEX_ACTION:
-                //case ExecutionContext::REVISIONS_ACTION:
-                //case ExecutionContext::DIFF_ACTION: needs styling
+                    //case ExecutionContext::REVISIONS_ACTION:
+                    //case ExecutionContext::DIFF_ACTION: needs styling
                     $action = self::getDoParameterValue(FetcherAppPages::NAME);
                     break;
             }
@@ -147,7 +161,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
             $reporterMessage = "An error has occurred during the execution of the action ($action)";
             $html = ExceptionReporter::createForException($e)
                 ->getHtmlPage($reporterMessage);
-            if(PluginUtility::isDevOrTest()) {
+            if (PluginUtility::isDevOrTest()) {
                 // Permits to throw the error to get the stack trace
                 LogUtility::warning($reporterMessage, self::TEMPLATE_CANONICAL, $e);
             }

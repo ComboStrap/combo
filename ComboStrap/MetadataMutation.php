@@ -22,7 +22,7 @@ class MetadataMutation
      * * on the whole set (ie after rendering the meta on references for instance)
      * * or for scalar mutation
      *
-     * This function is then used in tow places.
+     * This function is then used in two places.
      *
      * @param string $attribute
      * @param $valueBefore

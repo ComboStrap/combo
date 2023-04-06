@@ -290,10 +290,9 @@ abstract class Metadata
     }
 
     /**
-     * This function sends the object value to the {@link Metadata::getReadStore() store}
+     * This function sends the object value to the memory {@link Metadata::getWriteStore() store}
      *
      * This function should be used at the end of each setter/adder function
-     *
      *
      * To persist or commit on disk, you use the {@link MetadataStore::persist()}
      * Because the metadata is stored by resource, the persist function is

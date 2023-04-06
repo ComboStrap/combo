@@ -186,6 +186,8 @@ class LdJson extends MetadataJson
                  * We could add this predicate
                  * $resourceCombo->getTypeOrDefault() === {@link PageType::ORGANIZATION_TYPE}
                  * but we don't want to lose any data
+                 * (ie if the page was set to no be an organization table,
+                 * the frontmatter would not take it)
                  */
                 $store = $this->getReadStore();
                 $metadata = $store->getFromPersistentName(self::OLD_ORGANIZATION_PROPERTY);

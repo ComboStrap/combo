@@ -1525,6 +1525,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
      * Utility to {@link ResourceName::setValue()}
      * Used mostly to create page in test
      * @throws ExceptionCompile
+     * @deprecated use not persist
      */
     public
     function setPageName($value): MarkupPath
@@ -2003,11 +2004,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
 
     public function getSideSlot(): ?MarkupPath
     {
+
         /**
          * Only primary slot have a side slot
          * Root Home page does not have one either
          */
-        if ($this->isSlot() || $this->isRootHomePage()) {
+        if ($this->isSlot()) {
             return null;
         }
 

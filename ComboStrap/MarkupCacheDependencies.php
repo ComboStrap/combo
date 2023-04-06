@@ -155,16 +155,19 @@ class MarkupCacheDependencies
          * Rerender secondary slot if needed
          */
         $page = MarkupPath::createMarkupFromStringPath($pathAddedOrDeleted);
-        $wikiPath = $page->getPathObject();
-        if (!($wikiPath instanceof WikiPath)) {
+        $pageWikiPath = $page->getPathObject();
+        if (!($pageWikiPath instanceof WikiPath)) {
             LogUtility::errorIfDevOrTest("The path should be a wiki path");
             return;
         }
-        $slots = $page->getPrimaryIndependentSlots();
+        $slots = [$page->getSideSlot()];
         foreach ($slots as $slot) {
-
             try {
-                $slotFetcher = $slot->createHtmlFetcherWithRequestedPathAsContextPath();
+                $slotFetcher = FetcherMarkup::confRoot()
+                    ->setRequestedMimeToXhtml()
+                    ->setRequestedContextPath($pageWikiPath)
+                    ->setRequestedExecutingPath($slot)
+                    ->build();
             } catch (ExceptionNotExists $e) {
                 // layout fragment does not exists
                 continue;

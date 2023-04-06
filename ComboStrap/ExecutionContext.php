@@ -753,7 +753,7 @@ class ExecutionContext
         /**
          * Snippet are not yet fully coupled to the {@link FetcherMarkup}
          */
-        $this->closeExecutionVariableIfExists(Snippet::CANONICAL);
+        $this->closeAndRemoveRuntimeVariableIfExists(Snippet::CANONICAL);
         return $this;
     }
 
@@ -1074,7 +1074,7 @@ class ExecutionContext
      * @param string $globalObjectIdentifier
      * @return void
      */
-    public function closeExecutionVariableIfExists(string $globalObjectIdentifier)
+    public function closeAndRemoveRuntimeVariableIfExists(string $globalObjectIdentifier)
     {
 
         if (!isset($this->executionScopedVariables[$globalObjectIdentifier])) {
@@ -1118,7 +1118,7 @@ class ExecutionContext
     {
         $scopedVariables = array_keys($this->executionScopedVariables);
         foreach ($scopedVariables as $executionScopedVariableKey) {
-            $this->closeExecutionVariableIfExists($executionScopedVariableKey);
+            $this->closeAndRemoveRuntimeVariableIfExists($executionScopedVariableKey);
         }
         return $this;
     }

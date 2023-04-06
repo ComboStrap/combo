@@ -232,7 +232,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
              * Stop advertising the move
              */
             ExecutionContext::getActualOrCreateFromEnv()
-                ->closeExecutionVariableIfExists(self::FILE_MOVE_OPERATION);
+                ->closeAndRemoveRuntimeVariableIfExists(self::FILE_MOVE_OPERATION);
 
         } catch (Exception $exception) {
             $this->reportError($exception);

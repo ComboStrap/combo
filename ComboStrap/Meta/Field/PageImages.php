@@ -154,7 +154,9 @@ class PageImages extends MetadataTabular
     public function toStoreValue(): ?array
     {
         $this->buildCheck();
-        $this->checkImageExistence();
+        if(!\action_plugin_combo_linkmove::isMoveOperation()) {
+            $this->checkImageExistence();
+        }
         return parent::toStoreValue();
     }
 

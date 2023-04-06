@@ -11,6 +11,7 @@ use ComboStrap\ExceptionRuntime;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Path;
 use ComboStrap\References;
 
 /**
@@ -298,13 +299,13 @@ abstract class MetadataTabular extends Metadata
     }
 
     public
-    function remove($identifierValue): MetadataTabular
+    function remove(Path $identifierValue): MetadataTabular
     {
         $this->buildCheck();
         if ($this->rows === null) {
             return $this;
         }
-        unset($this->rows[$identifierValue]);
+        unset($this->rows[$identifierValue->toUriString()]);
         return $this;
     }
 

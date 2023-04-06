@@ -1,5 +1,7 @@
 <?php
 
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
@@ -31,20 +33,33 @@ class action_plugin_combo_metadescription extends DokuWiki_Action_Plugin
     function description_modification(&$event, $param)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            return;  // Admin call for instance
+        try {
+            $pageTemplate = ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingPageTemplate();
+        } catch (ExceptionNotFound $e) {
+            return;
+        }
+
+        if(!$pageTemplate->isSocial()){
+            return;
         }
 
         /**
          * Description
          * https://www.dokuwiki.org/devel:metadata
          */
-        $page = MarkupPath::createMarkupFromId($ID);
+        try {
+            $wikiPath = $pageTemplate->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("A social template should have a path");
+            return;
+        }
+
+        $page = MarkupPath::createPageFromPathObject($wikiPath);
 
         $description = $page->getDescriptionOrElseDokuWiki();
         if (empty($description)) {
-            $this->sendDestInfo($ID);
+            $this->sendDestInfo($wikiPath->getWikiId());
             return;
         }
 

@@ -747,7 +747,7 @@ class TemplateForWebPage
 
         $wikiPath = $this->getRequestedContextPath();
         if (FileSystems::isDirectory($wikiPath)) {
-            LogUtility::error("We have a found an inconsistency. The context path is not a markup directory and does have therefore no toc but the template ($this) has a toc.");
+            LogUtility::error("We have a found an inconsistency. The context path is a directory and does have therefore no toc but the template ($this) has a toc.");
         }
         $markup = MarkupPath::createPageFromPathObject($wikiPath);
         return Toc::createForPage($markup);

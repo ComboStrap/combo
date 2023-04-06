@@ -234,7 +234,9 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
         if ($jsonArray === null) {
             throw new ExceptionBadSyntax("The frontmatter is not valid");
         }
-        return new MetadataFrontmatterStore($page, $jsonArray);
+        $frontmatter = new MetadataFrontmatterStore($page, $jsonArray);
+        $frontmatter->setContentWithoutFrontMatter('');
+        return $frontmatter;
     }
 
     /**
@@ -447,7 +449,7 @@ EOF;
 
     public function persist()
     {
-        if ($this->contentWithoutFrontMatter === null) {
+        if (!isset($this->contentWithoutFrontMatter)) {
             LogUtility::msg("The content without frontmatter should have been set. Did you you use the createFromPage constructor");
             return $this;
         }

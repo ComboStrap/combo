@@ -90,6 +90,14 @@ class SiteConfig
         } else {
             $value = $conf[$confName];
         }
+        if(DataType::isBoolean($value)){
+            /**
+             * Because the next line
+             * `trim($value) === ""`
+             * is true for a false value
+             */
+            return $value;
+        }
         if ($value === null || trim($value) === "") {
             return $defaultValue;
         }
@@ -161,10 +169,9 @@ class SiteConfig
     {
         $value = $this->getValue($key, $default);
         /**
-         * Boolean in config is the value 1
-         * the non strict equality is needed, we get a string for an unknown reason
+         * Boolean in config is normally the value 1
          */
-        return $value == 1;
+        return DataType::toBoolean($value);
     }
 
     public function setCacheXhtmlOn()

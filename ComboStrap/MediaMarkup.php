@@ -331,7 +331,11 @@ class MediaMarkup
         $internalExternalType = $this->getInternalExternalType();
         switch ($internalExternalType) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
-                $src = $this->getPath()->getWikiId();
+                /**
+                 * Absolute id because dokuwiki resolve a relatif id
+                 * to the actual namespace
+                 */
+                $src = $this->getPath()->toAbsoluteId();
                 try {
                     $src = "$src#{$this->markupRef->getUrl()->getFragment()}";
                 } catch (ExceptionNotFound $e) {

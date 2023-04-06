@@ -136,7 +136,8 @@ abstract class MetadataTabular extends Metadata
              */
             $identifierMetadata = (new $identifierMetadataObject());
             $identifierMetadata->setValue($value);
-            $this->rows[$value] = [$identifierPersistentName => $identifierMetadata];
+            $rowId = $this->getRowId($identifierMetadata);
+            $this->rows[$rowId] = [$identifierPersistentName => $identifierMetadata];
             return $this;
         }
 
@@ -242,17 +243,7 @@ abstract class MetadataTabular extends Metadata
                 } catch (ExceptionBadArgument $e) {
                     throw ExceptionRuntimeInternal::withMessageAndError("The $identifierMetadataObject should be known", $e);
                 }
-                try {
-                    $identifierValue = $identifierMetadata->getValue(); // normalize if any
-                } catch (ExceptionNotFound $e) {
-                    throw ExceptionRuntimeInternal::withMessageAndError("The meta identifier ($identifierMetadata) should have a value", $e);
-                }
-                if (DataType::isObject($identifierValue)) {
-                    /**
-                     * An object cannot be the key of an array
-                     */
-                    $identifierValue = $identifierValue->__toString();
-                }
+                $identifierValue = $this->getRowId($identifierMetadata);
                 $this->rows[$identifierValue] = [$identifierPersistentName => $identifierMetadata];
                 continue;
             }
@@ -271,15 +262,7 @@ abstract class MetadataTabular extends Metadata
                 $childObject->setFromStoreValueWithoutException($colValue);
                 $row[$childObject::getPersistentName()] = $childObject;
                 if ($childObject::getPersistentName() === $identifierPersistentName) {
-                    try {
-                        $idValue = $childObject->getValue();
-                    } catch (ExceptionNotFound $e) {
-                        // should not happen but yeah
-                        $idValue = $colValue;
-                    }
-                    if(is_object($idValue)){
-                        $idValue = $idValue->__toString();
-                    }
+                    $idValue = $this->getRowId($childObject);
                 }
             }
             if ($idValue === null) {
@@ -299,13 +282,13 @@ abstract class MetadataTabular extends Metadata
     }
 
     public
-    function remove(Path $identifierValue): MetadataTabular
+    function remove(String $identifierValue): MetadataTabular
     {
         $this->buildCheck();
         if ($this->rows === null) {
             return $this;
         }
-        unset($this->rows[$identifierValue->toUriString()]);
+        unset($this->rows[$identifierValue]);
         return $this;
     }
 
@@ -387,6 +370,26 @@ abstract class MetadataTabular extends Metadata
             $rowsArray[] = $rowArray;
         }
         return $rowsArray;
+    }
+
+    /**
+     * @param Metadata $identifierMetadata
+     * @return mixed
+     */
+    private function getRowId(Metadata $identifierMetadata)
+    {
+        try {
+            $identifierValue = $identifierMetadata->getValue(); // normalize if any
+        } catch (ExceptionNotFound $e) {
+            throw ExceptionRuntimeInternal::withMessageAndError("The meta identifier ($identifierMetadata) should have a value", $e);
+        }
+        if (DataType::isObject($identifierValue)) {
+            /**
+             * An object cannot be the key of an array
+             */
+            $identifierValue = $identifierValue->__toString();
+        }
+        return $identifierValue;
     }
 
 }

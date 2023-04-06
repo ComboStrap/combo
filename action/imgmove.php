@@ -195,7 +195,8 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 try {
                     $metadata = MetadataSystem::getForName($key)
                         ->setResource($page)
-                        ->setReadStore($metadataFrontmatterStore);
+                        ->setReadStore($metadataFrontmatterStore)
+                        ->setWriteStore($metadataFrontmatterStore);
                 } catch (ExceptionNotFound $e) {
                     continue;
                 }
@@ -217,7 +218,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                             $before = $imageId;
                             $this->moveImage($imageId, $handler);
                             if ($before !== $imageId) {
-                                $pageImagesObject->remove(WikiPath::createMediaPathFromId($before));
+                                $pageImagesObject->remove($path);
                                 $pageImagesObject->addImage($imageId, $image->getUsages());
                             }
                         }

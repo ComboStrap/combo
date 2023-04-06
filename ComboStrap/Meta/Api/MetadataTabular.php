@@ -375,6 +375,10 @@ abstract class MetadataTabular extends Metadata
     /**
      * @param Metadata $identifierMetadata
      * @return mixed
+     * Due to dokuwiki, the same id may be a markup or media path
+     * We build the object from the same id but the url is not the same
+     * This function takes the metadata, get the value and
+     * return the identifier suitable for an array
      */
     private function getRowId(Metadata $identifierMetadata)
     {

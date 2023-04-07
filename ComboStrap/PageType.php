@@ -37,6 +37,32 @@ class PageType extends MetadataText
             ->setResource($page);
     }
 
+    public function setWriteStore($store): PageType
+    {
+        // Just to return the good type
+        return parent::setWriteStore($store);
+    }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
+
+    public function setReadStore($store): PageType
+    {
+        // Just to return the good type
+        return parent::setReadStore($store);
+    }
+
+
     static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
@@ -67,11 +93,14 @@ class PageType extends MetadataText
         return true;
     }
 
-    public function getDefaultValue(): ?string
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
         $resource = $this->getResource();
         if (!($resource instanceof MarkupPath)) {
-            return null;
+            return self::OTHER_TYPE;
         }
 
         if ($resource->isRootHomePage()) {
@@ -83,7 +112,7 @@ class PageType extends MetadataText
             if (!empty($defaultPageTypeConf)) {
                 return $defaultPageTypeConf;
             } else {
-                return null;
+                return self::ARTICLE_TYPE;
             }
         }
     }

@@ -184,7 +184,7 @@ class LdJson extends MetadataJson
                 /**
                  * Deprecated, old organization syntax
                  * We could add this predicate
-                 * $resourceCombo->getTypeOrDefault() === {@link PageType::ORGANIZATION_TYPE}
+                 *
                  * but we don't want to lose any data
                  * (ie if the page was set to no be an organization table,
                  * the frontmatter would not take it)
@@ -236,7 +236,23 @@ class LdJson extends MetadataJson
             return $actualValue;
         }
 
-        $type = $page->getTypeOrDefault();
+        $readStore = $this->getReadStore();
+        $type = PageType::createForPage($page)
+            ->setReadStore(MetadataDokuWikiStore::class)
+            ->getValueOrDefault();
+        if (!($readStore instanceof MetadataDokuWikiStore)) {
+            /**
+             * Edge case we set the readstore because in a frontmatter,
+             * the type may have been set
+             */
+            try {
+                $type = PageType::createForPage($page)
+                    ->setReadStore($readStore)
+                    ->getValue();
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+        }
         switch (strtolower($type)) {
             case PageType::WEBSITE_TYPE:
 

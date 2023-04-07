@@ -161,7 +161,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     ->setCanonical(action_plugin_combo_router::CANONICAL)
                     ->setSignatureName(action_plugin_combo_router::URL_MANAGER_NAME)
                     ->toHtmlBox();
-                ptln($html);
+                LogUtility::infoToPublic($html, action_plugin_combo_router::CANONICAL);
             }
 
 

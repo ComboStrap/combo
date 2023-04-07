@@ -830,8 +830,6 @@ class TemplateForWebPage
             throw new ExceptionNotFound("No messages");
         }
 
-        $shown = array();
-
         // deduplicate and auth
         $uniqueMessages = [];
         foreach ($MSG as $msg) {

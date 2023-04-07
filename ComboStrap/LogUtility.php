@@ -174,7 +174,7 @@ class LogUtility
      * @param string $canonical
      * @param bool $withIconURL
      */
-    public static function log2FrontEnd($message, $level, $canonical = "support", bool $withIconURL = true)
+    public static function log2FrontEnd($message, $level, $canonical = "support", bool $publicMessage = false)
     {
 
         try {
@@ -245,7 +245,12 @@ class LogUtility
                 $htmlMsg .= " - " . $message;
                 if ($level > self::LVL_MSG_DEBUG) {
                     $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];
-                    msg($htmlMsg, $dokuWikiLevel, '', '', MSG_USERS_ONLY);
+                    if ($publicMessage) {
+                        $allow = MSG_PUBLIC;
+                    } else {
+                        $allow = MSG_USERS_ONLY;
+                    }
+                    msg($htmlMsg, $dokuWikiLevel, '', '',$allow);
                 }
         }
     }
@@ -408,6 +413,11 @@ class LogUtility
     public static function debug(string $message, string $canonical = self::SUPPORT_CANONICAL, $e = null)
     {
         self::msg($message, LogUtility::LVL_MSG_DEBUG, $canonical, $e);
+    }
+
+    public static function infoToPublic(string $html, string $canonical)
+    {
+        self::log2FrontEnd($html, LogUtility::LVL_MSG_INFO, $canonical, true);
     }
 
 }

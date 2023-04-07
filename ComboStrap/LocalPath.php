@@ -41,6 +41,7 @@ class LocalPath extends PathAbs
         return new LocalPath($uri);
     }
 
+
     /**
      * @throws ExceptionBadArgument
      * @throws ExceptionCast
@@ -284,14 +285,12 @@ class LocalPath extends PathAbs
         /**
          * May be a symlink link
          */
-        if (is_link($this->path)) {
-            $realPath = readlink($this->path);
-            return LocalPath::createFromPathString($realPath)
-                ->relativize($localPath);
+        if ($this->isSymlink()) {
+            $realPath = $this->toCanonicalAbsolutePath();
+            return $realPath->relativize($localPath);
         }
         if ($localPath->isSymlink()) {
-            $realPath = readlink($localPath->path);
-            $localPath = LocalPath::createFromPathString($realPath);
+            $localPath = $localPath->toCanonicalAbsolutePath();
             $this->relativize($localPath);
         }
         throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
@@ -327,7 +326,29 @@ class LocalPath extends PathAbs
          * realpath() is just a system/library call to actual realpath() function supported by OS.
          * real path handle also the windows name ie USERNAME~
          */
+        $isSymlink = $this->isSymlink();
         $realPath = realpath($this->path);
+        if($isSymlink){
+            /**
+             *
+             * What fucked is fucked up
+             *
+             * With the symlink
+             * D:/dokuwiki-animals/combo.nico.lan/data/pages
+             * if you pass it to realpath:
+             * ```
+             * realpath("D:/dokuwiki-animals/combo.nico.lan/data/pages")
+             * ```
+             * you get: `d:\dokuwiki\website\pages`
+             * if you pass the result again in realpath
+             * ```
+             * realpath(d:\dokuwiki\website\pages)
+             * ```
+             * we get another result `D:\dokuwiki\website\pages`
+             *
+             */
+            $realPath = realpath($realPath);
+        }
         if ($realPath !== false) {
             return LocalPath::createFromPathString($realPath);
         }
@@ -441,7 +462,7 @@ class LocalPath extends PathAbs
         return $this->host;
     }
 
-    private function isSymlink(): bool
+    public function isSymlink(): bool
     {
         return is_link($this->path);
     }

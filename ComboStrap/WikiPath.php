@@ -600,12 +600,26 @@ class WikiPath extends PathAbs
             throw new ExceptionBadArgument("The path ($path) is not a local path and cannot be converted to a wiki path");
         }
         $driveRoots = WikiPath::getDriveRoots();
+
         foreach ($driveRoots as $driveRoot => $drivePath) {
 
             try {
                 $relativePath = $path->relativize($drivePath);
             } catch (ExceptionBadArgument $e) {
-                continue;
+                /**
+                 * The drive may be a symlink link
+                 * (not the path)
+                 */
+                if (!$drivePath->isSymlink()) {
+                    continue;
+                }
+                try {
+                    $drivePath = $drivePath->toCanonicalAbsolutePath();
+                    $relativePath = $path->relativize($drivePath);
+                } catch (ExceptionBadArgument $e) {
+                    // not a relative path
+                    continue;
+                }
             }
             $wikiId = $relativePath->toAbsoluteId();
             if (FileSystems::isDirectory($path)) {

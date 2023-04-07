@@ -685,14 +685,22 @@ class Site
      * @return ColorRgb|null
      * @deprecated use {@link SiteConfig::getPrimaryColor()} instead
      */
-    public static function getPrimaryColor($default = null): ?ColorRgb
+    public static function getPrimaryColor(string $default = null): ?ColorRgb
     {
         try {
             return ExecutionContext::getActualOrCreateFromEnv()
                 ->getConfig()
                 ->getPrimaryColor();
         } catch (ExceptionNotFound $e) {
-            return $default;
+            if($default===null){
+                return null;
+            }
+            try {
+                return ColorRgb::createFromString($default);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("The value ($default) is not a valid color");
+                return null;
+            }
         }
     }
 

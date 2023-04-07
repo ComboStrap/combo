@@ -162,6 +162,9 @@ class MarkupCacheDependencies
         }
         $slots = [$page->getSideSlot()];
         foreach ($slots as $slot) {
+            if ($slot === null) {
+                continue;
+            }
             try {
                 $slotFetcher = FetcherMarkup::confRoot()
                     ->setRequestedMimeToXhtml()

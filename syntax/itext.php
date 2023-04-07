@@ -131,7 +131,8 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("span");
+                    $toHtmlEnterTag = $tagAttributes->toHtmlEnterTag("span");
+                    $renderer->doc .= $toHtmlEnterTag;
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

@@ -84,17 +84,16 @@ class MarkupRenderUtility
     public static function renderInstructionsToXhtml($callStackHeaderInstructions, array $contextData = null): string
     {
 
-
         $builder = FetcherMarkup::confChild()
             ->setRequestedInstructions($callStackHeaderInstructions)
             ->setIsDocument(false)
-            ->setRequestedMimeToXhtml()
-            ->setRequestedContextPathWithDefault();
+            ->setRequestedMimeToXhtml();
         if ($contextData !== null) {
             $builder->setContextData($contextData);
         }
-        return $builder->build()
-            ->getFetchString();
+        $fetcherMarkup = $builder->build();
+        $fetchString = $fetcherMarkup->getFetchString();
+        return $fetchString;
     }
 
     /**

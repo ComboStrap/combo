@@ -58,12 +58,15 @@ class MarkupDynamicRender
      */
     public static function create($format): MarkupDynamicRender
     {
-        if (isset(self::$DYNAMIC_RENDERERS_CACHE[$format])) {
-            return self::$DYNAMIC_RENDERERS_CACHE[$format];
-        }
-        $markupDynamicRender = new MarkupDynamicRender($format);
-        self::$DYNAMIC_RENDERERS_CACHE[$format] = $markupDynamicRender;
-        return $markupDynamicRender;
+        /**
+         * Don't create a static object
+         * to preserve the build because
+         * the instructions may also recursively render.
+         *
+         * Therefore, a small instructions rendering such as a tooltip
+         * would take the actual rendering and close the previous.
+         */
+        return new MarkupDynamicRender($format);
     }
 
     public static function createXhtml(): MarkupDynamicRender

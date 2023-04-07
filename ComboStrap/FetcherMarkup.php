@@ -218,7 +218,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             return self::confRoot();
         }
         return self::confRoot()
-            ->setParentMarkupHandler($executing);
+            ->setParentMarkupHandler($executing)
+            ->setRequestedContextPath($executing->getRequestedContextPath());
     }
 
     /**

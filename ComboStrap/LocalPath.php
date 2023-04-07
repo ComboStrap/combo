@@ -96,7 +96,7 @@ class LocalPath extends PathAbs
                 $path = Url::createFromString($path)->getPath();
                 LogUtility::errorIfDevOrTest("The path given as constructor should not be an uri or a path object");
             } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
-                LogUtility::internalError("The uri path could not be created",self::CANONICAL, $e);
+                LogUtility::internalError("The uri path could not be created", self::CANONICAL, $e);
             }
         }
         if ($sep != null) {
@@ -225,7 +225,7 @@ class LocalPath extends PathAbs
             return $this;
         }
 
-        return $this->toCanonicalPath();
+        return $this->toCanonicalAbsolutePath();
 
     }
 
@@ -241,7 +241,7 @@ class LocalPath extends PathAbs
     public function resolve(string $name): LocalPath
     {
 
-        $newPath = $this->toCanonicalPath()->toAbsoluteId() . $this->getDirectorySeparator() . utf8_encodeFN($name);
+        $newPath = $this->toCanonicalAbsolutePath()->toAbsoluteId() . $this->getDirectorySeparator() . utf8_encodeFN($name);
         return self::createFromPathString($newPath);
 
     }
@@ -251,27 +251,50 @@ class LocalPath extends PathAbs
      */
     public function relativize(LocalPath $localPath): LocalPath
     {
-        $actualPath = $this->toCanonicalPath();
-        $localPath = $localPath->toCanonicalPath();
 
-        if (!(strpos($actualPath->toAbsoluteId(), $localPath->toAbsoluteId()) === 0)) {
+        /**
+         * One of the problem of relativization is
+         * that it may be:
+         * * logical (when using a symling)
+         * * physical
+         */
+        if (!$this->isAbsolute() || $this->isShortName()) {
             /**
-             * May be a symlink link
+             * This is not a logical resolution
+             * (if the path is logically not absolute and is a symlink,
+             * we have a problem)
              */
-            if (is_link($this->path)) {
-                $realPath = readlink($this->path);
-                return LocalPath::createFromPathString($realPath)
-                    ->relativize($localPath);
+            $actualPath = $this->toCanonicalAbsolutePath();
+        } else {
+            $actualPath = $this;
+        }
+        if (!$localPath->isAbsolute() || $localPath->isShortName()) {
+            $localPath = $localPath->toCanonicalAbsolutePath();
+        }
+
+        if (strpos($actualPath->toAbsoluteId(), $localPath->toAbsoluteId()) === 0) {
+            if ($actualPath->toAbsoluteId() === $localPath->toAbsoluteId()) {
+                return LocalPath::createFromPathString("");
             }
-            throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
+            $sepCharacter = 1; // delete the sep characters
+            $relativePath = substr($actualPath->toAbsoluteId(), strlen($localPath->toAbsoluteId()) + $sepCharacter);
+            $relativePath = str_replace($this->getDirectorySeparator(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
+            return LocalPath::createFromPathString($relativePath);
         }
-        if ($actualPath->toAbsoluteId() === $localPath->toAbsoluteId()) {
-            return LocalPath::createFromPathString("");
+        /**
+         * May be a symlink link
+         */
+        if (is_link($this->path)) {
+            $realPath = readlink($this->path);
+            return LocalPath::createFromPathString($realPath)
+                ->relativize($localPath);
         }
-        $sepCharacter = 1; // delete the sep characters
-        $relativePath = substr($actualPath->toAbsoluteId(), strlen($localPath->toAbsoluteId()) + $sepCharacter);
-        $relativePath = str_replace($this->getDirectorySeparator(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
-        return LocalPath::createFromPathString($relativePath);
+        if ($localPath->isSymlink()) {
+            $realPath = readlink($localPath->path);
+            $localPath = LocalPath::createFromPathString($realPath);
+            $this->relativize($localPath);
+        }
+        throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
 
     }
 
@@ -294,8 +317,10 @@ class LocalPath extends PathAbs
      *
      * This function makes the path canonical meaning that two canonical path can be compared.
      * This is also needed when you path a path string to a php function such as `clearstatcache`
+     *
+     * If this is a symlink, it will resolve it to the real path
      */
-    public function toCanonicalPath(): LocalPath
+    public function toCanonicalAbsolutePath(): LocalPath
     {
 
         /**
@@ -414,5 +439,19 @@ class LocalPath extends PathAbs
             throw new ExceptionNotFound("No host. Localhost should be the default");
         }
         return $this->host;
+    }
+
+    private function isSymlink(): bool
+    {
+        return is_link($this->path);
+    }
+
+    private function isShortName(): bool
+    {
+        /**
+         * See short name in windows
+         * https://datacadamia.com/os/windows/path#pathname
+         */
+        return strpos($this->path, "~1") !== false;
     }
 }

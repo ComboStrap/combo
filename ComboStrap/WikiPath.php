@@ -605,20 +605,7 @@ class WikiPath extends PathAbs
             try {
                 $relativePath = $path->relativize($drivePath);
             } catch (ExceptionBadArgument $e) {
-                /**
-                 * May be a symlink link
-                 */
-                if (!is_link($drivePath->toAbsoluteId())) {
-                    continue;
-                }
-                try {
-                    $realPath = readlink($drivePath->toAbsoluteId());
-                    $drivePath = LocalPath::createFromPathString($realPath);
-                    $relativePath = $path->relativize($drivePath);
-                } catch (ExceptionBadArgument $e) {
-                    // not a relative path
-                    continue;
-                }
+                continue;
             }
             $wikiId = $relativePath->toAbsoluteId();
             if (FileSystems::isDirectory($path)) {

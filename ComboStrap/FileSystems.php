@@ -326,7 +326,7 @@ class FileSystems
     public static function clearStatCache(Path $path)
     {
         try {
-            $pathString = $path->toLocalPath()->toCanonicalPath()->toAbsoluteId();
+            $pathString = $path->toLocalPath()->toCanonicalAbsolutePath()->toAbsoluteId();
             clearstatcache(true, $pathString);
         } catch (ExceptionCast $e) {
             throw new ExceptionRuntimeInternal("The cache can be clear only for local path");

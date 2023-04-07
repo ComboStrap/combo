@@ -31,7 +31,7 @@ abstract class MetadataText extends Metadata
     public function getValue(): string
     {
         $this->buildCheck();
-        if($this->value===null){
+        if ($this->value === null) {
             throw new ExceptionNotFound("The value was not found for the metadata ($this)");
         }
         return $this->value;
@@ -99,8 +99,6 @@ abstract class MetadataText extends Metadata
     {
         return null;
     }
-
-
 
 
 }

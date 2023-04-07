@@ -445,14 +445,10 @@ class LdJson extends MetadataJson
          * https://developers.google.com/search/docs/data-types/speakable
          */
         $speakableXpath = array();
+        $speakableXpath[] = "/html/head/title";
         try {
-            $page->getTitleOrDefault();
-            $speakableXpath[] = "/html/head/title";
-        } catch (ExceptionNotFound $e) {
-            // ok no title
-        }
-        try {
-            $page->getDescription();
+            PageDescription::createForPage($page)
+                ->getValue();
             /**
              * Only the description written otherwise this is not speakable
              * you can have link and other strangeness

@@ -555,5 +555,11 @@ class SiteConfig
         return $secondaryColor;
     }
 
+    public function isXhtmlCacheOn(): bool
+    {
+        global $conf;
+        return $conf['cachetime'] !== -1;
+    }
+
 
 }

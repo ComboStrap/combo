@@ -134,7 +134,7 @@ class SnippetSystem
         $snippets = null;
         foreach ($array as $element) {
             $snippets[] = Snippet::createFromJson($element)
-                ->addSlot($slot);
+                ->addElement($slot);
         }
         return $snippets;
     }
@@ -182,7 +182,7 @@ class SnippetSystem
     function attachInternalJavascriptFromPathForRequest($componentId, Path $path): Snippet
     {
         return Snippet::getOrCreateFromContext($path)
-            ->addSlot(Snippet::REQUEST_SCOPE)
+            ->addElement(Snippet::REQUEST_SCOPE)
             ->setComponentId($componentId);
     }
 
@@ -227,7 +227,7 @@ class SnippetSystem
     function attachSnippetFromRequest($componentId, $type): Snippet
     {
         return Snippet::getOrCreateFromComponentId($componentId, $type)
-            ->addSlot(Snippet::REQUEST_SCOPE);
+            ->addElement(Snippet::REQUEST_SCOPE);
     }
 
 

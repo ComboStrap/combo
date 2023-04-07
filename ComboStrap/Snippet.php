@@ -124,7 +124,7 @@ class Snippet implements JsonSerializable
      *   * a slot - cached along the HTML
      *   * or  {@link Snippet::REQUEST_SCOPE} - never cached
      */
-    private $slots;
+    private $elements;
 
     /**
      * @var bool run as soon as possible
@@ -287,7 +287,7 @@ class Snippet implements JsonSerializable
                  * but still used to store the snippets
                  */
                 $wikiId = $executingFetcher->getSourcePath()->toWikiPath()->getWikiId();
-                $snippet->addSlot($wikiId);
+                $snippet->addElement($wikiId);
             } catch (ExceptionCast $e) {
                 // not a wiki path
             } catch (ExceptionNotFound $e) {
@@ -298,7 +298,7 @@ class Snippet implements JsonSerializable
                  */
                 try {
                     $wikiId = $executionContext->getExecutingParentMarkupHandler()->getSourcePath()->toWikiPath()->getWikiId();
-                    $snippet->addSlot($wikiId);
+                    $snippet->addElement($wikiId);
                 } catch (ExceptionCast $e) {
                     // not a wiki path
                 } catch (ExceptionNotFound $e) {
@@ -308,10 +308,15 @@ class Snippet implements JsonSerializable
             }
         } catch (ExceptionNotFound $e) {
             /**
-             * admin page or page scope
+             * admin page, page scope or theme is not used
              * This snippets are not due to the markup
              */
-            $snippet->addSlot(Snippet::REQUEST_SCOPE);
+            try {
+                $executingId = $executionContext->getExecutingWikiId();
+                $snippet->addElement($executingId);
+            } catch (ExceptionNotFound $e) {
+                $snippet->addElement(Snippet::REQUEST_SCOPE);
+            }
         }
 
         return $snippet;
@@ -471,10 +476,10 @@ class Snippet implements JsonSerializable
 
     public function hasSlot($slot): bool
     {
-        if ($this->slots === null) {
+        if ($this->elements === null) {
             return false;
         }
-        return key_exists($slot, $this->slots);
+        return key_exists($slot, $this->elements);
     }
 
     public function __toString()
@@ -618,9 +623,9 @@ class Snippet implements JsonSerializable
         return $this;
     }
 
-    public function addSlot(string $slot): Snippet
+    public function addElement(string $element): Snippet
     {
-        $this->slots[$slot] = 1;
+        $this->elements[$element] = 1;
         return $this;
     }
 

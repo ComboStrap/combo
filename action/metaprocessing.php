@@ -3,6 +3,7 @@
 
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntimeInternal;
+use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
@@ -11,6 +12,7 @@ use ComboStrap\MetadataDokuWikiArrayStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataMutation;
 use ComboStrap\Meta\Field\PageImages;
+use ComboStrap\PluginUtility;
 use ComboStrap\References;
 
 /**

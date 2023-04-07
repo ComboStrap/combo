@@ -8,15 +8,22 @@ use ComboStrap\Web\Url;
 /**
  * Class DokuPath
  * @package ComboStrap
- * A dokuwiki path has the same structure than a windows path
- * with a drive and a path
+ * A dokuwiki path has the same structure than a windows path with a drive and a path
  *
- * The drive is just a local path on the local file system
+ * The drive being a local path on the local file system
+ *
+ * Ultimately, this path is the application path and should be used everywhere.
+ * * for users input (ie in a link markup such as media and page link)
+ * * for output (ie creating the id for the url)
  *
  * Dokuwiki knows only two drives ({@link WikiPath::MARKUP_DRIVE} and {@link WikiPath::MEDIA_DRIVE}
  * but we have added a couple more such as the {@link WikiPath::COMBO_DRIVE combo resources}
- * and the {@link WikiPath::CACHE_DRIVE}
+ * and the {@link WikiPath::CACHE_DRIVE} to be able to serve resources
  *
+ * TODO: because all {@link LocalPath} has at minium a drive (ie C:,D:, E: for windows or \ for linux)
+ *    A Wiki Path can be just a wrapper around every local path)
+ *    The {@link LocalPath::toWikiPath()} should not throw then but as not all drive
+ *    may be public, we need to add a drive functionality to get this information.
  */
 class WikiPath extends PathAbs
 {

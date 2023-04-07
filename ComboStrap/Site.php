@@ -574,8 +574,9 @@ class Site
 
     public static function isHtmlRenderCacheOn(): bool
     {
-        global $conf;
-        return $conf['cachetime'] !== -1;
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->isXhtmlCacheOn();
     }
 
     /**

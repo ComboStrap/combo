@@ -32,8 +32,6 @@ class RasterImageLink extends ImageLink
 {
 
     const CANONICAL = FetcherRaster::CANONICAL;
-    const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
-    const CONF_LAZY_LOADING_ENABLE_DEFAULT = 1;
 
     const RESPONSIVE_CLASS = "img-fluid";
 
@@ -260,6 +258,7 @@ class RasterImageLink extends ImageLink
             $lazyLoadMethod = $this->mediaMarkup->getLazyLoadMethodOrDefault();
             switch ($lazyLoadMethod) {
                 case LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE:
+                default:
                     $attributes->addOutputAttributeValue("src", $srcValue);
                     if (!empty($srcSet)) {
                         // it the image is small, no srcset for instance
@@ -267,7 +266,6 @@ class RasterImageLink extends ImageLink
                     }
                     $attributes->addOutputAttributeValue("loading", "lazy");
                     break;
-                default:
                 case LazyLoad::LAZY_LOAD_METHOD_LOZAD_VALUE:
                     /**
                      * Snippet Lazy loading
@@ -348,7 +346,7 @@ class RasterImageLink extends ImageLink
         try {
             return $this->mediaMarkup->isLazy();
         } catch (ExceptionNotFound $e) {
-            return SiteConfig::getConfValue(RasterImageLink::CONF_LAZY_LOADING_ENABLE, RasterImageLink::CONF_LAZY_LOADING_ENABLE_DEFAULT);
+            return SiteConfig::getConfValue(LazyLoad::CONF_RASTER_ENABLE, LazyLoad::CONF_RASTER_ENABLE_DEFAULT);
         }
     }
 

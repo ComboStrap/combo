@@ -323,7 +323,7 @@ class SiteConfig
     public function disableLazyLoad(): SiteConfig
     {
         return $this->setConf(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 0)
-            ->setConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE, 0);
+            ->setConf(LazyLoad::CONF_RASTER_ENABLE, 0);
 
     }
 

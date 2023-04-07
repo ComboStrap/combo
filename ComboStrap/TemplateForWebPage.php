@@ -707,7 +707,10 @@ class TemplateForWebPage
                     }
                     break;
                 case "meta":
-                    $deletedMeta = ["robots", "og:url", "og:description", "description"];
+                    /**
+                     * `robots` is not a social as we test the no-index in {@link LowQualityPage}
+                     */
+                    $deletedMeta = [ "og:url", "og:description", "description"];
                     foreach ($heads as $id => $headAttributes) {
                         if (isset($headAttributes['name']) || isset($headAttributes['property'])) {
                             $rel = $headAttributes['name'];

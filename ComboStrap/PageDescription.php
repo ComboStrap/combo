@@ -41,7 +41,7 @@ class PageDescription extends MetadataText
      * (You may set it via the metadata manager and get this origin)
      */
     public const DESCRIPTION_COMBO_ORIGIN = syntax_plugin_combo_frontmatter::CANONICAL;
-    private ?string $defaultValue;
+    private ?string $defaultValue = null;
 
     public static function createForPage($page): PageDescription
     {

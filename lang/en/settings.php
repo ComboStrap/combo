@@ -202,7 +202,7 @@ $lang[SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT] = PluginUtility::getDocum
 /**
  * Lazy load image
  */
-$lang[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Load the raster image only when they become visible");
+$lang[LazyLoad::CONF_RASTER_ENABLE] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Load the raster image only when they become visible");
 $lang[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Retina Support: If checked, the images downloaded will match the display capabilities (the size DPI correction will not be applied)");
 $lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Responsive image sizing: The image margin applied to screen size");
 

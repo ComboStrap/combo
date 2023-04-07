@@ -186,6 +186,7 @@ class PageImageTag
                     continue 2;
             }
             if ($imageFetcher !== null) {
+                $tagAttributes->addClassName(StyleUtility::addComboStrapSuffix($pageImageProcessing));
                 break;
             }
         }

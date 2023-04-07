@@ -253,7 +253,7 @@ $meta[FetcherSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
 /**
  * Raster Lazy load image
  */
-$meta[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = array('onoff');
+$meta[LazyLoad::CONF_RASTER_ENABLE] = array('onoff');
 $meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = array('string');
 $meta[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = array('onoff');
 

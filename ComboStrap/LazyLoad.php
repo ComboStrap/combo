@@ -61,7 +61,9 @@ class LazyLoad
     /**
      * Used internal for now on test
      */
-    const LAZY_LOAD_METHOD_CONF = "internal-lazy-load-method-combo";
+    const CONF_LAZY_LOAD_METHOD = "internal-lazy-load-method-combo";
+    public const CONF_RASTER_ENABLE = "rasterImageLazyLoadingEnable";
+    public const CONF_RASTER_ENABLE_DEFAULT = 1;
 
     /**
      * Used to select all lazy loaded

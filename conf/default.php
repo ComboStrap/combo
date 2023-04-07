@@ -25,6 +25,7 @@ use ComboStrap\Canonical;
 use ComboStrap\ContainerTag;
 use ComboStrap\IconDownloader;
 use ComboStrap\Identity;
+use ComboStrap\LazyLoad;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PageType;

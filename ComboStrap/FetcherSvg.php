@@ -982,19 +982,8 @@ class FetcherSvg extends IFetcherLocalImage
 
             /**
              * The crop happens when we set the height and width on the svg.
-             * Code below stay because we are not completly sure
-             * 2023-04-04
+             * There is no need to manipulate the view box coordinate
              */
-//            $targetAspectRatio = $this->getTargetAspectRatio();
-//            if ($targetAspectRatio > 1 && $viewBoxWidth >= $viewBoxHeight) {
-//                // Height crop
-//                // Width is greater than height
-//                $viewBoxHeight = self::round($viewBoxWidth / $targetAspectRatio);
-//            } else {
-//                // Height is greater than width
-//                // Width crop
-//                $viewBoxWidth = self::round($viewBoxHeight / $targetAspectRatio);
-//            }
 
             /**
              * Note: if the svg is an icon of width 24 with a viewbox of 0 0 24 24,

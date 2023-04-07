@@ -645,7 +645,7 @@ class MediaMarkup
 
             return ExecutionContext::getActualOrCreateFromEnv()
                 ->getConfig()
-                ->getValue(LazyLoad::LAZY_LOAD_METHOD_CONF,LazyLoad::LAZY_LOAD_METHOD_DEFAULT) ;
+                ->getValue(LazyLoad::CONF_LAZY_LOAD_METHOD,LazyLoad::LAZY_LOAD_METHOD_DEFAULT) ;
         }
 
     }
@@ -657,13 +657,11 @@ class MediaMarkup
         return preg_match(' / ' . syntax_plugin_combo_media::MEDIA_PATTERN . ' / msSi', $text);
     }
 
-    /**
-     * @throws ExceptionNotFound
-     */
+
     public function isLazy(): bool
     {
 
-        return $this->getLazyLoadMethod() !== LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
+        return $this->getLazyLoadMethodOrDefault() !== LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
 
     }
 

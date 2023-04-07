@@ -257,7 +257,12 @@ class PageUrlPath extends MetadataText
             case PageUrlType::CONF_VALUE_PERMANENT_PAGE_PATH:
                 return $this->toPermanentUrlPath($pagePath);
             case PageUrlType::CONF_VALUE_CANONICAL_PATH:
-                return $page->getCanonicalOrDefault();
+                try {
+                    return Canonical::createForPage($page)->getValueOrDefault()->toAbsoluteId();
+                } catch (ExceptionNotFound $e) {
+                    // no canonical, path as default
+                    return $pagePath;
+                }
             case PageUrlType::CONF_VALUE_PERMANENT_CANONICAL_PATH:
                 return $this->toPermanentUrlPath($page->getCanonicalOrDefault());
             case PageUrlType::CONF_VALUE_SLUG:

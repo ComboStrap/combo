@@ -34,6 +34,20 @@ class Canonical extends MetadataWikiPath
 
     }
 
+    /**
+     * @return WikiPath
+     * @throws ExceptionNotFound
+     */
+    public function getValueOrDefault(): WikiPath
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
+
     public static function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;

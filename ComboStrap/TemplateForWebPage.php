@@ -692,7 +692,11 @@ class TemplateForWebPage
         foreach ($data as $tag => &$heads) {
             switch ($tag) {
                 case "link":
-                    $deletedRel = ["manifest", "search", "start", "alternate", "canonical"];
+                    /**
+                     * canonical is not a social tag to delete
+                     * It should stay as this is the page identifier and we use it to idenfity the page in the router and
+                     */
+                    $deletedRel = ["manifest", "search", "start", "alternate"];
                     foreach ($heads as $id => $headAttributes) {
                         if (isset($headAttributes['rel'])) {
                             $rel = $headAttributes['rel'];

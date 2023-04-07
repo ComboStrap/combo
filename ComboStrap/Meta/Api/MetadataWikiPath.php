@@ -136,6 +136,10 @@ abstract class MetadataWikiPath extends Metadata
     }
 
 
+    /**
+     * @return WikiPath
+     * @throws ExceptionNotFound
+     */
     public function getValue(): WikiPath
     {
         $this->buildCheck();

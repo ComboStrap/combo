@@ -188,9 +188,8 @@ class TemplateEngine
     {
         $handleBars->addHelper("share",
             function ($template, $context, $args, $source) {
-                $attributes = $context->get($args);
                 $knownType = ShareTag::getKnownTypes();
-                $tagAttributes = TagAttributes::createFromTagMatch("<share $attributes/>", [], $knownType);
+                $tagAttributes = TagAttributes::createFromTagMatch("<share $args/>", [], $knownType);
                 return ShareTag::renderSpecialEnter($tagAttributes, DOKU_LEXER_SPECIAL);
             }
         );
@@ -207,10 +206,9 @@ class TemplateEngine
          */
         $handleBars->addHelper("breadcrumb",
             function ($template, Context $context, $args, $source) {
-                $attributes = $context->get($args);
                 $knownType = BreadcrumbTag::TYPES;
                 $default = BreadcrumbTag::getDefaultBlockAttributes();
-                $tagAttributes = TagAttributes::createFromTagMatch("<breadcrumb $attributes/>", $default, $knownType);
+                $tagAttributes = TagAttributes::createFromTagMatch("<breadcrumb $args/>", $default, $knownType);
                 return BreadcrumbTag::toBreadCrumbHtml($tagAttributes);
             }
         );
@@ -220,10 +218,9 @@ class TemplateEngine
          */
         $handleBars->addHelper("page-image",
             function ($template, Context $context, $args, $source) {
-                $attributes = $context->get($args);
                 $knownType = PageImageTag::TYPES;
                 $default = PageImageTag::getDefaultAttributes();
-                $tagAttributes = TagAttributes::createFromTagMatch("<page-image $attributes/>", $default, $knownType);
+                $tagAttributes = TagAttributes::createFromTagMatch("<page-image $args/>", $default, $knownType);
                 return PageImageTag::render($tagAttributes,[]);
             }
         );

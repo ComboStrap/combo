@@ -1,10 +1,11 @@
 {{#if main-header-html}}
     {{{ main-header-html }}}
 {{else}}
+    {{#breadcrumb class="mb-3"}}{{/breadcrumb}}
     <h1>{{ h1 }}</h1>
     {{#if lead}}
-        <div class="lead">{{lead}}</div>
+        <div class="lead mb-5" style="font-weight: 300;font-size: calc(1.275rem + .8vw);">{{lead}}</div>
     {{/if}}
-    {{#breadcrumb}}{{/breadcrumb}}
-    {{#page-image 'featured height="250" ratio="21:9" linking="default" default="icon|ancestor|logo" zoom="-10"'}}{{/page-image}}
+
+    {{#page-image featured height="250" ratio="21:9" linking="default" default="icon|ancestor|logo" zoom="-10"}}{{/page-image}}
 {{/if}}

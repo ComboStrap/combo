@@ -911,8 +911,6 @@ class TagAttributes
     }
 
 
-
-
     public
     function toHTMLAttributeString(): string
     {
@@ -1394,13 +1392,9 @@ class TagAttributes
         return $this;
     }
 
-    public function getIdOrDefault()
+    public function getDefaultGeneratedId()
     {
-        try {
-            return $this->getId();
-        } catch (ExceptionNotFound $e) {
-            return $this->getValue(TagAttributes::GENERATED_ID_KEY);
-        }
+        return $this->getValue(TagAttributes::GENERATED_ID_KEY);
     }
 
     public function setKnownTypes(?array $knownTypes): TagAttributes
@@ -1485,10 +1479,9 @@ class TagAttributes
     }
 
 
-
     public function setId(string $id): TagAttributes
     {
-        return $this->setComponentAttributeValue("id",$id);
+        return $this->setComponentAttributeValue("id", $id);
     }
 
     /**
@@ -1497,7 +1490,7 @@ class TagAttributes
     public function getId()
     {
         $id = $this->getValue(TagAttributes::ID_KEY);
-        if($id===null){
+        if ($id === null) {
             throw new ExceptionNotFound("no id");
         }
         return $id;

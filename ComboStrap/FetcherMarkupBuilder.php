@@ -29,7 +29,7 @@ class FetcherMarkupBuilder
     protected WikiPath $requestedContextPath;
     protected Mime $mime;
     protected bool $deleteRootBlockElement = false;
-    protected string $rendererName = MarkupRenderer::DEFAULT_RENDERER;
+    protected string $rendererName;
 
 
     protected bool $isDoc;
@@ -234,9 +234,41 @@ class FetcherMarkupBuilder
         }
 
         /**
+         * The object type is mandatory
+         */
+        if (!isset($this->rendererName)) {
+            switch ($this->mime->toString()) {
+                case Mime::XHTML:
+                    /**
+                     * ie last name of {@link \Doku_Renderer_xhtml}
+                     */
+                    $rendererName = MarkupRenderer::XHTML_RENDERER;
+                    break;
+                case Mime::META:
+                    /**
+                     * ie last name of {@link \Doku_Renderer_metadata}
+                     */
+                    $rendererName = "metadata";
+                    break;
+                case Mime::INSTRUCTIONS:
+                    /**
+                     * Does not exist yet bu that the future
+                     */
+                    $rendererName = FetcherMarkupInstructions::NAME;
+                    break;
+                default:
+                    throw new ExceptionRuntimeInternal("A renderer name (ie builder name/output object type) is mandatory");
+            }
+        } else {
+            $rendererName = $this->rendererName;
+        }
+
+        /**
          * Building
          */
         $newFetcherMarkup = new FetcherMarkup();
+        $newFetcherMarkup->builderName = $rendererName;
+
         $newFetcherMarkup->requestedContextPath = $this->requestedContextPath;
         if ($this->builderMarkupString !== null) {
             $newFetcherMarkup->markupString = $this->builderMarkupString;
@@ -257,13 +289,14 @@ class FetcherMarkupBuilder
         }
         $newFetcherMarkup->mime = $this->mime;
         $newFetcherMarkup->deleteRootBlockElement = $this->deleteRootBlockElement;
-        $newFetcherMarkup->rendererName = $this->rendererName;
+
+
         $newFetcherMarkup->isDoc = $this->getIsDocumentExecution();
         if (isset($this->builderContextData)) {
             $newFetcherMarkup->contextData = $this->builderContextData;
         }
 
-        if(isset($this->parentMarkupHandler)){
+        if (isset($this->parentMarkupHandler)) {
             $newFetcherMarkup->parentMarkupHandler = $this->parentMarkupHandler;
         }
         $newFetcherMarkup->isNonPathStandaloneExecution = $this->isCodeStandAloneExecution;

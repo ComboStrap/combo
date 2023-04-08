@@ -33,6 +33,9 @@ class Mime
     ];
 
     const XML = "text/xml";
+    const INSTRUCTIONS = "text/i";
+    const META = "text/meta";
+    const HANDLEBARS = "text/hbs";
 
     /**
      * @var array|null
@@ -102,13 +105,13 @@ class Mime
                 return new Mime(Mime::PDF);
             case MarkupRenderer::INSTRUCTION_EXTENSION:
                 // text storage, array memory
-                return new Mime("text/i");
+                return new Mime(self::INSTRUCTIONS);
             case MarkupRenderer::METADATA_EXTENSION:
                 // text storage, array memory
-                return new Mime("text/meta");
+                return new Mime(self::META);
             case TemplateEngine::EXTENSION_HBS:
                 // handlebars
-                return new Mime("text/hbs");
+                return new Mime(self::HANDLEBARS);
             default:
                 $mtypes = getMimeTypes();
                 $mimeString = $mtypes[$extension];

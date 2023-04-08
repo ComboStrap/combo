@@ -65,7 +65,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      */
     public CacheParser $contentCache;
 
-    public string $rendererName;
+    /**
+     * @var string the type of object (known as renderer in Dokuwiki)
+     */
+    public string $builderName;
 
     public array $requestedInstructions;
     public array $contextData;
@@ -139,10 +142,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * @var array
      */
     private array $meta;
-    /**
-     * @var array - the instructions processed
-     */
-    private array $processedInstructions;
 
     /**
      * @var bool - when a execution is not a {@link self::isPathExecution()}, the snippet will not be stored automatically.
@@ -150,6 +149,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * standalone execution
      */
     public bool $isNonPathStandaloneExecution = false;
+    /**
+     * @var array
+     */
+    private array $processedInstructions;
 
 
     /**
@@ -221,6 +224,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             ->setParentMarkupHandler($executing)
             ->setRequestedContextPath($executing->getRequestedContextPath());
     }
+
 
     /**
      * Dokuwiki will wrap the markup in a p element
@@ -313,7 +317,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
     }
 
-    public function shouldInstructionProcess(): bool
+    /**
+     * TODO: split We should split fetcherMarkup by object type output and {@link Mime}
+     * @return bool
+     */
+    private function shouldInstructionProcess(): bool
     {
 
         if (!$this->isPathExecution()) {
@@ -560,8 +568,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     self::deleteRootPElementsIfRequested($instructions);
                 }
 
-                if (!isset($this->rendererName)) {
-                    $this->rendererName = $this->getMime()->getExtension();
+                if (!isset($this->builderName)) {
+                    $this->builderName = $this->getMime()->getExtension();
                 }
 
                 $executionContext->setExecutingMarkupHandler($this);
@@ -569,15 +577,15 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     if ($this->isDocument()) {
                         $markupRenderer = MarkupRenderer::createFromMarkupInstructions($instructions, $this)
                             ->setRequestedMime($this->getMime())
-                            ->setRendererName($this->rendererName);
+                            ->setRendererName($this->builderName);
 
                         $output = $markupRenderer->getOutput();
                         if ($output === null && !empty($instructions)) {
-                            LogUtility::error("The renderer ({$this->rendererName}) seems to have been not found");
+                            LogUtility::error("The renderer ({$this->builderName}) seems to have been not found");
                         }
                         $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
                     } else {
-                        $output = MarkupDynamicRender::create($this->rendererName)->processInstructions($instructions);
+                        $output = MarkupDynamicRender::create($this->builderName)->processInstructions($instructions);
                     }
                 } catch (\Exception $e) {
                     /**
@@ -776,22 +784,6 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     }
 
-    /**
-     * @throws ExceptionBadSyntax
-     */
-    public function getOutputAsHtmlDom(): XmlDocument
-    {
-        return XmlDocument::createHtmlDocFromMarkup($this->getFetchString());
-    }
-
-    /**
-     * @throws ExceptionBadSyntax
-     */
-    public function getOutputAsXHtmlDom(): XmlDocument
-    {
-        return XmlDocument::createXmlDocFromMarkup($this->getFetchString());
-    }
-
 
     public function getLabel(): string
     {
@@ -980,6 +972,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     /**
      * @return array - the markup instructions
+     * @throws ExceptionNotExists - if the executing markup file does not exist
      */
     public function getInstructions(): array
     {
@@ -990,20 +983,27 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
         }
 
-        if (isset($this->processedInstructions)) {
-            return $this->processedInstructions;
-        }
-
-        if (!$this->shouldInstructionProcess()) {
-
-            $this->processedInstructions = $this->instructionsCache->retrieveCache();
-
+        /**
+         * We create a fetcher markup to not have the same {@link self::getId()}
+         * on execution
+         */
+        if (ExecutionContext::getActualOrCreateFromEnv()->hasExecutingMarkupHandler()) {
+            $fetcherMarkupBuilder = FetcherMarkup::confChild();
         } else {
-
-            $this->processInstructions();
-
+            $fetcherMarkupBuilder = FetcherMarkup::confRoot();
         }
-        return $this->processedInstructions;
+        $fetcherMarkupBuilder = $fetcherMarkupBuilder
+            ->setRequestedMime(Mime::create(Mime::INSTRUCTIONS))
+            ->setRequestedRenderer(FetcherMarkupInstructions::NAME)
+            ->setIsDocument($this->isDoc)
+            ->setRequestedContextPath($this->getRequestedContextPath());
+        if ($this->isPathExecution()) {
+            $fetcherMarkupBuilder->setRequestedExecutingPath($this->getExecutingPathOrFail());
+        } else {
+            $fetcherMarkupBuilder->setRequestedMarkupString($this->markupString);
+        }
+        $fetcherMarkup = $fetcherMarkupBuilder->build();
+        return $fetcherMarkup->getProcessedInstructions();
 
 
     }
@@ -1331,6 +1331,11 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
     }
 
+    /**
+     * Process the instructions
+     * TODO: move to a FetcherMarkup by tree instruction and array/encoding mime
+     * @return $this
+     */
     public function processInstructions(): FetcherMarkup
     {
         if (isset($this->processedInstructions)) {
@@ -1367,9 +1372,13 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     }
 
+    /**
+     * @return string - an execution id to be sure that we don't execute the same twice in recursion
+     */
     public function getId(): string
     {
-        return "{$this->getSourceName()} to {$this->getMime()} with context {$this->getRequestedContextPath()->toUriString()}";
+
+        return "({$this->getSourceName()}) to ({$this->builderName} - {$this->getMime()}) with context ({$this->getRequestedContextPath()->toUriString()})";
     }
 
     /**
@@ -1394,6 +1403,28 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                 throw new ExceptionRuntimeInternal("A source path should be defined if it's not a markup string execution");
             }
         }
+    }
+
+
+    /**
+     * TODO: move to a FetcherMarkup by object type output and mime
+     * @return array
+     */
+    private function getProcessedInstructions(): array
+    {
+
+
+        if (!$this->shouldInstructionProcess()) {
+
+            $this->processedInstructions = $this->instructionsCache->retrieveCache();
+
+        } else {
+
+            $this->processInstructions();
+
+        }
+        return $this->processedInstructions;
+
     }
 
 

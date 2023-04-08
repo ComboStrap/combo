@@ -94,17 +94,11 @@ class syntax_plugin_combo_ad extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        switch ($state) {
-
-            case DOKU_LEXER_SPECIAL :
-                $attributes = PluginUtility::getTagAttributes($match);
-                $html = AdsUtility::render($attributes);
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html);
-
-
+        if ($state == DOKU_LEXER_SPECIAL) {
+            $attributes = PluginUtility::getTagAttributes($match);
+            return array(
+                PluginUtility::STATE => $state,
+                PluginUtility::ATTRIBUTES => $attributes);
         }
         return array();
 
@@ -120,16 +114,14 @@ class syntax_plugin_combo_ad extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
-            switch ($state) {
-                case DOKU_LEXER_SPECIAL :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
-                    break;
+            if ($state == DOKU_LEXER_SPECIAL) {
+                $renderer->doc .= AdsUtility::render($data[PluginUtility::ATTRIBUTES]);
             }
             return true;
         }

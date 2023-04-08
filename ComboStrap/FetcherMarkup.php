@@ -922,6 +922,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         ) {
             LogUtility::warning("The execution ($this) is not a path execution. The snippet $snippet will not be preserved after initial rendering. Set the execution as standalone or set a parent markup handler.");
         }
+        if (!in_array($this->getMime()->toString(), [Mime::XHTML, Mime::HTML])) {
+            LogUtility::warning("The execution ($this) is not a HTML execution. The snippet $snippet will not be preserved because they are reserved for XHMTL execution");
+        }
 
         $snippetGuid = $snippet->getPath()->toUriString();
         $this->localSnippets[$snippetGuid] = $snippet;
@@ -1425,6 +1428,17 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         }
         return $this->processedInstructions;
 
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getParent(): FetcherMarkup
+    {
+        if (!isset($this->parentMarkupHandler)) {
+            throw new ExceptionNotFound();
+        }
+        return $this->parentMarkupHandler;
     }
 
 

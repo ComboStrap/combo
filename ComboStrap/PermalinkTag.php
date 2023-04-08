@@ -88,7 +88,8 @@ class PermalinkTag
                 try {
                     $requestedPage->getCanonical();
                 } catch (ExceptionNotFound $e) {
-                    $documentationUrlForCanonical = PluginUtility::getDocumentationHyperLink(Canonical::PROPERTY_NAME, "canonical value");
+                    $withIcon = false; // no icon in handle, error should be send to renderer
+                    $documentationUrlForCanonical = PluginUtility::getDocumentationHyperLink(Canonical::PROPERTY_NAME, "canonical value", $withIcon);
                     $errorMessage = "The page ($requestedPage) does not have a $documentationUrlForCanonical. We can't create a named permalink";
                     return self::handleError($errorMessage, $strict, $callStack);
                 }

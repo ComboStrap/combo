@@ -335,6 +335,7 @@ class Outline
              */
             switch ($tagName){
                 case "linebreak":
+                case "tablerow":
                     // linebreak is an inline component
                     $this->actualSection->incrementLineNumber();
                     break;

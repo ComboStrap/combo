@@ -864,16 +864,12 @@ class ExecutionContext
     }
 
     /**
-     * @throws ExceptionNotFound - if there is no markup handler execution running
+     * @throws ExceptionNotFound - if there is no parent markup handler execution found
      */
     public
     function getExecutingParentMarkupHandler(): FetcherMarkup
     {
-        $count = count($this->executingMarkupHandlerStack);
-        if ($count >= 2) {
-            return $this->executingMarkupHandlerStack[$count - 2][0];
-        }
-        throw new ExceptionNotFound("No parent markup handler running");
+        return $this->getExecutingMarkupHandler()->getParent();
     }
 
     /**

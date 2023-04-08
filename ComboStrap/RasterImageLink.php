@@ -343,11 +343,12 @@ class RasterImageLink extends ImageLink
 
     public function getLazyLoad(): bool
     {
-        try {
-            return $this->mediaMarkup->isLazy();
-        } catch (ExceptionNotFound $e) {
-            return SiteConfig::getConfValue(LazyLoad::CONF_RASTER_ENABLE, LazyLoad::CONF_RASTER_ENABLE_DEFAULT);
+
+        if ($this->mediaMarkup->isLazy() === false) {
+            return false;
         }
+        return SiteConfig::getConfValue(LazyLoad::CONF_RASTER_ENABLE, LazyLoad::CONF_RASTER_ENABLE_DEFAULT);
+
     }
 
     /**

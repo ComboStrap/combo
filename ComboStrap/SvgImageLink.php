@@ -42,7 +42,6 @@ class SvgImageLink extends ImageLink
     const TAG = "svg";
 
 
-
     /**
      * @throws ExceptionBadSyntax
      * @throws ExceptionBadArgument
@@ -66,7 +65,7 @@ class SvgImageLink extends ImageLink
 
         $svgInjection = ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()
-            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE,self::CONF_SVG_INJECTION_ENABLE_DEFAULT);
+            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE, self::CONF_SVG_INJECTION_ENABLE_DEFAULT);
 
         /**
          * Snippet
@@ -281,11 +280,12 @@ class SvgImageLink extends ImageLink
 
     public function isLazyLoaded(): bool
     {
-        try {
-            return $this->mediaMarkup->isLazy();
-        } catch (ExceptionNotFound $e) {
-            return ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getBooleanValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE, 1);
+
+        if ($this->mediaMarkup->isLazy() === false) {
+            return false;
         }
+        return SiteConfig::getConfValue(LazyLoad::CONF_RASTER_ENABLE, LazyLoad::CONF_RASTER_ENABLE_DEFAULT);
+
     }
 
 }

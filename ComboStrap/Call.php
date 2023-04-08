@@ -50,16 +50,26 @@ class Call
         "doublequoteopening",
         "singlequoteopening",
         "singlequoteclosing",
+        "quote_open",
+        "quote_close",
         "multiplyentity",
         "apostrophe",
+        "deleted_open",
+        "deleted_close",
+        "emaillink",
         "strong",
         "emphasis",
         "emphasis_open",
         "emphasis_close",
         "underline",
         "underline_close",
+        "underline_open",
         "monospace",
         "subscript",
+        "subscript_open",
+        "subscript_close",
+        "superscript_open",
+        "superscript_close",
         "superscript",
         "deleted",
         "footnote",
@@ -76,6 +86,7 @@ class Call
         "linebreak",
         "externallink",
         "internallink",
+        "smiley",
         MediaMarkup::INTERNAL_MEDIA_CALL_NAME,
         MediaMarkup::EXTERNAL_MEDIA_CALL_NAME,
         /**
@@ -94,6 +105,8 @@ class Call
     const BLOCK_MARKUP_DOKUWIKI_COMPONENTS = array(
         "listu_open", // ul
         "listu_close",
+        "listo_open",
+        "listo_close",
         "listitem_open", //li
         "listitem_close",
         "listcontent_open", // after li ???
@@ -101,7 +114,24 @@ class Call
         "table_open",
         "table_close",
         "p_open",
-        "p_close"
+        "p_close",
+        "nest", // seen as enclosing footnotes
+        "hr",
+        "rss"
+    );
+
+    /**
+     * Not inline, not block
+     */
+    const TABLE_MARKUP = array(
+        "tablethead_open",
+        "tablethead_close",
+        "tableheader_open",
+        "tableheader_close",
+        "tablerow_open",
+        "tablerow_close",
+        "tablecell_open",
+        "tablecell_close"
     );
 
     /**
@@ -113,6 +143,7 @@ class Call
         PageImageTag::MARKUP
     ];
     const CANONICAL = "call";
+    const TABLE_DISPLAY = "table-display";
 
     private $call;
 
@@ -514,7 +545,11 @@ class Call
                     return Call::BlOCK_DISPLAY;
                 }
 
-                LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");
+                if(in_array($mode, self::TABLE_MARKUP)){
+                    return Call::TABLE_DISPLAY;
+                }
+
+                LogUtility::warning("The display of the call with the mode (" . $mode . ") is unknown");
                 return null;
 
 

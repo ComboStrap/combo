@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 
-
 class OutlineSection extends TreeNode
 {
     const CANONICAL = "outline";
@@ -33,6 +32,10 @@ class OutlineSection extends TreeNode
      */
     private array $tocUniqueId = [];
 
+    /**
+     * @var int - a best guess on the number of
+     */
+    private int $lineNumber;
 
 
     /**
@@ -43,7 +46,7 @@ class OutlineSection extends TreeNode
         $this->headingEnterCall = $headingEnterCall;
         if ($headingEnterCall !== null) {
             $position = $headingEnterCall->getFirstMatchedCharacterPosition();
-            if($position===null){
+            if ($position === null) {
                 $this->startFileIndex = 0;
             } else {
                 $this->startFileIndex = $position;
@@ -52,6 +55,7 @@ class OutlineSection extends TreeNode
         } else {
             $this->startFileIndex = 0;
         }
+        $this->lineNumber = 1; // the heading
 
     }
 
@@ -284,6 +288,12 @@ class OutlineSection extends TreeNode
     public function deleteContentCalls(): OutlineSection
     {
         $this->contentCalls = [];
+        return $this;
+    }
+
+    public function incrementLineNumber(): OutlineSection
+    {
+        $this->lineNumber++;
         return $this;
     }
 

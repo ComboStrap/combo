@@ -152,37 +152,6 @@ class Outline
              * Unfortunately, it can't work because this is called after
              * {@link Block::process()}
              */
-//            if ($actualCall->isDisplaySet()) {
-
-//                $display = $actualCall->getDisplay();
-//                switch ($display) {
-//                    case Call::BlOCK_DISPLAY:
-//                        switch ($state) {
-//                            case DOKU_LEXER_SPECIAL:
-//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
-//                                break;
-//                            case DOKU_LEXER_ENTER:
-//                            case DOKU_LEXER_EXIT:
-//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblocktag::TAG);
-//                                break;
-//                        }
-//                        break;
-//                    case Call::INLINE_DISPLAY:
-//                        switch ($state) {
-//                            case DOKU_LEXER_SPECIAL:
-//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlinlineemptytag::TAG);
-//                                break;
-//                            case DOKU_LEXER_ENTER:
-//                            case DOKU_LEXER_EXIT:
-//                                $actualCall->setSyntaxComponentFromTag(\syntax_plugin_combo_xmlblockemptytag::TAG);
-//                                break;
-//                        }
-//                        break;
-//                }
-//
-//            }
-
-
             if ($analtyicsEnabled) {
 
                 if (in_array($state, CallStack::TAG_STATE)) {
@@ -215,6 +184,9 @@ class Outline
                     }
             }
 
+            /**
+             * Wrap the table
+             */
             $componentName = $actualCall->getComponentName();
             if ($componentName === "table_open") {
                 $position = $actualCall->getFirstMatchedCharacterPosition();
@@ -279,7 +251,7 @@ class Outline
                         $newSectionLevel = $actualSectionLevel;
                     }
                 } else {
-                    $headerTagName = $actualCall->getTagName();
+                    $headerTagName = $tagName;
                     if ($headerTagName !== "header") {
                         throw new ExceptionRuntimeInternal("This is not a dokuwiki header call", self::CANONICAL);
                     }
@@ -358,6 +330,23 @@ class Outline
             }
 
             /**
+             * Track the number of lines
+             * to inject ads
+             */
+            switch ($tagName){
+                case "linebreak":
+                    // linebreak is an inline component
+                    $this->actualSection->incrementLineNumber();
+                    break;
+                default:
+                    $display = $actualCall->getDisplay();
+                    if($display ===Call::BlOCK_DISPLAY){
+                        $this->actualSection->incrementLineNumber();
+                    }
+                    break;
+            }
+
+            /**
              * Track the position in the file
              */
             $currentLastPosition = $actualCall->getLastMatchedCharacterPosition();
@@ -378,7 +367,7 @@ class Outline
              * Close/Process the heading description
              */
             if ($this->actualHeadingParsingState === DOKU_LEXER_ENTER) {
-                switch ($actualCall->getTagName()) {
+                switch ($tagName) {
 
                     case HeadingTag::HEADING_TAG:
                     case syntax_plugin_combo_headingwiki::TAG:

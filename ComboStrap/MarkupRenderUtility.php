@@ -69,8 +69,11 @@ class MarkupRenderUtility
     {
 
         $wikiPath = WikiPath::createMarkupPathFromId($pageId);
-        $fetcher = FetcherMarkup::createXhtmlMarkupFetcherFromPath($wikiPath, $wikiPath);
-        return $fetcher->getFetchString();
+        return FetcherMarkup::confChild()
+            ->setRequestedExecutingPath($wikiPath)
+            ->setRequestedMimeToXhtml()
+            ->build()
+            ->getFetchString();
 
 
     }

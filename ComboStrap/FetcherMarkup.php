@@ -697,23 +697,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
 
     public function __toString()
     {
-        if (!$this->isPathExecution()) {
-            if (isset($this->markupString)) {
-                $name = "Markup String Execution";
-            } elseif (isset($this->requestedInstructions)) {
-                $name = "Markup Instructions Execution";
-            } else {
-                $name = "Markup Unknown Execution";
-                LogUtility::internalError("The name of the marku handler is unknown");
-            }
-        } else {
-            try {
-                $name = $this->getSourcePath();
-            } catch (ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("A source path should be defined if it's not a markup string execution");
-            }
-        }
-        return parent::__toString() . " (" . $name . ", " . $this->getMime()->toString() . ")";
+
+        return parent::__toString() . " ({$this->getSourceName()}, {$this->getMime()->toString()})";
     }
 
 
@@ -1380,6 +1365,35 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         $cache = $this->getSnippetCacheStore()->cache;
         return LocalPath::createFromPathString($cache);
 
+    }
+
+    public function getId(): string
+    {
+        return "{$this->getSourceName()} to {$this->getMime()} with context {$this->getRequestedContextPath()->toUriString()}";
+    }
+
+    /**
+     * @return string - a name for the source (used in {@link self::__toString()} and {@link self::getId() identification})
+     */
+    private function getSourceName(): string
+    {
+        if (!$this->isPathExecution()) {
+            if (isset($this->markupString)) {
+                return "Markup String Execution";
+            } elseif (isset($this->requestedInstructions)) {
+                return "Markup Instructions Execution";
+            } else {
+                LogUtility::internalError("The name of the markup handler is unknown");
+                return "Markup Unknown Execution";
+
+            }
+        } else {
+            try {
+                return $this->getSourcePath()->toUriString();
+            } catch (ExceptionNotFound $e) {
+                throw new ExceptionRuntimeInternal("A source path should be defined if it's not a markup string execution");
+            }
+        }
     }
 
 

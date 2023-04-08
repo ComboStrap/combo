@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Store\MetadataDbStore;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Tag\WebCodeTag;
 use ComboStrap\Web\Url;
 use dokuwiki\ActionRouter;
 use dokuwiki\Extension\EventHandler;
@@ -767,28 +768,7 @@ class ExecutionContext
     public function setExecutingMarkupHandler(FetcherMarkup $markupHandler): ExecutionContext
     {
 
-        if (count($this->executingMarkupHandlerStack) >= 1) {
 
-            try {
-                /**
-                 * If this is the same than the last one, we let it go
-                 * the {@link FetcherMarkup::processMetaEventually()}
-                 * metadata may call the {@link FetcherMarkup::getInstructions() instructions},
-                 * ....
-                 */
-                if ($this->getExecutingMarkupHandler() !== $markupHandler && $markupHandler->isPathExecution()) {
-                    /**
-                     * A markup handler for a file can call a handler with a string
-                     * (example: {@link webcode can launch a sub-one
-                     */
-                    throw new ExceptionRuntimeInternal("Only one path markup handler can run at the same time");
-                }
-            } catch (ExceptionNotFound $e) {
-                throw new ExceptionRuntimeInternal("Due to the condition > 1, it should not happen");
-            }
-
-
-        }
 
         /**
          * Act
@@ -834,11 +814,24 @@ class ExecutionContext
             $INFO['id'] = $contextPath->getWikiId();
         }
 
-        $this->executingMarkupHandlerStack[] = [$markupHandler, $oldExecutingId, $oldContextId, $oldAct];
+        /**
+         * Call to Fetcher Markup can be recursive,
+         * we try to break a loop
+         *
+         * Note that the same object may call recursively:
+         * * the {@link FetcherMarkup::processMetaEventually()} metadata may call the {@link FetcherMarkup::getInstructions() instructions},
+         */
+        $id = $markupHandler->getId();
+        if(array_key_exists($id,$this->executingMarkupHandlerStack)){
+            LogUtility::internalError("The markup ($id) is already executing");
+            $id = "$id-already-in-stack";
+        }
+        $this->executingMarkupHandlerStack[$id] = [$markupHandler, $oldExecutingId, $oldContextId, $oldAct];
         return $this;
     }
 
-    public function closeExecutingMarkupHandler(): ExecutionContext
+    public
+    function closeExecutingMarkupHandler(): ExecutionContext
     {
         /** @noinspection PhpUnusedLocalVariableInspection */
         [$markupHandler, $oldExecutingId, $oldContextId, $oldAct] = array_pop($this->executingMarkupHandlerStack);
@@ -860,11 +853,12 @@ class ExecutionContext
     /**
      * @throws ExceptionNotFound - if there is no markup handler execution running
      */
-    public function getExecutingMarkupHandler(): FetcherMarkup
+    public
+    function getExecutingMarkupHandler(): FetcherMarkup
     {
         $count = count($this->executingMarkupHandlerStack);
         if ($count >= 1) {
-            return $this->executingMarkupHandlerStack[$count - 1][0];
+            return $this->executingMarkupHandlerStack[array_key_last($this->executingMarkupHandlerStack)][0];
         }
         throw new ExceptionNotFound("No markup handler running");
     }
@@ -872,7 +866,8 @@ class ExecutionContext
     /**
      * @throws ExceptionNotFound - if there is no markup handler execution running
      */
-    public function getExecutingParentMarkupHandler(): FetcherMarkup
+    public
+    function getExecutingParentMarkupHandler(): FetcherMarkup
     {
         $count = count($this->executingMarkupHandlerStack);
         if ($count >= 2) {
@@ -892,7 +887,8 @@ class ExecutionContext
      * @return $this
      * @deprecated
      */
-    public function setDefaultContextPath(WikiPath $contextPath): ExecutionContext
+    public
+    function setDefaultContextPath(WikiPath $contextPath): ExecutionContext
     {
         $this->getConfig()->setDefaultContextPath($contextPath);
         return $this;
@@ -905,7 +901,8 @@ class ExecutionContext
      * When a link/path is empty or relative, the program will check for the context path
      * to calculate the absolute path
      */
-    public function getContextPath(): WikiPath
+    public
+    function getContextPath(): WikiPath
     {
 
         try {
@@ -967,7 +964,8 @@ class ExecutionContext
      * @return WikiPath
      * @deprecated uses {@link SiteConfig::getDefaultContextPath()}
      */
-    public function getDefaultContextPath(): WikiPath
+    public
+    function getDefaultContextPath(): WikiPath
     {
         return $this->getConfig()->getDefaultContextPath();
     }
@@ -976,7 +974,8 @@ class ExecutionContext
      * The page global context object
      * @throws ExceptionNotFound
      */
-    public function getExecutingPageTemplate(): TemplateForWebPage
+    public
+    function getExecutingPageTemplate(): TemplateForWebPage
     {
         if (isset($this->executingPageTemplate)) {
             return $this->executingPageTemplate;
@@ -991,19 +990,22 @@ class ExecutionContext
      * @param TemplateForWebPage $pageTemplate
      * @return $this
      */
-    public function setExecutingPageTemplate(TemplateForWebPage $pageTemplate): ExecutionContext
+    public
+    function setExecutingPageTemplate(TemplateForWebPage $pageTemplate): ExecutionContext
     {
         $this->executingPageTemplate = $pageTemplate;
         return $this;
     }
 
-    public function closeExecutingPageTemplate(): ExecutionContext
+    public
+    function closeExecutingPageTemplate(): ExecutionContext
     {
         unset($this->executingPageTemplate);
         return $this;
     }
 
-    public function getApp(): Site
+    public
+    function getApp(): Site
     {
         if (isset($this->app)) {
             return $this->app;
@@ -1015,7 +1017,8 @@ class ExecutionContext
     /**
      * @return SiteConfig short utility function to get access to the global app config
      */
-    public function getConfig(): SiteConfig
+    public
+    function getConfig(): SiteConfig
     {
         return $this->getApp()->getConfig();
     }
@@ -1023,7 +1026,8 @@ class ExecutionContext
     /**
      * @throws ExceptionNotFound - when there is no executing id (markup execution)
      */
-    public function getExecutingWikiPath(): WikiPath
+    public
+    function getExecutingWikiPath(): WikiPath
     {
         try {
             return $this->getExecutingMarkupHandler()
@@ -1044,7 +1048,8 @@ class ExecutionContext
      * It takes care of returning the context path
      * (in case of slot via the {@link self::getContextPath()}
      */
-    public function getContextData(): array
+    public
+    function getContextData(): array
     {
 
         try {
@@ -1074,7 +1079,8 @@ class ExecutionContext
      * @param string $globalObjectIdentifier
      * @return void
      */
-    public function closeAndRemoveRuntimeVariableIfExists(string $globalObjectIdentifier)
+    public
+    function closeAndRemoveRuntimeVariableIfExists(string $globalObjectIdentifier)
     {
 
         if (!isset($this->executionScopedVariables[$globalObjectIdentifier])) {
@@ -1114,7 +1120,8 @@ class ExecutionContext
     /**
      * Close all execution variables
      */
-    public function closeExecutionVariables(): ExecutionContext
+    public
+    function closeExecutionVariables(): ExecutionContext
     {
         $scopedVariables = array_keys($this->executionScopedVariables);
         foreach ($scopedVariables as $executionScopedVariableKey) {
@@ -1123,12 +1130,14 @@ class ExecutionContext
         return $this;
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->creationTime;
     }
 
-    public function isExecutingPageTemplate(): bool
+    public
+    function isExecutingPageTemplate(): bool
     {
         try {
             $this->getExecutingPageTemplate();
@@ -1138,7 +1147,8 @@ class ExecutionContext
         }
     }
 
-    public function hasExecutingMarkupHandler(): bool
+    public
+    function hasExecutingMarkupHandler(): bool
     {
         try {
             $this->getExecutingMarkupHandler();

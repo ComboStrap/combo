@@ -695,7 +695,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             return null;
         }
 
-        return $store->getFromPersistentName('creator');
+        return $store->getFromName('creator');
     }
 
     /**
@@ -712,7 +712,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             return null;
         }
 
-        return $store->getFromPersistentName('user');
+        return $store->getFromName('user');
 
     }
 

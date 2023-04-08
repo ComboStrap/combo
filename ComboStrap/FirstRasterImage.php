@@ -63,7 +63,7 @@ class FirstRasterImage extends MetadataImage
          *
          * Image set by {@link \syntax_plugin_combo_media::registerFirstImage()}
          */
-        $firstImageId = $store->getFromPersistentName(FirstRasterImage::PROPERTY_NAME);
+        $firstImageId = $store->getFromName(FirstRasterImage::PROPERTY_NAME);
 
         if ($firstImageId !== null) {
             return WikiPath::createMediaPathFromId($firstImageId);

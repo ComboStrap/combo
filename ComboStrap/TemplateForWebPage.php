@@ -680,61 +680,6 @@ class TemplateForWebPage
     }
 
 
-    /**
-     * Delete all social heads (export or iframe case)
-     * @param $event
-     */
-    public
-    function deleteSocialHeadTags(&$event)
-    {
-
-        $data = &$event->data;
-        foreach ($data as $tag => &$heads) {
-            switch ($tag) {
-                case "link":
-                    /**
-                     * canonical is not a social tag to delete
-                     * It should stay as this is the page identifier and we use it to idenfity the page in the router and
-                     */
-                    $deletedRel = ["manifest", "search", "start", "alternate"];
-                    foreach ($heads as $id => $headAttributes) {
-                        if (isset($headAttributes['rel'])) {
-                            $rel = $headAttributes['rel'];
-                            if (in_array($rel, $deletedRel)) {
-                                unset($heads[$id]);
-                            }
-                        }
-                    }
-                    break;
-                case "meta":
-                    /**
-                     * `robots` is not a social as we test the no-index in {@link LowQualityPage}
-                     */
-                    $deletedMeta = [ "og:url", "og:description", "description"];
-                    foreach ($heads as $id => $headAttributes) {
-                        if (isset($headAttributes['name']) || isset($headAttributes['property'])) {
-                            $rel = $headAttributes['name'];
-                            if ($rel === null) {
-                                $rel = $headAttributes['property'];
-                            }
-                            if (in_array($rel, $deletedMeta)) {
-                                unset($heads[$id]);
-                            }
-                        }
-                    }
-                    break;
-                case "script":
-                    foreach ($heads as $id => $headAttributes) {
-                        if (isset($headAttributes['src'])) {
-                            $src = $headAttributes['src'];
-                            if (strpos($src, "lib/exe/js.php") !== false) {
-                                unset($heads[$id]);
-                            }
-                        }
-                    }
-            }
-        }
-    }
 
 
     /**
@@ -983,15 +928,6 @@ EOF;
         /**
          * Start the meta headers
          */
-        /**
-         * Meta headers
-         * To delete the not needed headers for an export
-         * such as manifest, alternate, ...
-         */
-        if (!$this->isSocial()) {
-            global $EVENT_HANDLER;
-            $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'deleteSocialHeadTags');
-        }
         ob_start();
         try {
             tpl_metaheaders();
@@ -1125,6 +1061,7 @@ EOF;
         }
         return FetcherRailBar::BOTH_LAYOUT;
     }
+
 
 
 }

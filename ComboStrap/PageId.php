@@ -119,7 +119,7 @@ class PageId extends MetadataText
         $readStore = $this->getReadStore();
         if (!($readStore instanceof MetadataDokuWikiStore)) {
             $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
-            $value = $metadataFileSystemStore->getFromPersistentName(self::getPersistentName());
+            $value = $metadataFileSystemStore->getFromName(self::getPersistentName());
             if ($value !== null) {
                 return parent::setFromStoreValueWithoutException($value);
             }
@@ -130,7 +130,7 @@ class PageId extends MetadataText
         // frontmatter is the first element that is processed during a run
         try {
             $frontmatter = MetadataFrontmatterStore::createFromPage($resource);
-            $value = $frontmatter->getFromPersistentName(self::getPersistentName());
+            $value = $frontmatter->getFromName(self::getPersistentName());
             if ($value !== null) {
                 return parent::setFromStoreValueWithoutException($value);
             }
@@ -143,10 +143,10 @@ class PageId extends MetadataText
         if (!($readStore instanceof MetadataDbStore)) {
             try {
                 $dbStore = MetadataDbStore::getOrCreateFromResource($resource);
-                $value = $dbStore->getFromPersistentName(self::getPersistentName());
+                $value = $dbStore->getFromName(self::getPersistentName());
                 if ($value !== null && $value !== "") {
 
-                    $pathDbValue = $dbStore->getFromPersistentName(PagePath::getPersistentName());
+                    $pathDbValue = $dbStore->getFromName(PagePath::getPersistentName());
 
                     /**
                      * If the page in the database does not exist,

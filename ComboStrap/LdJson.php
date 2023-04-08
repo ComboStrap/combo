@@ -190,7 +190,7 @@ class LdJson extends MetadataJson
                  * the frontmatter would not take it)
                  */
                 $store = $this->getReadStore();
-                $metadata = $store->getFromPersistentName(self::OLD_ORGANIZATION_PROPERTY);
+                $metadata = $store->getFromName(self::OLD_ORGANIZATION_PROPERTY);
                 if ($metadata !== null) {
                     $organization = array(
                         "organization" => $metadata

@@ -89,7 +89,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
         $this->data = [];
     }
 
-    public function getFromPersistentName(string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
 
         $value = $this->data[$name];

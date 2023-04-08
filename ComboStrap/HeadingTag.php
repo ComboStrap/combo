@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Field\PageH1;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use renderer_plugin_combo_analytics;
@@ -81,6 +82,12 @@ class HeadingTag
      * only available in 5
      */
     public const DISPLAY_TYPES_ONLY_BS_5 = ["d5", "d6"];
+
+    /**
+     * The label is the text that is generally used
+     * in a TOC but also as default title for the page
+     */
+    public const LABEL = "label";
 
 
     /**
@@ -169,19 +176,27 @@ class HeadingTag
     public static function processHeadingEnterMetadata($data, Doku_Renderer_metadata $renderer)
     {
 
-
+        $state = $data[PluginUtility::STATE];
+        if (!in_array($state, [DOKU_LEXER_ENTER, DOKU_LEXER_SPECIAL])) {
+            return;
+        }
         /**
          * Only outline heading metadata
          * Not component heading
          */
         $context = $data[PluginUtility::CONTEXT];
         if ($context === self::TYPE_OUTLINE) {
+
             $callStackArray = $data[PluginUtility::ATTRIBUTES];
             $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
             $text = trim($tagAttributes->getValue(HeadingTag::HEADING_TEXT_ATTRIBUTE));
             $level = $tagAttributes->getValue(HeadingTag::LEVEL);
             $pos = 0; // mandatory for header but not for metadata, we set 0 to make the code analyser happy
             $renderer->header($text, $level, $pos);
+
+            $parsedLabel = $tagAttributes->getValue(self::LABEL);
+            $renderer->meta[PageH1::H1_PARSED] = $parsedLabel;
+
         }
 
 
@@ -230,12 +245,20 @@ class HeadingTag
          */
         $type = $tagAttributes->getType();
 
+        /**
+         * Label is for the TOC
+         */
+        $tagAttributes->removeAttributeIfPresent(self::LABEL);
+
 
         /**
          * Level
          */
         $level = $tagAttributes->getValueAndRemove(HeadingTag::LEVEL);
 
+        /**
+         * Delete Label
+         */
 
         /**
          * Display Heading

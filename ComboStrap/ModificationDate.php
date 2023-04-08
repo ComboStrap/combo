@@ -42,7 +42,7 @@ class ModificationDate extends MetadataDateTime
              */
             $createdMeta = $store->getCurrentFromName('date')['modified'];
             if (empty($createdMeta)) {
-                $createdMeta = $store->getFromPersistentName('date')['modified'];
+                $createdMeta = $store->getFromName('date')['modified'];
                 if (empty($createdMeta)) {
                     return $this;
                 }

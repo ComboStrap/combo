@@ -125,9 +125,9 @@ class FeaturedRasterImage extends MetadataImage
         $markupPath = $this->getResource();
         $isIndex = $markupPath->isIndexPage();
         if ($isIndex) {
-            $parsedValue = $this->getReadStore()->getFromPersistentName(FirstRasterImage::PROPERTY_NAME);
+            $parsedValue = $this->getReadStore()->getFromName(FirstRasterImage::PROPERTY_NAME);
         } else {
-            $parsedValue = $this->getReadStore()->getFromPersistentName(self::FEATURED_IMAGE_PARSED);
+            $parsedValue = $this->getReadStore()->getFromName(self::FEATURED_IMAGE_PARSED);
         }
         if ($parsedValue === null) {
             throw new ExceptionNotFound();

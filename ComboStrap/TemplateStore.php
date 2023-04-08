@@ -28,7 +28,7 @@ class TemplateStore extends MetadataStoreAbs implements MetadataStore
     }
 
 
-    public function getFromPersistentName(string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
         LogUtility::msg("You can't get a value with a template store");
     }

@@ -51,7 +51,7 @@ class CreationDate extends MetadataDateTime
             return parent::buildFromReadStore();
         }
 
-        $fromName = $store->getFromPersistentName(self::DATE_DOKUWIKI_PROPERTY_NAME);
+        $fromName = $store->getFromName(self::DATE_DOKUWIKI_PROPERTY_NAME);
         $createdMeta = $fromName[self::DOKUWIKI_SUB_KEY];
         if (empty($createdMeta)) {
             return $this;

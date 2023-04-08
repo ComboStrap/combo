@@ -54,7 +54,7 @@ class FeaturedIcon extends MetadataImage
          *
          * Image set by {@link \syntax_plugin_combo_media::registerFirstImage()}
          */
-        $iconImageParsed = $this->getReadStore()->getFromPersistentName(FeaturedIcon::FIRST_ICON_PARSED);
+        $iconImageParsed = $this->getReadStore()->getFromName(FeaturedIcon::FIRST_ICON_PARSED);
 
         if ($iconImageParsed !== null) {
             return WikiPath::createMediaPathFromId($iconImageParsed);

@@ -61,7 +61,7 @@ class FirstSvgIllustration extends MetadataImage
          *
          * Image set by {@link \syntax_plugin_combo_media::registerFirstImage()}
          */
-        $firstImageId = $store->getFromPersistentName(FirstSvgIllustration::PROPERTY_NAME);
+        $firstImageId = $store->getFromName(FirstSvgIllustration::PROPERTY_NAME);
 
 
         $this->setFromStoreValueWithoutException($firstImageId);

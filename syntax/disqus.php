@@ -133,7 +133,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                  * @deprecated the page id is used
                  */
                 $disqusIdentifier = MetadataDokuWikiStore::getOrCreateFromResource($page)
-                    ->getFromPersistentName(DisqusIdentifier::PROPERTY_NAME);
+                    ->getFromName(DisqusIdentifier::PROPERTY_NAME);
                 if (empty($disqusIdentifier)) {
 
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];

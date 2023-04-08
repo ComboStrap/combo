@@ -67,7 +67,7 @@ class MetadataDbStore extends MetadataStoreAbs implements MetadataStore
          * and returns the default or null, or empty array
          */
         $this->resourceUidMetaValue = MetadataDokuWikiStore::getOrCreateFromResource($resource)
-            ->getFromPersistentName($persistentName);
+            ->getFromName($persistentName);
 
         parent::__construct($resource);
     }
@@ -288,7 +288,7 @@ EOF;
         throw new ExceptionRuntime("To implement");
     }
 
-    public function getFromPersistentName(string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
 
         if ($this->resourceUidMetaValue === null) {

@@ -167,12 +167,13 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
         if (!($resource instanceof MarkupPath)) {
             throw new ExceptionRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        return $this->getFromPersistentName($metadata->getName(), $default);
+        return $this->getFromName($metadata->getName(), $default);
 
 
     }
 
     /**
+     *
      * Getting a metadata for a resource via its name
      * when we don't want to create a class
      *
@@ -182,7 +183,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
      * @param null $default
      * @return mixed
      */
-    public function getFromPersistentName(string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
         /**
          * We don't use {@link p_get_metadata()}
@@ -222,7 +223,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
      */
     public function setFromPersistentName(string $name, $value, $default = null): MetadataDokuWikiStore
     {
-        $oldValue = $this->getFromPersistentName($name);
+        $oldValue = $this->getFromName($name);
         if (is_bool($value)) {
             if ($oldValue === null) {
                 $oldValue = $default;
@@ -277,7 +278,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
         /**
          * We return only the current data.
          *
-         * WHy ?
+         * Why ?
          * To be consistent with {@link p_get_metadata()} that retrieves only from the `current` array
          * Therefore the `persistent` array values should always be duplicated in the `current` array
          *
@@ -305,12 +306,12 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
      *
      * @param $name
      * @return mixed|null
-     * @deprecated use {@link self::getFromPersistentName()}
+     * @deprecated - the data should always be replicated in current use {@link self::getFromName()}
      */
     public
     function getCurrentFromName($name)
     {
-        return $this->getFromPersistentName($name);
+        return $this->getFromName($name);
     }
 
     /**

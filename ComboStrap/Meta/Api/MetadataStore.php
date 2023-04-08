@@ -49,7 +49,7 @@ interface MetadataStore
      * @param null $default - the default value to return if no data is found
      * @return null|string|array|boolean
      */
-    public function getFromPersistentName(string $name, $default = null);
+    public function getFromName(string $name, $default = null);
 
     /**
      * This function permits to set a metadata value without creating a {@link Metadata} class

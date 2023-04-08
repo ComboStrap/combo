@@ -43,12 +43,11 @@ class Identity
      */
     public static function isLoggedIn(): bool
     {
-        $loggedIn = false;
-        global $INPUT;
-        if ($INPUT->server->has('REMOTE_USER')) {
-            $loggedIn = true;
+        global $_SERVER;
+        if (empty($_SERVER['REMOTE_USER'])) {
+            return false;
         }
-        return $loggedIn;
+        return true;
     }
 
     /**
@@ -69,9 +68,10 @@ class Identity
         /**
          * used by {@link getSecurityToken()}
          */
-        global $INPUT;
-        $INPUT->server->set('REMOTE_USER', $user);
-        // same as $_SERVER['REMOTE_USER'] = $user;
+        // same as
+        // global $INPUT;
+        // $INPUT->server->set('REMOTE_USER', $user);
+        $_SERVER['REMOTE_USER'] = $user;
 
         // global $INFO;
         // $INFO['ismanager'] = true;

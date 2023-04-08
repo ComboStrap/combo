@@ -68,7 +68,7 @@ class References extends MetadataTabular
         }
         if ($metadataStore->isDokuWikiStore()) {
 
-            $relation = $metadataStore->getFromPersistentName("relation");
+            $relation = $metadataStore->getFromName("relation");
             if (is_array($relation)) {
 
                 $this->wasBuild = true;

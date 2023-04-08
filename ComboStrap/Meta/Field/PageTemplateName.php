@@ -267,9 +267,9 @@ class PageTemplateName extends MetadataText
     {
 
         $metaDataStore = $this->getReadStore();
-        $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME);
+        $value = $metaDataStore->getFromName(self::PROPERTY_NAME);
         if ($value === null) {
-            $value = $metaDataStore->getFromPersistentName(self::PROPERTY_NAME_OLD);
+            $value = $metaDataStore->getFromName(self::PROPERTY_NAME_OLD);
         }
         if ($value === self::MEDIAN_OLD_TEMPLATE) {
             $value = self::MEDIUM_TEMPLATE_VALUE;
@@ -283,7 +283,7 @@ class PageTemplateName extends MetadataText
 
         parent::sendToWriteStore();
         $writeStore = $this->getWriteStore();
-        $value = $writeStore->getFromPersistentName(self::PROPERTY_NAME_OLD);
+        $value = $writeStore->getFromName(self::PROPERTY_NAME_OLD);
         if ($value !== null) {
             // delete the old value
             $writeStore->setFromPersistentName(self::PROPERTY_NAME_OLD, null);

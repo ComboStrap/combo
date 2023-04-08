@@ -631,7 +631,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             if (!isset($this->metadata[$key])) {
                 $this->metadata[$key] = $value;
                 if ($key === PageH1::getName()) {
-                    $this->metadata[PageH1::H1_PARSED] = MetadataDokuWikiStore::getOrCreateFromResource($requestedPage)->getFromPersistentName(PageH1::H1_PARSED);
+                    $this->metadata[PageH1::H1_PARSED] = MetadataDokuWikiStore::getOrCreateFromResource($requestedPage)->getFromName(PageH1::H1_PARSED);
                 }
             }
         }

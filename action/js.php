@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Identity;
 
 
 /**
@@ -40,7 +41,7 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
     {
 
         // If there is no user
-        if (empty($_SERVER['REMOTE_USER'])) {
+        if (Identity::isAnonymous()) {
             $scripts = &$event->data['script'];
             foreach ($scripts as &$script) {
                 $pos = strpos($script['src'], 'js.php');

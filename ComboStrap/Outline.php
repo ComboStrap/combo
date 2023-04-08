@@ -1035,7 +1035,7 @@ EOF;
         }
         if ($this->markupPath != null && $outlineSection->getLevel() === 1) {
             $label = $outlineSection->getLabel();
-            PageH1::createForPage($this->markupPath)->persistDefaultValue($label);
+            $outlineSection->getEnterHeadingCall()->addAttribute(HeadingTag::LABEL, $label);
         }
     }
 

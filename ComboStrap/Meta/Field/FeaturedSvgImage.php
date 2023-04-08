@@ -64,7 +64,7 @@ class FeaturedSvgImage extends MetadataImage
         /**
          * Parsed Feature Images
          */
-        $parsedValue = $this->getReadStore()->getFromPersistentName(self::ITEM_FEATURED_IMAGE_PARSED);
+        $parsedValue = $this->getReadStore()->getFromName(self::ITEM_FEATURED_IMAGE_PARSED);
         if ($parsedValue === null) {
             throw new ExceptionNotFound();
         }

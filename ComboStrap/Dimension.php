@@ -28,6 +28,8 @@ class Dimension
      */
     const HEIGHT_LAYOUT_DEFAULT = self::DESIGN_LAYOUT_CONSTRAINED;
     const SCROLL = "scroll";
+    const SCROLL_TOGGLE_MECHANISM = "toggle";
+    const SCROLL_LIFT_MECHANISM = "lift";
 
     /**
      * Logical height and width
@@ -93,12 +95,12 @@ class Dimension
                          */
                         $attributes->addStyleDeclarationIfNotSet("height", $heightValue);
 
-                        $scrollMechanism = $attributes->getValueAndRemoveIfPresent("scroll");
-                        if ($scrollMechanism != null) {
+                        $scrollMechanism = $attributes->getValueAndRemoveIfPresent(Dimension::SCROLL);
+                        if ($scrollMechanism !== null) {
                             $scrollMechanism = trim(strtolower($scrollMechanism));
                         }
                         switch ($scrollMechanism) {
-                            case "toggle":
+                            case self::SCROLL_TOGGLE_MECHANISM:
                                 // https://jsfiddle.net/gerardnico/h0g6xw58/
                                 $attributes->addStyleDeclarationIfNotSet("overflow-y", "hidden");
                                 $attributes->addStyleDeclarationIfNotSet("position", "relative");
@@ -118,6 +120,12 @@ class Dimension
                                  * Set the color dynamically to the color of the parent
                                  */
                                 PluginUtility::getSnippetManager()->attachJavascriptFromComponentId("height-toggle");
+
+                                $toggleOnClickId = "height-toggle-onclick";
+                                $attributes->addClassName(StyleUtility::addComboStrapSuffix($toggleOnClickId));
+                                $attributes->addStyleDeclarationIfNotSet("cursor", "pointer");
+                                PluginUtility::getSnippetManager()->attachJavascriptFromComponentId($toggleOnClickId);
+
                                 /**
                                  * The height when there is not the show class
                                  * is the original height
@@ -139,7 +147,7 @@ EOF;
                                 $attributes->addHtmlAfterEnterTag($button);
 
                                 break;
-                            case "lift";
+                            case self::SCROLL_LIFT_MECHANISM;
                             default:
                                 $attributes->addStyleDeclarationIfNotSet("overflow", "auto");
                                 break;
@@ -176,24 +184,17 @@ EOF;
         $callStack->moveToEnd();
         $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
         $scrollAttribute = $openingCall->getAttribute(Dimension::SCROLL);
-        if ($scrollAttribute != null && $scrollAttribute == "toggle") {
-
-            $controlFound = false;
-            while ($actualCall = $callStack->next()) {
-                if (in_array($actualCall->getTagName(),
-                    [ButtonTag::MARKUP_LONG, syntax_plugin_combo_link::TAG, "internallink", "externallink"])) {
-                    $controlFound = true;
-                    break;
-                }
-            }
-            if (!$controlFound) {
-                $toggleOnClickId = "height-toggle-onclick";
-                PluginUtility::getSnippetManager()->attachJavascriptFromComponentId($toggleOnClickId);
-                $openingCall->addClassName(StyleUtility::addComboStrapSuffix($toggleOnClickId));
-                $openingCall->addCssStyle("cursor", "pointer");
-            }
-
+        if ($scrollAttribute !== self::SCROLL_TOGGLE_MECHANISM) {
+            return;
         }
+        while ($actualCall = $callStack->next()) {
+            if (in_array($actualCall->getTagName(),
+                [ButtonTag::MARKUP_LONG, syntax_plugin_combo_link::TAG, "internallink", "externallink"])) {
+                $openingCall->setAttribute(Dimension::SCROLL, Dimension::SCROLL_LIFT_MECHANISM);
+                return;
+            }
+        }
+
     }
 
     /**

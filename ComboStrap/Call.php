@@ -52,6 +52,7 @@ class Call
         "singlequoteclosing",
         "quote_open",
         "quote_close",
+        "interwikilink",
         "multiplyentity",
         "apostrophe",
         "deleted_open",

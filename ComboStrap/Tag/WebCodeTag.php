@@ -233,7 +233,9 @@ class WebCodeTag
 
 
         // Css
-        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(WebCodeTag::TAG);
+        $snippetSystem = PluginUtility::getSnippetManager();
+        $snippetSystem->attachCssInternalStyleSheet(WebCodeTag::TAG);
+        $snippetSystem->attachJavascriptFromComponentId(WebCodeTag::TAG);
 
         // Mermaid code ?
         if (array_key_exists(MermaidTag::MERMAID_CODE, $codes)) {
@@ -256,7 +258,6 @@ class WebCodeTag
         if (array_key_exists(WebCodeTag::MARKI_LANG, $codes)) {
 
             $markupCode = $codes[WebCodeTag::MARKI_LANG];
-
 
             if ($type === self::INJECT_TYPE) {
                 /**
@@ -368,15 +369,10 @@ EOF;
         // The javascript console script should be first to handle console.log in the content
         $useConsole = $data[WebCodeTag::USE_CONSOLE_ATTRIBUTE];
         if ($useConsole) {
-            try {
-                $url = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl()->toHtmlString();
-                $headIFrame .= <<<EOF
+            $url = FetcherRawLocalPath::createFromPath(WikiPath::createComboResource("webcode:webcode-console.js"))->getFetchUrl()->toHtmlString();
+            $headIFrame .= <<<EOF
 <script class="$webcodeClass" type="text/javascript" src="$url"></script>
 EOF;
-            } catch (ExceptionNotFound $e) {
-                LogUtility::error("The webcode console was not found");
-            }
-
         }
         $body = self::getBodyHtmlAndJavascript($codes, $useConsole);
         $iframeSrcValue = <<<EOF

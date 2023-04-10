@@ -1025,7 +1025,11 @@ EOF;
         }
         if ($this->markupPath != null && $outlineSection->getLevel() === 1) {
             $label = $outlineSection->getLabel();
-            $outlineSection->getEnterHeadingCall()->addAttribute(HeadingTag::LABEL, $label);
+            $call = $outlineSection->getEnterHeadingCall();
+            if($call->isPluginCall()) {
+                // we support also the dokwuiki header call that does not need the label
+                $call->addAttribute(HeadingTag::PARSED_LABEL, $label);
+            }
         }
     }
 

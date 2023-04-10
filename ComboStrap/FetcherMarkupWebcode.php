@@ -101,7 +101,9 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
         /**
          * Conf
          */
-        Site::setConf(action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET, true);
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->setConf(action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET, true);
 
         $fetcherCache = FetcherCache::createFrom($this);
         if ($fetcherCache->isCacheUsable()) {
@@ -133,14 +135,13 @@ class FetcherMarkupWebcode extends IFetcherAbs implements IFetcherString
 
         $title = $this->getRequestedTitle();
 
-
         $html = TemplateForWebPage::create()
             ->setRequestedTitle($title)
             ->setRequestedTemplateName(PageTemplateName::BLANK_TEMPLATE_VALUE)
             ->setRequestedEnableTaskRunner(false)
+            ->setIsIframe(true)
             ->setMainContent($mainContent)
             ->render();
-
 
         $fetcherCache->storeCache($html);
         return $html;

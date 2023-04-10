@@ -55,6 +55,7 @@ class TemplateForWebPage
     private array $model;
     private bool $hadMessages = false;
     private string $requestedTheme;
+    private bool $isIframe = false;
 
 
     public static function create(): TemplateForWebPage
@@ -248,25 +249,36 @@ class TemplateForWebPage
 
     public function isSocial(): bool
     {
-        if (!isset($this->isSocial)) {
-            try {
-                $path = $this->getRequestedContextPath();
-                if(!FileSystems::exists($path)){
-                    return false;
-                }
-                $markup = MarkupPath::createPageFromPathObject($path);
-                if ($markup->isSlot()) {
-                    // slot are not social
-                    return false;
-                }
-            } catch (ExceptionNotFound $e) {
-                // not a path run
-            }
-            return ExecutionContext::getActualOrCreateFromEnv()
-                ->getConfig()
-                ->getBooleanValue(self::CONF_INTERNAL_IS_SOCIAL, true);
+        if (isset($this->isSocial)) {
+            return $this->isSocial;
         }
-        return $this->isSocial;
+        try {
+            $path = $this->getRequestedContextPath();
+            if (!FileSystems::exists($path)) {
+                return false;
+            }
+            $markup = MarkupPath::createPageFromPathObject($path);
+            if ($markup->isSlot()) {
+                // slot are not social
+                return false;
+            }
+        } catch (ExceptionNotFound $e) {
+            // not a path run
+            return false;
+        }
+        if ($this->isIframe) {
+            return false;
+        }
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getBooleanValue(self::CONF_INTERNAL_IS_SOCIAL, true);
+
+    }
+
+    public function setIsIframe(bool $isIframe): TemplateForWebPage
+    {
+        $this->isIframe = $isIframe;
+        return $this;
     }
 
 
@@ -680,8 +692,6 @@ class TemplateForWebPage
     }
 
 
-
-
     /**
      * @throws ExceptionNotFound
      */
@@ -926,6 +936,13 @@ EOF;
 
         }
         /**
+         * Iframe
+         */
+        if ($this->isIframe) {
+            global $EVENT_HANDLER;
+            $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'onlyIframeHeadTags');
+        }
+        /**
          * Start the meta headers
          */
         ob_start();
@@ -984,6 +1001,8 @@ EOF;
 
     /**
      * Delete the social head tags
+     * (ie the page should not be indexed)
+     * This is used for iframe content for instance
      * @param bool $isSocial
      * @return TemplateForWebPage
      */
@@ -1062,6 +1081,64 @@ EOF;
         return FetcherRailBar::BOTH_LAYOUT;
     }
 
+    /**
+     * Keep the only iframe head tag needed
+     * @param $event
+     * @return void
+     */
+    public
+    function onlyIframeHeadTags(&$event)
+    {
 
+        $data = &$event->data;
+        foreach ($data as $tag => &$heads) {
+            switch ($tag) {
+                case "link":
+                    $deletedRel = ["manifest", "search", "start", "alternate", "canonical"];
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['rel'])) {
+                            $rel = $headAttributes['rel'];
+                            if (in_array($rel, $deletedRel)) {
+                                unset($heads[$id]);
+                            }
+                            if ($rel === "stylesheet") {
+                                $href = $headAttributes['href'];
+                                if (strpos($href, "lib/exe/css.php") !== false) {
+                                    unset($heads[$id]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case "meta":
+                    $deletedMeta = ["og:url", "og:description", "description", "robots"];
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['name']) || isset($headAttributes['property'])) {
+                            $rel = $headAttributes['name'];
+                            if ($rel === null) {
+                                $rel = $headAttributes['property'];
+                            }
+                            if (in_array($rel, $deletedMeta)) {
+                                unset($heads[$id]);
+                            }
+                        }
+                    }
+                    break;
+                case "script":
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['src'])) {
+                            $src = $headAttributes['src'];
+                            if (strpos($src, "lib/exe/js.php") !== false) {
+                                unset($heads[$id]);
+                            }
+                            if (strpos($src, "lib/exe/jquery.php") !== false) {
+                                unset($heads[$id]);
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+    }
 
 }

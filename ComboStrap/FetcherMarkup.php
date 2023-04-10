@@ -1101,15 +1101,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
         /**
          * Derived TOC from instructions
          */
-        $toc = Outline::createFromCallStack(CallStack::createFromInstructions($this->getInstructions()))->toTocDokuwikiFormat();
-        try {
-            TOC::createEmpty()
-                ->setValue($toc)
-                ->sendToWriteStore();
-            return $toc;
-        } catch (ExceptionBadArgument $e) {
-            throw new ExceptionRuntimeInternal("should not happen");
-        }
+        return Outline::createFromCallStack(CallStack::createFromInstructions($this->getInstructions()))->toTocDokuwikiFormat();
+
 
     }
 
@@ -1391,7 +1384,8 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
     {
         if (!$this->isPathExecution()) {
             if (isset($this->markupString)) {
-                return "Markup String Execution";
+                $md5 = md5($this->markupString);
+                return "Markup String Execution ($md5)";
             } elseif (isset($this->requestedInstructions)) {
                 return "Markup Instructions Execution";
             } else {

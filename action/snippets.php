@@ -10,7 +10,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\SnippetSystem;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  *
@@ -81,7 +80,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * The function {@link action_plugin_combo_snippets::componentSnippetContent()} used it to determine if
          * the snippets should be added into the content
          */
-        $executionContext = ExecutionContext::getActualOrCreateFromEnv()
+        ExecutionContext::getActualOrCreateFromEnv()
             ->setRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED, true);
 
 
@@ -111,6 +110,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
 
         $snippetSystem = SnippetSystem::getFromContext();
+
         $snippets = $snippetSystem->getSnippets();
         foreach ($snippets as $snippet) {
             /**

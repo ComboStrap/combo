@@ -912,13 +912,14 @@ EOF;
     private
     function getHeadHtml(): string
     {
+        $snippetManager = PluginUtility::getSnippetManager();
+
         if (!$this->isTemplateStringExecutionMode()) {
 
-            $themeName = $this->getTheme();
             /**
              * Add the layout js and css first
              */
-            $snippetManager = PluginUtility::getSnippetManager();
+
             try {
                 $cssPath = $this->getCssPath();
                 $content = FileSystems::getContent($cssPath);
@@ -935,6 +936,12 @@ EOF;
 
 
         }
+
+        /**
+         * Dokuwiki Smiley does not have any height
+         */
+        $snippetManager->attachCssInternalStyleSheet("dokuwiki-smiley");
+
         /**
          * Iframe
          */

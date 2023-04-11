@@ -104,7 +104,7 @@ class AdTag
 
     public static function showPlaceHolder()
     {
-        return SiteConfig::getConfValue(self::CONF_IN_ARTICLE_PLACEHOLDER);
+        return SiteConfig::getConfValue(self::CONF_IN_ARTICLE_PLACEHOLDER, self::CONF_IN_ARTICLE_PLACEHOLDER_DEFAULT);
     }
 
     /**

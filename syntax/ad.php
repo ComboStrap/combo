@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\AdsUtility;
+use ComboStrap\Tag\AdTag;
 use ComboStrap\PluginUtility;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -72,8 +72,8 @@ class syntax_plugin_combo_ad extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getEmptyTagPattern(self::TAG);
-        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+//        $pattern = PluginUtility::getEmptyTagPattern(self::TAG);
+//        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -121,7 +121,7 @@ class syntax_plugin_combo_ad extends DokuWiki_Syntax_Plugin
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
             if ($state == DOKU_LEXER_SPECIAL) {
-                $renderer->doc .= AdsUtility::render($data[PluginUtility::ATTRIBUTES]);
+                $renderer->doc .= AdTag::render($data[PluginUtility::ATTRIBUTES]);
             }
             return true;
         }

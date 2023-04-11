@@ -297,5 +297,10 @@ class OutlineSection extends TreeNode
         return $this;
     }
 
+    public function getLineCount(): int
+    {
+        return $this->lineNumber;
+    }
+
 
 }

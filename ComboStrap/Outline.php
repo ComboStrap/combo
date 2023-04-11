@@ -89,6 +89,7 @@ class Outline
     private int $actualHeadingParsingState = DOKU_LEXER_EXIT;  // the state of the heading parsed (enter, closed), enter if we have entered an heading, exit if not;
     private ?MarkupPath $markupPath = null;
     private bool $isFragment;
+    private bool $metaHeaderCapture;
 
     /**
      * @param CallStack $callStack
@@ -333,7 +334,7 @@ class Outline
              * Track the number of lines
              * to inject ads
              */
-            switch ($tagName){
+            switch ($tagName) {
                 case "linebreak":
                 case "tablerow":
                     // linebreak is an inline component
@@ -341,7 +342,7 @@ class Outline
                     break;
                 default:
                     $display = $actualCall->getDisplay();
-                    if($display ===Call::BlOCK_DISPLAY){
+                    if ($display === Call::BlOCK_DISPLAY) {
                         $this->actualSection->incrementLineNumber();
                     }
                     break;
@@ -734,212 +735,13 @@ EOF;
 
     }
 
-    private function toHtmlSectionOutlineCallsRecurse(OutlineSection $outlineSection, array &$totalComboCalls, int &$sectionSequenceId, bool $captureHeaderMeta): void
-    {
-
-        $totalComboCalls[] = Call::createComboCall(
-            SectionTag::TAG,
-            DOKU_LEXER_ENTER,
-            array(HeadingTag::LEVEL => $outlineSection->getLevel()),
-            null,
-            null,
-            null,
-            null,
-            \syntax_plugin_combo_xmlblocktag::TAG
-        );
-        $contentCalls = $outlineSection->getContentCalls();
-        if ($outlineSection->hasChildren()) {
-
-            /**
-             * Section Header Creation
-             * If it has children and content, wrap the heading and the content
-             * in a header tag
-             * The header tag helps also to get the edit button to stay in place
-             */
-            $openHeader = Call::createComboCall(
-                \syntax_plugin_combo_header::TAG,
-                DOKU_LEXER_ENTER,
-                array(
-                    TagAttributes::CLASS_KEY => StyleUtility::addComboStrapSuffix("outline-header"),
-                ),
-                self::CONTEXT
-            );
-            $closeHeader = Call::createComboCall(
-                \syntax_plugin_combo_header::TAG,
-                DOKU_LEXER_EXIT,
-                [],
-                self::CONTEXT
-            );
-
-            $actualChildren = $outlineSection->getChildren();
-
-            if ($captureHeaderMeta && $outlineSection->getLevel() === 0) {
-                // should be only one 1
-                if (count($actualChildren) === 1) {
-                    $h1Section = $actualChildren[array_key_first($actualChildren)];
-                    if ($h1Section->getLevel() === 1) {
-                        $h1ContentCalls = $h1Section->getContentCalls();
-                        /**
-                         * Capture the image if any
-                         */
-                        if ($this->markupPath !== null) {
-                            foreach ($h1ContentCalls as $h1ContentCall) {
-                                $tagName = $h1ContentCall->getTagName();
-                                switch ($tagName) {
-                                    case "p":
-                                        continue 2;
-                                    case "media":
-                                        $h1ContentCall->addAttribute(Display::DISPLAY, Display::DISPLAY_NONE_VALUE);
-                                        try {
-                                            $fetcher = MediaMarkup::createFromCallStackArray($h1ContentCall->getAttributes())->getFetcher();
-                                            switch (get_class($fetcher)) {
-                                                case FetcherRaster::class:
-                                                    $path = $fetcher->getSourcePath()->toAbsoluteId();
-                                                    FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue($path);
-                                                    break;
-                                                case FetcherSvg::class:
-                                                    $path = $fetcher->getSourcePath()->toAbsoluteId();
-                                                    FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue($path);
-                                                    break;
-                                            }
-                                        } catch (\Exception $e) {
-                                            LogUtility::error("Error while capturing the feature images. Error: " . $e->getMessage(), self::CANONICAL, $e);
-                                        }
-                                        continue 2;
-                                    default:
-                                        // only the images found just after h1
-                                        break;
-                                }
-                            }
-                        }
-                        $contentCalls = array_merge($contentCalls, $h1ContentCalls);
-                        $actualChildren = $h1Section->getChildren();
-                    }
-                }
-            }
-            /**
-             * If header has content,
-             * we add it
-             */
-            $headerHasContent = !(empty($contentCalls) && empty($outlineSection->getHeadingCalls()));
-            if ($headerHasContent) {
-                $totalComboCalls = array_merge(
-                    $totalComboCalls,
-                    [$openHeader],
-                    $outlineSection->getHeadingCalls(),
-                    $contentCalls,
-                );
-                $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
-                $totalComboCalls[] = $closeHeader;
-            }
-
-            foreach ($actualChildren as $child) {
-                $this->toHtmlSectionOutlineCallsRecurse($child, $totalComboCalls, $sectionSequenceId, $captureHeaderMeta);
-            }
-
-        } else {
-            $totalComboCalls = array_merge(
-                $totalComboCalls,
-                $outlineSection->getHeadingCalls(),
-                $contentCalls,
-            );
-            $this->addSectionEditButtonComboFormatIfNeeded($outlineSection, $sectionSequenceId, $totalComboCalls);
-        }
-
-        $totalComboCalls[] = Call::createComboCall(
-            SectionTag::TAG,
-            DOKU_LEXER_EXIT,
-            [],
-            null,
-            null,
-            null,
-            null,
-            \syntax_plugin_combo_xmlblocktag::TAG
-        );
-
-
-    }
 
     public
     function toHtmlSectionOutlineCalls(): array
     {
-        $totalCalls = [];
-        $sectionSequenceId = 0;
-
-        /**
-         * Header Metadata
-         *
-         * On template that have an header, the h1 and the featured image are
-         * captured and deleted by default to allow complex header layout
-         *
-         * Delete the parsed value (runtime works only on rendering)
-         * TODO: move that to the metadata rendering by adding attributes
-         *   because if the user changes the template, the parsing will not work
-         *   it would need to parse the document again
-         */
-        if ($this->markupPath !== null) {
-            FeaturedRasterImage::createFromResourcePage($this->markupPath)->setParsedValue();
-            FeaturedSvgImage::createFromResourcePage($this->markupPath)->setParsedValue();
-        }
-
-        $captureHeaderMeta = false;
-        try {
-            if ($this->markupPath !== null) {
-                $contextPath = $this->markupPath->getPathObject()->toWikiPath();
-                $hasMainHeaderElement = TemplateForWebPage::create()
-                    ->setRequestedContextPath($contextPath)
-                    ->hasElement(TemplateSlot::MAIN_HEADER_ID);
-                $isThemeSystemEnabled = ExecutionContext::getActualOrCreateFromEnv()
-                    ->getConfig()
-                    ->isThemeSystemEnabled();
-                if ($isThemeSystemEnabled && $hasMainHeaderElement) {
-                    $captureHeaderMeta = true;
-                }
-            }
-        } catch (ExceptionCast $e) {
-            // to Wiki Path should be good
-        }
-
-
-        /**
-         * Transform and collect the calls in Instructions calls
-         */
-        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, $captureHeaderMeta);
-
-        return array_map(function (Call $element) {
-            return $element->getInstructionCall();
-        }, $totalCalls);
+        return OutlineVisitor::create($this)->getCalls();
     }
 
-    /**
-     * Add the edit button if needed
-     * @param $outlineSection
-     * @param $sectionSequenceId
-     * @param array $totalInstructionCalls
-     */
-    private
-    function addSectionEditButtonComboFormatIfNeeded(OutlineSection $outlineSection, int $sectionSequenceId, array &$totalInstructionCalls): void
-    {
-        if (!$outlineSection->hasParent()) {
-            // no button for the root (ie the page)
-            return;
-        }
-        if ($this->isSectionEditingEnabled()) {
-
-            $editButton = EditButton::create("Edit the section `{$outlineSection->getLabel()}`")
-                ->setStartPosition($outlineSection->getStartPosition())
-                ->setEndPosition($outlineSection->getEndPosition());
-            if ($outlineSection->hasHeading()) {
-                $editButton->setOutlineHeadingId($outlineSection->getHeadingId());
-            }
-
-            $totalInstructionCalls[] = $editButton
-                ->setOutlineSectionId($sectionSequenceId)
-                ->toComboCallComboFormat();
-
-        }
-
-    }
 
     /**
      * Fragment Rendering
@@ -996,24 +798,6 @@ EOF;
     }
 
 
-    public
-    function toHtmlSectionOutlineCallsWithoutHeader(): array
-    {
-
-        $totalCalls = [];
-        $sectionSequenceId = 0;
-
-        /**
-         * Transform and collect the calls in Instructions calls
-         */
-        $this->toHtmlSectionOutlineCallsRecurse($this->rootSection, $totalCalls, $sectionSequenceId, true);
-
-        return array_map(function (Call $element) {
-            return $element->getInstructionCall();
-        }, $totalCalls);
-
-    }
-
     private
     function storeH1()
     {
@@ -1026,7 +810,7 @@ EOF;
         if ($this->markupPath != null && $outlineSection->getLevel() === 1) {
             $label = $outlineSection->getLabel();
             $call = $outlineSection->getEnterHeadingCall();
-            if($call->isPluginCall()) {
+            if ($call->isPluginCall()) {
                 // we support also the dokwuiki header call that does not need the label
                 $call->addAttribute(HeadingTag::PARSED_LABEL, $label);
             }
@@ -1067,23 +851,55 @@ EOF;
     }
 
     public
-    function getMarkupPath(): MarkupPath
+    function getMarkupPath(): ?MarkupPath
     {
         return $this->markupPath;
     }
 
-    private
-    function isSectionEditingEnabled(): bool
-    {
-        return ExecutionContext::getActualOrCreateFromEnv()
-            ->getConfig()->isSectionEditingEnabled();
-    }
 
     private
     function getTocMaxLevel(): int
     {
         return ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()->getTocMaxLevel();
+    }
+
+    public function setMetaHeaderCapture(bool $metaHeaderCapture): Outline
+    {
+        $this->metaHeaderCapture = $metaHeaderCapture;
+        return $this;
+    }
+
+    public function getMetaHeaderCapture(): bool
+    {
+        if (isset($this->metaHeaderCapture)) {
+            return $this->metaHeaderCapture;
+        }
+        try {
+            if ($this->markupPath !== null) {
+                $contextPath = $this->markupPath->getPathObject()->toWikiPath();
+                $hasMainHeaderElement = TemplateForWebPage::create()
+                    ->setRequestedContextPath($contextPath)
+                    ->hasElement(TemplateSlot::MAIN_HEADER_ID);
+                $isThemeSystemEnabled = ExecutionContext::getActualOrCreateFromEnv()
+                    ->getConfig()
+                    ->isThemeSystemEnabled();
+                if ($isThemeSystemEnabled && $hasMainHeaderElement) {
+                    return true;
+                }
+            }
+        } catch (ExceptionCast $e) {
+            // to Wiki Path should be good
+        }
+        return false;
+    }
+
+    public function isSectionEditingEnabled(): bool
+    {
+
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()->isSectionEditingEnabled();
+
     }
 
 

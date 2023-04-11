@@ -10,8 +10,23 @@
  *
  */
 
-namespace ComboStrap;
+namespace ComboStrap\Tag;
 
+
+use ComboStrap\ColorRgb;
+use ComboStrap\Dimension;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExecutionContext;
+use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
+use ComboStrap\MarkupRenderUtility;
+use ComboStrap\PluginUtility;
+use ComboStrap\SiteConfig;
+use ComboStrap\Spacing;
+use ComboStrap\TagAttribute\Align;
+use ComboStrap\TagAttributes;
+use Mpdf\Css\Border;
 
 /**
  * Class AdsUtility
@@ -19,7 +34,7 @@ namespace ComboStrap;
  *
  * TODO: Injection: Words Between Ads (https://wpadvancedads.com/manual/minimum-amount-of-words-between-ads/)
  */
-class AdsUtility
+class AdTag
 {
 
     const CONF_ADS_MIN_LOCAL_LINE_DEFAULT = 2;
@@ -43,15 +58,23 @@ class AdsUtility
      */
     const CONF_IN_ARTICLE_PLACEHOLDER = 'AdsInArticleShowPlaceholder';
     const CONF_IN_ARTICLE_PLACEHOLDER_DEFAULT = 0;
+    const MARKUP = "ad";
+    const NAME_ATTRIBUTE = "name";
 
-    public static function showAds($sectionLineCount, $currentLineCountSinceLastAd, $sectionNumber, $adsCounter, $isLastSection)
+    public static function showAds($sectionLineCount, $currentLineCountSinceLastAd, $sectionNumber, $adsCounter, $isLastSection, ?MarkupPath $markupPath): bool
     {
+        $isHiddenPage = false;
+        if ($markupPath !== null) {
+            try {
+                $isHiddenPage = isHiddenPage($markupPath->getWikiId());
+            } catch (ExceptionBadArgument $e) {
+                //
+            }
+        }
         global $ACT;
-        global $ID;
         if (
-            FsWikiUtility::isSideBar() == FALSE && // No display on the sidebar
-            $ACT != 'admin' && // Not in the admin page
-            isHiddenPage($ID) == FALSE && // No ads on hidden pages
+            $ACT !== ExecutionContext::ADMIN_ACTION && // Not in the admin page
+            $isHiddenPage === false &&// No ads on hidden pages
             (
                 (
                     $sectionLineCount > self::CONF_ADS_MIN_LOCAL_LINE_DEFAULT && // Doesn't show any ad if the section does not contains this minimum number of line
@@ -89,7 +112,7 @@ class AdsUtility
      * @param $name
      * @return string
      */
-    public static function getAdPage($name)
+    public static function getAdPage($name): string
     {
         return strtolower(self::ADS_NAMESPACE . $name);
     }
@@ -101,61 +124,64 @@ class AdsUtility
      */
     public static function getTagId($name)
     {
-        return str_replace(":","-",substr(self::getAdPage($name),1));
+        return str_replace(":", "-", substr(self::getAdPage($name), 1));
     }
 
-    public static function render(array $attributes)
+    public static function render(TagAttributes $attributes): string
     {
-        $htmlAttributes = array();
-        $html = "";
-        if (!isset($attributes["name"])) {
 
-            $name = "unknown";
-            $html = "The name attribute is mandatory to render an ad";
-            $htmlAttributes["color"] = "red";
+        $name = $attributes->getValueAndRemoveIfPresent(self::NAME_ATTRIBUTE);
+        if ($name === null) {
+            return LogUtility::wrapInRedForHtml("Internal error: the name attribute is mandatory to render an ad");
+        }
 
-        } else {
+        $attributes->setId(AdTag::getTagId($name));
 
-            $name = $attributes["name"];
-            $adsPageId = AdsUtility::getAdPage($name);
-            if (page_exists($adsPageId)) {
-                $html .= MarkupRenderUtility::renderId2Xhtml($adsPageId);
+        $adsPageId = AdTag::getAdPage($name);
+        if (!page_exists($adsPageId)) {
+
+            if (AdTag::showPlaceHolder()) {
+
+
+                $link = PluginUtility::getDocumentationHyperLink("automatic/in-article/ad#AdsInArticleShowPlaceholder", "In-article placeholder");
+                $htmlAttributes = $attributes
+                    ->setComponentAttributeValue(ColorRgb::COLOR, "dark")
+                    ->setComponentAttributeValue(Spacing::SPACING_ATTRIBUTE, "m-3 p-3")
+                    ->setComponentAttributeValue(Align::ALIGN_ATTRIBUTE, "center text-align")
+                    ->setComponentAttributeValue(Dimension::WIDTH_KEY,"600")
+                    ->setComponentAttributeValue("border-color","dark")
+                    ->toHTMLAttributeString();
+                return <<<EOF
+<div $htmlAttributes>
+Ads Page Id ($adsPageId ) not found. <br>
+Showing the $link<br>
+</div>
+EOF;
+
             } else {
-                if (!(strpos($name, self::PREFIX_IN_ARTICLE_ADS) === 0)) {
-                    $html .= "The ad page (" . $adsPageId . ") does not exist";
-                    $htmlAttributes["color"] = "red";
-                } else {
-                    if (AdsUtility::showPlaceHolder()) {
 
-                        $html .= 'Ads Page Id (' . $adsPageId . ') not found. <br>' . DOKU_LF
-                        . 'Showing the '.PluginUtility::getDocumentationHyperLink("automatic/in-article/ad#AdsInArticleShowPlaceholder","In-article placeholder").'<br>' . DOKU_LF;
+                return LogUtility::wrapInRedForHtml("The ad page (" . $adsPageId . ") does not exist");
 
-                        $htmlAttributes["color"] = "dark";
-                        $htmlAttributes["spacing"] = "m-3 p-3";
-                        $htmlAttributes["text-align"] = "center";
-                        $htmlAttributes["align"] = "center";
-                        $htmlAttributes["width"] = "600px";
-                        $htmlAttributes["border-color"] = "dark";
-
-                    } else {
-
-                        // Show nothing
-                        return "";
-
-                    }
-                }
             }
+        }
 
+        try {
+            $content = MarkupRenderUtility::renderId2Xhtml($adsPageId);
+        } catch (ExceptionCompile $e) {
+            return LogUtility::wrapInRedForHtml("Error: " . $e->getMessage());
         }
 
         /**
          * We wrap the ad with a div to locate it and id it
          */
-        $divHtmlWrapper = "<div";
-        $htmlAttributes["id"] = AdsUtility::getTagId($name);
-        $htmlAttributes = PluginUtility::mergeAttributes($attributes, $htmlAttributes);
-        unset($htmlAttributes["name"]);
-        $divHtmlWrapper .= " " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes);
-        return $divHtmlWrapper . ">" . $html . '</div>';
+        $htmlAttributesString = $attributes
+            ->toHTMLAttributeString();
+
+        return <<<EOF
+<div $htmlAttributesString>
+$content
+</div>
+EOF;
+
     }
 }

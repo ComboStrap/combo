@@ -134,7 +134,7 @@ $conf['defaultBadgeAttributes'] = 'type="info" rounded="true"';
 
 /**
  * Ads
- * See {@link \ComboStrap\AdsUtility::CONF_IN_ARTICLE_PLACEHOLDER
+ * See {@link \ComboStrap\Tag\AdTag::CONF_IN_ARTICLE_PLACEHOLDER
  */
 $conf['AdsInArticleShowPlaceholder'] = 0;
 

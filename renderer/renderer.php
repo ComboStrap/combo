@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\AdsUtility;
+use ComboStrap\Tag\AdTag;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\HeadingTag;
 use ComboStrap\Xml\XhtmlUtility;
@@ -159,7 +159,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         $this->doc = '';
         $rollingLineCount = 0;
         $currentLineCountSinceLastAd = 0;
-        $adsCounter = 0;
         foreach ($this->sections as $sectionNumber => $section) {
 
             $sectionContent = $section['content'];
@@ -171,33 +170,10 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
             $rollingLineCount += $sectionLineCount;
 
             // The content
-            if ($this->getConf('ShowCount') == 1 && $isSidebar == FALSE) {
+            if ($this->getConf('ShowCount') == 1) {
                 $this->doc .= "<p>Section " . $sectionNumber . ": (" . $sectionLineCount . "|" . $currentLineCountSinceLastAd . "|" . $rollingLineCount . ")</p>";
             }
             $this->doc .= $sectionContent;
-
-            // No ads on private page
-
-
-            $isLastSection = $sectionNumber === count($this->sections) - 1;
-            if (AdsUtility::showAds(
-                $sectionLineCount,
-                $currentLineCountSinceLastAd,
-                $sectionNumber,
-                $adsCounter,
-                $isLastSection
-            )) {
-
-
-                // Counter
-                $adsCounter += 1;
-                $currentLineCountSinceLastAd = 0;
-
-                $attributes = array("name" => AdsUtility::PREFIX_IN_ARTICLE_ADS . $adsCounter);
-                $this->doc .= AdsUtility::render($attributes);
-
-
-            }
 
 
         }

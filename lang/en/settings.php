@@ -2,7 +2,7 @@
 
 require_once(__DIR__ . '/../../vendor/autoload.php');
 
-use ComboStrap\AdsUtility;
+use ComboStrap\Tag\AdTag;
 use ComboStrap\Api\QualityMessageHandler;
 use ComboStrap\BlockquoteTag;
 use ComboStrap\Bootstrap;
@@ -101,7 +101,7 @@ $lang[syntax_plugin_combo_badge::CONF_DEFAULT_ATTRIBUTES_KEY] = PluginUtility::g
 /**
  * Ads
  */
-$lang[AdsUtility::CONF_IN_ARTICLE_PLACEHOLDER] = PluginUtility::getDocumentationHyperLink("automatic:in-article:ad", "Automatic In-article Ad") . ' - Show a placeholder if the in-article ad page was not found';
+$lang[AdTag::CONF_IN_ARTICLE_PLACEHOLDER] = PluginUtility::getDocumentationHyperLink("automatic:in-article:ad", "Automatic In-article Ad") . ' - Show a placeholder if the in-article ad page was not found';
 
 /**
  * Code enabled

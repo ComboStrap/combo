@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Tag\AdTag;
 use ComboStrap\Tag\BackgroundTag;
 use ComboStrap\Tag\BarTag;
 use ComboStrap\Tag\BoxTag;
@@ -837,6 +838,9 @@ class XmlTagProcessing
                         return true;
                     case SubscribeTag::LOGICAL_TAG:
                         $renderer->doc .= SubscribeTag::renderEnterXhtml($tagAttributes);
+                        return true;
+                    case AdTag::MARKUP:
+                        $renderer->doc .= AdTag::render($tagAttributes);
                         return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

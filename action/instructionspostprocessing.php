@@ -70,6 +70,7 @@ class action_plugin_combo_instructionspostprocessing extends DokuWiki_Action_Plu
         $handler = $event->data;
 
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
         try {
             $fetcherMarkup = $executionContext->getExecutingMarkupHandler();
             $isFragment = $fetcherMarkup->isFragment() === true;
@@ -79,6 +80,15 @@ class action_plugin_combo_instructionspostprocessing extends DokuWiki_Action_Plu
                 $executingPath = null;
             }
         } catch (ExceptionNotFound $e) {
+
+            /**
+             * Not on admin pages
+             */
+            $action = $executionContext->getExecutingAction();
+            if($action===ExecutionContext::ADMIN_ACTION){
+                return;
+            }
+
             /**
              * What fucked up is fucked up !
              * {@link pageinfo()} in common may starts before the {@link action_plugin_combo_docustom handler } is called

@@ -61,8 +61,6 @@ class SvgImageLink extends ImageLink
     {
 
 
-        $lazyLoad = $this->isLazyLoaded();
-
         $svgInjection = ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()
             ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE, self::CONF_SVG_INJECTION_ENABLE_DEFAULT);
@@ -87,10 +85,6 @@ class SvgImageLink extends ImageLink
 
         }
 
-        // Add lazy load snippet
-        if ($lazyLoad) {
-            LazyLoad::addLozadSnippet();
-        }
 
         /**
          * Remove the cache attribute
@@ -115,34 +109,55 @@ class SvgImageLink extends ImageLink
 
 
         /**
-         * Class management
-         *
-         * functionalClass is the class used in Javascript
-         * that should be in the class attribute
-         * When injected, the other class should come in a `data-class` attribute
-         */
-        $svgFunctionalClass = "";
-        if ($svgInjection && $lazyLoad) {
-            $snippetManager->attachJavascriptFromComponentId("lozad-svg-injection");
-            $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg-injection");
-        } else if ($lazyLoad && !$svgInjection) {
-            $snippetManager->attachJavascriptFromComponentId("lozad-svg");
-            $svgFunctionalClass = StyleUtility::addComboStrapSuffix("lazy-svg");
-        } else if ($svgInjection && !$lazyLoad) {
-            $snippetManager->attachJavascriptFromComponentId("svg-injector");
-            $svgFunctionalClass = StyleUtility::addComboStrapSuffix("svg-injection");
-        }
-        if ($lazyLoad) {
-            // A class to all component lazy loaded to download them before print
-            $svgFunctionalClass .= " " . LazyLoad::getLazyClass();
-        }
-        $imgAttributes->addClassName($svgFunctionalClass);
-
-
-        /**
          * @var FetcherSvg $svgFetch
          */
         $svgFetch = $this->mediaMarkup->getFetcher();
+        $srcValue = $svgFetch->getFetchUrl();
+
+        /**
+         * Class management
+         *
+         */
+        $lazyLoad = $this->isLazyLoaded();
+        if ($lazyLoad) {
+            // A class to all component lazy loaded to download them before print
+            $imgAttributes->addClassName(LazyLoad::getLazyClass());
+            $lazyLoadMethod = $this->mediaMarkup->getLazyLoadMethodOrDefault();
+            switch ($lazyLoadMethod) {
+                case LazyLoad::LAZY_LOAD_METHOD_LOZAD_VALUE:
+                    LazyLoad::addLozadSnippet();
+                    if ($svgInjection) {
+                        $snippetManager->attachJavascriptFromComponentId("lozad-svg-injection");
+                        $imgAttributes->addClassName(StyleUtility::addComboStrapSuffix("lazy-svg-injection"));
+                    } else {
+                        $snippetManager->attachJavascriptFromComponentId("lozad-svg");
+                        $imgAttributes->addClassName(StyleUtility::addComboStrapSuffix("lazy-svg"));
+                    }
+                    /**
+                     * Note: Responsive image srcset is not needed for svg
+                     */
+                    $imgAttributes->addOutputAttributeValue("data-src", $srcValue);
+                    $imgAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
+                        $svgFetch->getTargetWidth(),
+                        $svgFetch->getTargetHeight()
+                    ));
+                    break;
+                case LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE:
+                    $imgAttributes->addOutputAttributeValue("loading", "lazy");
+                    $imgAttributes->addOutputAttributeValue("src", $srcValue);
+                    break;
+            }
+
+        } else {
+            if ($svgInjection) {
+                $snippetManager->attachJavascriptFromComponentId("svg-injector");
+                $imgAttributes->addClassName(StyleUtility::addComboStrapSuffix("svg-injection"));
+            }
+            $imgAttributes->addOutputAttributeValue("src", $srcValue);
+        }
+
+
+
         /**
          * Dimension are mandatory on the image
          * to avoid layout shift (CLS)
@@ -163,27 +178,6 @@ class SvgImageLink extends ImageLink
             $imgAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getRequestedHeight());
         } catch (ExceptionNotFound $e) {
             // ok
-        }
-
-        /**
-         * Src call
-         */
-        $srcValue = $svgFetch->getFetchUrl();
-        if ($lazyLoad) {
-
-            /**
-             * Note: Responsive image srcset is not needed for svg
-             */
-            $imgAttributes->addOutputAttributeValue("data-src", $srcValue);
-            $imgAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
-                $svgFetch->getTargetWidth(),
-                $svgFetch->getTargetHeight()
-            ));
-
-        } else {
-
-            $imgAttributes->addOutputAttributeValue("src", $srcValue);
-
         }
 
         /**
@@ -284,7 +278,7 @@ class SvgImageLink extends ImageLink
         if ($this->mediaMarkup->isLazy() === false) {
             return false;
         }
-        return SiteConfig::getConfValue(LazyLoad::CONF_RASTER_ENABLE, LazyLoad::CONF_RASTER_ENABLE_DEFAULT);
+        return SiteConfig::getConfValue(self::CONF_LAZY_LOAD_ENABLE, 1);
 
     }
 

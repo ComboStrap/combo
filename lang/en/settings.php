@@ -321,3 +321,6 @@ $lang[TemplateEngine::CONF_THEME] = PluginUtility::getDocumentationHyperLink(Tem
  * Security
  */
 $lang[Identity::CONF_DESIGNER_GROUP_NAME] = PluginUtility::getDocumentationHyperLink("designer", "Security - The name of the designer group. Users that can inject HTML, Javascript and SVG");
+
+
+$lang[AdTag::CONF_IN_ARTICLE_ENABLED] = PluginUtility::getDocumentationHyperLink(AdTag::CANONICAL,"Ad - Turn on or off the ad features");

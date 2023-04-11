@@ -26,7 +26,6 @@ use ComboStrap\SiteConfig;
 use ComboStrap\Spacing;
 use ComboStrap\TagAttribute\Align;
 use ComboStrap\TagAttributes;
-use Mpdf\Css\Border;
 
 /**
  * Class AdsUtility
@@ -38,7 +37,7 @@ class AdTag
 {
 
     const CONF_ADS_MIN_LOCAL_LINE_DEFAULT = 2;
-    const CONF_ADS_MIN_LOCAL_LINE_KEY = 'AdsMinLocalLine';
+    const CONF_ADS_MIN_LOCAL_LINE_KEY = '"AdsMinLocalLine"';
     const CONF_ADS_LINE_BETWEEN_DEFAULT = 13;
     const CONF_ADS_LINE_BETWEEN_KEY = 'AdsLineBetween';
     const CONF_ADS_MIN_SECTION_NUMBER_DEFAULT = 2;
@@ -60,6 +59,10 @@ class AdTag
     const CONF_IN_ARTICLE_PLACEHOLDER_DEFAULT = 0;
     const MARKUP = "ad";
     const NAME_ATTRIBUTE = "name";
+    const CONF_IN_ARTICLE_ENABLED = "combo-conf-007" ;
+    const CONF_IN_ARTICLE_ENABLED_DEFAULT = 0;
+
+    const CANONICAL = "ad";
 
     public static function showAds($sectionLineCount, $currentLineCountSinceLastAd, $sectionNumber, $adsCounter, $isLastSection, ?MarkupPath $markupPath): bool
     {
@@ -148,8 +151,8 @@ class AdTag
                     ->setComponentAttributeValue(ColorRgb::COLOR, "dark")
                     ->setComponentAttributeValue(Spacing::SPACING_ATTRIBUTE, "m-3 p-3")
                     ->setComponentAttributeValue(Align::ALIGN_ATTRIBUTE, "center text-align")
-                    ->setComponentAttributeValue(Dimension::WIDTH_KEY,"600")
-                    ->setComponentAttributeValue("border-color","dark")
+                    ->setComponentAttributeValue(Dimension::WIDTH_KEY, "600")
+                    ->setComponentAttributeValue("border-color", "dark")
                     ->toHTMLAttributeString();
                 return <<<EOF
 <div $htmlAttributes>
@@ -158,11 +161,11 @@ Showing the $link<br>
 </div>
 EOF;
 
-            } else {
-
-                return LogUtility::wrapInRedForHtml("The ad page (" . $adsPageId . ") does not exist");
-
             }
+
+            return LogUtility::wrapInRedForHtml("The ad page (" . $adsPageId . ") does not exist");
+
+
         }
 
         try {

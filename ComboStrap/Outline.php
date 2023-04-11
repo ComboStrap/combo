@@ -814,6 +814,7 @@ EOF;
                 // we support also the dokwuiki header call that does not need the label
                 $call->addAttribute(HeadingTag::PARSED_LABEL, $label);
             }
+            PageH1::createForPage($this->markupPath)->setDefaultValue($label);
         }
     }
 

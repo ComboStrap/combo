@@ -194,8 +194,10 @@ class HeadingTag
             $pos = 0; // mandatory for header but not for metadata, we set 0 to make the code analyser happy
             $renderer->header($text, $level, $pos);
 
-            $parsedLabel = $tagAttributes->getValue(self::PARSED_LABEL);
-            $renderer->meta[PageH1::H1_PARSED] = $parsedLabel;
+            if ($level === 1) {
+                $parsedLabel = $tagAttributes->getValue(self::PARSED_LABEL);
+                $renderer->meta[PageH1::H1_PARSED] = $parsedLabel;
+            }
 
         }
 
@@ -255,10 +257,6 @@ class HeadingTag
          * Level
          */
         $level = $tagAttributes->getValueAndRemove(HeadingTag::LEVEL);
-
-        /**
-         * Delete Label
-         */
 
         /**
          * Display Heading

@@ -110,6 +110,7 @@ $meta[syntax_plugin_combo_badge::CONF_DEFAULT_ATTRIBUTES_KEY] = array('string');
 /**
  * Ads
  */
+$meta[AdTag::CONF_IN_ARTICLE_ENABLED] = array('onoff');
 $meta[AdTag::CONF_IN_ARTICLE_PLACEHOLDER] = array('onoff');
 
 /**

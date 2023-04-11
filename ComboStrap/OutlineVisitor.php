@@ -25,17 +25,20 @@ class OutlineVisitor
      * @var OutlineSection The last section to be printed
      */
     private OutlineSection $lastSectionToBePrinted;
+    private bool $inArticleEnabled;
 
     public function __construct(Outline $outline)
     {
         $this->outline = $outline;
         $this->markupPath = $outline->getMarkupPath();
 
-        // slot in outline
+        $this->inArticleEnabled = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getBooleanValue(AdTag::CONF_IN_ARTICLE_ENABLED, AdTag::CONF_IN_ARTICLE_ENABLED_DEFAULT);
+        // Running variables that permits to balance the creation of Ads
         $this->currentLineCountSinceLastAd = 0;
         $this->sectionNumbers = 0;
         $this->adsCounter = 0;
-
         $this->lastSectionToBePrinted = $this->getLastSectionToBePrinted();
 
     }
@@ -105,10 +108,12 @@ class OutlineVisitor
         /**
          * In Ads Content Slot Calculation
          */
-        $adCall = $this->getAdCall($outlineSection);
         $adCalls = [];
-        if($adCall!==null){
-            $adCalls = [$adCall];
+        if($this->inArticleEnabled) {
+            $adCall = $this->getAdCall($outlineSection);
+            if ($adCall !== null) {
+                $adCalls = [$adCall];
+            }
         }
 
         $contentCalls = $outlineSection->getContentCalls();
@@ -239,7 +244,6 @@ class OutlineVisitor
         }
 
     }
-
 
 
     private function getIsLastSectionToBePrinted(OutlineSection $outlineSection): bool

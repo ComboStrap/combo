@@ -103,12 +103,11 @@ class PageH1 extends MetadataText
         return static::getName();
     }
 
-    public function persistDefaultValue(string $defaultValue): PageH1
+    public function setDefaultValue(string $defaultValue): PageH1
     {
         $store = $this->getWriteStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $store
-                ->setFromPersistentName(self::H1_PARSED, $defaultValue);
+            $store->setFromPersistentName(self::H1_PARSED, $defaultValue);
         }
         return $this;
 

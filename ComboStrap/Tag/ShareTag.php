@@ -73,7 +73,7 @@ class ShareTag
         }
         try {
             $type = $shareAttributes->getType();
-            $linkAttributes = $brandButton->getLinkAttributes($requestedPage)
+            $buttonAttributes = $brandButton->getHtmlAttributes($requestedPage)
                 ->setType($type)
                 ->setLogicalTag($shareAttributes->getLogicalTag());
         } catch (ExceptionCompile $e) {
@@ -83,7 +83,7 @@ class ShareTag
         /**
          * Add the link
          */
-        $rendererHtml = $linkAttributes->toHtmlEnterTag("a");
+        $rendererHtml = $buttonAttributes->toHtmlEnterTag("button");
 
         /**
          * Icon
@@ -108,7 +108,7 @@ class ShareTag
          * When empty tag, close the link
          */
         if ($state === DOKU_LEXER_SPECIAL) {
-            $rendererHtml .= "</a>";
+            $rendererHtml .= "</button>";
         }
 
         return $rendererHtml;
@@ -124,7 +124,7 @@ class ShareTag
 
     public static function renderExit(): string
     {
-        return "</a>";
+        return "</button>";
     }
 
 }

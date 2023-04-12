@@ -273,7 +273,7 @@ class BrandButton
         return $this->brand->__toString();
     }
 
-    public function getLinkTitle(): string
+    public function getLabel(): string
     {
         $title = $this->title;
         if ($title !== null && trim($title) !== "") {
@@ -458,10 +458,7 @@ EOF;
     public
     function getWidgetClass(): string
     {
-        if ($this->widget === self::WIDGET_BUTTON_VALUE) {
-            return "btn";
-        }
-        return "";
+        return "btn";
     }
 
 
@@ -537,20 +534,19 @@ EOF;
     }
 
     /**
-     * Return the link HTML attributes
+     * Return the button HTML attributes
      * @throws ExceptionCompile
      */
     public
-    function getLinkAttributes(MarkupPath $requestedPage = null): TagAttributes
+    function getHtmlAttributes(MarkupPath $requestedPage = null): TagAttributes
     {
 
 
         $logicalTag = $this->type;
-        $linkAttributes = TagAttributes::createEmpty($logicalTag);
-        $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
-        $linkAttributes->addClassName("{$this->getWidgetClass()} {$this->getIdentifierClass()}");
-        $linkTitle = $this->getLinkTitle();
-        $linkAttributes->addOutputAttributeValue("title", $linkTitle);
+        $buttonAttributes = TagAttributes::createEmpty($logicalTag);
+        $buttonAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
+        $buttonAttributes->addClassName("{$this->getWidgetClass()} {$this->getIdentifierClass()}");
+        $label = $this->getLabel();
         switch ($this->type) {
             case self::TYPE_BUTTON_SHARE:
 
@@ -558,18 +554,14 @@ EOF;
                     throw new ExceptionCompile("The page requested should not be null for a share button");
                 }
 
-                $ariaLabel = "Share on " . ucfirst($this->getBrand());
-                $linkAttributes->addOutputAttributeValue("aria-label", $ariaLabel);
-                $linkAttributes->addOutputAttributeValue("rel", "nofollow");
-
                 switch ($this->getBrand()) {
                     case "whatsapp":
                         /**
                          * Direct link
                          * For whatsapp, the sharer link is not the good one
                          */
-                        $linkAttributes->addOutputAttributeValue("target", "_blank");
-                        $linkAttributes->addOutputAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
+                        $buttonAttributes->addOutputAttributeValue("target", "_blank");
+                        $buttonAttributes->addOutputAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
                         break;
                     default:
                         /**
@@ -579,41 +571,41 @@ EOF;
                         /**
                          * Opens in a popup
                          */
-                        $linkAttributes->addOutputAttributeValue("rel", "noopener");
+                        $buttonAttributes->addOutputAttributeValue("rel", "noopener");
 
                         PluginUtility::getSnippetManager()->attachRemoteJavascriptLibrary(
                             "sharer",
                             "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
                             "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU="
                         );
-
-                        $linkAttributes->addOutputAttributeValue("data-sharer", $this->getBrand()); // the id
-                        $linkAttributes->addOutputAttributeValue("data-link", "false");
-                        $linkAttributes->addOutputAttributeValue("data-title", $this->getTextForPage($requestedPage));
+                        $buttonAttributes->addOutputAttributeValue("aria-label", $label);
+                        $buttonAttributes->addOutputAttributeValue("data-sharer", $this->getBrand()); // the id
+                        $buttonAttributes->addOutputAttributeValue("data-link", "false");
+                        $buttonAttributes->addOutputAttributeValue("data-title", $this->getTextForPage($requestedPage));
                         $urlToShare = $this->getSharedUrlForPage($requestedPage);
-                        $linkAttributes->addOutputAttributeValue("data-url", $urlToShare);
+                        $buttonAttributes->addOutputAttributeValue("data-url", $urlToShare);
                         //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
-                        $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
+                        $buttonAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
                 }
-                return $linkAttributes;
+                return $buttonAttributes;
             case self::TYPE_BUTTON_FOLLOW:
 
-                $ariaLabel = "Follow us on " . ucfirst($this->getBrand());
-                $linkAttributes->addOutputAttributeValue("aria-label", $ariaLabel);
-                $linkAttributes->addOutputAttributeValue("target", "_blank");
-                $linkAttributes->addOutputAttributeValue("rel", "nofollow");
+                $buttonAttributes->addOutputAttributeValue("title", $label);
+                $buttonAttributes->addOutputAttributeValue("target", "_blank");
+                $buttonAttributes->addOutputAttributeValue("rel", "nofollow");
                 $href = $this->getBrandEndpointForPage();
                 if ($href !== null) {
-                    $linkAttributes->addOutputAttributeValue("href", $href);
+                    $buttonAttributes->addOutputAttributeValue("href", $href);
                 }
-                return $linkAttributes;
+                return $buttonAttributes;
             case self::TYPE_BUTTON_BRAND:
                 if ($this->brand->getBrandUrl() !== null) {
-                    $linkAttributes->addOutputAttributeValue("href", $this->brand->getBrandUrl());
+                    $buttonAttributes->addOutputAttributeValue("href", $this->brand->getBrandUrl());
                 }
-                return $linkAttributes;
+                $buttonAttributes->addOutputAttributeValue("title", $label);
+                return $buttonAttributes;
             default:
-                return $linkAttributes;
+                return $buttonAttributes;
 
         }
 
@@ -679,6 +671,28 @@ EOF;
             return $this->secondaryColor;
         }
         return $this->brand->getSecondaryColor();
+    }
+
+    /**
+     * The button is sometimes:
+     * * a HTML button
+     * * and other times a HTML link
+     *
+     * It seems that the button is mostly for data-sharer (share button)
+     *
+     * A Link should have an href otherwise the SEO scan will not be happy
+     * A button should have a aria-label
+     *
+     * @param $tagAttributes
+     * @return string
+     */
+    public function getHtmlElement($tagAttributes): string
+    {
+        if ($tagAttributes->hasAttribute("href")) {
+            return "a";
+        } else {
+            return "button";
+        }
     }
 
 

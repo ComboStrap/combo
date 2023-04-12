@@ -82,7 +82,9 @@ EOF;
                     if ($type === BrandButton::TYPE_BUTTON_SHARE) {
                         $page = MarkupPath::createFromRequestedPage();
                     }
-                    $html .= $brandButton->getLinkAttributes($page)->toHtmlEnterTag("a");
+                    $brandTagAttributes = $brandButton->getHtmlAttributes($page);
+                    $buttonTag = $brandButton->getHtmlElement($brandTagAttributes);
+                    $html .= $brandTagAttributes->toHtmlEnterTag($buttonTag);
 
                     if ($brandButton->hasIcon()) {
                         $iconArrayAttributes = $brandButton->getIconAttributes();
@@ -95,7 +97,7 @@ EOF;
                         }
                     }
                     $snippetManager->attachCssInternalStyleSheet($brandButton->getStyleScriptIdentifier(), $brandButton->getStyle());
-                    $html .= "</a></td>";
+                    $html .= "</$buttonTag></td>";
                 }
 
                 /**

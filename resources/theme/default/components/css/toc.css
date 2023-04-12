@@ -6,8 +6,16 @@
 }
 
 .toc-cs li {
-    margin-bottom: 0.25rem;
     padding-left: initial;
+}
+
+/*Interactive elements like buttons and links should be large enough (48x48px)*/
+.toc-cs a {
+    display: inline-block;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    font-size: 1rem;
+    line-height: 1.8;
 }
 
 .toc-cs a:not(:hover) {

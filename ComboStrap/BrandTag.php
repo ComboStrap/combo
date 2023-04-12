@@ -225,7 +225,7 @@ BrandTag
      */
     public static function mixBrandButtonToTagAttributes(TagAttributes $tagAttributes, BrandButton $brandButton): TagAttributes
     {
-        $brandLinkAttributes = $brandButton->getLinkAttributes();
+        $brandLinkAttributes = $brandButton->getHtmlAttributes();
         $urlAttribute = self::URL_ATTRIBUTE;
         $url = $tagAttributes->getValueAndRemoveIfPresent($urlAttribute);
         if ($url !== null) {

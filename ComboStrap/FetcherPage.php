@@ -65,10 +65,17 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $url = UrlEndpoint::createDokuUrl();
         $url = parent::getFetchUrl($url);
         try {
-            $url->addQueryParameter(PageTemplateName::PROPERTY_NAME, $this->getRequestedLayout());
+            $template = $this->getRequestedTemplate();
         } catch (ExceptionNotFound $e) {
-            // no requested layout
+            $template = PageTemplateName::createFromPage($this->getRequestedPage())
+                ->getValueOrDefault();
         }
+        /**
+         * The template is mandatory as cache key
+         * If the user change it, the cache should be disabled
+         */
+        $url->addQueryParameter(PageTemplateName::PROPERTY_NAME, $template);
+
         $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
 
         // the drive is not needed
@@ -106,46 +113,28 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     /**
      * @return string
-     * @throws ExceptionBadSyntax - if the layout is incorrect (missing element, ...)
-     * @throws ExceptionNotFound - if the main markup fragment could not be found
-     * @throws ExceptionBadArgument - if the main markup fragment path can not be transformed as wiki path
      */
     public function getFetchString(): string
     {
 
         $this->buildObjectIfNeeded();
 
-        try {
-            $this->fetcherCache->addFileDependency($this->pageTemplate->getCssPath());
-        } catch (ExceptionNotFound $e) {
-            // no css file
-        }
-        try {
-            $this->fetcherCache->addFileDependency($this->pageTemplate->getJsPath());
-        } catch (ExceptionNotFound $e) {
-            // no js
-        }
-        // mandatory, should not throw
-        try {
-            $cache = $this->fetcherCache->addFileDependency($this->pageTemplate->getHtmlTemplatePath());
-        } catch (ExceptionNotFound $e) {
-            //throw ExceptionRuntimeInternal::withMessageAndError("The html template should be found", $e);
-            $cache = null;
-        }
-
+        $cache = $this->fetcherCache;
 
         /**
          * Public static cache
          * (Do we create the page or return the cache)
          */
-//        if ($cache->isCacheUsable() && $this->isPublicStaticPage()) {
-//            try {
-//                return FileSystems::getContent($cache->getFile());
-//            } catch (ExceptionNotFound $e) {
-//                // the cache file should exists
-//                LogUtility::internalError("The cache HTML fragment file was not found", self::NAME);
-//            }
-//        }
+        $isPublicStaticPage = $this->isPublicStaticPage();
+        $isCacheUsable = $cache->isCacheUsable();
+        if ($isCacheUsable && $isPublicStaticPage) {
+            try {
+                return FileSystems::getContent($cache->getFile());
+            } catch (ExceptionNotFound $e) {
+                // the cache file should exists
+                LogUtility::internalError("The cache HTML fragment file was not found", self::NAME);
+            }
+        }
 
         /**
          * Generate the whole html page via the layout
@@ -153,9 +142,11 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $htmlDocumentString = $this->pageTemplate->render();
 
         /**
-         * We store only the public pages
+         * We store only the static public pages
+         * without messages (they are dynamically insert)
          */
-        if ($this->isPublicStaticPage() && $cache !== null) {
+        $hasMessages = $this->pageTemplate->hasMessages();
+        if ($isPublicStaticPage && !$hasMessages) {
             $cache->storeCache($htmlDocumentString);
         }
 
@@ -206,7 +197,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             }
             return;
         }
-        $this->fetcherCache = FetcherCache::createFrom($this);
+
         $this->build = true;
 
         $this->requestedMarkupPath = MarkupPath::createPageFromPathObject($this->getRequestedPath());
@@ -221,6 +212,44 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
             ->setRequestedLang($pageLang)
             ->setRequestedTitle($title);
 
+        /**
+         * Build the cache
+         */
+        $this->fetcherCache = FetcherCache::createFrom($this);
+        // the requested page
+        $this->fetcherCache->addFileDependency($this->getRequestedPath());
+        if (PluginUtility::isDevOrTest()) {
+            /**
+             * The hbs template dependency
+             * (only on test/dev)
+             */
+            try {
+                $this->fetcherCache->addFileDependency($this->pageTemplate->getCssPath());
+            } catch (ExceptionNotFound $e) {
+                // no css file
+            }
+            try {
+                $this->fetcherCache->addFileDependency($this->pageTemplate->getJsPath());
+            } catch (ExceptionNotFound $e) {
+                // no js
+            }
+            // mandatory, should not throw
+            try {
+                $this->fetcherCache->addFileDependency($this->pageTemplate->getHtmlTemplatePath());
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The html template should be found", self::CANONICAL, $e);
+            }
+        }
+        /**
+         * The Slots of the requested template
+         */
+        foreach ($this->pageTemplate->getSlots() as $templateSlot) {
+            try {
+                $this->fetcherCache->addFileDependency($templateSlot->getMarkupFetcher()->getSourcePath());
+            } catch (ExceptionNotFound $e) {
+                // no slot page found
+            }
+        }
 
     }
 
@@ -238,7 +267,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     /**
      * @throws ExceptionNotFound
      */
-    private function getRequestedLayout(): string
+    private function getRequestedTemplate(): string
     {
         if (!isset($this->requestedLayout)) {
             throw new ExceptionNotFound("No requested layout");
@@ -275,12 +304,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         return $this->requestedMarkupPath;
     }
 
-    private function getLayout(): string
-    {
-        $this->buildObjectIfNeeded();
-        return $this->requestedLayoutName;
-    }
-
 
     /**
      * The cache stores only public pages.
@@ -294,16 +317,15 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
      */
     private function isPublicStaticPage(): bool
     {
-        return
-            SiteConfig::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0) === 1
-            && !Identity::isLoggedIn()
-            && !$this->pageTemplate->hasMessages();
+        $privateRailbar = SiteConfig::getConfValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, 0);
+        $isLoggedIn = Identity::isLoggedIn();
+        return $privateRailbar === 1 && !$isLoggedIn;
     }
 
     private function getRequestedTemplateOrDefault(): string
     {
         try {
-            return $this->getRequestedLayout();
+            return $this->getRequestedTemplate();
         } catch (ExceptionNotFound $e) {
             return PageTemplateName::createFromPage($this->getRequestedPage())->getValueOrDefault();
         }
@@ -320,4 +342,6 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $sourcePath = $this->getSourcePath();
         return ResourceName::getFromPath($sourcePath);
     }
+
+
 }

@@ -176,9 +176,10 @@ class TemplateSlot
         return $this->fetcherFragment;
     }
 
-    private function getName(): string
+    public function getName(): string
     {
         return $this->slotId;
     }
+
 
 }

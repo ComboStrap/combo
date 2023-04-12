@@ -57,6 +57,7 @@ class TemplateForWebPage
     private bool $hadMessages = false;
     private string $requestedTheme;
     private bool $isIframe = false;
+    private array $slots;
 
 
     public static function create(): TemplateForWebPage
@@ -147,12 +148,14 @@ class TemplateForWebPage
             $model = $this->getModel();
 
             /**
-             * Checks ???
-             * DocType is required by bootstrap
+             *
+             * DocType is required by bootstrap and chrome
+             * https://developer.chrome.com/docs/lighthouse/best-practices/doctype/
              * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
              * <!doctype html>
              */
-            return $pageTemplateEngine->renderWebPage($template, $model);
+            $doctype = '<!DOCTYPE html>';
+            return $doctype . $pageTemplateEngine->renderWebPage($template, $model);
 
 
         } finally {
@@ -280,6 +283,28 @@ class TemplateForWebPage
     {
         $this->isIframe = $isIframe;
         return $this;
+    }
+
+    /**
+     * @return TemplateSlot[]
+     */
+    public function getSlots(): array
+    {
+        if (isset($this->slots)) {
+            return $this->slots;
+        }
+        $this->slots = [];
+        foreach ($this->getElementIds() as $elementId) {
+            if ($elementId === TemplateSlot::MAIN_TOC_ID) {
+                /**
+                 * Main toc element is not a slot
+                 */
+                continue;
+            }
+
+            $this->slots[] = TemplateSlot::createFor($elementId, $this);
+        }
+        return $this->slots;
     }
 
 
@@ -574,17 +599,11 @@ class TemplateForWebPage
             /**
              * Slots
              */
-            foreach ($this->getElementIds() as $elementId) {
-                if ($elementId === TemplateSlot::MAIN_TOC_ID) {
-                    /**
-                     * Main toc element is not a slot
-                     */
-                    continue;
-                }
+            foreach ($this->getSlots() as $slot) {
+
+                $elementId = $slot->getName();
                 try {
-                    $slotFetcherMarkup = TemplateSlot::createFor($elementId, $this)
-                        ->getMarkupFetcher();
-                    $model["$elementId-html"] = $slotFetcherMarkup->getFetchString();
+                    $model["$elementId-html"] = $slot->getMarkupFetcher()->getFetchString();
                 } catch (ExceptionNotFound $e) {
                     // no slot found
                 } catch (ExceptionCompile $e) {

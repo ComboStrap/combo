@@ -9,6 +9,15 @@ use Doku_Renderer_xhtml;
 use renderer_plugin_combo_analytics;
 use syntax_plugin_combo_webcode;
 
+/**
+ * Heading
+ *
+ * By following Bootstrap, we uses them also as title in component.
+ *
+ *
+ * But lighthouse complains
+ * https://accessibility.psu.edu/headingshtml/
+ */
 class HeadingTag
 {
 
@@ -358,7 +367,17 @@ class HeadingTag
         /**
          * Printing
          */
-        $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");
+        if ($context === self::TYPE_OUTLINE) {
+            /**
+             * Parts of the toc
+             */
+            $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");
+        } else {
+            /**
+             * Not part of the toc
+             */
+            $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+        }
 
     }
 
@@ -367,13 +386,17 @@ class HeadingTag
      * @return string
      */
     public
-    static function renderClosingTag(TagAttributes $tagAttributes): string
+    static function renderClosingTag(TagAttributes $tagAttributes, string $context): string
     {
         $level = $tagAttributes->getValueAndRemove(HeadingTag::LEVEL);
         if ($level == null) {
             LogUtility::msg("The level is mandatory when closing a heading", self::CANONICAL);
         }
-        return "</h$level>" . DOKU_LF;
+        if ($context === self::TYPE_OUTLINE) {
+            return "</h$level>";
+        } else {
+            return "</div>";
+        }
     }
 
     /**

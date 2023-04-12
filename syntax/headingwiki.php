@@ -195,8 +195,9 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                         return true;
                     case DOKU_LEXER_EXIT:
                         $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                        $context = $data[PluginUtility::CONTEXT];
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-                        $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes);
+                        $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes, $context);
                         return true;
 
                 }

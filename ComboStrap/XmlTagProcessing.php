@@ -79,7 +79,8 @@ class XmlTagProcessing
                 $renderer->doc .= DropDownTag::renderExitXhtml();
                 return true;
             case HeadingTag::LOGICAL_TAG:
-                $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes);
+                $context = $data[PluginUtility::CONTEXT];
+                $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes, $context);
                 return true;
             case NoteTag::TAG_INOTE:
                 $renderer->doc .= NoteTag::renderClosingInlineNote();

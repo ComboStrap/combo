@@ -558,8 +558,6 @@ EOF;
                     throw new ExceptionCompile("The page requested should not be null for a share button");
                 }
 
-                $ariaLabel = "Share on " . ucfirst($this->getBrand());
-                $linkAttributes->addOutputAttributeValue("aria-label", $ariaLabel);
                 $linkAttributes->addOutputAttributeValue("rel", "nofollow");
 
                 switch ($this->getBrand()) {
@@ -598,8 +596,6 @@ EOF;
                 return $linkAttributes;
             case self::TYPE_BUTTON_FOLLOW:
 
-                $ariaLabel = "Follow us on " . ucfirst($this->getBrand());
-                $linkAttributes->addOutputAttributeValue("aria-label", $ariaLabel);
                 $linkAttributes->addOutputAttributeValue("target", "_blank");
                 $linkAttributes->addOutputAttributeValue("rel", "nofollow");
                 $href = $this->getBrandEndpointForPage();

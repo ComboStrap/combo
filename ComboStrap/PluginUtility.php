@@ -751,9 +751,6 @@ class PluginUtility
     static function getMarkupTag($match): ?string
     {
 
-        // Trim to start clean
-        $match = trim($match);
-
         // Until the first >
         $pos = strpos($match, ">");
         if (!$pos) {

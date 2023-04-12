@@ -112,7 +112,7 @@ class XmlTagProcessing
                 $renderer->doc .= FollowTag::renderExit();
                 return true;
             default:
-                LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
+                LogUtility::warning("The exit tag (" . $logicalTag . ") was not processed.");
                 return false;
         }
 
@@ -258,7 +258,7 @@ class XmlTagProcessing
                 TableTag::renderEnterXhtml($tagAttributes, $renderer);
                 return true;
             default:
-                LogUtility::errorIfDevOrTest("The tag (" . $logicalTag . ") was not processed.");
+                LogUtility::warning("The enter tag (" . $logicalTag . ") was not processed.");
                 return false;
         }
     }
@@ -267,6 +267,10 @@ class XmlTagProcessing
     {
         // context data
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        // Normalize Trim and delete eol to start clean
+        $match = trim($match);
+        $match = str_replace("\n"," ",$match);
 
         // Markup
         $markupTag = PluginUtility::getMarkupTag($match);

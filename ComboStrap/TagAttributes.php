@@ -30,7 +30,11 @@ use ComboStrap\Xml\XmlElement;
 use dokuwiki\Extension\SyntaxPlugin;
 
 /**
- * An helper to create manipulate component and html attributes
+ * An utility:
+ * * to parse the jsx/component markup match
+ * * to enforce user security (ie `style` is not allowed)
+ * * to get from component attributes to html attributes
+ *
  *
  * This is the equivalent of an {@link XmlElement}
  * but does not need any {@link XmlDocument} to be created

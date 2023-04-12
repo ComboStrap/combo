@@ -119,4 +119,15 @@ EOF;
         global $conf;
         return $conf["sidebar"];
     }
+
+    public static function isMainHeaderSlot(Path $sourcePath): bool
+    {
+        try {
+            $nameWithoutExtension = $sourcePath->getLastNameWithoutExtension();
+        } catch (ExceptionNotFound $e) {
+            return false;
+        }
+        $mainHeaderSlotName = self::getMainHeaderSlotName();
+        return $nameWithoutExtension === $mainHeaderSlotName;
+    }
 }

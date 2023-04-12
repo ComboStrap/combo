@@ -642,10 +642,7 @@ class MediaMarkup
         try {
             return $this->getLazyLoadMethod();
         } catch (ExceptionNotFound $e) {
-
-            return ExecutionContext::getActualOrCreateFromEnv()
-                ->getConfig()
-                ->getValue(LazyLoad::CONF_LAZY_LOAD_METHOD,LazyLoad::LAZY_LOAD_METHOD_DEFAULT) ;
+            return LazyLoad::getDefault();
         }
 
     }
@@ -684,7 +681,7 @@ class MediaMarkup
     public function setLazyLoad(bool $true): MediaMarkup
     {
         if ($true) {
-            $this->lazyLoadMethod = LazyLoad::LAZY_LOAD_METHOD_DEFAULT;
+            $this->lazyLoadMethod = LazyLoad::getDefault();
         } else {
             $this->lazyLoadMethod = LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
         }

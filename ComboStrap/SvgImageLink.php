@@ -145,7 +145,7 @@ class SvgImageLink extends ImageLink
                     ));
                     break;
                 case LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE:
-                    $imgAttributes->addOutputAttributeValue("loading", "lazy");
+                    $imgAttributes->addOutputAttributeValue(LazyLoad::HTML_LOADING_ATTRIBUTE, "lazy");
                     $imgAttributes->addOutputAttributeValue("src", $srcValue);
                     break;
             }

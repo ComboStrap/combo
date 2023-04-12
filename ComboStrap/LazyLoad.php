@@ -50,14 +50,12 @@ class LazyLoad
     public const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
 
     /**
-     * With lozad as default, in a {@link TemplateForWebPage},
-     * it would not work as the script would not be added
-     */
-    public const LAZY_LOAD_METHOD_DEFAULT = LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE;
-    /**
      * The method on how to lazy load resources (Ie media)
      */
     public const LAZY_LOAD_METHOD = "lazy";
+    /**
+     * The default when the image are above the fold
+     */
     public const LAZY_LOAD_METHOD_NONE_VALUE = "none";
     /**
      * Used internal for now on test
@@ -65,6 +63,7 @@ class LazyLoad
     const CONF_LAZY_LOAD_METHOD = "internal-lazy-load-method-combo";
     public const CONF_RASTER_ENABLE = "rasterImageLazyLoadingEnable";
     public const CONF_RASTER_ENABLE_DEFAULT = 1;
+    public const HTML_LOADING_ATTRIBUTE = "loading";
 
     /**
      * Used to select all lazy loaded
@@ -233,6 +232,40 @@ class LazyLoad
         ExecutionContext::getActualOrCreateFromEnv()
             ->getConfig()
             ->disableLazyLoad();
+    }
+
+    /**
+     *
+     * By default, the image above the fold should not be lazy loaded
+     * Above-the-fold images that are lazily loaded render later in the page lifecycle, which can delay the largest contentful paint.
+     *
+     *
+     */
+    public static function getDefault()
+    {
+
+        try {
+            /**
+             * Above-the-fold images that are lazily loaded render later in the page lifecycle,
+             * which can delay the largest contentful paint.
+             */
+            $sourcePath = ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingMarkupHandler()
+                ->getSourcePath();
+            if(SlotSystem::isMainHeaderSlot($sourcePath)){
+                return LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
+            }
+        } catch (ExceptionNotFound $e) {
+            // not a path execution
+        }
+
+        /**
+         * HTML and not lozad as default because in a Hbs template, in a {@link TemplateForWebPage},
+         * it would not work as the script would not be added
+         */
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getValue(LazyLoad::CONF_LAZY_LOAD_METHOD,LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE) ;
     }
 
 }

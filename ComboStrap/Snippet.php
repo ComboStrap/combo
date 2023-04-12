@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_docustom;
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Web\Url;
 use JsonSerializable;
 use splitbrain\slika\Exception;
@@ -230,7 +231,7 @@ class Snippet implements JsonSerializable
      */
     public static function getClassFromComponentId($snippetId): string
     {
-        return StyleUtility::addComboStrapSuffix("snippet-" . $snippetId);
+        return StyleAttribute::addComboStrapSuffix("snippet-" . $snippetId);
     }
 
     /**
@@ -519,10 +520,10 @@ class Snippet implements JsonSerializable
          *
          */
         try {
-            return StyleUtility::addComboStrapSuffix("snippet-" . $this->getComponentId());
+            return StyleAttribute::addComboStrapSuffix("snippet-" . $this->getComponentId());
         } catch (ExceptionNotFound $e) {
             LogUtility::internalError("A component id was not found for the snippet ($this)", self::CANONICAL);
-            return StyleUtility::addComboStrapSuffix("snippet");
+            return StyleAttribute::addComboStrapSuffix("snippet");
         }
 
     }

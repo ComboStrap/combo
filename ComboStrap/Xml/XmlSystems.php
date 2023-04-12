@@ -10,7 +10,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotEquals;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\Html;
-use ComboStrap\StyleUtility;
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Web\Url;
 use ComboStrap\Xml\XmlDocument;
 use ComboStrap\Xml\XmlElement;
@@ -219,7 +219,7 @@ class XmlSystems
                                 break;
                             case "style":
                                 try {
-                                    StyleUtility::stringEquals($leftAttValue, $rightAttValue);
+                                    StyleAttribute::stringEquals($leftAttValue, $rightAttValue);
                                 } catch (ExceptionNotEquals $e) {
                                     $error .= "The style attribute (" . $leftAtt->getNodePath() . ") has different values (" . $leftAttValue . "," . $rightAttValue . "). Error:{$e->getMessage()}\n";
                                 }

@@ -2,6 +2,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\StyleAttribute;
+
 /**
  * Search Tag Implementation
  *
@@ -74,7 +76,7 @@ class SearchTag
         if (!$tagAttributes->getBooleanValue('autocomplete')) {
             $browserAutoComplete = 'off';
         }
-        $tagClass = StyleUtility::addComboStrapSuffix(self::TAG);
+        $tagClass = StyleAttribute::addComboStrapSuffix(self::TAG);
         $action = wl();
         return <<<EOF
 <form

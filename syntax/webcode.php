@@ -28,7 +28,7 @@ use ComboStrap\FetcherMarkupWebcode;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\StyleUtility;
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Tag\WebCodeTag;
 use ComboStrap\TagAttributes;
 use ComboStrap\WikiPath;

@@ -19,6 +19,7 @@ use ComboStrap\TagAttribute\BackgroundAttribute;
 use ComboStrap\TagAttribute\Boldness;
 use ComboStrap\TagAttribute\Hero;
 use ComboStrap\TagAttribute\Shadow;
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\TagAttribute\TextAlign;
 use ComboStrap\TagAttribute\Toggle;
 use ComboStrap\TagAttribute\Underline;
@@ -173,7 +174,7 @@ class TagAttributes
      */
     const HTML_ATTRIBUTES = [
         TagAttributes::CLASS_KEY,
-        StyleUtility::STYLE_ATTRIBUTE,
+        StyleAttribute::STYLE_ATTRIBUTE,
         TagAttributes::ID_KEY,
         TagAttributes::TITLE_KEY,
         "href",
@@ -287,12 +288,9 @@ class TagAttributes
                 unset($this->componentAttributesCaseInsensitive[$key]);
                 continue;
             }
-            if ($key === StyleUtility::STYLE_ATTRIBUTE) {
+            if ($key === StyleAttribute::STYLE_ATTRIBUTE) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
-                $stylingProperties = StyleUtility::HtmlStyleValueToArray($value);
-                foreach ($stylingProperties as $styleKey => $styleValue) {
-                    $this->addStyleDeclarationIfNotSet($styleKey, $styleValue);
-                }
+                LogUtility::warning("The style attribute cannot be set or used due to security. Uses the combostrap style attribute or set a class attibute instead.");
             }
         }
 
@@ -607,7 +605,7 @@ class TagAttributes
         /**
          * Add the type class used for CSS styling
          */
-        StyleUtility::addStylingClass($this);
+        StyleAttribute::addStylingClass($this);
 
         /**
          * Add the style has html attribute

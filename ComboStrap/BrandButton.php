@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metatwitter;
+use ComboStrap\TagAttribute\StyleAttribute;
 
 /**
  *
@@ -407,7 +408,7 @@ EOF;
     public
     function getIdentifierClass(): string
     {
-        return StyleUtility::addComboStrapSuffix($this->getStyleScriptIdentifier());
+        return StyleAttribute::addComboStrapSuffix($this->getStyleScriptIdentifier());
     }
 
     /**

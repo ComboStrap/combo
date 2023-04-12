@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Web\UrlEndpoint;
 
 /**
@@ -104,7 +105,7 @@ abstract class ImageLink extends MediaLink
                 $href = FetcherRawLocalPath::createFromPath($dokuPath)->getFetchUrl()->toString();
                 $linkTagAttributes->addOutputAttributeValue("href", $href);
                 $snippetId = self::LIGHTBOX;
-                $linkTagAttributes->addClassName(StyleUtility::addComboStrapSuffix($snippetId));
+                $linkTagAttributes->addClassName(StyleAttribute::addComboStrapSuffix($snippetId));
                 $linkingClass = $this->mediaMarkup->getLinkingClass();
                 if ($linkingClass !== null) {
                     $linkTagAttributes->addClassName($linkingClass);

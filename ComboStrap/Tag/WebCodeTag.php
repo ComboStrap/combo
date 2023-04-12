@@ -14,7 +14,7 @@ use ComboStrap\FetcherMarkupWebcode;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\StyleUtility;
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\TagAttributes;
 use ComboStrap\WikiPath;
 use syntax_plugin_combo_code;
@@ -59,7 +59,7 @@ class WebCodeTag
 
     public static function getClass(): string
     {
-        return StyleUtility::addComboStrapSuffix(WebCodeTag::TAG);
+        return StyleAttribute::addComboStrapSuffix(WebCodeTag::TAG);
     }
 
     public static function getKnownTypes(): array

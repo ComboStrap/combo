@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use ComboStrap\TagAttribute\BackgroundAttribute;
+use ComboStrap\TagAttribute\StyleAttribute;
 
 /**
  * This one support background loading
@@ -71,7 +72,7 @@ class LazyLoad
      */
     public static function getLazyClass(): string
     {
-        return StyleUtility::addComboStrapSuffix(self::CANONICAL);
+        return StyleAttribute::addComboStrapSuffix(self::CANONICAL);
     }
 
     public static function addSnippet()

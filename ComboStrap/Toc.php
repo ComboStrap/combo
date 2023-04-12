@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 
 use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\TagAttribute\StyleAttribute;
 use Doku_Renderer;
 use DokuWiki_Admin_Plugin;
 use syntax_plugin_combo_toc;
@@ -33,7 +34,7 @@ class Toc extends Metadata
 
     public static function getClass(): string
     {
-        return StyleUtility::addComboStrapSuffix(self::CANONICAL);
+        return StyleAttribute::addComboStrapSuffix(self::CANONICAL);
     }
 
     /**
@@ -140,7 +141,7 @@ class Toc extends Metadata
 
             $href = $tocItem['link'];
             $label = $tocItem['title'];
-            $tocLevelClass = StyleUtility::addComboStrapSuffix("toc-level-$actualLevel");
+            $tocLevelClass = StyleAttribute::addComboStrapSuffix("toc-level-$actualLevel");
             $ulMarkup .= "<li><a href=\"$href\" class=\"$tocLevelClass\">$label</a>";
             /**
              * Close
@@ -150,7 +151,7 @@ class Toc extends Metadata
         // grand closing
         $ulMarkup .= str_repeat("</li></ul>", abs($htmlLevel));
         $tocHeaderLang = $lang['toc'];
-        $tocHeaderClass = StyleUtility::addComboStrapSuffix("toc-header");
+        $tocHeaderClass = StyleAttribute::addComboStrapSuffix("toc-header");
         return <<<EOF
 <p class="$tocHeaderClass">$tocHeaderLang</p>
 $ulMarkup

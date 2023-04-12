@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\StyleAttribute;
 use dokuwiki\Menu\PageMenu;
 use dokuwiki\Menu\SiteMenu;
 use dokuwiki\Menu\UserMenu;
@@ -51,7 +52,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
 
     private static function getComponentClass(): string
     {
-        return StyleUtility::addComboStrapSuffix(self::CANONICAL);
+        return StyleAttribute::addComboStrapSuffix(self::CANONICAL);
     }
 
     /**
@@ -241,13 +242,13 @@ EOF;
             $breakpointHiding = "d-{$hideFromBreakpoint->getShortName()}-none";
         }
         $railBarOffCanvasPrefix = "railbar-offcanvas";
-        $railBarClass = StyleUtility::addComboStrapSuffix(self::NAME);
-        $railBarOffCanvasClassAndId = StyleUtility::addComboStrapSuffix($railBarOffCanvasPrefix);
-        $railBarOffCanvasWrapperId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-wrapper");
-        $railBarOffCanvasLabelId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-label");
-        $railBarOffcanvasBodyId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-body");
-        $railBarOffCanvasCloseId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-close");
-        $railBarOffCanvasOpenId = StyleUtility::addComboStrapSuffix("{$railBarOffCanvasPrefix}-open");
+        $railBarClass = StyleAttribute::addComboStrapSuffix(self::NAME);
+        $railBarOffCanvasClassAndId = StyleAttribute::addComboStrapSuffix($railBarOffCanvasPrefix);
+        $railBarOffCanvasWrapperId = StyleAttribute::addComboStrapSuffix("{$railBarOffCanvasPrefix}-wrapper");
+        $railBarOffCanvasLabelId = StyleAttribute::addComboStrapSuffix("{$railBarOffCanvasPrefix}-label");
+        $railBarOffcanvasBodyId = StyleAttribute::addComboStrapSuffix("{$railBarOffCanvasPrefix}-body");
+        $railBarOffCanvasCloseId = StyleAttribute::addComboStrapSuffix("{$railBarOffCanvasPrefix}-close");
+        $railBarOffCanvasOpenId = StyleAttribute::addComboStrapSuffix("{$railBarOffCanvasPrefix}-open");
         return <<<EOF
 <div id="$railBarOffCanvasWrapperId" class="$railBarClass $railBarOffCanvasClassAndId $breakpointHiding">
     <button id="$railBarOffCanvasOpenId" class="btn" type="button" data-bs-toggle="offcanvas"
@@ -352,8 +353,8 @@ EOF;
         if ($showFromBreakpoint !== null) {
             $showFromBreakpointClasses = "d-none d-{$showFromBreakpoint->getShortName()}-flex";
         }
-        $railBarClass = StyleUtility::addComboStrapSuffix(self::NAME);
-        $railBarFixedClassOrId = StyleUtility::addComboStrapSuffix(self::NAME . "-fixed");
+        $railBarClass = StyleAttribute::addComboStrapSuffix(self::NAME);
+        $railBarFixedClassOrId = StyleAttribute::addComboStrapSuffix(self::NAME . "-fixed");
         $zIndexRailbar = 1000; // A navigation bar (below the drop down because we use it in the search box for auto-completion)
         return <<<EOF
 <div id="$railBarFixedClassOrId" class="$railBarClass $railBarFixedClassOrId d-flex $showFromBreakpointClasses" style="z-index: $zIndexRailbar;">

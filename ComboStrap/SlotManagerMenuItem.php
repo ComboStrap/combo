@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Web\UrlEndpoint;
 use dokuwiki\Menu\Item\AbstractItem;
 
@@ -31,7 +32,7 @@ class SlotManagerMenuItem extends AbstractItem
 
     private static function getClass(): string
     {
-        return StyleUtility::addComboStrapSuffix(self::TAG);
+        return StyleAttribute::addComboStrapSuffix(self::TAG);
     }
 
 
@@ -135,7 +136,7 @@ class SlotManagerMenuItem extends AbstractItem
                 $secondaryPath = $parentPath->resolveId($secondarySlot);
 
                 $secondaryPage = MarkupPath::createPageFromAbsoluteId($secondaryPath->toAbsoluteId());
-                $class = StyleUtility::addComboStrapSuffix(\syntax_plugin_combo_link::TAG);
+                $class = StyleAttribute::addComboStrapSuffix(\syntax_plugin_combo_link::TAG);
                 if (FileSystems::exists($secondaryPath)) {
                     $action = self::EDIT_ACTION;
                     $style = '';

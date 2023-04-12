@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\StyleAttribute;
+
 require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/LazyLoad.php');
 require_once(__DIR__ . '/PluginUtility.php');
@@ -397,7 +399,7 @@ class RasterImageLink extends ImageLink
      */
     public static function getLazyClass()
     {
-        return StyleUtility::addComboStrapSuffix("lazy-raster");
+        return StyleAttribute::addComboStrapSuffix("lazy-raster");
     }
 
 

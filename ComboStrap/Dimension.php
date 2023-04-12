@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\StyleAttribute;
 use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_xmlinlinetag;
 use syntax_plugin_combo_link;
@@ -122,7 +123,7 @@ class Dimension
                                 PluginUtility::getSnippetManager()->attachJavascriptFromComponentId("height-toggle");
 
                                 $toggleOnClickId = "height-toggle-onclick";
-                                $attributes->addClassName(StyleUtility::addComboStrapSuffix($toggleOnClickId));
+                                $attributes->addClassName(StyleAttribute::addComboStrapSuffix($toggleOnClickId));
                                 $attributes->addStyleDeclarationIfNotSet("cursor", "pointer");
                                 PluginUtility::getSnippetManager()->attachJavascriptFromComponentId($toggleOnClickId);
 
@@ -138,7 +139,7 @@ class Dimension
 EOF;
                                 PluginUtility::getSnippetManager()->attachCssInternalStyleSheet("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
-                                $buttonClass = StyleUtility::addComboStrapSuffix("height-toggle");
+                                $buttonClass = StyleAttribute::addComboStrapSuffix("height-toggle");
                                 /** @noinspection HtmlUnknownAttribute */
                                 $button = <<<EOF
 <button class="$buttonClass" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>

@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Web\UrlEndpoint;
 use ComboStrap\Xml\XmlDocument;
 use ComboStrap\Xml\XmlElement;
@@ -477,9 +478,9 @@ class TemplateForWebPage
          */
         $bodyDokuwikiClass = tpl_classes();
         try {
-            $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("{$this->getTheme()}-{$this->getTemplateName()}");
+            $bodyTemplateIdentifierClass = StyleAttribute::addComboStrapSuffix("{$this->getTheme()}-{$this->getTemplateName()}");
         } catch (\Exception $e) {
-            $bodyTemplateIdentifierClass = StyleUtility::addComboStrapSuffix("template-string");
+            $bodyTemplateIdentifierClass = StyleAttribute::addComboStrapSuffix("template-string");
         }
         // position relative is for the toast and messages that are in the corner
         $model['body-classes'] = "$bodyDokuwikiClass position-relative $bodyTemplateIdentifierClass";
@@ -755,7 +756,7 @@ class TemplateForWebPage
         // such as https://github.com/jakearchibald/svgomg/blob/master/src/index.html#L183
         // would be difficult to test
 
-        $class = StyleUtility::addComboStrapSuffix(self::PRELOAD_TAG);
+        $class = StyleAttribute::addComboStrapSuffix(self::PRELOAD_TAG);
         $preloadHtml = "<div class=\"$class\">";
         foreach ($preloadedCss as $link) {
             $htmlLink = '<link rel="stylesheet" href="' . $link['href'] . '" ';

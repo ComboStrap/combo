@@ -3,6 +3,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Web\Url;
 use ComboStrap\Xml\XmlDocument;
 use ComboStrap\Xml\XmlSystems;
@@ -1348,8 +1349,8 @@ class FetcherSvg extends IFetcherLocalImage
         }
         // add class with svg type
         $documentElement
-            ->addClass(StyleUtility::addComboStrapSuffix(self::TAG))
-            ->addClass(StyleUtility::addComboStrapSuffix(self::TAG . "-" . $requestedType));
+            ->addClass(StyleAttribute::addComboStrapSuffix(self::TAG))
+            ->addClass(StyleAttribute::addComboStrapSuffix(self::TAG . "-" . $requestedType));
         // Add a class on each path for easy styling
         try {
             $name = $this->getRequestedNameOrDefault();

@@ -7,6 +7,7 @@ use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\Tag\TableTag;
+use ComboStrap\TagAttribute\StyleAttribute;
 use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_analytics;
 use syntax_plugin_combo_header;
@@ -442,7 +443,7 @@ class Outline
 
     public static function getOutlineHeadingClass(): string
     {
-        return StyleUtility::addComboStrapSuffix(self::OUTLINE_HEADING_PREFIX);
+        return StyleAttribute::addComboStrapSuffix(self::OUTLINE_HEADING_PREFIX);
     }
 
     public function getRootOutlineSection(): OutlineSection

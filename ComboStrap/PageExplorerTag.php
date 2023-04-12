@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\StyleAttribute;
 use Doku_Handler;
 
 
@@ -742,7 +743,7 @@ class PageExplorerTag
              * the good HTML node
              */
             $namespaceId = ExecutionContext::getActualOrCreateFromEnv()->getIdManager()->generateNewHtmlIdForComponent("page-explorer-{$containerPath->getWikiId()}");
-            $id = StyleUtility::addComboStrapSuffix($namespaceId);
+            $id = StyleAttribute::addComboStrapSuffix($namespaceId);
             $html .= TagAttributes::createEmpty()
                 ->addOutputAttributeValue("data-bs-target", "#$id")
                 ->addOutputAttributeValue("data-" . TagAttributes::WIKI_ID, $containerPath->getWikiId())

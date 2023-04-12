@@ -11,7 +11,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
 use ComboStrap\Html;
 use ComboStrap\StringUtility;
-use ComboStrap\StyleUtility;
+use ComboStrap\TagAttribute\StyleAttribute;
 use ComboStrap\Web\Url;
 use ComboStrap\Xml\XmlSystems;
 use DOMElement;
@@ -386,7 +386,7 @@ class XmlElement
 
     public function getStyleProperties(): ArrayCaseInsensitive
     {
-        $source = StyleUtility::HtmlStyleValueToArray($this->getStyle());
+        $source = StyleAttribute::HtmlStyleValueToArray($this->getStyle());
         return new ArrayCaseInsensitive($source);
     }
 

@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 
 use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\TagAttribute\StyleAttribute;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
@@ -311,7 +312,7 @@ EOF;
                          */
                         $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                         $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
-                        $outputAttributes->addClassName(StyleUtility::addComboStrapSuffix(LowQualityPage::CLASS_SUFFIX));
+                        $outputAttributes->addClassName(StyleAttribute::addComboStrapSuffix(LowQualityPage::CLASS_SUFFIX));
                         $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
                         $snippetSystem->attachCssInternalStyleSheet($snippetLowQualityPageId);
                         /**
@@ -344,7 +345,7 @@ EOF;
                         /**
                          * Add a class to style it differently if needed
                          */
-                        $className = StyleUtility::addComboStrapSuffix(PagePublicationDate::LATE_PUBLICATION_CLASS_PREFIX_NAME);
+                        $className = StyleAttribute::addComboStrapSuffix(PagePublicationDate::LATE_PUBLICATION_CLASS_PREFIX_NAME);
                         $outputAttributes->addClassName($className);
                         if (PagePublicationDate::isLatePublicationProtectionEnabled()) {
                             $outputAttributes->removeOutputAttributeIfPresent(PageProtection::DATA_PP_LINK);

@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\StyleAttribute;
+
 /**
  * Image
  * This is the class that handles the
@@ -128,10 +130,10 @@ class SvgImageLink extends ImageLink
                     LazyLoad::addLozadSnippet();
                     if ($svgInjection) {
                         $snippetManager->attachJavascriptFromComponentId("lozad-svg-injection");
-                        $imgAttributes->addClassName(StyleUtility::addComboStrapSuffix("lazy-svg-injection"));
+                        $imgAttributes->addClassName(StyleAttribute::addComboStrapSuffix("lazy-svg-injection"));
                     } else {
                         $snippetManager->attachJavascriptFromComponentId("lozad-svg");
-                        $imgAttributes->addClassName(StyleUtility::addComboStrapSuffix("lazy-svg"));
+                        $imgAttributes->addClassName(StyleAttribute::addComboStrapSuffix("lazy-svg"));
                     }
                     /**
                      * Note: Responsive image srcset is not needed for svg
@@ -151,7 +153,7 @@ class SvgImageLink extends ImageLink
         } else {
             if ($svgInjection) {
                 $snippetManager->attachJavascriptFromComponentId("svg-injector");
-                $imgAttributes->addClassName(StyleUtility::addComboStrapSuffix("svg-injection"));
+                $imgAttributes->addClassName(StyleAttribute::addComboStrapSuffix("svg-injection"));
             }
             $imgAttributes->addOutputAttributeValue("src", $srcValue);
         }

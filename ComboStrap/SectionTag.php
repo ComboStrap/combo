@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\StyleAttribute;
+
 class SectionTag
 {
 
@@ -14,8 +16,8 @@ class SectionTag
     {
         $level = $tag->getComponentAttributeValueAndRemoveIfPresent(HeadingTag::LEVEL);
         if ($level !== null) {
-            $tag->addClassName(StyleUtility::addComboStrapSuffix("outline-section"));
-            $tag->addClassName(StyleUtility::addComboStrapSuffix("outline-level-$level"));
+            $tag->addClassName(StyleAttribute::addComboStrapSuffix("outline-section"));
+            $tag->addClassName(StyleAttribute::addComboStrapSuffix("outline-level-$level"));
         }
         return $tag->toHtmlEnterTag("section");
     }

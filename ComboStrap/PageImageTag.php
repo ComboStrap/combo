@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Field\AncestorImage;
 use ComboStrap\Meta\Field\FeaturedImage;
+use ComboStrap\TagAttribute\StyleAttribute;
 use syntax_plugin_combo_iterator;
 
 
@@ -186,7 +187,7 @@ class PageImageTag
                     continue 2;
             }
             if ($imageFetcher !== null) {
-                $tagAttributes->addClassName(StyleUtility::addComboStrapSuffix($pageImageProcessing));
+                $tagAttributes->addClassName(StyleAttribute::addComboStrapSuffix($pageImageProcessing));
                 break;
             }
         }

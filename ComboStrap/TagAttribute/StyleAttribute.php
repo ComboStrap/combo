@@ -10,17 +10,26 @@
  *
  */
 
-namespace ComboStrap;
+namespace ComboStrap\TagAttribute;
 
-require_once(__DIR__ . '/StringUtility.php');
 
-class StyleUtility
+use ComboStrap\ExceptionNotEquals;
+use ComboStrap\StringUtility;
+use ComboStrap\TagAttributes;
+
+/**
+ * This class gots static function about the HTML style attribute
+ *
+ * The style attribute is not allowed due to security concern
+ * in Combostrap (Click Hijacking, ...)
+ */
+class StyleAttribute
 {
 
     const COMBOSTRAP_FIX = "cs";
     public const STYLE_ATTRIBUTE = "style";
 
-    public static function getRule(array $styles, $selector)
+    public static function getRule(array $styles, $selector): string
     {
         $rule = $selector . " {" . DOKU_LF;
         foreach ($styles as $key => $value) {
@@ -113,8 +122,8 @@ class StyleUtility
      */
     public static function stringEquals($leftStyles, $rightStyles)
     {
-        $leftStylesArray = StyleUtility::HtmlStyleValueToArray($leftStyles);
-        $rightStylesArray = StyleUtility::HtmlStyleValueToArray($rightStyles);
+        $leftStylesArray = StyleAttribute::HtmlStyleValueToArray($leftStyles);
+        $rightStylesArray = StyleAttribute::HtmlStyleValueToArray($rightStyles);
         self::arrayEquals($leftStylesArray,$rightStylesArray);
     }
 }

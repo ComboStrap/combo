@@ -5,6 +5,7 @@ namespace ComboStrap;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Tag\AdTag;
+use ComboStrap\TagAttribute\StyleAttribute;
 
 class OutlineVisitor
 {
@@ -283,7 +284,7 @@ class OutlineVisitor
             \syntax_plugin_combo_header::TAG,
             DOKU_LEXER_ENTER,
             array(
-                TagAttributes::CLASS_KEY => StyleUtility::addComboStrapSuffix("outline-header"),
+                TagAttributes::CLASS_KEY => StyleAttribute::addComboStrapSuffix("outline-header"),
             ),
             Outline::CONTEXT
         );

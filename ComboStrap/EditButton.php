@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\StyleAttribute;
+
 /**
  * Class SectionEdit
  * @package ComboStrap
@@ -304,7 +306,7 @@ class EditButton
             $url = $page->getUrl()
                 ->withoutRewrite()
                 ->toHtmlString();
-            $classPageEdit = StyleUtility::addComboStrapSuffix(self::CLASS_SUFFIX);
+            $classPageEdit = StyleAttribute::addComboStrapSuffix(self::CLASS_SUFFIX);
 
             /**
              * Important Note: the first div and the public class is mandatory for the edittable plugin

@@ -345,7 +345,33 @@ class TagAttributes
             LogUtility::msg("The renderArray variable passed is not an array ($callStackArray)");
             $callStackArray = [];
         }
-        return new TagAttributes($callStackArray, $logicalTag);
+        /**
+         * Style is not allowed in a TagAttributes
+         *
+         * Because callstack is safe,
+         * style have been added by plugin
+         * For instance, the card had a `max-width style of 100%` to the image
+         *
+         * We capture it and add them afterwards
+         */
+        if (isset($callStackArray[StyleAttribute::STYLE_ATTRIBUTE])) {
+            $style = $callStackArray[StyleAttribute::STYLE_ATTRIBUTE];
+            unset($callStackArray[StyleAttribute::STYLE_ATTRIBUTE]);
+        }
+
+        $tagAttributes = new TagAttributes($callStackArray, $logicalTag);
+
+        /**
+         * Add the styles
+         */
+        if(isset($style)){
+            $stylingProperties = StyleAttribute::HtmlStyleValueToArray($style);
+            foreach ($stylingProperties as $styleKey => $styleValue) {
+                $tagAttributes->addStyleDeclarationIfNotSet($styleKey, $styleValue);
+            }
+        }
+
+        return $tagAttributes;
     }
 
 

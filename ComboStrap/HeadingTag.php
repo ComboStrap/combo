@@ -358,7 +358,8 @@ class HeadingTag
         /**
          * Printing
          */
-        $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");
+        $tag = self::getTagFromContext($context, $level);
+        $renderer->doc .= $tagAttributes->toHtmlEnterTag($tag);
 
     }
 
@@ -367,13 +368,15 @@ class HeadingTag
      * @return string
      */
     public
-    static function renderClosingTag(TagAttributes $tagAttributes): string
+    static function renderClosingTag(TagAttributes $tagAttributes, string $context): string
     {
         $level = $tagAttributes->getValueAndRemove(HeadingTag::LEVEL);
         if ($level == null) {
             LogUtility::msg("The level is mandatory when closing a heading", self::CANONICAL);
         }
-        return "</h$level>" . DOKU_LF;
+        $tag = self::getTagFromContext($context, $level);
+
+        return "</$tag>";
     }
 
     /**
@@ -507,5 +510,14 @@ class HeadingTag
             self::SHORT_TYPES,
             self::TITLE_DISPLAY_TYPES
         );
+    }
+
+    private static function getTagFromContext(string $context, int $level): string
+    {
+        if($context===self::TYPE_OUTLINE) {
+            return "h$level";
+        } else {
+            return "div";
+        }
     }
 }

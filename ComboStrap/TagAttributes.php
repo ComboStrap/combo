@@ -312,21 +312,12 @@ class TagAttributes
         $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes, $allowFirstBooleanAttributesAsType);
         $tag = PluginUtility::getMarkupTag($match);
         $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
-        return self::createFromCallStackArray($mergedAttributes, $tag)
-            ->setKnownTypes($knownTypes);
-    }
-
-    public static function createFromTagAttributes($match, array $defaultAttributes = [], array $knownTypes = [], bool $allowFirstBooleanAttributesAsType = false): TagAttributes
-    {
-        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes, $allowFirstBooleanAttributesAsType);
-        $tag = PluginUtility::getMarkupTag($match);
-        $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
-        return self::createFromCallStackArray($mergedAttributes, $tag)
+        return (new TagAttributes($mergedAttributes, $tag))
             ->setKnownTypes($knownTypes);
     }
 
 
-    public static function createEmpty($logicalTag = "")
+    public static function createEmpty($logicalTag = ""): TagAttributes
     {
         if ($logicalTag !== "") {
             return new TagAttributes([], $logicalTag);

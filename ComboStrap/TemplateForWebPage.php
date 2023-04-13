@@ -29,6 +29,14 @@ class TemplateForWebPage
      */
     const CONF_INTERNAL_IS_SOCIAL = "web-page-is-social";
 
+    /**
+     * DocType is required by bootstrap and chrome
+     * https://developer.chrome.com/docs/lighthouse/best-practices/doctype/
+     * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
+     * <!doctype html>
+     */
+    const DOCTYPE = "<!DOCTYPE html>";
+
     private array $templateDefinition;
     const CANONICAL = "template";
 
@@ -147,15 +155,8 @@ class TemplateForWebPage
              */
             $model = $this->getModel();
 
-            /**
-             *
-             * DocType is required by bootstrap and chrome
-             * https://developer.chrome.com/docs/lighthouse/best-practices/doctype/
-             * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
-             * <!doctype html>
-             */
-            $doctype = '<!DOCTYPE html>';
-            return $doctype . $pageTemplateEngine->renderWebPage($template, $model);
+
+            return self::DOCTYPE . $pageTemplateEngine->renderWebPage($template, $model);
 
 
         } finally {

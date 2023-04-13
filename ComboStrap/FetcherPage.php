@@ -67,15 +67,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         $url = parent::getFetchUrl($url);
         try {
             $template = $this->getRequestedTemplate();
+            $url->addQueryParameter(PageTemplateName::PROPERTY_NAME, $template);
         } catch (ExceptionNotFound $e) {
-            $template = PageTemplateName::createFromPage($this->getRequestedPage())
-                ->getValueOrDefault();
+            // ok
         }
-        /**
-         * The template is mandatory as cache key
-         * If the user change it, the cache should be disabled
-         */
-        $url->addQueryParameter(PageTemplateName::PROPERTY_NAME, $template);
 
         $this->addLocalPathParametersToFetchUrl($url, DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
 
@@ -219,8 +214,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
         /**
          * Build the cache
+         * The template is mandatory as cache key
+         * If the user change it, the cache should be disabled
          */
-        $this->fetcherCache = FetcherCache::createFrom($this);
+        $this->fetcherCache = FetcherCache::createFrom($this, [$layoutName]);
         // the requested page
         $this->fetcherCache->addFileDependency($this->getRequestedPath());
         if (PluginUtility::isDevOrTest()) {

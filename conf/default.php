@@ -478,3 +478,7 @@ $conf['combo-conf-003'] = 4;
  */
 $conf['combo-conf-005'] = 'default';
 
+/**
+ * {@link \ComboStrap\Tag\AdTag::CONF_IN_ARTICLE_ENABLED}
+ */
+$conf['combo-conf-007'] = 0;

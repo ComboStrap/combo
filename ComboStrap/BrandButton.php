@@ -458,6 +458,11 @@ EOF;
     public
     function getWidgetClass(): string
     {
+        /**
+         * The btn bootstrap class:
+         * * makes a link a button
+         * * and normalize the button styling
+         */
         return "btn";
     }
 

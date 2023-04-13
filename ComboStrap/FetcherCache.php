@@ -29,9 +29,12 @@ class FetcherCache
 
 
     /**
-     * Cache constructor.
+     * @param IFetcher $fetcher
+     * @param String[] $keys - extra cache keys that are not in the url because they are retrieved from a database
+     * This is the case of the {@link FetcherPage::getRequestedTemplate()} as it can be changed in the database
+     * but we don't want to see it in the URL.
      */
-    public function __construct(IFetcher $fetcher)
+    public function __construct(IFetcher $fetcher, array $keys = [])
     {
 
         $this->fetcher = $fetcher;
@@ -39,13 +42,21 @@ class FetcherCache
          * Cache Key Construction
          */
         $cacheKey = $fetcher->getFetchUrl()->toAbsoluteUrlString();
+        foreach ($keys as $key) {
+            $cacheKey .= $key;
+        }
         $this->fileCache = new Cache($cacheKey, ".{$fetcher->getMime()->getExtension()}");
 
     }
 
-    public static function createFrom(IFetcher $fetch): FetcherCache
+    /**
+     * @param IFetcher $fetch
+     * @param String[] $cacheKeys - extra cache keys that are not in the url because they are retrieved from a database
+     * @return FetcherCache
+     */
+    public static function createFrom(IFetcher $fetch, array $cacheKeys = []): FetcherCache
     {
-        return new FetcherCache($fetch);
+        return new FetcherCache($fetch, $cacheKeys);
     }
 
 

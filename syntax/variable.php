@@ -21,16 +21,11 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
 
 
     const CANONICAL = self::TAG;
-    const PREFIX_LONG = '${';
-    const PREFIX_SHORT = '$';
-    const ENTRY_PATTERN_SHORT = self::DOLLAR_ESCAPE . self::PREFIX_SHORT . "[A-Za-z0-9_]+";
-    const ENTRY_PATTERN_LONG = self::DOLLAR_ESCAPE . self::PREFIX_LONG . "[^}\r\n]+}";
     const EXPRESSION_ATTRIBUTE = "expression";
-    const DOLLAR_ESCAPE = '\\';
 
     public static function isVariable($ref): bool
     {
-        return substr($ref, 0, 1) === syntax_plugin_combo_variable::PREFIX_SHORT;
+        return substr($ref, 0, 1) === Template::DOLLAR_VARIABLE_PREFIX;
     }
 
     /**
@@ -96,8 +91,8 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
     public function connectTo($mode)
     {
 
-        $this->Lexer->addSpecialPattern(self::ENTRY_PATTERN_SHORT, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-        $this->Lexer->addSpecialPattern(self::ENTRY_PATTERN_LONG, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addSpecialPattern(Template::CAPTURE_PATTERN_SHORT, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addSpecialPattern(Template::CAPTURE_PATTERN_LONG, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -118,11 +113,11 @@ class syntax_plugin_combo_variable extends DokuWiki_Syntax_Plugin
     public function handle($match, $state, $pos, Doku_Handler $handler): array
     {
         if ($state == DOKU_LEXER_SPECIAL) {
-            $lengthLongPrefix = strlen(self::PREFIX_LONG);
+            $lengthLongPrefix = strlen(Template::LONG_PREFIX);
             /**
              * Recreating a pipeline expression
              */
-            if (substr($match, 0, $lengthLongPrefix) === self::PREFIX_LONG) {
+            if (substr($match, 0, $lengthLongPrefix) === Template::LONG_PREFIX) {
                 $expression = trim(substr($match, $lengthLongPrefix, -1));
                 if (!in_array($expression[0], PipelineUtility::QUOTES_CHARACTERS)) {
                     $expression = "\${$expression}";

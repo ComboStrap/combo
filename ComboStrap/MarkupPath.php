@@ -1102,7 +1102,7 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
             $array[$metadataName] = $value;
         }
 
-        $array["url"] = $this->getCanonicalUrl();
+        $array["url"] = $this->getCanonicalUrl()->toAbsoluteUrl()->toString();
         $array["now"] = Iso8601Date::createFromNow()->toString();
         return $array;
 

@@ -15,6 +15,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
 
     const NAME = "page";
     const CANONICAL = "page";
+    const PURGE = "purge";
 
     private string $requestedLayout;
     private bool $build = false;
@@ -101,6 +102,10 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
         if ($layout !== null) {
             $this->setRequestedLayout($layout);
         }
+        /**
+         * Purge the cache
+         */
+        $tagAttributes->getValueAndRemoveIfPresent(self::PURGE);
         return $this;
     }
 

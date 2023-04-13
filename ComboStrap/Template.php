@@ -3,7 +3,6 @@
 
 namespace ComboStrap;
 
-use Psr\Log\LogLevel;
 
 /**
  * Class Template
@@ -13,13 +12,24 @@ use Psr\Log\LogLevel;
 class Template
 {
 
-    const VARIABLE_PREFIX = "$";
-    const VARIABLE_PATTERN_CAPTURE_VARIABLE = "/(\\" . self::VARIABLE_PREFIX . "[\w]*)/im";
-    const VARIABLE_PATTERN_CAPTURE_NAME = "/\\" . self::VARIABLE_PREFIX . "([\w]*)/im";
-    const CANONICAL = "template";
+    public const DOLLAR_VARIABLE_PREFIX = "$";
 
-    protected $_string;
-    protected $_data = array();
+    public const DOLLAR_ESCAPE = '\\';
+
+    public const CAPTURE_PATTERN_SHORT = Template::DOLLAR_ESCAPE . Template::DOLLAR_VARIABLE_PREFIX . self::VARIABLE_NAME_EXPRESSION;
+    public const CAPTURE_PATTERN_LONG = Template::DOLLAR_ESCAPE . Template::LONG_PREFIX . "[^}\r\n]+" . self::LONG_EXIT;
+
+
+    const CANONICAL = "variable-template";
+    public const LONG_PREFIX = self::DOLLAR_VARIABLE_PREFIX . self::LONG_ENTER;
+    public const LONG_EXIT = '}';
+    const LONG_ENTER = '{';
+    const VARIABLE_NAME_EXPRESSION = "[A-Za-z0-9_]+";
+    const LONG_VARIABLE_NAME_CAPTURE_EXPRESSION = self::DOLLAR_ESCAPE . self::LONG_PREFIX . '\s*(' . self::VARIABLE_NAME_EXPRESSION . ')[^\r\n]*' . self::LONG_EXIT;
+
+
+    protected string $_string;
+    protected array $_data = array();
 
     public function __construct($string = null)
     {
@@ -49,13 +59,22 @@ class Template
     public function render(): string
     {
 
-
-        $variablePattern = self::VARIABLE_PATTERN_CAPTURE_VARIABLE;
-        $splits = preg_split($variablePattern, $this->_string, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $pattern = '/' .
+            '(' . self::DOLLAR_ESCAPE . self::DOLLAR_VARIABLE_PREFIX . self::VARIABLE_NAME_EXPRESSION . ')' .
+            '|' .
+            '(' . self::DOLLAR_ESCAPE . self::LONG_PREFIX . '\s*' . self::VARIABLE_NAME_EXPRESSION . '[^\r\n]*' . self::LONG_EXIT . ')' .
+            '/im';
+        $splits = preg_split($pattern, $this->_string, -1, PREG_SPLIT_DELIM_CAPTURE);
         $rendered = "";
         foreach ($splits as $part) {
-            if (substr($part, 0, 1) === self::VARIABLE_PREFIX) {
-                $variable = trim(substr($part, 1));
+            if (substr($part, 0, 1) === self::DOLLAR_VARIABLE_PREFIX) {
+                if (substr($part, 1, 1) === self::LONG_ENTER) {
+                    $matches = [];
+                    preg_match('/' . self::LONG_VARIABLE_NAME_CAPTURE_EXPRESSION . '/im', $part, $matches);
+                    $variable = $matches[1];
+                } else {
+                    $variable = trim(substr($part, 1));
+                }
                 if (isset($this->_data[$variable])) {
                     $value = $this->_data[$variable];
                 } else {
@@ -90,13 +109,28 @@ class Template
      */
     public function getVariablesDetected(): array
     {
-        $result = preg_match_all(self::VARIABLE_PATTERN_CAPTURE_NAME, $this->_string, $matches);
+        /** @noinspection RegExpUnnecessaryNonCapturingGroup */
+        $pattern = '/' .
+            '(?:' . self::DOLLAR_ESCAPE . self::DOLLAR_VARIABLE_PREFIX . '(' . self::VARIABLE_NAME_EXPRESSION . '))' .
+            '|' .
+            '(?:' . self::LONG_VARIABLE_NAME_CAPTURE_EXPRESSION . ')' .
+            '/im';
+        $result = preg_match_all($pattern, $this->_string, $matches);
         if ($result >= 1) {
-            return $matches[1];
+            $returnedMatch = [];
+            $firstExpressionMatches = $matches[1];
+            $secondExpressionMatches = $matches[2];
+            foreach ($firstExpressionMatches as $key => $match) {
+                if (empty($match)) {
+                    $returnedMatch[] = $secondExpressionMatches[$key];
+                    continue;
+                }
+                $returnedMatch[] = $match;
+            }
+            return $returnedMatch;
         } else {
             return [];
         }
-
 
     }
 

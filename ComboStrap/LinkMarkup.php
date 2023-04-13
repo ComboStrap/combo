@@ -80,11 +80,15 @@ class LinkMarkup
     /**
      * Url properties
      * that are not seen as styling properties
+     * for a page
+     * We could also build the {@link FetcherPage}
+     * and see which attributes were not taken ?
      */
     const PROTECTED_URL_PROPERTY = [
         self::SEARCH_HIGHLIGHT_QUERY_PROPERTY,
         DokuWikiId::DOKUWIKI_ID_ATTRIBUTE,
-        PageTemplateName::PROPERTY_NAME
+        PageTemplateName::PROPERTY_NAME,
+        FetcherPage::PURGE
     ];
 
 

@@ -181,12 +181,12 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                  * @var Doku_Renderer_xhtml $renderer
                  */
                 $state = $data[PluginUtility::STATE];
+                $context = $data[PluginUtility::CONTEXT];
                 switch ($state) {
 
                     case DOKU_LEXER_ENTER:
                         $callStackArray = $data[PluginUtility::ATTRIBUTES];
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, HeadingTag::HEADING_TAG);
-                        $context = $data[PluginUtility::CONTEXT];
                         $pos = $data[PluginUtility::POSITION];
                         HeadingTag::processRenderEnterXhtml($context, $tagAttributes, $renderer, $pos);
                         return true;
@@ -196,7 +196,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_EXIT:
                         $callStackArray = $data[PluginUtility::ATTRIBUTES];
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-                        $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes);
+                        $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes, $context);
                         return true;
 
                 }

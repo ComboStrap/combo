@@ -90,10 +90,26 @@ class Snippet implements JsonSerializable
     public const SNIPPET_BASE = ":snippet"; // quick internal snippet
     public const CONF_USE_CDN_DEFAULT = 1;
 
+    /**
+     * With a raw format, we do nothing
+     * We take it without any questions
+     */
     const RAW_FORMAT = "raw";
+    /**
+     * With a iife, if the javascript snippet is not critical
+     * It will be wrapped to execute after page load
+     */
     const IIFE_FORMAT = "iife";
+    /**
+     * Javascript es module
+     */
     const ES_FORMAT = "es";
+    /**
+     * Umd module
+     */
     const UMD_FORMAT = "umd";
+    const JSON_FORMAT_PROPERTY = "format";
+    const DEFAULT_FORMAT = self::RAW_FORMAT;
 
 
     /**
@@ -144,7 +160,7 @@ class Snippet implements JsonSerializable
      * It will be outputted only once.
      */
     private bool $hasHtmlOutputOccurred = false;
-    private string $format = self::RAW_FORMAT;
+    private string $format = self::DEFAULT_FORMAT;
 
     /**
      * @param Path $path - path mandatory because it's the path of fetch and it's the storage format
@@ -380,6 +396,14 @@ class Snippet implements JsonSerializable
 
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createJavascriptSnippetFromComponentId(string $componentId): Snippet
+    {
+        return Snippet::createSnippetFromComponentId($componentId, self::EXTENSION_JS);
+    }
+
 
     /**
      * @param $bool - if the snippet is critical, it would not be deferred or preloaded
@@ -578,6 +602,11 @@ class Snippet implements JsonSerializable
             $snippet->setDoesManipulateTheDomOnRun($async);
         }
 
+        $format = $array[self::JSON_FORMAT_PROPERTY];
+        if ($format !== null) {
+            $snippet->setFormat($format);
+        }
+
         $content = $array[self::JSON_CONTENT_PROPERTY];
         if ($content !== null) {
             $snippet->setInlineContent($content);
@@ -770,6 +799,9 @@ class Snippet implements JsonSerializable
         }
         if (isset($this->inlineContent)) {
             $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->inlineContent;
+        }
+        if ($this->format!==self::DEFAULT_FORMAT) {
+            $dataToSerialize[self::JSON_FORMAT_PROPERTY] = $this->format;
         }
         if (isset($this->htmlAttributes)) {
             $dataToSerialize[self::JSON_HTML_ATTRIBUTES_PROPERTY] = $this->htmlAttributes;
@@ -1160,6 +1192,11 @@ window.addEventListener('load', function () { $internal });
 EOF;
         }
         return $internal;
+    }
+
+    public function getFormat(): string
+    {
+        return $this->format;
     }
 
 

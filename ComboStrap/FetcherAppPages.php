@@ -54,8 +54,6 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
 
     /**
      * @return string
-     * @throws ExceptionNotFound - if the main markup fragment could not be found
-     * @throws ExceptionBadArgument - if the main markup fragment path can not be transformed as wiki path
      */
     public function getFetchString(): string
     {
@@ -112,7 +110,11 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
             case ExecutionContext::EDIT_ACTION:
                 $markupPath = MarkupPath::createPageFromPathObject($contextPath);
                 if ($ACT === ExecutionContext::PREVIEW_ACTION && $markupPath->isSlot()) {
-                    SlotSystem::sendContextPathMessage(SlotSystem::getContextPath());
+                    try {
+                        SlotSystem::sendContextPathMessage(SlotSystem::getContextPath());
+                    } catch (ExceptionNotFound $e) {
+                        // no history (ie no cookie or new installation)
+                    }
                 }
         }
 

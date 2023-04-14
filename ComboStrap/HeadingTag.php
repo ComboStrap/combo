@@ -248,6 +248,16 @@ class HeadingTag
         $type = $tagAttributes->getType();
 
         /**
+         * Old syntax deprecated
+         */
+        if ($type === "0") {
+            if ($context === self::TYPE_OUTLINE) {
+                $type = 'h' . self::DEFAULT_LEVEL_OUTLINE_CONTEXT;
+            } else {
+                $type = 'h' . self::DEFAULT_LEVEL_TITLE_CONTEXT;
+            }
+        }
+        /**
          * Label is for the TOC
          */
         $tagAttributes->removeAttributeIfPresent(self::PARSED_LABEL);
@@ -262,6 +272,12 @@ class HeadingTag
          * Display Heading
          * https://getbootstrap.com/docs/5.0/content/typography/#display-headings
          */
+        if ($context !== self::TYPE_OUTLINE && $type === null) {
+            /**
+             * if not an outline, a display
+             */
+            $type = "h$level";
+        }
         if (in_array($type, self::DISPLAY_TYPES)) {
 
             $displayClass = "display-$level";
@@ -365,6 +381,7 @@ class HeadingTag
 
     /**
      * @param TagAttributes $tagAttributes
+     * @param string $context
      * @return string
      */
     public
@@ -512,12 +529,19 @@ class HeadingTag
         );
     }
 
+    /**
+     * @param string $context
+     * @param int $level
+     * @return string
+     */
     private static function getTagFromContext(string $context, int $level): string
     {
-        if($context===self::TYPE_OUTLINE) {
+        if ($context === self::TYPE_OUTLINE) {
             return "h$level";
         } else {
             return "div";
         }
     }
+
+
 }

@@ -78,35 +78,30 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     }
 
 
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
-        switch ($state) {
+        if ($state == DOKU_LEXER_SPECIAL) {
+            $attributes = [HeadingTag::LEVEL => strlen(trim($match))];
+            $callStack = CallStack::createFromHandler($handler);
 
-            case DOKU_LEXER_SPECIAL :
+            // Determine the type
+            $context = HeadingTag::getContext($callStack);
 
-                $attributes = [HeadingTag::LEVEL => strlen(trim($match))];
-                $callStack = CallStack::createFromHandler($handler);
-
-                // Determine the type
-                $context = HeadingTag::getContext($callStack);
-
-                /**
-                 * The context is needed:
-                 *   * to add the bootstrap class if it's a card title for instance
-                 *   * and to delete {@link HeadingTag::TYPE_OUTLINE} call
-                 * in the {@link action_plugin_combo_headingpostprocess} (The rendering is done via Dokuwiki,
-                 * see the exit processing for more info on the handling of outline headings)
-                 *
-                 */
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context,
-                    PluginUtility::POSITION => $pos
-                );
-
-
+            /**
+             * The context is needed:
+             *   * to add the bootstrap class if it's a card title for instance
+             *   * and to delete {@link HeadingTag::TYPE_OUTLINE} call
+             * in the {@link action_plugin_combo_headingpostprocess} (The rendering is done via Dokuwiki,
+             * see the exit processing for more info on the handling of outline headings)
+             *
+             */
+            return array(
+                PluginUtility::STATE => $state,
+                PluginUtility::ATTRIBUTES => $attributes,
+                PluginUtility::CONTEXT => $context,
+                PluginUtility::POSITION => $pos
+            );
         }
         return array();
 
@@ -122,7 +117,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         /**
@@ -134,12 +129,13 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
+            $context = $data[PluginUtility::CONTEXT];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $context = $data[PluginUtility::CONTEXT];
+
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, HeadingTag::HEADING_TAG);
                     $pos = $data[PluginUtility::POSITION];
                     HeadingTag::processRenderEnterXhtml($context, $tagAttributes, $renderer, $pos);
@@ -150,8 +146,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                    $level = $tagAttributes->getValue(HeadingTag::LEVEL);
-                    $renderer->doc .= "</h$level>" . DOKU_LF;
+                    $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes, $context);
                     return true;
 
             }

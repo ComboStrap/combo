@@ -409,7 +409,8 @@ class Outline
                                     $endAtxCall = Call::createComboCall(
                                         syntax_plugin_combo_headingatx::TAG,
                                         DOKU_LEXER_EXIT,
-                                        $this->actualHeadingCall->getAttributes()
+                                        $this->actualHeadingCall->getAttributes(),
+                                        $this->actualHeadingCall->getContext(),
                                     );
                                     $this->addCallToSection($endAtxCall);
                                     $this->exitHeading();

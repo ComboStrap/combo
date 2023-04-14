@@ -225,7 +225,10 @@ BrandTag
      */
     public static function mixBrandButtonToTagAttributes(TagAttributes $tagAttributes, BrandButton $brandButton): TagAttributes
     {
-        $brandLinkAttributes = $brandButton->getHtmlAttributes();
+
+                /**
+         * Url
+         */
         $urlAttribute = self::URL_ATTRIBUTE;
         $url = $tagAttributes->getValueAndRemoveIfPresent($urlAttribute);
         if ($url !== null) {
@@ -246,12 +249,10 @@ BrandTag
                     ->setProperty("path", $relativePath)
                     ->render();
             }
-            $tagAttributes->addOutputAttributeValue("href", $url);
+            $tagAttributes->addOutputAttributeValue("href",$url);
         }
-        $brandLinkAttributes->mergeWithCallStackArray($tagAttributes->toCallStackArray());
-        // set the type back
-        $brandLinkAttributes->setType($tagAttributes->getType());
-        return $brandLinkAttributes;
+        $tagAttributes->mergeWithCallStackArray($brandButton->getHtmlAttributes()->toCallStackArray());
+        return $tagAttributes;
     }
 
 

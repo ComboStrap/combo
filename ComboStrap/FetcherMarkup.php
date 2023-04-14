@@ -387,7 +387,15 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                     ->getMetadataPath()
                     ->toAbsoluteId();
             } catch (ExceptionNotExists|ExceptionNotFound $e) {
-                LogUtility::error("The metadata path should be known", self::CANONICAL, $e);
+                /**
+                 * Computer are hard
+                 * At the beginning there is no markup path
+                 * We may get this error then
+                 * We don't allow on test
+                 */
+                if (PluginUtility::isTest()) {
+                    LogUtility::error("The metadata path should be known. " . $e->getMessage(), self::CANONICAL, $e);
+                }
             }
         }
         /**

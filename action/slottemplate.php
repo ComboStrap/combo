@@ -23,6 +23,8 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
 {
 
 
+    const CANONICAL = "slot-template";
+
     public function register(Doku_Event_Handler $controller)
     {
 
@@ -34,45 +36,30 @@ class action_plugin_combo_slottemplate extends DokuWiki_Action_Plugin
     {
 
 
+        $id = $event->data['id'];
+        $page = MarkupPath::createMarkupFromId($id);
+        if (!$page->isSlot()) {
+            return;
+        }
+
+
         try {
-            $page = MarkupPath::createFromRequestedPage();
+            $pathName = $page->getLastNameWithoutExtension();
         } catch (ExceptionNotFound $e) {
-            LogUtility::warning("The requested page was not found");
+            LogUtility::internalError("Should not happen as it's not the root", self::CANONICAL);
             return;
         }
 
-        /**
-         * Header
-         */
-        $pageHeaderSlotName = SlotSystem::getPageHeaderSlotName();
-        $toQualifiedId = $page->getPathObject()->toAbsoluteId();
-        if ($toQualifiedId === ":$pageHeaderSlotName") {
-            $pageHeaderPath = TemplateSlot::getDefaultSlotContentPath(TemplateSlot::PAGE_HEADER_ID);
-            try {
-                $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
-                $event->data["doreplace"] = false;
-            } catch (ExceptionNotFound $e) {
-                // Should not happen
-                LogUtility::errorIfDevOrTest("Internal Error: The default page header was not found");
-            }
+        $pageHeaderPath = TemplateSlot::createFromPathName($pathName)->getDefaultSlotContentPath();
+        if (!FileSystems::exists($pageHeaderPath)) {
             return;
         }
-
-
-        /**
-         * Footer
-         */
-
-        $pageFooterSlotName = SlotSystem::getPageFooterSlotName();
-        if ($toQualifiedId === ":$pageFooterSlotName") {
-            $pageFooterPath = TemplateSlot::getDefaultSlotContentPath(TemplateSlot::PAGE_FOOTER_ID);
-            try {
-                $event->data["tpl"] = FileSystems::getContent($pageFooterPath);
-                $event->data["doreplace"] = false;
-            } catch (ExceptionNotFound $e) {
-                // Should not happen
-                LogUtility::errorIfDevOrTest("Internal Error: The default page footer was not found");
-            }
+        try {
+            $event->data["tpl"] = FileSystems::getContent($pageHeaderPath);
+            $event->data["doreplace"] = false;
+        } catch (ExceptionNotFound $e) {
+            // Should not happen
+            LogUtility::error("Internal Error", self::CANONICAL, $e);
         }
 
 

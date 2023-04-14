@@ -34,42 +34,81 @@ class TemplateSlot
     public const CONF_PAGE_FOOTER_NAME_DEFAULT = "slot_footer";
     public const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";
     const MAIN_TOC_ID = "main-toc";
+    const SLOT_MAIN_HEADER_PATH_NAME = "slot_main_header";
+    const SLOT_MAIN_FOOTER_PATH_NAME = "slot_main_footer";
 
 
     /**
-     * @var TemplateForWebPage - the page layout of this page element
+     * @var WikiPath - the context path of this slot
      */
-    private TemplateForWebPage $pageTemplate;
+    private WikiPath $contextPath;
     /**
      * @var FetcherMarkup - the fetcher if this is a slot and has a page fragment source
      */
     private FetcherMarkup $fetcherFragment;
-    private string $slotId;
+    private string $elementId;
 
 
-    public function __construct(string $slotId, TemplateForWebPage $pageTemplate)
+    public function __construct(string $elementId, WikiPath $contextPath)
     {
 
-        $this->slotId = $slotId;
-        if(!in_array($slotId,self::SLOT_IDS)){
-            throw new ExceptionRuntimeInternal("$slotId is not a valid slot id. Valid ids are (".ArrayUtility::formatAsString(self::SLOT_IDS).").");
+        $this->elementId = $elementId;
+        if (!in_array($elementId, self::SLOT_IDS)) {
+            throw new ExceptionRuntimeInternal("$elementId is not a valid slot id. Valid ids are (" . ArrayUtility::formatAsString(self::SLOT_IDS) . ").");
         }
-        $this->pageTemplate = $pageTemplate;
+        $this->contextPath = $contextPath;
 
 
     }
 
-    public static function createFor(string $slotId, TemplateForWebPage $pageTemplate): TemplateSlot
+    public static function createFromElementId(string $elementId, WikiPath $contextPath = null): TemplateSlot
     {
-        return new TemplateSlot($slotId, $pageTemplate);
+
+        if ($contextPath === null) {
+            $contextPath = ExecutionContext::getActualOrCreateFromEnv()
+                ->getConfig()
+                ->getDefaultContextPath();
+        }
+        return new TemplateSlot($elementId, $contextPath);
+
+    }
+
+    public static function createFromPathName($pathNameWithoutExtension): TemplateSlot
+    {
+        return self::createFromElementId(self::getElementIdFromPathName($pathNameWithoutExtension));
+    }
+
+    private static function getElementIdFromPathName($pathNameWithoutExtension): string
+    {
+        if ($pathNameWithoutExtension === SlotSystem::getPageHeaderSlotName()) {
+            return self::PAGE_HEADER_ID;
+        }
+
+        if ($pathNameWithoutExtension === SlotSystem::getPageFooterSlotName()) {
+            return self::PAGE_FOOTER_ID;
+        }
+        if ($pathNameWithoutExtension === SlotSystem::getSidebarName()) {
+            return self::PAGE_SIDE_ID;
+        }
+
+        if ($pathNameWithoutExtension === SlotSystem::getMainSideSlotName()) {
+            return self::MAIN_SIDE_ID;
+        }
+        if ($pathNameWithoutExtension === self::SLOT_MAIN_HEADER_PATH_NAME) {
+            return self::MAIN_HEADER_ID;
+        }
+        if ($pathNameWithoutExtension === self::SLOT_MAIN_FOOTER_PATH_NAME) {
+            return self::MAIN_FOOTER_ID;
+        }
+        throw new ExceptionRuntimeInternal("Internal: The markup name ($pathNameWithoutExtension) was unexpected, it's not a slot");
+
     }
 
 
-    /**
-     */
-    public static function getSlotNameFromId($slotId)
+    public
+    static function getPathNameFromElementId($elementId)
     {
-        switch ($slotId) {
+        switch ($elementId) {
             case self::PAGE_HEADER_ID:
                 return SlotSystem::getPageHeaderSlotName();
             case self::PAGE_FOOTER_ID:
@@ -81,52 +120,53 @@ class TemplateSlot
             case self::MAIN_SIDE_ID:
                 return SlotSystem::getMainSideSlotName();
             case self::MAIN_HEADER_ID:
-                return "slot_main_header";
+                return self::SLOT_MAIN_HEADER_PATH_NAME;
             case self::MAIN_FOOTER_ID:
-                return "slot_main_footer";
+                return self::SLOT_MAIN_FOOTER_PATH_NAME;
             default:
-                throw new ExceptionRuntimeInternal("Internal: The element ($slotId) was unexpected, it's not a slot");
+                throw new ExceptionRuntimeInternal("Internal: The element ($elementId) was unexpected, it's not a slot");
         }
 
     }
 
     /**
-     * This function is static because it's used to put a default template when creating a new slot
-     * @param string $areaId
+     *
      * @return WikiPath
      */
-    public static function getDefaultSlotContentPath(string $areaId): WikiPath
+    public
+     function getDefaultSlotContentPath(): WikiPath
     {
-        return WikiPath::createComboResource(":pages:$areaId.md");
+        return WikiPath::createComboResource(":slot:{$this->getElementId()}.md");
     }
 
 
     /**
      */
-    public function getLastFileNameForFragment()
+    public
+    function getLastFileNameForFragment()
     {
-        $elementId = $this->getName();
-        return self::getSlotNameFromId($elementId);
+        $elementId = $this->getElementId();
+        return self::getPathNameFromElementId($elementId);
     }
 
 
     public
     function __toString()
     {
-        return "Fragment {$this->pageTemplate} / {$this->getName()}";
+        return "Slot {$this->getElementId()} for {$this->contextPath}";
     }
-
 
 
     /**
      * @throws ExceptionNotFound - if the area is not a slot or there is no path found
      */
-    private function getFragmentPath()
+    private
+    function getFragmentPath()
     {
 
         // Main content
-        $requestedPath = $this->pageTemplate->getRequestedContextPath();
-        if ($this->getName() === self::MAIN_CONTENT_ID) {
+        $requestedPath = $this->contextPath;
+        if ($this->getElementId() === self::MAIN_CONTENT_ID) {
             return $requestedPath;
         }
         // Slot
@@ -146,10 +186,9 @@ class TemplateSlot
             }
         }
 
-        /**
-         * The default content is in the theme
-         */
-        throw new ExceptionNotFound("No slot page for the area ($this) found");
+
+        return $this->getDefaultSlotContentPath();
+
 
 
     }
@@ -158,7 +197,8 @@ class TemplateSlot
     /**
      * @throws ExceptionNotFound if the page/markup fragment was not found (a container element does not have any also)
      */
-    public function getMarkupFetcher(): FetcherMarkup
+    public
+    function getMarkupFetcher(): FetcherMarkup
     {
         if (isset($this->fetcherFragment)) {
             return $this->fetcherFragment;
@@ -167,7 +207,7 @@ class TemplateSlot
          * Rebuild the fragment if any
          */
         $fragmentPath = $this->getFragmentPath();
-        $contextPath = $this->pageTemplate->getRequestedContextPath();
+        $contextPath = $this->contextPath;
         try {
             $this->fetcherFragment = FetcherMarkup::createXhtmlMarkupFetcherFromPath($fragmentPath, $contextPath);
         } catch (ExceptionNotExists $e) {
@@ -176,9 +216,15 @@ class TemplateSlot
         return $this->fetcherFragment;
     }
 
-    public function getName(): string
+    public
+    function getElementId(): string
     {
-        return $this->slotId;
+        return $this->elementId;
+    }
+
+    public function getPathName()
+    {
+        return self::getPathNameFromElementId($this->getElementId());
     }
 
 

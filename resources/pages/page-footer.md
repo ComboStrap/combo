@@ -1,3 +1,0 @@
-<bar>
-Default footer
-</bar>

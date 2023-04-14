@@ -303,7 +303,11 @@ class TemplateForWebPage
                 continue;
             }
 
-            $this->slots[] = TemplateSlot::createFor($elementId, $this);
+            try {
+                $this->slots[] = TemplateSlot::createFromElementId($elementId, $this->getRequestedContextPath());
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("This template is not for a markup path, it cannot have slots then.");
+            }
         }
         return $this->slots;
     }
@@ -602,7 +606,7 @@ class TemplateForWebPage
              */
             foreach ($this->getSlots() as $slot) {
 
-                $elementId = $slot->getName();
+                $elementId = $slot->getElementId();
                 try {
                     $model["$elementId-html"] = $slot->getMarkupFetcher()->getFetchString();
                 } catch (ExceptionNotFound $e) {

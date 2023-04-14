@@ -9,6 +9,7 @@ use ComboStrap\Tag\BarTag;
 use ComboStrap\Tag\BoxTag;
 use ComboStrap\Tag\FollowTag;
 use ComboStrap\Tag\MermaidTag;
+use ComboStrap\Tag\RelatedTag;
 use ComboStrap\Tag\ShareTag;
 use ComboStrap\Tag\SubscribeTag;
 use ComboStrap\Tag\TableTag;
@@ -257,6 +258,10 @@ class XmlTagProcessing
                 return true;
             case TableTag::TAG:
                 TableTag::renderEnterXhtml($tagAttributes, $renderer);
+                return true;
+            case RelatedTag::TAG:
+                LogUtility::warning("The related tag should be closed. You should write <related/> and not <related>.");
+                $renderer->doc .= RelatedTag::render($tagAttributes);
                 return true;
             default:
                 LogUtility::warning("The enter tag (" . $logicalTag . ") was not processed.");
@@ -846,6 +851,9 @@ class XmlTagProcessing
                         return true;
                     case AdTag::MARKUP:
                         $renderer->doc .= AdTag::render($tagAttributes);
+                        return true;
+                    case RelatedTag::TAG:
+                        $renderer->doc .= RelatedTag::render($tagAttributes);
                         return true;
                     default:
                         LogUtility::errorIfDevOrTest("The empty tag (" . $tag . ") was not processed.");

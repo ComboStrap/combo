@@ -34,12 +34,13 @@ use ComboStrap\Prism;
 use ComboStrap\Meta\Field\Region;
 use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
+use ComboStrap\Tag\RelatedTag;
 
 
 /**
  * Related UI components
- * {@link syntax_plugin_combo_related::MAX_LINKS_CONF}
- * {@link syntax_plugin_combo_related::MAX_LINKS_CONF_DEFAULT}
+ * {@link RelatedTag::MAX_LINKS_CONF}
+ * {@link RelatedTag::MAX_LINKS_CONF_DEFAULT}
  */
 $conf['maxLinks'] = 10;
 $conf['extra_pattern'] = '{{backlinks>.}}';

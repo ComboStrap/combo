@@ -18,6 +18,7 @@ use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
+use ComboStrap\Tag\RelatedTag;
 use ComboStrap\WikiPath;
 use dokuwiki\Menu\Item\Backlink;
 
@@ -125,7 +126,7 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
 
 
         $backlinkPages = MarkupPath::createMarkupFromId($id);
-        $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
+        $html = RelatedTag::renderForPage($backlinkPages);
 
 
         $executionContext

@@ -25,6 +25,7 @@ use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\Tag\RelatedTag;
 use ComboStrap\TemplateEngine;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
@@ -43,8 +44,8 @@ use ComboStrap\SvgImageLink;
 /**
  * @var array
  */
-$lang[syntax_plugin_combo_related::MAX_LINKS_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - The maximum of related links shown';
-$lang[syntax_plugin_combo_related::EXTRA_PATTERN_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - Another pattern';
+$lang[RelatedTag::MAX_LINKS_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - The maximum of related links shown';
+$lang[RelatedTag::EXTRA_PATTERN_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - Another pattern';
 
 /**
  * Disqus

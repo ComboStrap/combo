@@ -28,6 +28,7 @@ use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\Tag\RelatedTag;
 use ComboStrap\TemplateEngine;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
@@ -46,8 +47,8 @@ require_once(__DIR__ . '/../syntax/related.php');
 
 
 // https://www.dokuwiki.org/devel:configuration
-$meta[syntax_plugin_combo_related::MAX_LINKS_CONF] = array('numeric');
-$meta[syntax_plugin_combo_related::EXTRA_PATTERN_CONF] = array('string');
+$meta[RelatedTag::MAX_LINKS_CONF] = array('numeric');
+$meta[RelatedTag::EXTRA_PATTERN_CONF] = array('string');
 
 /**
  * Disqus

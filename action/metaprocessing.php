@@ -70,6 +70,16 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
             return;
         }
 
+        /**
+         * To avoid
+         * Console Info: slot_footer.xhtml: Cache (1681473480)
+         * is older than dependent C:\Users\GERARD~1\AppData\Local\Temp\dwtests-1681473476.2836\data\meta\cache_manager_slot_test.meta (1681473480), cache is not usable
+         * See {@link \ComboStrap\Test\TestUtility::WaitToCreateCacheFile1SecLater()}
+         */
+        if(PluginUtility::isDevOrTest()){
+            sleep(1);
+        }
+
         $page = MarkupPath::createMarkupFromId($afterId);
 
         $primaryMetas = action_plugin_combo_pageprimarymetamutation::PRIMARY_METAS;

@@ -1,3 +1,7 @@
 <header id="page-header" class="d-print-none mb-3">
-    {{{page-header-html}}}
+    {{#if page-header-html}}
+        {{{page-header-html}}}
+    {{else}}
+        Header
+    {{/if}}
 </header>

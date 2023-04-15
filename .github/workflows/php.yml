@@ -24,12 +24,12 @@ jobs:
 
     env:
       COMBO_HOME: lib/plugins/combo
-      GITHUB_CONTEXT: ${{ toJSON(github) }}
+      #GITHUB_CONTEXT: ${{ toJSON(github) }}
 
     steps:
 
-      - name: Context Dump
-        run: echo "$GITHUB_CONTEXT"
+#      - name: Context Dump
+#        run: echo "$GITHUB_CONTEXT"
 
       # https://github.com/marketplace/actions/setup-php-action#matrix-setup
       - name: Setup PHP
@@ -79,5 +79,4 @@ jobs:
       # with verbose, you see the configuration file used at the beginning
       - name: Test
         run: |
-          cd _test 
-          phpunit.phar --stderr --group plugin_combo --verbose --debug --bootstrap ../${COMBO_HOME}/_test/bootstrap.php
+          cd _test && phpunit.phar --stderr --group plugin_combo --verbose --debug --bootstrap ../${COMBO_HOME}/_test/bootstrap.php

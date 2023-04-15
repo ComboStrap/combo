@@ -99,4 +99,4 @@ jobs:
       - name: Test
         run: |
           phpunit --version
-          cd _test && phpunit --stderr --group plugin_combo --verbose --debug --bootstrap ../${COMBO_HOME}/_test/bootstrap.php
+          phpunit --stderr --configuration _test/phpunit.xml --verbose --debug --bootstrap ${COMBO_HOME}/_test/bootstrap.php ${COMBO_HOME}/_test

@@ -24,6 +24,7 @@ jobs:
 
     env:
       COMBO_HOME: lib/plugins/combo
+      GITHUB_CONTEXT: ${{ toJSON(github) }}
 
     steps:
 
@@ -67,8 +68,8 @@ jobs:
       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
       - name: Post installation (Download Requirements)
         run: |
-          chmod +x .github/bootstrap.sh
-          source .github/bootstrap.sh
+          chmod +x ${COMBO_HOME}/.github/bootstrap.sh
+          source ${COMBO_HOME}/.github/bootstrap.sh
         # https://docs.github.com/en/actions/security-guides/encrypted-secrets#using-encrypted-secrets-in-a-workflow
         env:
           TOKEN: ${{ secrets.TOKEN }}

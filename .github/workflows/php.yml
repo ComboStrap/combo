@@ -24,6 +24,9 @@ jobs:
 
     steps:
 
+      - name: Context Dump
+        run: echo "$GITHUB_CONTEXT"
+
       # https://github.com/marketplace/actions/setup-php-action#matrix-setup
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

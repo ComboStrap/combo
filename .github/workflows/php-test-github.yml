@@ -57,16 +57,6 @@ jobs:
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
-      # Node
-      - uses: actions/setup-node@v3
-        with:
-          node-version: latest
-      # Yarn
-      - name: Yarn install
-        run: |
-          npm install --global yarn
-          cd ${COMBO_HOME} && yarn install
-
       # Cloning Dokuwiki
       - name: Checkout Dokuwiki
         uses: actions/checkout@v3
@@ -92,6 +82,16 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
         working-directory: .
         shell: bash
+
+      # Node
+      - uses: actions/setup-node@v3
+        with:
+          node-version: latest
+      # Yarn (should happen after combo as we install in combo)
+      - name: Yarn install
+        run: |
+          npm install --global yarn
+          cd ${COMBO_HOME} && yarn install
 
       # Get the list of locales
       - name: Installed Locale

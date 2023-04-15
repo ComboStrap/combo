@@ -19,8 +19,15 @@ jobs:
     strategy:
       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
       matrix:
-         php-versions: [ '7.4'] # '8.2' ]
-         phpunit-versions: ['7.5.20']
+         # 2 jobs will run, one for each include entry
+         # because we don't specify any matrix variables
+         # All configurations under include will run
+         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
+         include:
+           - php: "7.4"
+             phpunit: "7.5.20"
+           - php: "8.2"
+             phpunit: "7.5.20"
       fail-fast: false
 
     env:
@@ -36,9 +43,19 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-versions }}
+          php-version: ${{ matrix.php }}
           extensions: mbstring, intl, PDO, pdo_sqlite, pdo_mysql, pdo_pgsql, bz2
           ini-values: pcre.jit=0
+          tools: phpunit:${{ matrix.phpunit }}
+
+      # Php Problem Matchers
+      # https://github.com/marketplace/actions/setup-php-action#problem-matchers
+      # Problem matchers are json configurations which identify errors and warnings in your logs
+      # and surface them prominently in the GitHub Actions UI by highlighting them and creating code annotations.
+      - name: Setup problem matchers for PHP
+        run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+      - name: Setup problem matchers for PHPUnit
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
       # Node
       - uses: actions/setup-node@v3
@@ -65,6 +82,7 @@ jobs:
         with:
           path: ${{ env.COMBO_HOME }}
 
+
       # Runs command-line programs using the operating system's shell.
       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
       - name: Post installation (Download Requirements)
@@ -80,4 +98,5 @@ jobs:
       # with verbose, you see the configuration file used at the beginning
       - name: Test
         run: |
-          cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug --bootstrap ../${COMBO_HOME}/_test/bootstrap.php
+          cd _test && phpunit.phar --version
+          cd _test && phpunit.phar --stderr --group plugin_combo --verbose --debug --bootstrap ../${COMBO_HOME}/_test/bootstrap.php

@@ -20,6 +20,7 @@ jobs:
       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
       matrix:
          php-versions: [ '7.4'] # '8.2' ]
+         phpunit-versions: ['7.5.20']
       fail-fast: false
 
     env:

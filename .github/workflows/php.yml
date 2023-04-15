@@ -36,7 +36,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: npm ci
+      # Yarn
+      # --check-cache is for zero install model, equivavlent to npm ci
+      # https://yarnpkg.com/cli/install
+      - run: |
+          npm install --global yarn
+          yarn install --immutable --immutable-cache --check-cache
 
       # Cloning your repository to the runner
       - uses: actions/checkout@v3

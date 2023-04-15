@@ -609,7 +609,7 @@ class TemplateForWebPage
                 $elementId = $slot->getElementId();
                 try {
                     $model["$elementId-html"] = $slot->getMarkupFetcher()->getFetchString();
-                } catch (ExceptionNotFound $e) {
+                } catch (ExceptionNotFound|ExceptionNotExists $e) {
                     // no slot found
                 } catch (ExceptionCompile $e) {
                     LogUtility::error("Error while rendering the slot $elementId for the template ($this)", self::CANONICAL, $e);

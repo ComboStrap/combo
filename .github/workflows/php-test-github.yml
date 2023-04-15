@@ -65,7 +65,7 @@ jobs:
       - name: Yarn install
         run: |
           npm install --global yarn
-          yarn install
+          cd ${COMBO_HOME} && yarn install
 
       # Cloning Dokuwiki
       - name: Checkout Dokuwiki

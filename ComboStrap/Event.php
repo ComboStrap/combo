@@ -30,8 +30,9 @@ class Event
     public static function dispatchEvent($maxEvent = 10)
     {
 
-        $sqlite = Sqlite::createOrGetBackendSqlite();
-        if ($sqlite === null) {
+        try {
+            $sqlite = Sqlite::createOrGetBackendSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
             LogUtility::msg("Sqlite is mandatory for asynchronous event");
             return;
         }

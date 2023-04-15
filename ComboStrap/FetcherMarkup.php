@@ -391,10 +391,17 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                  * Computer are hard
                  * At the beginning there is no markup path
                  * We may get this error then
+                 *
                  * We don't allow on test
                  */
                 if (PluginUtility::isTest()) {
-                    LogUtility::error("The metadata path should be known. " . $e->getMessage(), self::CANONICAL, $e);
+                    /**
+                     * The first edit, the page does not exists
+                     */
+                    $executingAction = ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction();
+                    if (!in_array($executingAction, [ExecutionContext::EDIT_ACTION, ExecutionContext::PREVIEW_ACTION])) {
+                        LogUtility::error("The metadata path should be known. " . $e->getMessage(), self::CANONICAL, $e);
+                    }
                 }
             }
         }

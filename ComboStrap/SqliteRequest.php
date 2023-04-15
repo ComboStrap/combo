@@ -77,7 +77,7 @@ class SqliteRequest
             $requestType = "Query Parametrized"; // delete, insert, update, query
         }
 
-        if($this->statement!==null){
+        if ($this->statement !== null) {
             $res = $this->sqlitePlugin->getAdapter()->getDb()->exec($this->statement);
             $requestType = "statement";
         }
@@ -89,6 +89,11 @@ class SqliteRequest
         if ($res === false) {
             $message = $this->getErrorMessage();
             throw new ExceptionCompile("Error in the $requestType. Message: {$message}");
+        }
+
+        if((!$res instanceof \PDOStatement)){
+            $message = $this->getErrorMessage();
+            throw new ExceptionCompile("Error in the $requestType. res is not a PDOStatement but as the value ($res). Message: {$message}");
         }
 
         $this->result = new SqliteResult($this, $res);
@@ -111,7 +116,7 @@ class SqliteRequest
         if ($errorCode === '0000') {
             $message = ("No rows were deleted or updated");
         }
-        $errorInfoAsString = implode(", ",$errorInfo);
+        $errorInfoAsString = implode(", ", $errorInfo);
         return "$message. : {$errorInfoAsString}";
     }
 

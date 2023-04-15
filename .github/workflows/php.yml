@@ -79,4 +79,5 @@ jobs:
       # with verbose, you see the configuration file used at the beginning
       - name: Test
         run: |
-          cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
+          cd _test 
+          phpunit.phar --stderr --group plugin_combo --verbose --debug --bootstrap ../${COMBO_HOME}/_test/bootstrap.php

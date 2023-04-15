@@ -184,7 +184,8 @@ class TagAttributes
         "href",
         "rel", // anchor
         "name", // iframe
-        "frameborder" // iframe
+        "frameborder", // iframe
+        "target" // a
     ];
 
     /**

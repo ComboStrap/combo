@@ -34,7 +34,16 @@ class SqliteResult
 
     public function close(): SqliteResult
     {
-        $this->sqlitePlugin->res_close($this->res);
+        /**
+         * $this->res is a number in CI
+         *
+         * We get:
+         * Error: Call to a member function closeCursor() on int
+         * /home/runner/work/combo/combo/lib/plugins/sqlite/classes/adapter_pdosqlite.php:125
+         */
+        if ($this->res instanceof \PDOStatement) {
+            $this->sqlitePlugin->res_close($this->res);
+        }
         $this->res = null;
         return $this;
     }
@@ -62,7 +71,7 @@ class SqliteResult
     public function getFirstRow()
     {
         $rows = $this->getRows();
-        if(sizeof($rows)>=1){
+        if (sizeof($rows) >= 1) {
             return $rows[0];
         }
         return [];

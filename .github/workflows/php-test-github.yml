@@ -62,12 +62,10 @@ jobs:
         with:
           node-version: latest
       # Yarn
-      # --check-cache is for zero install model, equivavlent to npm ci
-      # https://yarnpkg.com/cli/install
       - name: Yarn install
         run: |
           npm install --global yarn
-          yarn install --immutable --immutable-cache --check-cache
+          yarn install
 
       # Cloning Dokuwiki
       - name: Checkout Dokuwiki
@@ -94,6 +92,10 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
         working-directory: .
         shell: bash
+
+      # Get the list of locales
+      - name: Installed Locale
+        run: locale -a
 
       # with verbose, you see the configuration file used at the beginning
       - name: Test

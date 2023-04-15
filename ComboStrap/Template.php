@@ -75,7 +75,7 @@ class Template
                 } else {
                     $variable = trim(substr($part, 1));
                 }
-                if (isset($this->_data[$variable])) {
+                if (array_key_exists($variable, $this->_data)) {
                     $value = $this->_data[$variable];
                 } else {
                     LogUtility::warning("The variable ($variable) was not found in the data and has not been replaced", self::CANONICAL);

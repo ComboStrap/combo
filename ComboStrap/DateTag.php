@@ -53,7 +53,10 @@ class DateTag
                 }
                 $newLocale = setlocale(LC_TIME, $lang, $derivedLocale);
                 if ($newLocale === false) {
-                    throw new ExceptionBadSyntax("The language ($lang) is not available as locale on the server. You can't then format the value ($date) in this language.");
+                    $newLocale = setlocale(LC_TIME, $lang);
+                    if ($newLocale === false) {
+                        throw new ExceptionBadSyntax("The language ($lang) / locale ($derivedLocale) is not available as locale on the server. You can't then format the value ($date) in this language.");
+                    }
                 }
             }
             $date = syntax_plugin_combo_variable::replaceVariablesWithValuesFromContext($date);

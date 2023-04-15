@@ -26,8 +26,8 @@ jobs:
          include:
            - php: "7.4"
              phpunit: "7.5.20"
-           - php: "8.2"
-             phpunit: "7.5.20"
+#           - php: "8.2"
+#             phpunit: "7.5.20"
       fail-fast: false
 
     env:

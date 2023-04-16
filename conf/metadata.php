@@ -41,6 +41,7 @@ use ComboStrap\TagAttribute\Shadow;
 use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
 use ComboStrap\SvgImageLink;
+use ComboStrap\TemplateSlot;
 
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -414,4 +415,8 @@ $meta[SiteConfig::REM_CONF] = array('numeric');
 $themes = TemplateEngine::getThemes();
 $meta[TemplateEngine::CONF_THEME] = array('multichoice', '_choices' => $themes);
 
-
+/**
+ * Slot
+ */
+$meta[TemplateSlot::CONF_PAGE_HEADER_NAME] = array("string");
+$meta[TemplateSlot::CONF_PAGE_FOOTER_NAME] = array("string");

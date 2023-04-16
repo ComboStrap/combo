@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/../vendor/autoload.php');
+
 use ComboStrap\DatabasePageRow;
 use ComboStrap\WikiPath;
 use ComboStrap\ExceptionNotFound;

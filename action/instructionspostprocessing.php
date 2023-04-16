@@ -1,5 +1,6 @@
 <?php
 
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionNotFound;

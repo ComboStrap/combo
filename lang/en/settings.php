@@ -39,6 +39,7 @@ use ComboStrap\TagAttribute\Shadow;
 use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
 use ComboStrap\SvgImageLink;
+use ComboStrap\TemplateSlot;
 
 
 /**
@@ -325,3 +326,10 @@ $lang[Identity::CONF_DESIGNER_GROUP_NAME] = PluginUtility::getDocumentationHyper
 
 
 $lang[AdTag::CONF_IN_ARTICLE_ENABLED] = PluginUtility::getDocumentationHyperLink(AdTag::CANONICAL,"Ad - Turn on or off the ad features");
+
+/**
+ * Template
+ */
+$lang[TemplateSlot::CONF_PAGE_HEADER_NAME] = PluginUtility::getDocumentationHyperLink("template","The name of the page header slot");
+$lang[TemplateSlot::CONF_PAGE_FOOTER_NAME] = PluginUtility::getDocumentationHyperLink("template","The name of the page footer slot");
+

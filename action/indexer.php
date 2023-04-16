@@ -11,11 +11,11 @@
  *
  */
 
+require_once(__DIR__ . '/../vendor/autoload.php');
+
 use ComboStrap\Console;
-use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;

@@ -28,8 +28,8 @@ class TemplateSlot
     public const MAIN_HEADER_ID = "main-header";
     public const PAGE_MAIN_ID = "page-main";
     public const CONF_PAGE_MAIN_SIDEKICK_NAME_DEFAULT = Site::SLOT_MAIN_SIDE_NAME;
-    public const CONF_PAGE_HEADER_NAME = "headerSlotPageName";
-    public const CONF_PAGE_FOOTER_NAME = "footerSlotPageName";
+    public const CONF_PAGE_HEADER_NAME = "combo-conf-008";
+    public const CONF_PAGE_FOOTER_NAME = "combo-conf-009";
     public const CONF_PAGE_HEADER_NAME_DEFAULT = "slot_header";
     public const CONF_PAGE_FOOTER_NAME_DEFAULT = "slot_footer";
     public const CONF_PAGE_MAIN_SIDEKICK_NAME = "sidekickSlotPageName";

@@ -483,3 +483,10 @@ $conf['combo-conf-005'] = 'default';
  * {@link \ComboStrap\Tag\AdTag::CONF_IN_ARTICLE_ENABLED}
  */
 $conf['combo-conf-007'] = 0;
+
+/**
+ * {@link \ComboStrap\TemplateSlot::CONF_PAGE_HEADER_NAME
+ * {@link \ComboStrap\TemplateSlot::CONF_PAGE_HEADER_NAME
+ */
+$conf['combo-conf-008'] = 'slot_header';
+$conf['combo-conf-009'] = 'slot_footer';

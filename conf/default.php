@@ -20,19 +20,27 @@
  */
 
 
+use ComboStrap\BrandingColors;
 use ComboStrap\Canonical;
-use ComboStrap\Icon;
-use ComboStrap\Metadata;
+use ComboStrap\ContainerTag;
+use ComboStrap\IconDownloader;
+use ComboStrap\Identity;
+use ComboStrap\LazyLoad;
+use ComboStrap\MetadataFrontmatterStore;
+use ComboStrap\Outline;
 use ComboStrap\PageType;
-use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
-use ComboStrap\Region;
+use ComboStrap\Prism;
+use ComboStrap\Meta\Field\Region;
+use ComboStrap\SiteConfig;
+use ComboStrap\Snippet;
+use ComboStrap\Tag\RelatedTag;
 
 
 /**
  * Related UI components
- * {@link syntax_plugin_combo_related::MAX_LINKS_CONF}
- * {@link syntax_plugin_combo_related::MAX_LINKS_CONF_DEFAULT}
+ * {@link RelatedTag::MAX_LINKS_CONF}
+ * {@link RelatedTag::MAX_LINKS_CONF_DEFAULT}
  */
 $conf['maxLinks'] = 10;
 $conf['extra_pattern'] = '{{backlinks>.}}';
@@ -73,7 +81,7 @@ $conf['WeightFactorForStartPage'] = 3;
 $conf['WeightFactorForSameNamespace'] = 5;
 
 /**
- * See {@link UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT}
+ * See {@link RouterBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT}
  */
 $conf['BestEndPageMinimalScoreForAliasCreation'] = 2;
 
@@ -92,15 +100,15 @@ $conf['useCanonicalValueForGoogleAnalyticsPageView'] = 0;
 
 /**
  * Icon Namespace
- * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE}
- * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
+ * See {@link IconDownloader::CONF_ICONS_MEDIA_NAMESPACE}
+ * See {@link IconDownloader::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
  */
 $conf['icons_namespace'] = ":combostrap:icons";
 
 /**
  * Default library
- * See {@link Icon::CONF_DEFAULT_ICON_LIBRARY}
- * See {@link Icon::CONF_DEFAULT_ICON_LIBRARY_DEFAULT}
+ * See {@link IconDownloader::CONF_DEFAULT_ICON_LIBRARY}
+ * See {@link IconDownloader::CONF_DEFAULT_ICON_LIBRARY_DEFAULT}
  */
 $conf['defaultIconLibrary'] = "mdi";
 
@@ -127,7 +135,7 @@ $conf['defaultBadgeAttributes'] = 'type="info" rounded="true"';
 
 /**
  * Ads
- * See {@link \ComboStrap\AdsUtility::CONF_IN_ARTICLE_PLACEHOLDER
+ * See {@link \ComboStrap\Tag\AdTag::CONF_IN_ARTICLE_PLACEHOLDER
  */
 $conf['AdsInArticleShowPlaceholder'] = 0;
 
@@ -169,37 +177,35 @@ $conf['mandatoryQualityRules'] = 'words_min,internal_backlinks_min,internal_link
 
 
 /**
- * {@link action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING}
- * {@link action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING}
+ * {@link QualityMessageHandler::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING}
+ * {@link QualityMessageHandler::CONF_DISABLE_QUALITY_MONITORING}
  */
 $conf['excludedQualityRulesFromDynamicMonitoring'] = 'words_by_section_avg_min,words_by_section_avg_max';
 $conf['disableDynamicQualityMonitoring'] = 0;
 
 /**
  * Link
- * Class in link {@link \ComboStrap\MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME}
- * Preview on link {@link \ComboStrap\MarkupRef::CONF_PREVIEW_LINK}
+ * Class in link {@link \ComboStrap\LinkMarkup::CONF_USE_DOKUWIKI_CLASS_NAME}
+ * Preview on link {@link \ComboStrap\LinkMarkup::CONF_PREVIEW_LINK}
  * Enable {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
 $conf['disableLink'] = 0;
 $conf['previewLink'] = 0;
 
-/**
- * Twitter
- * {@link action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE}
- */
-$conf['defaultTwitterImage'] = ":apple-touch-icon.png";
+
 $conf['twitterSiteHandle'] = "";
 $conf['twitterSiteId'] = "";
 $conf['twitter:dnt'] = "on";
+/**
+ * {@link \ComboStrap\BlockquoteTag::CONF_TWEET_WIDGETS_THEME_DEFAULT}
+ */
 $conf['twitter:widgets:theme'] = "light";
+/**
+ * {@link \ComboStrap\BlockquoteTag::CONF_TWEET_WIDGETS_BORDER_DEFAULT}
+ */
 $conf['twitter:widgets:border-color'] = "#55acee";
 
-/**
- * Page Image {@link Metadata::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
- */
-$conf['disableFirstImageAsPageImage'] = 0;
 
 /**
  * Facebook
@@ -229,7 +235,7 @@ $conf["defaultPageType"] = "article";
 
 /**
  * Default shadow elevation
- * {@link \ComboStrap\Shadow::CONF_DEFAULT_VALUE}
+ * {@link \ComboStrap\TagAttribute\Shadow::CONF_DEFAULT_VALUE}
  */
 $conf["defaultShadowLevel"] = "medium";
 
@@ -240,27 +246,21 @@ $conf["defaultShadowLevel"] = "medium";
 $conf["svgLazyLoadEnable"] = 1;
 
 /**
- * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_SVG_INJECTION_ENABLE}
+ * Injection {@link \ComboStrap\SvgImageLink::CONF_SVG_INJECTION_ENABLE}
  */
-$conf["svgInjectionEnable"] = 1;
+$conf["svgInjectionEnable"] = 0;
 
 /**
  * Svg Optimization Disable {@link \ComboStrap\SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE}
  */
 $conf["svgOptimizationEnable"] = 1;
 
-/**
- * Svg Inline Max size {@link \ComboStrap\SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG}
- * 2kb is too small for icon.
- * For instance, the et:twitter is 2,600b
- */
-$conf["svgMaxInlineSizeKb"] = 3;
 
 /**
  * The name of the group of user that can upload svg
- * {@link action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME}
+ * {@link Identity::CONF_DESIGNER_GROUP_NAME}
  */
-$conf["svgUploadGroupName"] = "";
+$conf["combo-conf-006"] = "";
 
 /**
  * Svg Optimization
@@ -330,17 +330,17 @@ $conf["floatDefaultBreakpoint"] = "sm";
 
 /**
  * Outline Numbering
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX}
- * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_ENABLE}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_PREFIX}
+ * {@link Outline::CONF_OUTLINE_NUMBERING_SUFFIX}
  */
-$conf["outlineNumberingEnable"] = 0;
+$conf["outlineNumberingEnable"] = 1;
 $conf["outlineNumberingCounterStyleLevel2"] = "decimal";
 $conf["outlineNumberingCounterStyleLevel3"] = "decimal";
 $conf["outlineNumberingCounterStyleLevel4"] = "decimal";
@@ -389,7 +389,7 @@ $conf["enableEnhancedLinkWizard"] = 1;
 $conf["pageUrlType"] = "page path";
 
 /**
- * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT}
+ * {@link MetadataFrontmatterStore::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT}
  * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT}
  */
 $conf["enableFrontMatterOnSubmit"] = 0;
@@ -418,5 +418,68 @@ $conf["brandingColorInheritanceEnable"] = 1;
 $conf["primaryColor"] = "";
 $conf["secondaryColor"] = "";
 
+/**
+ * {@link ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF}
+ */
+$conf["defaultLayoutContainer"] = "sm";
+
+/**
+ * Enable templating
+ * See {@link SiteConfig::CONF_ENABLE_THEME_SYSTEM}
+ */
+$conf["combo-conf-001"] = 1;
 
 
+/**
+ * CDN for library ?
+ * See {@link Snippet::CONF_USE_CDN}
+ */
+$conf['useCDN'] = 1;
+
+/**
+ * {@link Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET}
+ */
+$conf["bootstrapVersionStylesheet"] = "5.0.1 - bootstrap";
+
+/**
+ * {@link action_plugin_combo_snippetsbootstrap::CONF_PRELOAD_CSS}
+ */
+$conf['preloadCss'] = 0;
+
+/**
+ * {@link FetcherRailBar::CONF_PRIVATE_RAIL_BAR}
+ */
+$conf['privateRailbar'] = 0;
+/**
+ * {@link FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR}
+ */
+$conf['breakpointRailbar'] = "large";
+
+/**
+ * @see {@link action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU}
+ * @See {@link action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT}
+ */
+$conf['jQueryDoku'] = 0;
+$conf["disableBackendJavascript"] = 0;
+
+
+/**
+ * {@link \ComboStrap\SiteConfig::REM_CONF}
+ */
+$conf['combo-conf-002'] = 16;
+
+/**
+ * {@link SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT}
+ */
+$conf['combo-conf-003'] = 4;
+
+/**
+ * {@link \ComboStrap\TemplateEngine::CONF_THEME}
+ * {@link \ComboStrap\TemplateEngine::CONF_THEME_DEFAULT}
+ */
+$conf['combo-conf-005'] = 'default';
+
+/**
+ * {@link \ComboStrap\Tag\AdTag::CONF_IN_ARTICLE_ENABLED}
+ */
+$conf['combo-conf-007'] = 0;

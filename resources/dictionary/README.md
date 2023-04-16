@@ -9,3 +9,6 @@ This directory contains all dictionary (ie data to be looked up)
   * [fad](./fad-icons.json) - list of [fad svg](https://github.com/fefanto/fontaudio/tree/master/svgs) in iconify form
   * [icomoon](./icomoon-icons.json) - list of [icomoon svg](https://github.com/Keyamoon/IcoMoon-Free/tree/master/SVG)
   * [cib](./cib-icons.json) - list of [CoreUI Brands icons](https://github.com/coreui/coreui-icons/tree/master/svg/brand)
+  * [Health Icon](./healthicons-icons.json) - list of [HealthIcon](https://raw.githubusercontent.com/resolvetosavelives/healthicons/main/public/icons/meta-data.json)
+
+The processing is in the `tabulify` repo.

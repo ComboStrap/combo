@@ -4,44 +4,49 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataTabular;
+
 class References extends MetadataTabular
 {
 
 
-    public static function createFromResource(Page $page)
+    const PROPERTY_NAME = "references";
+
+    public static function createFromResource(MarkupPath $page)
     {
         return (new References())
             ->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The link of the page that references another resources";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "References";
     }
 
     public static function getName(): string
     {
-        return "references";
+        return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
 
-    public function getDefaultValue()
+    public function getDefaultValue(): array
     {
-        return null;
+        return [];
     }
 
     public function getUidClass(): ?string
@@ -49,7 +54,7 @@ class References extends MetadataTabular
         return Reference::class;
     }
 
-    public function getChildrenClass(): ?array
+    static public function getChildrenClass(): array
     {
         return [Reference::class];
     }
@@ -61,17 +66,18 @@ class References extends MetadataTabular
             LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");
             return $this;
         }
-        if ($metadataStore instanceof MetadataDokuWikiStore) {
+        if ($metadataStore->isDokuWikiStore()) {
 
-            $relation = $metadataStore->getCurrentFromName("relation");
-            if ($relation !== null) {
+            $relation = $metadataStore->getFromName("relation");
+            if (is_array($relation)) {
 
                 $this->wasBuild = true;
                 $referencesArray = $relation["references"];
-                if($referencesArray!==null) {
-                    $references = array_keys($referencesArray);
+                if ($referencesArray !== null) {
+                    $referencesArray = array_keys($referencesArray);
                 }
-                $this->buildFromStoreValue($references);
+                $this->setFromStoreValueWithoutException($referencesArray);
+
                 return $this;
 
             }

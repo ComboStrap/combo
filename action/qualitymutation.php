@@ -3,21 +3,23 @@
 use ComboStrap\CacheLog;
 use ComboStrap\CacheManager;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;
 use ComboStrap\LowQualityPageOverwrite;
-use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\MarkupPath;
+use ComboStrap\MetadataMutation;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
 
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
- * Delete the backlinks when there is a quality mutation
+ * Delete the backlinks when there is a page quality mutation
  */
 class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
 {
@@ -27,6 +29,14 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
     const CANONICAL = "low_quality";
     const DESC = "desc";
 
+    public static function getQualityMetas(): array
+    {
+        return [
+            LowQualityCalculatedIndicator::getPersistentName(),
+            LowQualityPageOverwrite::getPersistentName()
+        ];
+    }
+
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -35,7 +45,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
         /**
          * create the async event
          */
-        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_quality_mutation', array());
+        $controller->register_hook(MetadataMutation::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'create_quality_mutation', array());
 
         /**
          * process the Async event
@@ -52,7 +62,7 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
 
         $data = $event->data;
         $path = $data[PagePath::getPersistentName()];
-        $page = Page::createPageFromQualifiedPath($path);
+        $page = MarkupPath::createPageFromAbsoluteId($path);
 
         if (!$page->getCanBeOfLowQuality()) {
             return;
@@ -63,13 +73,24 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          *
          */
         foreach ($page->getBacklinks() as $backlink) {
-            $htmlDocument = $backlink->getHtmlDocument();
+            try {
+                $htmlDocument = $backlink->createHtmlFetcherWithItselfAsContextPath();
+            } catch (ExceptionNotExists $e) {
+                continue;
+            }
+            try {
+                $wikiId = $backlink->getWikiId();
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::internalError("Backlink should be only for wiki path");
+                continue;
+            }
             $desc = $data[self::DESC];
             CacheLog::deleteCacheIfExistsAndLog(
                 $htmlDocument,
                 self::QUALITY_MUTATION_EVENT_NAME,
-                "The {$backlink->getDokuwikiId()} of {$path} had its HTML cache deleted ($desc)."
+                "The {$wikiId} of {$path} had its HTML cache deleted ($desc)."
             );
+
         }
     }
 
@@ -88,11 +109,11 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $variableName = $data["name"];
-        if (!(in_array($variableName, [LowQualityCalculatedIndicator::getPersistentName(), LowQualityPageOverwrite::getPersistentName()]))) {
+        if (!(in_array($variableName, self::getQualityMetas()))) {
             return;
         }
 
-        $newValue = $data[MetadataDokuWikiStore::NEW_VALUE_ATTRIBUTE];
+        $newValue = $data[MetadataMutation::NEW_VALUE_ATTRIBUTE];
         $path = $data[PagePath::getPersistentName()];
         Event::createEvent(
             self::QUALITY_MUTATION_EVENT_NAME,

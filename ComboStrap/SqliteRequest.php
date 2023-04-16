@@ -56,39 +56,49 @@ class SqliteRequest
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function execute(): SqliteResult
     {
         $res = null;
         $requestType = "";
+        $queryExecuted="";
         if ($this->data !== null && $this->tableName !== null) {
             $res = $this->sqlitePlugin->storeEntry($this->tableName, $this->data);
             $requestType = "Upsert";
+            $queryExecuted = "upsert of table $this->tableName";
         }
 
         if ($this->query !== null) {
             $res = $this->sqlitePlugin->query($this->query);
             $requestType = "Query Simple";
+            $queryExecuted = $this->query;
         }
 
         if ($this->queryParametrized !== null) {
             $res = $this->sqlitePlugin->getAdapter()->query($this->queryParametrized);
             $requestType = "Query Parametrized"; // delete, insert, update, query
+            $queryExecuted = $this->queryParametrized;
         }
 
-        if($this->statement!==null){
+        if ($this->statement !== null) {
             $res = $this->sqlitePlugin->getAdapter()->getDb()->exec($this->statement);
             $requestType = "statement";
+            $queryExecuted = $this->statement;
         }
 
         if ($res === null) {
-            throw new ExceptionCombo("No Sql request was found to be executed");
+            throw new ExceptionCompile("No Sql request was found to be executed");
         }
 
         if ($res === false) {
             $message = $this->getErrorMessage();
-            throw new ExceptionCombo("Error in the $requestType. Message: {$message}");
+            throw new ExceptionCompile("Error in the $requestType. Message: {$message}");
+        }
+
+        if((!$res instanceof \PDOStatement)){
+            $message = $this->getErrorMessage();
+            throw new ExceptionCompile("Error in the request type `$requestType`. res is not a PDOStatement but as the value ($res). Message: {$message}, Query: {$queryExecuted}");
         }
 
         $this->result = new SqliteResult($this, $res);
@@ -99,13 +109,11 @@ class SqliteRequest
     {
         $adapter = $this->sqlitePlugin->getAdapter();
         if ($adapter === null) {
-            LogUtility::msg("The database adapter is null, no error info can be retrieved");
-            return "";
+            throw new ExceptionRuntimeInternal("The database adapter is null, no error info can be retrieved");
         }
         $do = $adapter->getDb();
         if ($do === null) {
-            LogUtility::msg("The database object is null, it seems that the database connection has been closed");
-            return "";
+            throw new ExceptionRuntimeInternal("The database object is null, it seems that the database connection has been closed. Are you in two differents execution context ?");
         }
         $errorInfo = $do->errorInfo();
         $message = "";
@@ -113,7 +121,7 @@ class SqliteRequest
         if ($errorCode === '0000') {
             $message = ("No rows were deleted or updated");
         }
-        $errorInfoAsString = implode(", ",$errorInfo);
+        $errorInfoAsString = implode(", ", $errorInfo);
         return "$message. : {$errorInfoAsString}";
     }
 

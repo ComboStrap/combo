@@ -1,0 +1,12 @@
+<form action="{{ action }}"
+      data-success-content="{{ success-content }}"
+      data-success-header="Hurray!"
+>
+    <label for="{{ email-id }}" class="visually-hidden">Enter your email</label>
+    <input type="hidden" name="{{ list-name }}" value="{{ list-value }}"/>
+    <input type="email" id="{{ email-id }}" name="{{ email-name }}" class="form-control" placeholder="Your email"
+           autocomplete="email" required="required"/>
+    {{!--The variable are needed for bootstrap prior to 5.1.3--}}
+    <button class="btn btn-primary" type="submit">Subscribe</button>
+
+</form>

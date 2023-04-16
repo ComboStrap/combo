@@ -8,9 +8,9 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
+use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) die();
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
@@ -84,7 +84,7 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
     public function connectTo($mode)
     {
         // This define the DOKU_LEXER_ENTER state
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
     }
@@ -111,7 +111,7 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
      * @param Doku_Handler $handler
      * @return array
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler)
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
     {
         switch ($state) {
 
@@ -120,22 +120,19 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
                 $parameters = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $parameters);
-
-                break;
+                    PluginUtility::ATTRIBUTES => $parameters
+                );
 
             case DOKU_LEXER_UNMATCHED :
 
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
-                break;
 
             case DOKU_LEXER_EXIT:
 
                 return array(PluginUtility::STATE => $state);
-                break;
 
         }
-
+        return [];
     }
 
     /**

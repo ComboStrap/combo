@@ -1,15 +1,15 @@
 <?php
 
 use ComboStrap\CacheManager;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\HtmlDocument;
+use ComboStrap\ExceptionBadState;
+use ComboStrap\ExceptionNotExists;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherMarkup;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\RenderUtility;
-use ComboStrap\SnippetManager;
+use ComboStrap\SnippetSystem;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  *
@@ -23,9 +23,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     const CLASS_SNIPPET_IN_CONTENT = "snippet-content-combo";
 
     /**
-     * @var bool - to trace if the header output was called
+     * To known if we needs to put all snippet in the content
+     * or not
      */
-    private $headerOutputWasCalled = false;
+    const HEAD_EVENT_WAS_CALLED = "head_event_was_called";
+    const CANONICAL = "snippets";
+
 
     function __construct()
     {
@@ -57,140 +60,95 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('RENDERER_CONTENT_POSTPROCESS', 'AFTER', $this, 'componentSnippetContent', array());
 
-        /**
-         * To reset the value
-         */
-        $controller->register_hook('DOKUWIKI_DONE', 'BEFORE', $this, 'close', array());
-
 
     }
 
-    /**
-     * Reset variable
-     * Otherwise in test, when we call it two times, it just fail
-     */
-    function close()
-    {
-
-        $this->headerOutputWasCalled = false;
-
-        /**
-         * Fighting the fact that in 7.2,
-         * there is still a cache
-         */
-        SnippetManager::reset();
-
-    }
 
     /**
-     * Dokuwiki has already a canonical methodology
-     * https://www.dokuwiki.org/canonical
+     *
+     * Add the snippets in the head
      *
      * @param $event
      */
     function componentSnippetHead($event)
     {
 
+        /**
+         * Advertise that this event has occurred
+         * In a strap template, this event is last because head are added after content rendering
+         * In another template, this event is first
+         * The function {@link action_plugin_combo_snippets::componentSnippetContent()} used it to determine if
+         * the snippets should be added into the content
+         */
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->setRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED, true);
 
-        global $ID;
-        if (empty($ID)) {
 
-            global $_SERVER;
-            $scriptName = $_SERVER['SCRIPT_NAME'];
 
+        /**
+         * For each processed slot in the execution, retrieve the snippets
+         */
+        $cacheReporters = CacheManager::getFromContextExecution()->getCacheResults();
+        foreach ($cacheReporters as $cacheReporter) {
+
+            foreach ($cacheReporter->getResults() as $report) {
+
+                if ($report->getMode() !== FetcherMarkup::XHTML_MODE) {
+                    continue;
+                }
+                $markupPath = $report->getMarkupPath();
+                try {
+                    $fetcherMarkupForMarkup = $markupPath->createHtmlFetcherWithRequestedPathAsContextPath();
+                } catch (ExceptionNotExists $e) {
+                    LogUtility::internalError("The executing markup path ($markupPath) should exists because it was executed.");
+                    continue;
+                }
+                $fetcherMarkupForMarkup->loadSnippets();
+            }
+
+        }
+
+
+        $snippetSystem = SnippetSystem::getFromContext();
+
+        $snippets = $snippetSystem->getSnippets();
+        foreach ($snippets as $snippet) {
             /**
-             * If this is an ajax call, return
-             * only if this not from webcode
+             * In a dokuwiki standard template, head is called
+             * first, then the content, to not add the snippet in the head and in the content
+             * there is an indicator that tracks if the output was asked
              */
-            if (strpos($scriptName, "/lib/exe/ajax.php") !== false) {
-                global $_REQUEST;
-                $call = $_REQUEST['call'];
-                if ($call != action_plugin_combo_webcode::CALL_ID) {
-                    return;
+            if (!$snippet->hasHtmlOutputAlreadyOccurred()) {
+                try {
+                    $tag = $snippet->toDokuWikiArray();
+                } catch (\Exception $e) {
+                    LogUtility::error("We couldn't get the attributes of the snippet ($snippet). It has been skipped. Error: {$e->getMessage()}", self::CANONICAL);
+                    continue;
                 }
-            } else if (!(strpos($scriptName, "/lib/exe/detail.php") !== false)) {
-                /**
-                 * Image page has an header and footer that may needs snippet
-                 * We return only if this is not a image/detail page
-                 */
-                return;
-            }
-        }
-
-        /**
-         * Advertise that the header output was called
-         * If the user is using another template
-         * than strap that does not put the component snippet
-         * in the head
-         * Used in
-         */
-        $this->headerOutputWasCalled = true;
-
-        $snippetManager = PluginUtility::getSnippetManager();
-
-        /**
-         * For each processed slot in the page, retrieve the snippets
-         */
-        $cacheReporters = CacheManager::getOrCreate()->getCacheResults();
-        if ($cacheReporters !== null) {
-            foreach ($cacheReporters as $cacheReporter) {
-
-                foreach ($cacheReporter->getResults() as $report) {
-
-                    if ($report->getMode() !== HtmlDocument::mode) {
-                        continue;
-                    }
-
-                    $slotId = $report->getSlotId();
-                    Page::createPageFromId($slotId)
-                        ->getHtmlDocument()
-                        ->loadSnippets();
-
-                }
-
-
-            }
-        }
-        /**
-         * Snippets
-         * (Slot and request snippets)
-         */
-        try {
-            $allSnippets = $snippetManager->getAllSnippetsToDokuwikiArray();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error: We couldn't add the snippets in the head. Error: {$e->getMessage()}");
-            return;
-        }
-        foreach ($allSnippets as $tagType => $tags) {
-
-            foreach ($tags as $tag) {
+                $tagType = $snippet->getHtmlTag();
                 $event->data[$tagType][] = $tag;
             }
 
         }
 
-        $snippetManager->close();
 
     }
 
     /**
-     * Used if the template does not run the content
-     * before the calling of the header as strap does.
      *
-     * In this case, the {@link \ComboStrap\SnippetManager::close()} has
-     * not run, and the snippets are still in memory.
+     * This function store the snippets in the HTML content when needed
+     * (mostly admin page or any other template than strap ...)
      *
-     * We store them in the HTML and they
-     * follows then the HTML cache of DokuWiki
+     * This event/function is called first because {@link \ComboStrap\FetcherPage} parse the main markup first (It's the driver)
+     *
+     * In any other template, they follows the creation of the page, the
+     * header are called first, then the content
+     *
+     *
      * @param $event
      */
     function componentSnippetContent($event)
     {
-
-        $format = $event->data[0];
-        if ($format !== "xhtml") {
-            return;
-        }
 
         /**
          * Add snippet in the content
@@ -198,74 +156,74 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          *  - if this is not a page rendering (ie an admin rendering)
          * for instance, the upgrade plugin call {@link p_cached_output()} on local file
          */
+
+        /**
+         * Dynamic rendering call this event
+         * We don't add any component at this moment
+         */
         global $ACT;
-        if ($ACT === RenderUtility::DYNAMIC_RENDERING) {
+        if ($ACT === FetcherMarkup::MARKUP_DYNAMIC_EXECUTION_NAME) {
             return;
         }
-        $putSnippetInContent =
-            $this->headerOutputWasCalled
-            ||
-            ($ACT !== "show" && $ACT !== null); // admin page rendering
-        if ($putSnippetInContent) {
 
-            $snippetManager = PluginUtility::getSnippetManager();
-            $xhtmlContent = &$event->data[1];
-            try {
-                $snippets = $snippetManager->getAllSnippetsToDokuwikiArray();
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("Error: We couldn't add the snippets in the content. Error: {$e->getMessage()}");
+
+        $format = $event->data[0];
+        if ($format !== "xhtml") {
+            return;
+        }
+
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        try {
+            $headEventWasCalled = $executionContext->getRuntimeBoolean(self::HEAD_EVENT_WAS_CALLED);
+        } catch (ExceptionNotFound $e) {
+            $headEventWasCalled = false;
+        }
+
+        /**
+         * Put snippet in the content
+         * if this is not a show (ie Admin page rendering)
+         *
+         * And if the header output was already called
+         * (case that the template is not strap)
+         */
+        $putAllSnippetsInContent =
+            $headEventWasCalled === true
+            ||
+            ($ACT !== "show" && $ACT !== null);
+        if (!$putAllSnippetsInContent) {
+            return;
+        }
+
+        $snippetManager = PluginUtility::getSnippetManager();
+        $xhtmlContent = &$event->data[1];
+        /**
+         * What fucked up is fucked up
+         *
+         * In admin page, as we don't know the source of the processing text
+         * (It may be a partial (ie markup) to create the admin page
+         * We may have several times the same global request slot
+         *
+         * We can't make the difference.
+         *
+         * For now, we add therefore only the snippet for the slots.
+         * The snippet for the request should have been already added with the
+         * DOKUWIKI_STARTED hook
+         */
+
+        $snippets = $snippetManager->getSnippets();
+        if (sizeof($snippets) > 0) {
+            $class = self::CLASS_SNIPPET_IN_CONTENT;
+            $htmlForSlots = $snippetManager->toHtmlForSlotSnippets();
+            if (empty($htmlForSlots)) {
                 return;
             }
-            if (sizeof($snippets) > 0) {
-
-                $class = self::CLASS_SNIPPET_IN_CONTENT;
-                $xhtmlContent .= "<div class=\"$class\">\n";
-                foreach ($snippets as $htmlElement => $tags) {
-
-                    foreach ($tags as $tag) {
-                        $xhtmlContent .= DOKU_LF . "<$htmlElement";
-                        $attributes = "";
-                        $content = null;
-
-                        /**
-                         * This code runs in editing mode
-                         * or if the template is not strap
-                         * No preload is then supported
-                         */
-                        if ($htmlElement === "link") {
-                            $relValue = $tag["rel"];
-                            $relAs = $tag["as"];
-                            if ($relValue === "preload") {
-                                if ($relAs === "style") {
-                                    $tag["rel"] = "stylesheet";
-                                    unset($tag["as"]);
-                                }
-                            }
-                        }
-
-                        /**
-                         * Print
-                         */
-                        foreach ($tag as $attributeName => $attributeValue) {
-                            if ($attributeName !== "_data") {
-                                $attributes .= " $attributeName=\"$attributeValue\"";
-                            } else {
-                                $content = $attributeValue;
-                            }
-                        }
-                        $xhtmlContent .= "$attributes>";
-                        if (!empty($content)) {
-                            $xhtmlContent .= $content;
-                        }
-                        $xhtmlContent .= "</$htmlElement>" . DOKU_LF;
-                    }
-
-                }
-                $xhtmlContent .= "</div>\n";
-
-            }
-
-            $snippetManager->close();
+            $htmlForSlotsWrapper = <<<EOF
+<div class="$class">
+    {$htmlForSlots}
+</div>
+EOF;
+            $xhtmlContent .= $htmlForSlotsWrapper;
 
         }
 

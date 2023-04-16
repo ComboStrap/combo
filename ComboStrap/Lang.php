@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
 use dokuwiki\Cache\Cache;
 
 class Lang extends MetadataText
@@ -48,7 +50,12 @@ class Lang extends MetadataText
                 // Language about the data
                 $downloadUrl = "https://raw.githubusercontent.com/unicode-org/cldr-json/master/cldr-json/cldr-misc-modern/main/$langValue/layout.json";
 
-                $filePointer = @fopen($downloadUrl, 'r');
+                if (PluginUtility::isDevOrTest()) {
+                    // phpunit takes over and would catch and cache the error
+                    $filePointer = fopen($downloadUrl, 'r');
+                } else {
+                    $filePointer = @fopen($downloadUrl, 'r');
+                }
                 if ($filePointer != false) {
 
                     $numberOfByte = @file_put_contents($languageDataCache->cache, $filePointer);
@@ -61,7 +68,10 @@ class Lang extends MetadataText
 
                 } else {
 
-                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
+                    // fopen(): Unable to find the wrapper "https" - did you forget to enable it when you configured PHP?
+                    $error_get_last = error_get_last();
+                    $message = $error_get_last['message'];
+                    LogUtility::msg("The data for the language ($langValue) could not be downloaded at (<a href=\"$downloadUrl\">$langValue</a>). Error: " . $message, LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
 
                 }
             }
@@ -87,19 +97,61 @@ class Lang extends MetadataText
 
     }
 
-    public static function createForPage(Page $page)
+    public static function createForMarkup(MarkupPath $markup): Lang
     {
-        return (new Lang())
-            ->setResource($page);
+        $lang = new Lang();
+        $lang->setResource($markup);
+        return $lang;
     }
 
-    public function getTab(): ?string
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function createFromRequestedMarkup(): Lang
+    {
+        return self::createForMarkup(MarkupPath::createFromRequestedPage());
+    }
+
+    /**
+     * Set the direction of the text
+     * The global lang direction (not yet inside the Lang class)
+     * @param string $string
+     * @return void
+     */
+    public static function setDirection(string $string)
+    {
+        global $lang;
+        $lang["direction"] = $string;
+    }
+
+    public static function createFromValue(string $langValue): Lang
+    {
+        $lang = new Lang();
+        $lang->value = $langValue;
+        return $lang;
+    }
+
+    static public function getTab(): ?string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
+
+    /**
+     * @throws ExceptionCompile
      */
     public function setFromStoreValue($value): Metadata
     {
@@ -112,7 +164,7 @@ class Lang extends MetadataText
     /**
      * @param string|null $value
      * @return Metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
@@ -121,12 +173,12 @@ class Lang extends MetadataText
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The language of the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Language";
     }
@@ -136,23 +188,26 @@ class Lang extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
-    public function getDefaultValue()
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
         return Site::getLang();
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function validityCheck($value)
     {
@@ -160,14 +215,37 @@ class Lang extends MetadataText
             return;
         }
         if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-            throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", $this->getCanonical());
+            throw new ExceptionCompile("The lang value ($value) for the page ($this) does not have two letters", $this->getCanonical());
         }
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "lang";
     }
 
+    public function getDirection()
+    {
+        /**
+         * TODO: should be base on the page value
+         * Search PHP and CLDR
+         * https://punic.github.io/
+         * https://www.php.net/manual/en/book.intl.php
+         *
+         * Example:
+         * https://github.com/salarmehr/cosmopolitan
+         * use Salarmehr\Cosmopolitan\Cosmo;
+         *
+         * echo Cosmo::create('fa')->direction(); // rlt
+         * echo Cosmo::create('en')->direction(); // ltr
+         */
+        return Site::getLangDirection();
+    }
+
+
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
 
 }

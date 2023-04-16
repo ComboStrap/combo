@@ -1,82 +1,34 @@
 window.addEventListener('load', function () {
 
-    let searchBox = document.getElementById("internal-search-box");
-    let autoCompletionUlElement = searchBox.nextElementSibling;
-    const popperInstance = Popper.createPopper(
-        searchBox,
-        autoCompletionUlElement,
-        {
-            modifiers: [
-                {
-                    name: 'offset', // to be below the box-shadow on focus
-                    options: {
-                        offset: [0, 4],
-                    },
+
+    let getSuggestedPagesAsAnchor = async function (searchTerm) {
+
+        let formData = new URLSearchParams();
+        formData.append('call', 'combo');
+        formData.append('fetcher', 'page-search');
+        formData.append('q', searchTerm);
+        let response = await fetch(DOKU_BASE + 'lib/exe/ajax.php',
+            {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
                 },
-            ]
+            });
+        let htmlSuggestedPages = await response.json();
+        if (!Array.isArray(htmlSuggestedPages)) {
+            throw Error("The received suggest pages are not in a json array format");
         }
-    );
-
-    searchBox.addEventListener("input", debounce(
-        async function () {
-            await buildAutoCompletionList(this)
-        },
-        500
-    ));
-
-    searchBox.addEventListener("blur", function (event) {
-        let relatedTarget = event.relatedTarget;
-        if (relatedTarget === null) {
-            return;
+        let divContainer = document.createElement('div');
+        for (let suggestPage of htmlSuggestedPages) {
+            // Trim to never return a text node of whitespace as the result
+            divContainer.insertAdjacentHTML('beforeend',suggestPage.trim())
         }
-        let form = relatedTarget.closest("form");
-        if (form === null) {
-            return;
-        }
-        // Only if it's not a node of the search form
-        // ie deleting show will prevent click navigation from a page list suggestion
-        if (!form.classList.contains("search")) {
-            autoCompletionUlElement.classList.remove("show");
-        }
-    });
+        return [...divContainer.childNodes];
 
-
-let buildAutoCompletionList = async function (searchBox) {
-
-    let searchTerm = searchBox.value;
-    if (searchTerm.length < 3) {
-        return;
     }
-    let formData = new URLSearchParams();
-    formData.append('call', 'combo-search');
-    formData.append('q', searchTerm);
-    let response = await fetch(DOKU_BASE + 'lib/exe/ajax.php',
-        {
-            method: "POST",
-            body: formData,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-            },
-        });
-    let data = await response.json();
-    while (autoCompletionUlElement.firstChild) {
-        autoCompletionUlElement.firstChild.remove()
-    }
-    autoCompletionUlElement.classList.add("show");
-    popperInstance.update();
-    for (let index in data) {
-        if (!data.hasOwnProperty(index)) {
-            continue;
-        }
-        let anchor = data[index];
-        let li = document.createElement("li");
-        li.classList.add("dropdown-item");
-        li.setAttribute("tabindex", "0");
-        li.innerHTML = anchor;
-        autoCompletionUlElement.append(li);
-    }
+    combos.searchBox
+        .create("internal-search-box", getSuggestedPagesAsAnchor)
+        .init();
 
-}
-
-})
-;
+});

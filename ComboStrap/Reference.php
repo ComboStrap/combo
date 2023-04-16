@@ -3,6 +3,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataWikiPath;
+
 /**
  * Class Reference
  * @package ComboStrap
@@ -15,19 +18,18 @@ class Reference extends MetadataWikiPath
 {
 
 
-
-    public static function createFromResource(Page $page)
+    public static function createFromResource(MarkupPath $page)
     {
         return (new Reference())
             ->setResource($page);
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The path to the internal page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Reference Path";
     }
@@ -37,14 +39,19 @@ class Reference extends MetadataWikiPath
         return "reference";
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
+    }
+
+    static public function getDrive(): string
+    {
+        return WikiPath::MARKUP_DRIVE;
     }
 
 }

@@ -13,7 +13,6 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/PluginUtility.php');
 
 use helper_plugin_sqlite;
 use RuntimeException;
@@ -21,8 +20,6 @@ use RuntimeException;
 class Sqlite
 {
 
-    /** @var Sqlite[] $sqlite */
-    private static $sqlites;
 
     /**
      * Principal database
@@ -37,10 +34,15 @@ class Sqlite
 
     private static $sqliteVersion;
 
+
+    private helper_plugin_sqlite $sqlitePlugin;
+
     /**
-     * @var helper_plugin_sqlite
+     * @var SqliteRequest the actual request. If not closed, it will be close.
+     * Otherwise, it's not possible to delete the database file. See {@link self::deleteDatabasesFile()}
      */
-    private $sqlitePlugin;
+    private SqliteRequest $actualRequest;
+
 
     /**
      * Sqlite constructor.
@@ -55,18 +57,44 @@ class Sqlite
     /**
      *
      * @return Sqlite $sqlite
+     * @throws ExceptionSqliteNotAvailable
      */
-    public static function createOrGetSqlite($databaseName = self::MAIN_DATABASE_NAME): ?Sqlite
+    public static function createOrGetSqlite($databaseName = self::MAIN_DATABASE_NAME): Sqlite
     {
 
-        $sqlite = self::$sqlites[$databaseName];
+        $sqliteExecutionObjectIdentifier = Sqlite::class . "-$databaseName";
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        try {
+            /**
+             * @var Sqlite $sqlite
+             *
+             *
+             * sqlite is stored globally
+             * because when we create a new instance, it will open the
+             * sqlite file.
+             *
+             * In a {@link cli_plugin_combo} run, you will run in the error:
+             * ``
+             * failed to open stream: Too many open files
+             * ``
+             * As there is by default a limit of 1024 open files
+             * which means that if there is more than 1024 pages
+             * that you replicate using a new sqlite instance each time,
+             * you fail.
+             *
+             */
+            $sqlite = $executionContext->getRuntimeObject($sqliteExecutionObjectIdentifier);
+        } catch (ExceptionNotFound $e) {
+            $sqlite = null;
+        }
+
         if ($sqlite !== null) {
             $res = $sqlite->doWeNeedToCreateNewInstance();
             if ($res === false) {
                 return $sqlite;
             }
         }
-
 
         /**
          * Init
@@ -79,36 +107,21 @@ class Sqlite
         if ($sqlitePlugin === null) {
 
             $sqliteMandatoryMessage = "The Sqlite Plugin is mandatory. Some functionalities of the ComboStrap Plugin may not work.";
-            LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
-            return null;
+            throw new ExceptionSqliteNotAvailable($sqliteMandatoryMessage);
         }
 
         $adapter = $sqlitePlugin->getAdapter();
         if ($adapter == null) {
             self::sendMessageAsNotAvailable();
-            return null;
         }
 
         $adapter->setUseNativeAlter(true);
 
-        global $conf;
-
-        if ($databaseName === self::MAIN_DATABASE_NAME) {
-            $oldDbName = '404manager';
-            $oldDbFile = $conf['metadir'] . "/{$oldDbName}.sqlite";
-            $oldDbFileSqlite3 = $conf['metadir'] . "/{$oldDbName}.sqlite3";
-            if (file_exists($oldDbFile) || file_exists($oldDbFileSqlite3)) {
-                $databaseName = $oldDbName;
-            }
-        }
-
-        $updatedir = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/db/$databaseName";
-        $init = $sqlitePlugin->init($databaseName, $updatedir);
+        list($databaseName, $databaseDefinitionDir) = self::getDatabaseNameAndDefinitionDirectory($databaseName);
+        $init = $sqlitePlugin->init($databaseName, $databaseDefinitionDir);
         if (!$init) {
-            # TODO: Message 'SqliteUnableToInitialize'
             $message = "Unable to initialize Sqlite";
-            LogUtility::msg($message, MSG_MANAGERS_ONLY);
-            return null;
+            throw new ExceptionSqliteNotAvailable($message);
         }
         // regexp implementation
         // https://stackoverflow.com/questions/5071601/how-do-i-use-regex-in-a-sqlite-query/18484596#18484596
@@ -124,11 +137,14 @@ class Sqlite
         );
 
         $sqlite = new Sqlite($sqlitePlugin);
-        self::$sqlites[$databaseName] = $sqlite;
+        $executionContext->setRuntimeObject($sqliteExecutionObjectIdentifier, $sqlite);
         return $sqlite;
 
     }
 
+    /**
+     * @throws ExceptionSqliteNotAvailable
+     */
     public static function createOrGetBackendSqlite(): ?Sqlite
     {
         return self::createOrGetSqlite(self::SECONDARY_DB);
@@ -146,6 +162,57 @@ class Sqlite
             $columnStatement = implode(", ", $columnsStatement);
         }
         return "select $columnStatement from $tableName";
+
+    }
+
+    /**
+     * Used in test to delete the database file
+     * @return void
+     * @throws ExceptionFileSystem - if we can delete the databases
+     */
+    public static function deleteDatabasesFile()
+    {
+        /**
+         * The plugin does not give you the option to
+         * where to create the database file
+         * See {@link \helper_plugin_sqlite_adapter::initdb()}
+         * $this->dbfile = $conf['metadir'].'/'.$dbname.$this->fileextension;
+         *
+         * If error on delete, see {@link self::close()}
+         */
+        $metadatDirectory = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getMetaDataDirectory();
+        $fileChildren = FileSystems::getChildrenLeaf($metadatDirectory);
+        foreach ($fileChildren as $child) {
+            try {
+                $extension = $child->getExtension();
+            } catch (ExceptionNotFound $e) {
+                // ok no extension
+                continue;
+            }
+            if (in_array($extension, ["sqlite", "sqlite3"])) {
+                FileSystems::delete($child);
+            }
+
+        }
+    }
+
+    private static function getDatabaseNameAndDefinitionDirectory($databaseName): array
+    {
+        global $conf;
+
+        if ($databaseName === self::MAIN_DATABASE_NAME) {
+            $oldDbName = '404manager';
+            $oldDbFile = $conf['metadir'] . "/{$oldDbName}.sqlite";
+            $oldDbFileSqlite3 = $conf['metadir'] . "/{$oldDbName}.sqlite3";
+            if (file_exists($oldDbFile) || file_exists($oldDbFileSqlite3)) {
+                $databaseName = $oldDbName;
+            }
+        }
+
+        $databaseDir = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/db/$databaseName";
+        return [$databaseName, $databaseDir];
 
     }
 
@@ -197,22 +264,21 @@ class Sqlite
     }
 
 
+    /**
+     * @throws ExceptionSqliteNotAvailable
+     */
     public
     static function sendMessageAsNotAvailable(): void
     {
         $sqliteMandatoryMessage = "The Sqlite Php Extension is mandatory. It seems that it's not available on this installation.";
-        LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
+        throw new ExceptionSqliteNotAvailable($sqliteMandatoryMessage);
     }
 
     /**
-     * sqlite is stored in a static variable
-     * because when we run the {@link cli_plugin_combo},
-     * we will run in the error:
-     * ``
-     * failed to open stream: Too many open files
-     * ``
-     * There is by default a limit of 1024 open files
-     * which means that if there is more than 1024 pages, you fail.
+     *
+     * Old check when there was no {@link ExecutionContext}
+     * to reset the Sqlite variable
+     * TODO: delete ?
      *
      *
      */
@@ -221,7 +287,6 @@ class Sqlite
 
         global $conf;
         $metaDir = $conf['metadir'];
-
 
         /**
          * Adapter may be null
@@ -270,60 +335,49 @@ class Sqlite
         return true;
     }
 
-    public
-    function close()
+    public function close()
     {
+
+        /**
+         * https://www.php.net/manual/en/pdo.connections.php#114822
+         * You put the variable connection on null
+         * the {@link \helper_plugin_sqlite_adapter::closedb() function} do that
+         *
+         * If we don't do that, the file is still locked
+         * by the sqlite process and the clean up process
+         * of dokuwiki test cannot delete it
+         *
+         * ie to avoid
+         * RuntimeException: Unable to delete the file
+         * (C:/Users/GERARD~1/AppData/Local/Temp/dwtests-1676813655.6773/data/meta/combo-secondary.sqlite3) in D:\dokuwiki\_test\core\TestUtils.php on line 58
+         * {@link TestUtils::rdelete}
+         *
+         * Windows sort of handling/ bug explained here
+         * https://bugs.php.net/bug.php?id=78930&edit=3
+         *
+         * Null to close the db explanation and bug
+         * https://bugs.php.net/bug.php?id=62065
+         *
+         */
+
+        $this->closeActualRequestIfNotClosed();
 
         $adapter = $this->sqlitePlugin->getAdapter();
         if ($adapter !== null) {
-            /**
-             * https://www.php.net/manual/en/pdo.connections.php#114822
-             * You put the connection on null
-             * CloseDb do that
-             */
+
             $adapter->closedb();
 
-            /**
-             * Delete the file If we can't delete the file
-             * there is a resource still open
-             */
-            $sqliteFile = $adapter->getDbFile();
-            if (file_exists($sqliteFile)) {
-                $result = unlink($sqliteFile);
-                if ($result === false) {
-                    throw new RuntimeException("Unable to delete the file ($sqliteFile). Did you close all resources ?");
-                }
-            }
+            unset($adapter);
+
+            gc_collect_cycles();
 
         }
-        /**
-         * Forwhatever reason, closing in php
-         * is putting the variable to null
-         * We do it also in the static variable to be sure
-         */
-        self::$sqlites[$this->getDbName()] == null;
-
 
     }
 
     public function getDbName(): string
     {
         return $this->sqlitePlugin->getAdapter()->getName();
-    }
-
-    public static function closeAll()
-    {
-
-        $sqlites = self::$sqlites;
-        if ($sqlites !== null) {
-            foreach ($sqlites as $sqlite) {
-                $sqlite->close();
-            }
-            /**
-             * Set it to null
-             */
-            Sqlite::$sqlites = null;
-        }
     }
 
 
@@ -334,7 +388,9 @@ class Sqlite
 
     public function createRequest(): SqliteRequest
     {
-        return new SqliteRequest($this);
+        $this->closeActualRequestIfNotClosed();
+        $this->actualRequest = new SqliteRequest($this);
+        return $this->actualRequest;
     }
 
     public function getVersion()
@@ -346,7 +402,7 @@ class Sqlite
                 self::$sqliteVersion = $request
                     ->execute()
                     ->getFirstCellValue();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 self::$sqliteVersion = "unknown";
             } finally {
                 $request->close();
@@ -363,14 +419,32 @@ class Sqlite
     {
         try {
             $present = $this->createRequest()
-                ->setQueryParametrized("select count(1) from pragma_compile_options() where compile_options = ?", $option)
+                ->setQueryParametrized("select count(1) from pragma_compile_options() where compile_options = ?", [$option])
                 ->execute()
                 ->getFirstCellValueAsInt();
             return $present === 1;
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while trying to see if the sqlite option is available");
             return false;
         }
 
+    }
+
+    /**
+     * Internal function that closes the actual request
+     * This is to be able to close all resources even if the developer
+     * forget.
+     *
+     * This is needed to be able to delete the database file.
+     * See {@link self::close()} for more information
+     *
+     * @return void
+     */
+    private function closeActualRequestIfNotClosed()
+    {
+        if(isset($this->actualRequest)){
+            $this->actualRequest->close();
+            unset($this->actualRequest);
+        }
     }
 }

@@ -1,6 +1,6 @@
-window.addEventListener("load", function (event) {
+window.addEventListener("load", function () {
     // lazy loads elements with default selector as '.lozad'
-    const svgObserver = lozad('.lazy-svg-injection-combo', {
+    const svgObserver = lozad('.lazy-svg-injection-cs', {
         load: function (el) {
             // SvgInjector leaves a src blank
             // creating a broken image
@@ -26,20 +26,24 @@ window.addEventListener("load", function (event) {
                                     dataSet.class.split(" ").forEach(e => svg.classList.add(e));
                                 }
                             }
+
+                            // remove the none display or set the old value back
+                            if(svg.style !== 'undefined' ) {
+                                if (displayValue === "") {
+                                    svg.style.removeProperty("display");
+                                } else {
+                                    svg.style.setProperty("display", displayValue, displayPriority);
+                                }
+                            }
                         }
-                        // remove the none display or set the old value back
-                        if (displayValue === "") {
-                            svg.style.removeProperty("display");
-                        } else {
-                            svg.style.setProperty("display", displayValue, displayPriority);
-                        }
+
                     },
                 }
             )
         },
         loaded: function (el) {
             // Custom implementation on a loaded element
-            el.classList.add('loaded-combo');
+            el.classList.add('loaded-cs');
         }
     });
     svgObserver.observe();

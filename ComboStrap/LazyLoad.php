@@ -12,6 +12,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\TagAttribute\BackgroundAttribute;
+use ComboStrap\TagAttribute\StyleAttribute;
+
 /**
  * This one support background loading
  * https://github.com/ApoorvSaxena/lozad.js
@@ -43,12 +46,33 @@ class LazyLoad
     const CANONICAL = "lazy";
     const DEFAULT_COLOR = "#cbf1ea";
 
+    public const LAZY_LOAD_METHOD_HTML_VALUE = "html";
+    public const LAZY_LOAD_METHOD_LOZAD_VALUE = "lozad";
+
+    /**
+     * The method on how to lazy load resources (Ie media)
+     */
+    public const LAZY_LOAD_METHOD = "lazy";
+    /**
+     * The default when the image are above the fold
+     */
+    public const LAZY_LOAD_METHOD_NONE_VALUE = "none";
+    /**
+     * Used internal for now on test
+     */
+    const CONF_LAZY_LOAD_METHOD = "internal-lazy-load-method-combo";
+    public const CONF_RASTER_ENABLE = "rasterImageLazyLoadingEnable";
+    public const CONF_RASTER_ENABLE_DEFAULT = 1;
+    public const HTML_LOADING_ATTRIBUTE = "loading";
+
     /**
      * Used to select all lazy loaded
      * resources and load them before print
      */
-    const LAZY_CLASS = "lazy-combo";
-
+    public static function getLazyClass(): string
+    {
+        return StyleAttribute::addComboStrapSuffix(self::CANONICAL);
+    }
 
     public static function addSnippet()
     {
@@ -73,7 +97,7 @@ class LazyLoad
 
         $snippetManager = PluginUtility::getSnippetManager();
 
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::LAZY_SIDE_ID,
             "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
             "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk="
@@ -83,7 +107,7 @@ class LazyLoad
          * lazysizes adds the class lazy loading while the images are loading
          * and the class lazyloaded as soon as the image is loaded.
          */
-        $snippetManager->attachCssInternalStyleSheetForSlot(self::LAZY_SIDE_ID);
+        $snippetManager->attachCssInternalStyleSheet(self::LAZY_SIDE_ID);
 
     }
 
@@ -94,8 +118,8 @@ class LazyLoad
     {
         // https://github.com/ApoorvSaxena/lozad.js#large-image-improvment
         $placeholderColor = LazyLoad::getPlaceholderColor();
-        if ($attributes->hasComponentAttribute(Background::BACKGROUND_COLOR)) {
-            $placeholderColor = $attributes->getValueAndRemove(Background::BACKGROUND_COLOR);
+        if ($attributes->hasComponentAttribute(BackgroundAttribute::BACKGROUND_COLOR)) {
+            $placeholderColor = $attributes->getValueAndRemove(BackgroundAttribute::BACKGROUND_COLOR);
         }
         $attributes->addOutputAttributeValue("data-placeholder-background", "$placeholderColor");
 
@@ -114,7 +138,7 @@ class LazyLoad
 
         // https://www.jsdelivr.com/package/npm/lozad
         $snippetManager
-            ->attachJavascriptLibraryForSlot(
+            ->attachRemoteJavascriptLibrary(
                 self::LOZAD_ID,
                 "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
                 "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc="
@@ -125,7 +149,7 @@ class LazyLoad
          * Add the fading effect
          */
         $snippetId = "lazy-load-fade";
-        $snippetManager->attachCssInternalStyleSheetForSlot($snippetId);
+        $snippetManager->attachCssInternalStyleSheet($snippetId);
 
 
         /**
@@ -134,7 +158,7 @@ class LazyLoad
          * The others javascript snippet to download lazy load depend on the image type
          * and features and was therefore added in the code for svg or raster
          */
-        $snippetManager->attachInternalJavascriptForSlot("lozad-print");
+        $snippetManager->attachJavascriptFromComponentId("lozad-print");
 
 
     }
@@ -159,7 +183,7 @@ class LazyLoad
      */
     public static function getPlaceholderColor()
     {
-        return PluginUtility::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
+        return SiteConfig::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
     }
 
     /**
@@ -198,4 +222,50 @@ class LazyLoad
         }
         return $image;
     }
+
+    /**
+     * @return void
+     * @deprecated use {@link SiteConfig::disableLazyLoad()}
+     */
+    public static function disable()
+    {
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->disableLazyLoad();
+    }
+
+    /**
+     *
+     * By default, the image above the fold should not be lazy loaded
+     * Above-the-fold images that are lazily loaded render later in the page lifecycle, which can delay the largest contentful paint.
+     *
+     *
+     */
+    public static function getDefault()
+    {
+
+        try {
+            /**
+             * Above-the-fold images that are lazily loaded render later in the page lifecycle,
+             * which can delay the largest contentful paint.
+             */
+            $sourcePath = ExecutionContext::getActualOrCreateFromEnv()
+                ->getExecutingMarkupHandler()
+                ->getSourcePath();
+            if(SlotSystem::isMainHeaderSlot($sourcePath)){
+                return LazyLoad::LAZY_LOAD_METHOD_NONE_VALUE;
+            }
+        } catch (ExceptionNotFound $e) {
+            // not a path execution
+        }
+
+        /**
+         * HTML and not lozad as default because in a Hbs template, in a {@link TemplateForWebPage},
+         * it would not work as the script would not be added
+         */
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getValue(LazyLoad::CONF_LAZY_LOAD_METHOD,LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE) ;
+    }
+
 }

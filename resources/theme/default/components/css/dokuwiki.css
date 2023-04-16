@@ -1,0 +1,9 @@
+/**
+ * A stylesheet to fight the dokuwiki template css rules
+ *
+ * Reversing Bad height default: https://github.com/splitbrain/dokuwiki/issues/3690
+ * In all.css
+ */
+.svg-cs { height: auto; }
+
+.blockquote-cs { padding: initial; border: none; }

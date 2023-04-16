@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+    <title>{{title}}</title>
+    {{> head-partial }}
+</head>
+<body class="{{body-classes}}">
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <main id="page-main" class="col-md-4 mx-auto">
+        <div id="main-content" style="margin:5rem auto">
+            {{{ main-content-html }}}
+        </div>
+    </main>
+</div>
+{{> body-beforeend-partial }}
+</body>
+</html>

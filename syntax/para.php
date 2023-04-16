@@ -8,10 +8,8 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  *
@@ -78,9 +76,12 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      */
-    function getType()
+    function getType(): string
     {
-        return 'paragraphs';
+        /**
+         * Not `paragraphs' because we don't allow them in {@link syntax_plugin_combo_xmlblocktag}
+         */
+        return 'formatting';
     }
 
     /**
@@ -140,7 +141,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
 
         /**
          * No need to connect
-         * This syntax plugin is added dynamically with the {@link Tag::processEolToEndStack()}
+         * This syntax plugin is added dynamically with the {@link CallStack::processEolToEndStack()}
          * function
          */
 

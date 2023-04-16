@@ -5,6 +5,9 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TabsTag;
+use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -86,7 +89,7 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
@@ -161,14 +164,14 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
-            $attributes = array();
+            $attributes = TagAttributes::createEmpty();
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement($attributes);
+                    $renderer->doc .= TabsTag::openTabPanelsElement($attributes);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($attributes);
+                    $renderer->doc .= TabsTag::closeTabPanelsElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

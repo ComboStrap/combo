@@ -1,7 +1,7 @@
 # Sqlite Combo Secondary Database
 
 ## About
-A database that you don't need to backup
+A database that you don't need to back up
 
 ## Migration
 

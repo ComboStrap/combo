@@ -4,15 +4,14 @@
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
 use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\Skin;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) die();
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_badge
@@ -44,14 +43,14 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - The plugin can be used inside paragraphs (inline or inside)
-     *  * 'block'  - Open paragraphs need to be closed before plugin output (box) - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *  * 'normal' - Inline
+     *  * 'block' - Block (p are not created inside)
+     *  * 'stack' - Block (p can be created inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      * @see https://www.dokuwiki.org/devel:syntax_plugins#ptype
      */
-    function getPType()
+    function getPType(): string
     {
         return 'normal';
     }
@@ -83,7 +82,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
@@ -143,7 +142,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                 if ($color !== null) {
                     try {
                         $colorObject = ColorRgb::createFromString($color);
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The color value ($color) for the badge type ($type) is not valid. Error: {$e->getMessage()}");
                     }
                 }
@@ -163,7 +162,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                                 ->setLightness(80)
                                 ->toRgb()
                                 ->toCssValue();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while trying to set the lightness for the badge background color");
                             $backgroundColor = $colorObject
                                 ->scale(-80)
@@ -181,7 +180,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                                 ->scale(40)
                                 ->toMinimumContrastRatio($backgroundColor)
                                 ->toCssValue();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             LogUtility::msg("Error while scaling the text color ($color) for the badge type ($type). Error: {$e->getMessage()}");
                             $textColor = $colorObject
                                 ->scale(40)
@@ -244,7 +243,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);

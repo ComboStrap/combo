@@ -6,12 +6,16 @@ namespace ComboStrap;
 use Doku_Renderer_xhtml;
 use syntax_plugin_combo_code;
 
+/**
+ * Concurrent: https://highlightjs.org/ used by remark powerpoint
+ */
 class Prism
 {
 
     const SNIPPET_NAME = 'prism';
     /**
      * The class used to mark the added prism code
+     * See: https://cdnjs.com/libraries/prism/
      */
     const BASE_PRISM_CDN = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0";
     /**
@@ -87,69 +91,69 @@ class Prism
          * as a paragraph
          */
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachCssInternalStyleSheetForSlot(self::SNIPPET_NAME);
+        $snippetManager->attachCssInternalStyleSheet(self::SNIPPET_NAME);
 
         /**
          * Javascript
          */
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/components/prism-core.min.js",
             "sha256-vlRYHThwdq55dA+n1BKQRzzLwFtH9VINdSI68+5JhpU=");
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js",
             "sha256-FyIVdIHL0+ppj4Q4Ft05K3wyCsYikpHIDGI7dcaBalU="
         );
-        $snippetManager->attachCssExternalStyleSheetForSlot(
+        $snippetManager->attachRemoteCssStyleSheet(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.css",
             "sha256-kK4/JIYJUKI4Zdg9ZQ7FYyRIqeWPfYKi5QZHO2n/lJI="
         );
         // https://prismjs.com/plugins/normalize-whitespace/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js",
             "sha256-gBzABGbXfQYYnyr8xmDFjx6KGO9dBYuypG1QBjO76pY=");
         // https://prismjs.com/plugins/copy-to-clipboard/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js",
             "sha512-pUNGXbOrc+Y3dm5z2ZN7JYQ/2Tq0jppMDOUsN4sQHVJ9AUQpaeERCUfYYBAnaRB9r8d4gtPKMWICNhm3tRr4Fg==");
         // https://prismjs.com/plugins/show-language/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js",
             "sha256-Z3GTw2RIadLG7KyP/OYB+aAxVYzvg2PByKzYrJlA1EM=");
         // https://prismjs.com/plugins/command-line/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js",
             "sha256-9WlakH0Upf3N8DDteHlbeKCHxSsljby+G9ucUCQNiU0=");
-        $snippetManager->attachCssExternalStyleSheetForSlot(
+        $snippetManager->attachRemoteCssStyleSheet(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.css",
             "sha256-UvoA9bIYCYQkCMTYG5p2LM8ZpJmnC4G8k0oIc89nuQA="
         );
         //https://prismjs.com/plugins/line-numbers/
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
             "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=");
-        $snippetManager->attachCssExternalStyleSheetForSlot(
+        $snippetManager->attachRemoteCssStyleSheet(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.css",
             "sha256-ye8BkHf2lHXUtqZ18U0KI3xjJ1Yv7P8lvdKBt9xmVJM="
         );
 
         // https://prismjs.com/plugins/download-button/-->
-        $snippetManager->attachJavascriptLibraryForSlot(
+        $snippetManager->attachRemoteJavascriptLibrary(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
             "sha256-CQyVQ5ejeTshlzOS/eCiry40br9f4fQ9jb5e4qPl7ZA=");
 
         // Loading the theme
-        $snippetManager->attachCssExternalStyleSheetForSlot(
+        $snippetManager->attachRemoteCssStyleSheet(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/themes/$themeStyleSheet",
             $themeIntegrity
@@ -167,7 +171,7 @@ window.addEventListener('load', (event) => {
 
 });
 EOD;
-        $snippetManager->attachInternalJavascriptForSlot(self::SNIPPET_NAME, $javascriptCode);
+        $snippetManager->attachJavascriptFromComponentId(self::SNIPPET_NAME, $javascriptCode);
 
     }
 
@@ -198,7 +202,7 @@ EOD;
         /**
          * Add prism theme
          */
-        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME);
+        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME,Prism::PRISM_THEME_DEFAULT);
         Prism::addSnippet($theme);
 
         /**
@@ -230,15 +234,14 @@ EOD;
             Prism::addAutoloaderSnippet();
         }
 
-        if (in_array($language, \syntax_plugin_combo_webcode::MARKIS)) {
+        if (in_array($language, Tag\WebCodeTag::MARKIS)) {
             // Marki is not fully markdown
             // because it accepts space in super set html container and
             // prism will highlight them as indented code
             $language = "html";
         }
         /**
-         * Language name mapping between the dokuwiki default
-         * and prism
+         * Language name mapping between the syntax name and prism
          */
         switch ($language) {
             case "rsplus":
@@ -247,6 +250,13 @@ EOD;
             case "dos":
             case "bat":
                 $language = "batch";
+                break;
+            case "grok":
+                $language = "regex";
+                break;
+            case "jinja":
+                // https://github.com/PrismJS/prism/issues/759
+                $language = "twig";
                 break;
             case "apache":
                 $language = "apacheconf";
@@ -367,7 +377,7 @@ EOD;
     private static function addAutoloaderSnippet()
     {
         PluginUtility::getSnippetManager()
-            ->attachJavascriptLibraryForSlot(
+            ->attachRemoteJavascriptLibrary(
                 self::SNIPPET_ID_AUTOLOADER,
                 self::BASE_PRISM_CDN . "/plugins/autoloader/prism-autoloader.min.js"
             );

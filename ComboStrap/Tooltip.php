@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 
-use syntax_plugin_combo_button;
+use syntax_plugin_combo_xmlinlinetag;
 use syntax_plugin_combo_link;
 use syntax_plugin_combo_tooltip;
 
@@ -24,7 +24,7 @@ class Tooltip
             return;
         }
 
-        if(!is_array($tooltip)){
+        if (!is_array($tooltip)) {
             LogUtility::msg("The tooltip value ($tooltip) is not an array.");
             return;
         }
@@ -44,8 +44,8 @@ class Tooltip
             $callStack = $tooltip[Tooltip::CALLSTACK];
             if ($callStack !== null) {
                 try {
-                    $title = PluginUtility::renderInstructionsToXhtml($callStack);
-                } catch (ExceptionCombo $e) {
+                   $title = PluginUtility::renderInstructionsToXhtml($callStack);
+                } catch (ExceptionCompile $e) {
                     $title = LogUtility::wrapInRedForHtml("Error while rendering the tooltip. Error: {$e->getMessage()}");
                 }
 
@@ -57,8 +57,6 @@ class Tooltip
 
             }
         }
-
-
 
 
         if (empty($title)) {
@@ -91,7 +89,7 @@ class Tooltip
          * Arbitrary HTML elements (such as <span>s) can be made focusable by adding the tabindex="0" attribute
          */
         $logicalTag = $tagAttributes->getLogicalTag();
-        if (!in_array($logicalTag, [syntax_plugin_combo_link::TAG, syntax_plugin_combo_button::TAG])) {
+        if (!in_array($logicalTag, [syntax_plugin_combo_link::TAG, ButtonTag::MARKUP_LONG])) {
             $tagAttributes->addOutputAttributeValue("tabindex", "0");
         }
 
@@ -104,7 +102,8 @@ class Tooltip
     public
     static function addToolTipSnippetIfNeeded()
     {
-        PluginUtility::getSnippetManager()->attachInternalJavascriptForSlot(syntax_plugin_combo_tooltip::TAG);
-        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(syntax_plugin_combo_tooltip::TAG);
+        $snippetSystem = SnippetSystem::getFromContext();
+        $snippetSystem->attachJavascriptFromComponentId(syntax_plugin_combo_tooltip::TAG);
+        $snippetSystem->attachCssInternalStyleSheet(syntax_plugin_combo_tooltip::TAG);
     }
 }

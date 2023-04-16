@@ -13,8 +13,7 @@
 namespace ComboStrap;
 
 
-require_once(__DIR__ . '/PluginUtility.php');
-
+use ComboStrap\TagAttribute\StyleAttribute;
 
 /**
  * Image
@@ -24,13 +23,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class SvgImageLink extends ImageLink
 {
 
-    const CANONICAL = ImageSvg::CANONICAL;
-
-    /**
-     * The maximum size to be embedded
-     * Above this size limit they are fetched
-     */
-    const CONF_MAX_KB_SIZE_FOR_INLINE_SVG = "svgMaxInlineSizeKb";
+    const CANONICAL = FetcherSvg::CANONICAL;
 
     /**
      * Lazy Load
@@ -41,30 +34,39 @@ class SvgImageLink extends ImageLink
      * Svg Injection
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
+    /**
+     * Svg Injection Default
+     * For now, there is a FOUC when the svg is visible,
+     * The image does away, the layout shift, the image comes back, the layout shift
+     * We disabled it by default then
+     */
+    const CONF_SVG_INJECTION_ENABLE_DEFAULT = 0;
+    const TAG = "svg";
 
 
     /**
-     * SvgImageLink constructor.
-     * @param ImageSvg $imageSvg
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionBadArgument
+     * @throws ExceptionNotExists
      */
-    public function __construct($imageSvg)
+    public static function createFromFetcher(FetcherSvg $fetchImage)
     {
-        parent::__construct($imageSvg);
-        $imageSvg->getAttributes()->setLogicalTag(self::CANONICAL);
-
+        return SvgImageLink::createFromMediaMarkup(MediaMarkup::createFromFetcher($fetchImage));
     }
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax
      */
     private function createImgHTMLTag(): string
     {
 
 
-        $lazyLoad = $this->getLazyLoad();
+        $svgInjection = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getBooleanValue(self::CONF_SVG_INJECTION_ENABLE, self::CONF_SVG_INJECTION_ENABLE_DEFAULT);
 
-        $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
         /**
          * Snippet
          */
@@ -76,7 +78,7 @@ class SvgImageLink extends ImageLink
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
             $snippetManager
-                ->attachJavascriptLibraryForSlot(
+                ->attachRemoteJavascriptLibrary(
                     "svg-injector",
                     "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
                     "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk="
@@ -85,106 +87,106 @@ class SvgImageLink extends ImageLink
 
         }
 
-        // Add lazy load snippet
-        if ($lazyLoad) {
-            LazyLoad::addLozadSnippet();
-        }
 
         /**
          * Remove the cache attribute
          * (no cache for the img tag)
-         * @var ImageSvg $image
+         * @var FetcherSvg $image
          */
-        $image = $this->getDefaultImage();
-        $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());
-        $responseAttributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
-
-        /**
-         * Remove linking (not yet implemented)
-         */
-        $responseAttributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
-
+        $imgAttributes = $this->mediaMarkup->getExtraMediaTagAttributes()
+            ->setLogicalTag(self::TAG);
 
         /**
          * Adaptive Image
          * It adds a `height: auto` that avoid a layout shift when
          * using the img tag
          */
-        $responseAttributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
+        $imgAttributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
 
 
         /**
          * Alt is mandatory
          */
-        $responseAttributes->addOutputAttributeValue("alt", $image->getAltNotEmpty());
+        $imgAttributes->addOutputAttributeValue("alt", $this->getAltNotEmpty());
 
+
+        /**
+         * @var FetcherSvg $svgFetch
+         */
+        $svgFetch = $this->mediaMarkup->getFetcher();
+        $srcValue = $svgFetch->getFetchUrl();
 
         /**
          * Class management
          *
-         * functionalClass is the class used in Javascript
-         * that should be in the class attribute
-         * When injected, the other class should come in a `data-class` attribute
          */
-        $svgFunctionalClass = "";
-        if ($svgInjection && $lazyLoad) {
-            $snippetManager->attachInternalJavascriptForSlot("lozad-svg-injection");
-            $svgFunctionalClass = "lazy-svg-injection-combo";
-        } else if ($lazyLoad && !$svgInjection) {
-            $snippetManager->attachInternalJavascriptForSlot("lozad-svg");
-            $svgFunctionalClass = "lazy-svg-combo";
-        } else if ($svgInjection && !$lazyLoad) {
-            $snippetManager->attachInternalJavascriptForSlot("svg-injector");
-            $svgFunctionalClass = "svg-injection-combo";
-        }
+        $lazyLoad = $this->isLazyLoaded();
         if ($lazyLoad) {
             // A class to all component lazy loaded to download them before print
-            $svgFunctionalClass .= " " . LazyLoad::LAZY_CLASS;
-        }
-        $responseAttributes->addClassName($svgFunctionalClass);
-
-        /**
-         * Dimension are mandatory
-         * to avoid layout shift (CLS)
-         */
-        $responseAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
-        $responseAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
-
-        /**
-         * Src call
-         */
-        $srcValue = $image->getUrl();
-        if ($lazyLoad) {
-
-            /**
-             * Note: Responsive image srcset is not needed for svg
-             */
-            $responseAttributes->addOutputAttributeValue("data-src", $srcValue);
-            $responseAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
-                $image->getTargetWidth(),
-                $image->getTargetHeight()
-            ));
+            $imgAttributes->addClassName(LazyLoad::getLazyClass());
+            $lazyLoadMethod = $this->mediaMarkup->getLazyLoadMethodOrDefault();
+            switch ($lazyLoadMethod) {
+                case LazyLoad::LAZY_LOAD_METHOD_LOZAD_VALUE:
+                    LazyLoad::addLozadSnippet();
+                    if ($svgInjection) {
+                        $snippetManager->attachJavascriptFromComponentId("lozad-svg-injection");
+                        $imgAttributes->addClassName(StyleAttribute::addComboStrapSuffix("lazy-svg-injection"));
+                    } else {
+                        $snippetManager->attachJavascriptFromComponentId("lozad-svg");
+                        $imgAttributes->addClassName(StyleAttribute::addComboStrapSuffix("lazy-svg"));
+                    }
+                    /**
+                     * Note: Responsive image srcset is not needed for svg
+                     */
+                    $imgAttributes->addOutputAttributeValue("data-src", $srcValue);
+                    $imgAttributes->addOutputAttributeValue("src", LazyLoad::getPlaceholder(
+                        $svgFetch->getTargetWidth(),
+                        $svgFetch->getTargetHeight()
+                    ));
+                    break;
+                case LazyLoad::LAZY_LOAD_METHOD_HTML_VALUE:
+                    $imgAttributes->addOutputAttributeValue(LazyLoad::HTML_LOADING_ATTRIBUTE, "lazy");
+                    $imgAttributes->addOutputAttributeValue("src", $srcValue);
+                    break;
+            }
 
         } else {
-
-            $responseAttributes->addOutputAttributeValue("src", $srcValue);
-
+            if ($svgInjection) {
+                $snippetManager->attachJavascriptFromComponentId("svg-injector");
+                $imgAttributes->addClassName(StyleAttribute::addComboStrapSuffix("svg-injection"));
+            }
+            $imgAttributes->addOutputAttributeValue("src", $srcValue);
         }
 
-        /**
-         * Old model where dokuwiki parses the src in handle
-         */
-        $responseAttributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
+
 
         /**
-         * Ratio is an attribute of the request, not or rendering
+         * Dimension are mandatory on the image
+         * to avoid layout shift (CLS)
+         * We add them as output attribute
          */
-        $responseAttributes->removeAttributeIfPresent(Dimension::RATIO_ATTRIBUTE);
+        $imgAttributes->addOutputAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getTargetWidth());
+        $imgAttributes->addOutputAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getTargetHeight());
+
+        /**
+         * For styling, we add the width and height as component attribute
+         */
+        try {
+            $imgAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $svgFetch->getRequestedWidth());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        try {
+            $imgAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $svgFetch->getRequestedHeight());
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
 
         /**
          * Return the image
          */
-        return '<img ' . $responseAttributes->toHTMLAttributeString() . '/>';
+        return $imgAttributes->toHtmlEmptyTag("img");
+
 
     }
 
@@ -194,77 +196,92 @@ class SvgImageLink extends ImageLink
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also
      * @return string
-     * @throws ExceptionCombo
+     * @throws ExceptionNotFound
+     * @throws ExceptionBadArgument
      */
     public function renderMediaTag(): string
     {
 
+
+        $imagePath = $this->mediaMarkup->getPath();
+        if (!FileSystems::exists($imagePath)) {
+            throw new ExceptionNotFound("The image ($imagePath) does not exist");
+        }
+
         /**
-         * @var ImageSvg $image
+         * TODO: Title/Label should be a node just below SVG
          */
-        $image = $this->getDefaultImage();
-        if ($image->exists()) {
+        $imageSize = FileSystems::getSize($imagePath);
+
+        /**
+         * Svg Style conflict:
+         * when two svg are created and have a style node, they inject class
+         * that may conflict with others (ie cls-1 class, ...)
+         * The svg is then inserted via an img tag to scope it.
+         */
+        try {
+            $preserveStyle = DataType::toBoolean($this->mediaMarkup->getFetcher()->getFetchUrl()->getQueryPropertyValueAndRemoveIfPresent(FetcherSvg::REQUESTED_PRESERVE_ATTRIBUTE));
+        } catch (ExceptionNotFound $e) {
+            $preserveStyle = false;
+        }
+
+        $asImgTag = $imageSize > $this->getMaxInlineSize() || $preserveStyle;
+        if ($asImgTag) {
 
             /**
-             * This attributes should not be in the render
+             * Img tag
              */
-            $attributes = $this->getDefaultImage()->getAttributes();
-            $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
-            $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
-            /**
-             * TODO: Title should be a node just below SVG
-             */
-            $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
+            $imgHTML = $this->createImgHTMLTag();
 
-            $imageSize = FileSystems::getSize($image->getPath());
-            if (
-                $imageSize > $this->getMaxInlineSize()
-            ) {
+        } else {
 
-                /**
-                 * Img tag
-                 */
-                $imgHTML = $this->createImgHTMLTag();
 
-            } else {
-
+            try {
                 /**
                  * Svg tag
+                 * @var FetcherSvg $fetcherSvg
                  */
+                $fetcherSvg = $this->mediaMarkup->getFetcher();
                 try {
-                    $imgHTML = FileSystems::getContent($image->getSvgFile());
-                } catch (ExceptionCombo $e) {
-                    $error = "Error while retrieving the content of the svg image ($image). Error: {$e->getMessage()}";
-                    LogUtility::msg($error);
-                    return "<span class=\"text-danger\">$error</span>";
+                    $fetcherSvg->setRequestedClass($this->mediaMarkup->getExtraMediaTagAttributes()->getClass());
+                } catch (ExceptionNull $e) {
+                    // ok
                 }
-
+                $fetchPath = $fetcherSvg->getFetchPath();
+                $imgHTML = FileSystems::getContent($fetchPath);
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->getSnippetSystem()
+                    ->attachCssInternalStyleSheet(DokuWiki::DOKUWIKI_STYLESHEET_ID);
+            } catch (ExceptionNotFound|ExceptionBadArgument|ExceptionBadState|ExceptionBadSyntax|ExceptionCompile $e) {
+                LogUtility::error("Unable to include the svg in the document. Error: {$e->getMessage()}");
+                $imgHTML = $this->createImgHTMLTag();
             }
 
-
-        } else {
-
-            $imgHTML = "<span class=\"text-danger\">The svg ($this) does not exist</span>";
-
         }
-        return $imgHTML;
+
+        return $this->wrapMediaMarkupWithLink($imgHTML);
+
     }
 
+    /**
+     * @return int
+     */
     private function getMaxInlineSize()
     {
-        return PluginUtility::getConfValue(self::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
+        return ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->getHtmlMaxInlineResourceSize();
     }
 
 
-    public function getLazyLoad()
+    public function isLazyLoaded(): bool
     {
-        $lazyLoad = parent::getLazyLoad();
-        if ($lazyLoad !== null) {
-            return $lazyLoad;
-        } else {
-            return PluginUtility::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
-        }
-    }
 
+        if ($this->mediaMarkup->isLazy() === false) {
+            return false;
+        }
+        return SiteConfig::getConfValue(self::CONF_LAZY_LOAD_ENABLE, 1);
+
+    }
 
 }

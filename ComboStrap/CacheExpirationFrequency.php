@@ -4,6 +4,10 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+
 class CacheExpirationFrequency extends MetadataText
 {
 
@@ -19,7 +23,7 @@ class CacheExpirationFrequency extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_CACHE_VALUE;
     }
@@ -27,7 +31,8 @@ class CacheExpirationFrequency extends MetadataText
     /**
      * @param string|null $value
      * @return Metadata
-     * @throws ExceptionCombo
+     * @throws ExceptionBadArgument - if the value cannot be persisted
+     * @throws ExceptionBadSyntax - if the frequency has not the good syntax
      */
     public function setValue($value): Metadata
     {
@@ -45,25 +50,26 @@ class CacheExpirationFrequency extends MetadataText
 
         try {
             $cacheExpirationCalculatedDate = Cron::getDate($value);
-            $cacheExpirationDate = CacheExpirationDate::createForPage($this->getResource());
-            $cacheExpirationDate
-                ->setValue($cacheExpirationCalculatedDate)
-                ->persist();
-            parent::setValue($value);
-            return $this;
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The cache frequency expression ($value) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME, 0, $e);
+        } catch (ExceptionBadSyntax $e) {
+            throw new ExceptionBadSyntax("The cache frequency expression ($value) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME, 0, $e);
         }
+        $cacheExpirationDate = CacheExpirationDate::createForPage($this->getResource());
+        $cacheExpirationDate
+            ->setValue($cacheExpirationCalculatedDate)
+            ->persist();
+        parent::setValue($value);
+        return $this;
+
 
     }
 
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "A page expiration frequency expressed as a cron expression";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Cache Expiration Frequency";
     }
@@ -73,12 +79,12 @@ class CacheExpirationFrequency extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function getMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
@@ -88,10 +94,14 @@ class CacheExpirationFrequency extends MetadataText
         return null;
     }
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return self::CANONICAL;
     }
 
 
+    public static function isOnForm(): bool
+    {
+        return true;
+    }
 }

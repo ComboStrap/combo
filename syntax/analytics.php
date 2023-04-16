@@ -1,9 +1,9 @@
 <?php
 
 
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\PluginUtility;
 
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_analytics
@@ -14,6 +14,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "analytics";
+    public const CONF_SYNTAX_ANALYTICS_ENABLE = "syntaxAnalyticsEnable";
 
     /**
      * Syntax Type.
@@ -27,9 +28,9 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - The plugin can be used inside paragraphs
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *  * 'normal' - Inline
+     *  * 'block' - Block (p are not created inside)
+     *  * 'stack' - Block (p can be created inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
@@ -66,7 +67,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
     {
         /**
          * The instruction `calls` are not created via syntax
-         * but dynamically via {@link action_plugin_combo_pluginanalytics::_extract_plugin_info()}
+         * but dynamically in the Outline {@link \ComboStrap\Outline::buildOutline()}
          */
 
     }
@@ -76,7 +77,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
 
         /**
          * The instruction `calls` are not created via syntax
-         * but dynamically via {@link action_plugin_combo_pluginanalytics::_extract_plugin_info()}
+         * but dynamically in the Outline {@link \ComboStrap\Outline::buildOutline()}
          */
 
     }
@@ -110,7 +111,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             if ($state == DOKU_LEXER_SPECIAL) {
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $renderer->stats[AnalyticsDocument::SYNTAX_COUNT] = $attributes;
+                $renderer->stats[renderer_plugin_combo_analytics::SYNTAX_COUNT] = $attributes;
                 return true;
             }
 

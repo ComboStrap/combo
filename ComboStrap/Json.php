@@ -43,6 +43,19 @@ class Json
     }
 
     /**
+     * @throws ExceptionBadSyntax
+     * @throws ExceptionNotFound
+     */
+    public static function createFromPath(Path $path): Json
+    {
+
+
+        $content = FileSystems::getContent($path);
+        return self::createFromString($content);
+
+    }
+
+    /**
      * Used to make diff
      * @return false|string
      */
@@ -74,17 +87,17 @@ class Json
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionBadSyntax
      */
     public
     static function createFromString($jsonString): Json
     {
-        if($jsonString===null || $jsonString === "" ){
+        if ($jsonString === null || $jsonString === "") {
             return new Json();
         }
         $jsonArray = json_decode($jsonString, true);
         if ($jsonArray === null) {
-            throw new ExceptionCombo("The string is not a valid json. Value: ($jsonString)");
+            throw new ExceptionBadSyntax("The string is not a valid json. Value: ($jsonString)");
         }
         return new Json($jsonArray);
     }
@@ -116,7 +129,7 @@ class Json
     private
     function getJsonString()
     {
-        return  json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        return json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     /**

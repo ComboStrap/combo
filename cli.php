@@ -9,25 +9,25 @@
  * @author   ComboStrap <support@combostrap.com>
  *
  */
-if (!defined('DOKU_INC')) die();
 
-use ComboStrap\AnalyticsDocument;
-use ComboStrap\BacklinkCount;
+use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
+use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\MetadataFrontmatterStore;
-use ComboStrap\Page;
-use ComboStrap\PageH1;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
 
 /**
- * All dependency are loaded in plugin utility
+ * All dependency are loaded
  */
-require_once(__DIR__ . '/ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/vendor/autoload.php');
 
 /**
  * The memory of the server 128 is not enough
@@ -86,15 +86,15 @@ ComboStrap Administrative Commands
 Example:
   * Replicate all pages into the database
 ```bash
-php ./bin/plugin.php combo metadata-to-database :
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 :
 # or
-php ./bin/plugin.php combo metadata-to-database /
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 /
 ```
   * Replicate only the page `:namespace:my-page`
 ```bash
-php ./bin/plugin.php combo metadata-to-database :namespace:my-page
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 :namespace:my-page
 # or
-php ./bin/plugin.php combo metadata-to-database /namespace/my-page
+php ./bin/plugin.php combo metadata-to-database --host serverHostName  --port 80 /namespace/my-page
 ```
 
 Animal: If you want to use it for an animal farm, you need to set first the animal directory name in a environment variable
@@ -154,7 +154,7 @@ EOF;
     /**
      * The main entry
      * @param Options $options
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     protected function main(Options $options)
     {
@@ -237,7 +237,7 @@ EOF;
      * @param array $namespaces
      * @param bool $rebuild
      * @param int $depth recursion depth. 0 for unlimited
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function index($namespaces = array(), $rebuild = false, $depth = 0)
     {
@@ -261,7 +261,7 @@ EOF;
             $ID = $id;
             /**
              * Indexing the page start the database replication
-             * See {@link action_plugin_combo_fulldatabasereplication}
+             * See {@link action_plugin_combo_indexer}
              */
             $pageCounter++;
             try {
@@ -275,7 +275,7 @@ EOF;
                 } else {
                     LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error", LogUtility::LVL_MSG_ERROR);
                 }
-            } catch (ExceptionComboRuntime $e) {
+            } catch (ExceptionRuntime $e) {
                 LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
             }
         }
@@ -333,7 +333,7 @@ EOF;
         $totalNumberOfPages = sizeof($pages);
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
-            $page = Page::createPageFromId($id);
+            $page = MarkupPath::createMarkupFromId($id);
 
 
             $pageCounter++;
@@ -342,28 +342,36 @@ EOF;
             /**
              * Analytics
              */
-            $analytics = $page->getAnalyticsDocument();
-            $data = $analytics->getOrProcessContent()->toArray();
+            $analyticsPath = $page->fetchAnalyticsPath();
+            try {
+                $data = \ComboStrap\Json::createFromPath($analyticsPath)->toArray();
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::error("The analytics json of the page ($page) is not conform");
+                continue;
+            } catch (ExceptionNotFound $e) {
+                LogUtility::error("The analytics document ({$analyticsPath}) for the page ($page) was not found");
+                continue;
+            }
 
             if (!empty($fileHandle)) {
-                $statistics = $data[AnalyticsDocument::STATISTICS];
+                $statistics = $data[renderer_plugin_combo_analytics::STATISTICS];
                 $row = array(
                     'id' => $id,
                     'backlinks' => $statistics[BacklinkCount::getPersistentName()],
-                    'broken_links' => $statistics[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT],
-                    'changes' => $statistics[AnalyticsDocument::EDITS_COUNT],
-                    'chars' => $statistics[AnalyticsDocument::CHAR_COUNT],
-                    'external_links' => $statistics[AnalyticsDocument::EXTERNAL_LINK_COUNT],
-                    'external_medias' => $statistics[AnalyticsDocument::EXTERNAL_MEDIA_COUNT],
-                    PageH1::PROPERTY_NAME => $statistics[AnalyticsDocument::HEADING_COUNT][PageH1::PROPERTY_NAME],
-                    'h2' => $statistics[AnalyticsDocument::HEADING_COUNT]['h2'],
-                    'h3' => $statistics[AnalyticsDocument::HEADING_COUNT]['h3'],
-                    'h4' => $statistics[AnalyticsDocument::HEADING_COUNT]['h4'],
-                    'h5' => $statistics[AnalyticsDocument::HEADING_COUNT]['h5'],
-                    'internal_links' => $statistics[AnalyticsDocument::INTERNAL_LINK_COUNT],
-                    'internal_medias' => $statistics[AnalyticsDocument::INTERNAL_MEDIA_COUNT],
-                    'words' => $statistics[AnalyticsDocument::WORD_COUNT],
-                    'low' => $data[AnalyticsDocument::QUALITY]['low']
+                    'broken_links' => $statistics[renderer_plugin_combo_analytics::INTERNAL_LINK_BROKEN_COUNT],
+                    'changes' => $statistics[renderer_plugin_combo_analytics::EDITS_COUNT],
+                    'chars' => $statistics[renderer_plugin_combo_analytics::CHAR_COUNT],
+                    'external_links' => $statistics[renderer_plugin_combo_analytics::EXTERNAL_LINK_COUNT],
+                    'external_medias' => $statistics[renderer_plugin_combo_analytics::EXTERNAL_MEDIA_COUNT],
+                    PageH1::PROPERTY_NAME => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT][PageH1::PROPERTY_NAME],
+                    'h2' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h2'],
+                    'h3' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h3'],
+                    'h4' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h4'],
+                    'h5' => $statistics[renderer_plugin_combo_analytics::HEADING_COUNT]['h5'],
+                    'internal_links' => $statistics[renderer_plugin_combo_analytics::INTERNAL_LINK_COUNT],
+                    'internal_medias' => $statistics[renderer_plugin_combo_analytics::INTERNAL_MEDIA_COUNT],
+                    'words' => $statistics[renderer_plugin_combo_analytics::WORD_COUNT],
+                    'low' => $data[renderer_plugin_combo_analytics::QUALITY]['low']
                 );
                 fwrite($fileHandle, implode(",", $row) . PHP_EOL);
             }
@@ -388,7 +396,7 @@ EOF;
             $rows = $request
                 ->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while getting the id pages. {$e->getMessage()}");
             return;
         } finally {
@@ -400,7 +408,7 @@ EOF;
             $id = $row['id'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
-                Page::createPageFromId($id)->getDatabasePage()->delete();
+                MarkupPath::createMarkupFromId($id)->getDatabasePage()->delete();
             }
         }
         LogUtility::msg("Sync finished ($counter pages checked)");
@@ -421,7 +429,7 @@ EOF;
             $id = $pageArray['id'];
             global $ID;
             $ID = $id;
-            $page = Page::createPageFromId($id);
+            $page = MarkupPath::createMarkupFromId($id);
             $pageCounter++;
             LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
             try {
@@ -442,7 +450,7 @@ EOF;
                         break;
 
                 }
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 $pagesWithError[$id] = $e->getMessage();
             }
 

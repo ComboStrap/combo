@@ -1,0 +1,21 @@
+.content-list-cs {
+    margin-bottom: 1rem;
+}
+
+.list-group-item {
+    display: list-item;
+}
+
+.list-group-item p:last-child{
+    margin-bottom: 0;
+}
+
+.list-group-numbered>*::before {
+    content: counters(section, ".") ". ";
+    counter-increment: section;
+    margin-right: 0.5rem;
+}
+
+
+
+

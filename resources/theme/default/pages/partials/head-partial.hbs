@@ -1,0 +1,35 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{{ head-html }}}
+{{#if rem-size}}
+    <style>
+        body {
+            font-size: {{rem-size}}px
+        }
+    </style>
+{{/if}}
+{{#if primary-color}}
+    {{!-- The bootstrap css variables customization --}}
+    <style>
+        :root {
+            --bs-primary: {{primary-color}};
+            --bs-link-color: {{primary-color-text}};
+            --bs-link-hover-color: {{primary-color-text-hover}};
+            --cs-primary-color-text: {{primary-color-text}};
+            --cs-primary-color-text-hover: {{primary-color-text-hover}};
+        {{#if secondary-color}}
+             --bs-secondary: {{secondary-color}};
+        {{/if}}
+        }
+        .btn-primary {
+            --bs-btn-bg: {{primary-color}};
+            --bs-btn-border-color: {{primary-color}};
+        }
+        {{#if secondary-color}}
+        .btn-secondary {
+            --bs-btn-bg: {{secondary-color}};
+            --bs-btn-border-color: {{secondary-color}};
+        }
+        {{/if}}
+    </style>
+{{/if}}

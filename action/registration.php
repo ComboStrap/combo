@@ -9,8 +9,10 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\Identity;
+use ComboStrap\IdentityFormsHelper;
 use ComboStrap\LogUtility;
 use ComboStrap\Snippet;
+use dokuwiki\Form\Form;
 use dokuwiki\Menu\Item\Register;
 
 if (!defined('DOKU_INC')) die();
@@ -31,11 +33,56 @@ class action_plugin_combo_registration extends DokuWiki_Action_Plugin
     const CONF_ENABLE_REGISTER_FORM = "enableRegistrationForm";
 
 
+
+
+    function register(Doku_Event_Handler $controller)
+    {
+        /**
+         * To modify the register form and add class
+         *
+         * Deprecated object passed by the event but still in use
+         * https://www.dokuwiki.org/devel:event:html_registerform_output
+         */
+        $controller->register_hook('HTML_REGISTERFORM_OUTPUT', 'BEFORE', $this, 'handle_register_page', array());
+        /**
+         * New Event using the new object
+         * https://www.dokuwiki.org/devel:event:form_register_output
+         */
+        $controller->register_hook('FORM_REGISTER_OUTPUT', 'BEFORE', $this, 'handle_register_page', array());
+
+
+    }
+
+    function handle_register_page(&$event, $param)
+    {
+
+        $form = &$event->data;
+        $class = get_class($form);
+        switch ($class) {
+            case Doku_Form::class:
+                /**
+                 * Old one
+                 * @var Doku_Form $form
+                 */
+                self::updateDokuFormRegistration($form);
+                return;
+            case dokuwiki\Form\Form::class;
+                /**
+                 * New One
+                 * @var Form $form
+                 */
+                self::updateNewFormRegistration($form);
+                return;
+        }
+
+
+    }
+
     /**
      * Return the register text and link paragraph
      * @return string
      */
-    public static function getRegisterLinkAndParagraph()
+    public static function getRegisterLinkAndParagraph(): string
     {
 
 
@@ -61,48 +108,51 @@ EOF;
     }
 
 
-    function register(Doku_Event_Handler $controller)
+    private static function updateNewFormRegistration(Form &$form)
     {
         /**
-         * To modify the register form and add class
-         *
-         * Deprecated object passed by the event but still in use
-         * https://www.dokuwiki.org/devel:event:html_registerform_output
+         * The Login page is an admin page created via buffer
+         * We print before the forms
+         * to avoid a FOUC
          */
-        $controller->register_hook('HTML_REGISTERFORM_OUTPUT', 'BEFORE', $this, 'handle_register_page', array());
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
 
+
+        $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_REGISTER_CLASS);
         /**
-         * Event using the new object but not yet used
-         * https://www.dokuwiki.org/devel:event:form_register_output
+         * Heading
          */
-        // $controller->register_hook('FORM_REGISTER_OUTPUT', 'BEFORE', $this, 'handle_register', array());
+        $headerHTML = IdentityFormsHelper::getHeaderHTML($form, self::FORM_REGISTER_CLASS);
+        if ($headerHTML != "") {
+            $form->addHTML($headerHTML, 1);
+        }
 
-
+        IdentityFormsHelper::deleteFieldSetAndBrFromForm($form);
+        IdentityFormsHelper::toBoostrapInputElements($form, self::FORM_REGISTER_CLASS);
+        IdentityFormsHelper::toBootStrapSubmitButton($form);
     }
 
-    function handle_register_page(&$event, $param)
+    private static function updateDokuFormRegistration(Doku_Form &$form)
     {
-
         /**
          * The register page is created via buffer
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
 
 
         /**
          * @var Doku_Form $form
          */
-        $form = &$event->data;
         $class = &$form->params["class"];
-        Identity::addIdentityClass($class, self::FORM_REGISTER_CLASS);
+        IdentityFormsHelper::addIdentityClass($class, self::FORM_REGISTER_CLASS);
         $newFormContent = [];
 
         /**
          * Header (Logo / Title)
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_REGISTER_CLASS);
+        $newFormContent[] = IdentityFormsHelper::getHeaderHTML($form, self::FORM_REGISTER_CLASS);
 
 
         /**
@@ -236,8 +286,6 @@ EOF;
          * Update
          */
         $form->_content = $newFormContent;
-        return true;
-
 
     }
 

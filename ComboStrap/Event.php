@@ -30,9 +30,10 @@ class Event
     public static function dispatchEvent($maxEvent = 10)
     {
 
-        $sqlite = Sqlite::createOrGetBackendSqlite();
-        if ($sqlite === null) {
-            LogUtility::msg("Sqlite is mandatory for asynchronous event");
+        try {
+            $sqlite = Sqlite::createOrGetBackendSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
+            LogUtility::error("Sqlite is mandatory for asynchronous event", self::CANONICAL, $e);
             return;
         }
 
@@ -44,7 +45,12 @@ class Event
 
         $version = $sqlite->getVersion();
         $rows = [];
-        if ($version > "3.35.0") {
+        /**
+         * Returning clause
+         */
+        $isCi = PluginUtility::isCi(); // Sqlite plugin seems to not support the returning clause - it returns a number as result set in CI
+        $isDev = PluginUtility::isDevOrTest(); // may not work for normal users
+        if ($version > "3.35.0" && $isDev && !$isCi) {
 
             // returning clause is available since 3.35 on delete
             // https://www.sqlite.org/lang_returning.html
@@ -63,8 +69,8 @@ class Event
                 if (sizeof($rows) === 0) {
                     return;
                 }
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+            } catch (ExceptionCompile $e) {
+                LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
             } finally {
                 $request->close();
             }
@@ -92,7 +98,7 @@ class Event
                 if (sizeof($rowsSelected) === 0) {
                     return;
                 }
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while retrieving the event {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                 return;
             } finally {
@@ -112,7 +118,7 @@ class Event
                     } else {
                         $rows[] = $row;
                     }
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("Error while deleting the event. Message {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                     return;
                 } finally {
@@ -133,7 +139,7 @@ class Event
             if ($eventDataJson !== null) {
                 try {
                     $eventData = Json::createFromString($eventDataJson)->toArray();
-                } catch (ExceptionCombo $e) {
+                } catch (ExceptionCompile $e) {
                     LogUtility::msg("The stored data for the event $eventName was not in the json format");
                     continue;
                 }
@@ -157,12 +163,12 @@ class Event
     function createEvent(string $name, array $data)
     {
 
-        $sqlite = Sqlite::createOrGetBackendSqlite();
-        if ($sqlite === null) {
-            LogUtility::msg("Unable to create the event $name. Sqlite is not available");
+        try {
+            $sqlite = Sqlite::createOrGetBackendSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
+            LogUtility::error("Unable to create the event $name. Sqlite is not available");
             return;
         }
-
 
         /**
          * If not present
@@ -172,9 +178,9 @@ class Event
             "timestamp" => Iso8601Date::createFromNow()->toString()
         );
 
-        if ($data !== null) {
-            $entry["data"] = Json::createFromArray($data)->toPrettyJsonString();
-        }
+
+        $entry["data"] = Json::createFromArray($data)->toPrettyJsonString();
+        $entry["data_hash"] = md5($entry["data"]);
 
         /**
          * Execute
@@ -183,8 +189,8 @@ class Event
             ->setTableRow(self::EVENT_TABLE_NAME, $entry);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Unable to create the event $name. Error:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+        } catch (ExceptionCompile $e) {
+            LogUtility::error("Unable to create the event $name. Error:" . $e->getMessage(), self::CANONICAL, $e);
         } finally {
             $request->close();
         }
@@ -207,32 +213,37 @@ class Event
         $tmp = []; // No event data
         $tmp['page'] = $pageId;
         $evt = new \dokuwiki\Extension\Event('INDEXER_TASKS_RUN', $tmp);
+        $evt->advise_before();
         $evt->advise_after();
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public static function getQueue(): array
-    {
-        $sqlite = Sqlite::createOrGetBackendSqlite();
-        if ($sqlite === null) {
-            throw new ExceptionCombo("Sqlite is not available");
-        }
 
+    public static function getQueue(string $eventName = null): array
+    {
+        try {
+            $sqlite = Sqlite::createOrGetBackendSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
+            LogUtility::internalError("Sqlite is not available, no events was returned", self::CANONICAL);
+            return [];
+        }
 
         /**
          * Execute
          */
         $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, DatabasePageRow::ROWID];
         $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME, $attributes);
-        $request = $sqlite->createRequest()
-            ->setQuery($select);
+        $request = $sqlite->createRequest();
+        if (empty($eventName)) {
+            $request->setQuery($select);
+        } else {
+            $request->setQueryParametrized($select . " where " . self::EVENT_NAME_ATTRIBUTE . " = ?", [$eventName]);
+        }
         try {
             return $request->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("Unable to get the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+        } catch (ExceptionCompile $e) {
+            LogUtility::internalError("Unable to get the queue. Error:" . $e->getMessage(), self::CANONICAL, $e);
+            return [];
         } finally {
             $request->close();
         }
@@ -240,29 +251,38 @@ class Event
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function purgeQueue(): int
     {
         $sqlite = Sqlite::createOrGetBackendSqlite();
         if ($sqlite === null) {
-            throw new ExceptionCombo("Sqlite is not available");
+            throw new ExceptionCompile("Sqlite is not available");
         }
 
 
         /**
          * Execute
          */
+        /** @noinspection SqlWithoutWhere */
         $request = $sqlite->createRequest()
             ->setQuery("delete from " . self::EVENT_TABLE_NAME);
         try {
             return $request->execute()
                 ->getChangeCount();
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("Unable to count the number of event in the queue. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("Unable to count the number of event in the queue. Error:" . $e->getMessage(), self::CANONICAL, 0, $e);
         } finally {
             $request->close();
         }
+    }
+
+    /**
+     * @throws ExceptionCompile
+     */
+    public static function getEvents(string $eventName): array
+    {
+        return Event::getQueue($eventName);
     }
 
 

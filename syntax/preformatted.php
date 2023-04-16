@@ -2,6 +2,7 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\Html;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\TagAttributes;
@@ -215,7 +216,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
                     $text = trim($data[PluginUtility::PAYLOAD], "\n\r");
                     if (!(trim($text) == "" && $emptyContentShouldBeDeleted)) {
 
-                        $renderer->doc .= PluginUtility::htmlEncode($text);
+                        $renderer->doc .= Html::encode($text);
                         Prism::htmlExit($renderer);
                     }
                     break;

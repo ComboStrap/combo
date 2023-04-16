@@ -2,16 +2,25 @@
 
 use ComboStrap\BacklinkMenuItem;
 use ComboStrap\Event;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherMarkup;
+use ComboStrap\FetcherPage;
 use ComboStrap\FileSystems;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
-use ComboStrap\MarkupRef;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\LinkMarkup;
+use ComboStrap\LogUtility;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
+use ComboStrap\Tag\RelatedTag;
+use ComboStrap\WikiPath;
+use dokuwiki\Menu\Item\Backlink;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -57,23 +66,25 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
          */
         if ($event->data['view'] != 'page') return;
 
-        global $INFO;
-        if (!$INFO['exists']) {
-            return;
-        }
+
         $menuItems = &$event->data["items"];
         foreach ($menuItems as $key => $menuItem) {
-            if ($menuItem instanceof \dokuwiki\Menu\Item\Backlink) {
+            if ($menuItem instanceof Backlink) {
                 $menuItems[$key] = new BacklinkMenuItem();
                 break;
             }
         }
         /**
-         * Add the wl to build the link to the backlinks actions
+         * Add the link to build the link to the backlinks actions
          */
-        $id = PluginUtility::getRequestedWikiId();
+        try {
+            $requestedContextPage = ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
+        } catch (ExceptionNotFound $e) {
+            // admin
+            return;
+        }
         global $JSINFO;
-        $JSINFO[self::WHREF] = wl($id);
+        $JSINFO[self::WHREF] = FetcherPage::createPageFetcherFromPath($requestedContextPage)->getFetchUrl()->toString();
 
     }
 
@@ -102,24 +113,29 @@ class action_plugin_combo_backlinkmenuitem extends DokuWiki_Action_Plugin
              */
             $id = $_REQUEST["id"];
         }
-
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
         if (empty($id)) {
-            \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_BAD_REQUEST)
+            $executionContext->response()
+                ->setStatus(HttpResponseStatus::BAD_REQUEST)
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
-                ->send("The page id should not be empty", Mime::HTML);
+                ->setBody("The page id should not be empty", Mime::getHtml())
+                ->end();
             return;
         }
 
 
-        $backlinkPages = Page::createPageFromId($id);
-        $html = syntax_plugin_combo_related::getHtmlRelated($backlinkPages);
+        $backlinkPages = MarkupPath::createMarkupFromId($id);
+        $html = RelatedTag::renderForPage($backlinkPages);
 
 
-        \ComboStrap\HttpResponse::create(\ComboStrap\HttpResponse::STATUS_ALL_GOOD)
+        $executionContext
+            ->response()
+            ->setStatus(HttpResponseStatus::ALL_GOOD)
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
-            ->send($html, Mime::HTML);
+            ->setBody($html, Mime::getHtml())
+            ->end();
 
     }
 

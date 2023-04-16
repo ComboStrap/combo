@@ -1,27 +1,34 @@
 <?php
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
-use ComboStrap\AliasType;
+
 use ComboStrap\DatabasePageRow;
-use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionSqliteNotAvailable;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FileSystems;
 use ComboStrap\HttpResponse;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
+use ComboStrap\Meta\Field\AliasType;
 use ComboStrap\Mime;
-use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PageRules;
 use ComboStrap\PageUrlPath;
 use ComboStrap\PageUrlType;
-use ComboStrap\PluginUtility;
+use ComboStrap\RouterBestEndPage;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\Sqlite;
-use ComboStrap\Url;
-use ComboStrap\UrlManagerBestEndPage;
+use ComboStrap\Web\Url;
+use ComboStrap\WikiPath;
 
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class action_plugin_combo_url
@@ -86,8 +93,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     const PAGE_404 = "<html lang=\"en\"><body></body></html>";
     const REFRESH_HEADER_NAME = "Refresh";
     const REFRESH_HEADER_PREFIX = self::REFRESH_HEADER_NAME . ': 0;url=';
-    const LOCATION_HEADER_NAME = "Location";
-    const LOCATION_HEADER_PREFIX = self::LOCATION_HEADER_NAME . ": ";
+    const LOCATION_HEADER_PREFIX = HttpResponse::LOCATION_HEADER_NAME . ": ";
     public const URL_MANAGER_NAME = "Router";
 
 
@@ -106,10 +112,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     }
 
     /**
-     * @param $refreshHeader
+     * @param string $refreshHeader
      * @return false|string
      */
-    public static function getUrlFromRefresh($refreshHeader)
+    public static function getUrlFromRefresh(string $refreshHeader)
     {
         return substr($refreshHeader, strlen(action_plugin_combo_router::REFRESH_HEADER_PREFIX));
     }
@@ -131,7 +137,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     private static function getOriginalIdFromRequest()
     {
         $originalId = $_GET["id"];
-        return str_replace("/", DokuPath::PATH_SEPARATOR, $originalId);
+        return str_replace("/", WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $originalId);
     }
 
     /**
@@ -215,7 +221,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        if (PluginUtility::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
+        if (SiteConfig::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
+
             /**
              * This will call the function {@link action_plugin_combo_router::_router()}
              * The event is not DOKUWIKI_STARTED because this is not the first one
@@ -223,7 +230,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * https://www.dokuwiki.org/devel:event:init_lang_load
              */
             $controller->register_hook('DOKUWIKI_STARTED',
-                'AFTER',
+                'BEFORE',
                 $this,
                 'router',
                 array());
@@ -256,19 +263,21 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         $id = self::getOriginalIdFromRequest();
-        $page = Page::createPageFromId($id);
-        if (!$page->exists()) {
+        $page = MarkupPath::createMarkupFromId($id);
+        if (!FileSystems::exists($page)) {
             // Well known
             if (self::isWellKnownFile($id)) {
                 $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
-                HttpResponse::create(HttpResponse::STATUS_NOT_FOUND)
-                    ->send();
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->response()
+                    ->setStatus(HttpResponseStatus::NOT_FOUND)
+                    ->end();
                 return;
             }
 
             // Shadow banned
             if (self::isShadowBanned($id)) {
-                $webSiteHomePage = Site::getHomePageName();
+                $webSiteHomePage = Site::getIndexPageName();
                 $this->executeTransparentRedirect($webSiteHomePage, self::TARGET_ORIGIN_SHADOW_BANNED);
             }
         }
@@ -283,8 +292,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     function router(&$event, $param)
     {
 
-        global $ACT;
-        if ($ACT !== 'show') return;
+        /**
+         * Just the {@link ExecutionContext::SHOW_ACTION}
+         * may be redirected
+         */
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        if ($executionContext->getExecutingAction()!==ExecutionContext::SHOW_ACTION) {
+            return;
+        }
 
 
         global $ID;
@@ -292,17 +307,19 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Without SQLite, this module does not work further
          */
-        $sqlite = Sqlite::createOrGetSqlite();
-        if ($sqlite == null) {
+        try {
+            Sqlite::createOrGetSqlite();
+        } catch (ExceptionSqliteNotAvailable $e) {
             return;
-        } else {
-            $this->pageRules = new PageRules();
         }
+
+        $this->pageRules = new PageRules();
+
 
         /**
          * Unfortunately, DOKUWIKI_STARTED is not the first event
          * The id may have been changed by
-         * {@link action_plugin_combo_metalang::load_lang()}
+         * {@link action_plugin_combo_lang::load_lang()}
          * function, that's why we check against the {@link $_REQUEST}
          * and not the global ID
          */
@@ -311,8 +328,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page is an existing id ?
          */
-        $targetPage = Page::createPageFromId($ID);
-        if ($targetPage->exists()) {
+        $requestedMarkupPath = MarkupPath::createMarkupFromId($ID);
+        if (FileSystems::exists($requestedMarkupPath)) {
 
             /**
              * If this is not the root home page
@@ -321,19 +338,29 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * redirect
              */
             if (
-                $originalId !== $targetPage->getUrlId() // The id may have been changed
-                && $ID != Site::getHomePageName()
+                $originalId !== $requestedMarkupPath->getUrlId() // The id may have been changed
+                && $ID != Site::getIndexPageName()
                 && !isset($_REQUEST["rev"])
             ) {
                 /**
                  * TODO: When saving for the first time, the page is not stored in the database
                  *   but that's not the case actually
                  */
-                if ($targetPage->getDatabasePage()->exists()) {
-                    $this->executePermanentRedirect(
-                        $targetPage->getCanonicalUrl([], true),
-                        self::TARGET_ORIGIN_PERMALINK_EXTENDED
-                    );
+                $databasePageRow = $requestedMarkupPath->getDatabasePage();
+                if ($databasePageRow->exists()) {
+                    /**
+                     * A move may leave the database in a bad state,
+                     * unfortunately (ie page is not in index, unable to update, ...)
+                     * We test therefore if the database page id exists
+                     */
+                    $targetPageId = $databasePageRow->getFromRow("id");
+                    $targetPath = WikiPath::createMarkupPathFromId($targetPageId);
+                    if(FileSystems::exists($targetPath)) {
+                        $this->executePermanentRedirect(
+                            $requestedMarkupPath->getCanonicalUrl()->toAbsoluteUrlString(),
+                            self::TARGET_ORIGIN_PERMALINK_EXTENDED
+                        );
+                    }
                 }
             }
             return;
@@ -346,14 +373,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page Id Website / root Permalink ?
          */
-        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($targetPage->getPath()->getLastName());
+        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedMarkupPath->getPathObject()->getLastNameWithoutExtension());
         if ($shortPageId !== null) {
             $pageId = PageUrlPath::decodePageId($shortPageId);
-            if ($targetPage->getParentPage() === null && $pageId !== null) {
-                $page = DatabasePageRow::createFromPageId($pageId)->getPage();
+            if ($requestedMarkupPath->getParent() === null && $pageId !== null) {
+                $page = DatabasePageRow::createFromPageId($pageId)->getMarkupPath();
                 if ($page !== null && $page->exists()) {
                     $this->executePermanentRedirect(
-                        $page->getCanonicalUrl([], true),
+                        $page->getCanonicalUrl()->toAbsoluteUrlString(),
                         self::TARGET_ORIGIN_PERMALINK
                     );
                 }
@@ -366,14 +393,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             if (
                 $pageId !== null
             ) {
-                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getPage();
+                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getMarkupPath();
                 if ($page === null) {
                     // or the length of the abbr has changed
-                    $databasePage = new DatabasePageRow();
-                    $row = $databasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
+                    $canonicalDatabasePage = new DatabasePageRow();
+                    $row = $canonicalDatabasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
                     if ($row !== null) {
-                        $databasePage->setRow($row);
-                        $page = $databasePage->getPage();
+                        $canonicalDatabasePage->setRow($row);
+                        $page = $canonicalDatabasePage->getMarkupPath();
                     }
                 }
                 if ($page !== null && $page->exists()) {
@@ -390,13 +417,13 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                         // it's a good idea to pick one of those URLs as your preferred (canonical) destination,
                         // and use redirects to send traffic from the other URLs to your preferred URL.
                         $this->executePermanentRedirect(
-                            $page->getCanonicalUrl([], true),
+                            $page->getCanonicalUrl()->toAbsoluteUrlString(),
                             self::TARGET_ORIGIN_PERMALINK_EXTENDED
                         );
                         return;
                     }
 
-                    $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                    $this->executeTransparentRedirect($page->getWikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
                     return;
 
                 }
@@ -414,21 +441,21 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Identifier is a Canonical ?
          */
-        $databasePage = DatabasePageRow::createFromCanonical($identifier);
-        $targetPage = $databasePage->getPage();
-        if ($targetPage !== null && $targetPage->exists()) {
+        $canonicalDatabasePage = DatabasePageRow::createFromCanonical($identifier);
+        $canonicalPage = $canonicalDatabasePage->getMarkupPath();
+        if ($canonicalPage !== null && $canonicalPage->exists()) {
             /**
              * Does the canonical url is canonical name based
              * ie {@link  PageUrlType::CONF_VALUE_CANONICAL_PATH}
              */
-            if ($targetPage->getUrlId() === $identifier) {
+            if ($canonicalPage->getUrlId() === $identifier) {
                 $res = $this->executeTransparentRedirect(
-                    $targetPage->getDokuwikiId(),
+                    $canonicalPage->getWikiId(),
                     self::TARGET_ORIGIN_CANONICAL
                 );
             } else {
                 $res = $this->executePermanentRedirect(
-                    $targetPage->getDokuwikiId(), // not the url because, it allows to add url query redirection property
+                    $canonicalPage->getWikiId(), // not the url because, it allows to add url query redirection property
                     self::TARGET_ORIGIN_CANONICAL
                 );
             }
@@ -440,31 +467,31 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Identifier is an alias
          */
-        $targetPage = DatabasePageRow::createFromAlias($identifier)->getPage();
+        $aliasRequestedPage = DatabasePageRow::createFromAlias($identifier)->getMarkupPath();
         if (
-            $targetPage !== null
-            && $targetPage->exists()
+            $aliasRequestedPage !== null
+            && $aliasRequestedPage->exists()
             // The build alias is the file system metadata alias
             // it may be null if the replication in the database was not successful
-            && $targetPage->getBuildAlias() !== null
+            && $aliasRequestedPage->getBuildAlias() !== null
         ) {
-            $buildAlias = $targetPage->getBuildAlias();
+            $buildAlias = $aliasRequestedPage->getBuildAlias();
             switch ($buildAlias->getType()) {
                 case AliasType::REDIRECT:
-                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl([], true), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl()->toAbsoluteUrlString(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
                     break;
                 case AliasType::SYNONYM:
-                    $res = $this->executeTransparentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executeTransparentRedirect($aliasRequestedPage->getWikiId(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
                     break;
                 default:
                     LogUtility::msg("The alias type ({$buildAlias->getType()}) is unknown. A permanent redirect was performed for the alias $identifier");
-                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl([], true), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl()->toAbsoluteUrlString(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
@@ -494,7 +521,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         }
 
-        /*
+        /**
          *  We are still a reader, the redirection does not exist the user is not allowed to edit the page (public of other)
          */
         if ($this->getConf('ActionReaderFirst') == self::NOTHING) {
@@ -518,15 +545,18 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
                 case self::GO_TO_BEST_END_PAGE_NAME:
 
-                    list($targetPage, $method) = UrlManagerBestEndPage::process($identifier);
-                    if ($targetPage != null) {
+                    /**
+                     * @var MarkupPath $bestEndPage
+                     */
+                    list($bestEndPage, $method) = RouterBestEndPage::process($requestedMarkupPath);
+                    if ($bestEndPage != null) {
                         $res = false;
                         switch ($method) {
                             case self::REDIRECT_PERMANENT_METHOD:
-                                $res = $this->executePermanentRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
+                                $res = $this->executePermanentRedirect($bestEndPage->getWikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                                 break;
                             case self::REDIRECT_NOTFOUND_METHOD:
-                                $res = $this->performNotFoundRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
+                                $res = $this->performNotFoundRedirect($bestEndPage->getWikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                                 break;
                             default:
                                 LogUtility::msg("This redirection method ($method) was not expected for the redirection algorithm ($algorithm)");
@@ -701,7 +731,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
         /**
          * Because we set the ID globally for the ID redirect
-         * we make sure that this is not a {@link Page}
+         * we make sure that this is not a {@link MarkupPath}
          * object otherwise we got an error in the {@link \ComboStrap\AnalyticsMenuItem}
          * because the constructor takes it {@link \dokuwiki\Menu\Item\AbstractItem}
          */
@@ -726,6 +756,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         global $INFO;
         $sourceId = $ID;
         $ID = $targetPageId;
+        if (isset($_REQUEST["id"])) {
+            $_REQUEST["id"] = $targetPageId;
+        }
+        if (isset($_GET["id"])) {
+            $_GET["id"] = $targetPageId;
+        }
 
         /**
          * Refresh the $INFO data
@@ -758,51 +794,56 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
     }
 
-    private function executePermanentRedirect(string $target, $targetOrigin): bool
+    private function executePermanentRedirect(string $targetIdOrUrl, $targetOrigin): bool
     {
-        return $this->executeHttpRedirect($target, $targetOrigin, self::REDIRECT_PERMANENT_METHOD);
+        return $this->executeHttpRedirect($targetIdOrUrl, $targetOrigin, self::REDIRECT_PERMANENT_METHOD);
     }
 
     /**
      * The general HTTP Redirect method to an internal page
      * where the redirection method decide which type of redirection
-     * @param string $target - a dokuwiki id or an url
+     * @param string $targetIdOrUrl - a dokuwiki id or an url
      * @param string $targetOrigin - the origin of the target (the algorithm used to get the target origin)
      * @param string $method - the redirection method
      */
     private
-    function executeHttpRedirect(string $target, string $targetOrigin, string $method): bool
+    function executeHttpRedirect(string $targetIdOrUrl, string $targetOrigin, string $method): bool
     {
 
         global $ID;
 
 
         // Log the redirections
-        $this->logRedirection($ID, $target, $targetOrigin, $method);
+        $this->logRedirection($ID, $targetIdOrUrl, $targetOrigin, $method);
 
 
-        // An external url ?
-        $isValid = Url::isValid($target);
+        // An http external url ?
+        try {
+            $isValid = Url::createFromString($targetIdOrUrl)->isHttpUrl();
+        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
+            $isValid = false;
+        }
+
         // If there is a bug in the isValid function for an internal url
         // We get a loop.
         // The Url becomes the id, the id is unknown and we do a redirect again
         //
         // We check then if the target starts with the base url
         // if this is the case, it's valid
-        if (!$isValid && strpos($target, DOKU_URL) === 0) {
+        if (!$isValid && strpos($targetIdOrUrl, DOKU_URL) === 0) {
             $isValid = true;
         }
         if ($isValid) {
 
             // defend against HTTP Response Splitting
             // https://owasp.org/www-community/attacks/HTTP_Response_Splitting
-            $targetUrl = stripctl($target);
+            $targetUrl = stripctl($targetIdOrUrl);
 
         } else {
 
 
             // Explode the page ID and the anchor (#)
-            $link = explode('#', $target, 2);
+            $link = explode('#', $targetIdOrUrl, 2);
 
             // Query String to pass the message
             $urlParams = [];
@@ -846,18 +887,23 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         switch ($method) {
             case self::REDIRECT_PERMANENT_METHOD:
-                HttpResponse::create(HttpResponse::STATUS_PERMANENT_REDIRECT)
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->response()
+                    ->setStatus(HttpResponseStatus::PERMANENT_REDIRECT)
                     ->addHeader(self::LOCATION_HEADER_PREFIX . $targetUrl)
-                    ->send();
+                    ->end();
                 return true;
             case self::REDIRECT_NOTFOUND_METHOD:
 
                 // Empty 404 body to not get the standard 404 page of the browser
                 // but a blank page to avoid a sort of FOUC.
                 // ie the user see a page briefly
-                HttpResponse::create(HttpResponse::STATUS_NOT_FOUND)
+                ExecutionContext::getActualOrCreateFromEnv()
+                    ->response()
+                    ->setStatus(HttpResponseStatus::NOT_FOUND)
                     ->addHeader(self::REFRESH_HEADER_PREFIX . $targetUrl)
-                    ->send(self::PAGE_404, Mime::HTML);
+                    ->setBody(self::PAGE_404, Mime::getHtml())
+                    ->end();
                 return true;
 
             default:
@@ -969,7 +1015,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         try {
             $request
                 ->execute();
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Redirection Log Insert Error. {$e->getMessage()}");
         } finally {
             $request->close();
@@ -999,7 +1045,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $ruleTarget = $rule[PageRules::TARGET_NAME];
 
             // Glob to Rexgexp
-            $regexpPattern = '/' . str_replace("*", "(.*)", $ruleMatcher) . '/';
+            $regexpPattern = '/' . str_replace("*", "(.*)", $ruleMatcher) . '/i';
 
             // Match ?
             // https://www.php.net/manual/en/function.preg-match.php
@@ -1028,11 +1074,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
 
         // If this is an external redirect (other domain)
-        if (Url::isValid($calculatedTarget)) {
-
+        try {
+            $isHttpUrl = Url::createFromString($calculatedTarget)->isHttpUrl();
+        } catch (ExceptionBadSyntax $e) {
+            $isHttpUrl = false;
+        }
+        if ($isHttpUrl) {
             $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             return true;
-
         }
 
         // If the page exist
@@ -1041,7 +1090,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             // This is DokuWiki Id and should always be lowercase
             // The page rule may have change that
             $calculatedTarget = strtolower($calculatedTarget);
-            $res = $this->executeHttpRedirect($calculatedTarget,self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
+            $res = $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             if ($res) {
                 return true;
             } else {

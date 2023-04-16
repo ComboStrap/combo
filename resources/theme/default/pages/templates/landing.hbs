@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+    <title>{{ title }}</title>
+    {{> head-partial }}
+</head>
+<body class="{{body-classes}}">
+{{>page-header-partial}}
+{{!-- no layout-container-class, the bar component takes care of it --}}
+<div id="page-core" class="position-relative">
+    <main id="main-content">
+        {{{ main-content-html }}}
+    </main>
+</div>
+{{>page-footer-partial}}
+{{!-- Railbar at the end to paint over the footer. It happens when a page without a lot of content is shown such as a slot --}}
+{{> railbar-partial }}
+{{>body-beforeend-partial}}
+</body>
+</html>

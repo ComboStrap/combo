@@ -36,12 +36,31 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
     const HISTORICAL_BREADCRUMB_NAME = "historical-breadcrumb";
     const CANONICAL = "breadcrumb";
 
+    public function __construct()
+    {
+        /**
+         * Making popover active
+         */
+        $snippetManager = PluginUtility::getSnippetManager();
+        $snippetManager
+            ->addPopoverLibrary()
+            ->attachJavascriptFromComponentId(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
+
+        /**
+         * Css
+         */
+        $snippetManager->attachCssInternalStylesheet(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
+
+        parent::__construct();
+
+    }
+
 
     /**
      *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return self::RECENT_PAGES_VISITED;
     }
@@ -53,6 +72,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         $linkAttributes['href'] = "#";
         $dataAttributeNamespace = Bootstrap::getDataNamespace();
         $linkAttributes["data{$dataAttributeNamespace}-toggle"] = "popover";
+        $linkAttributes["data{$dataAttributeNamespace}-placement"] = "left";
         $linkAttributes["data{$dataAttributeNamespace}-html"] = "true";
         global $lang;
         $linkAttributes["data{$dataAttributeNamespace}-title"] = $lang['breadcrumb'];
@@ -97,11 +117,12 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         // https://getbootstrap.com/docs/5.1/components/popovers/#dismiss-on-next-click
         $linkAttributes['tabindex'] = "0";
 
-        $linkAttributes["data{$dataAttributeNamespace}custom-class"] = "historical-breadcrumb";
+        $linkAttributes["data{$dataAttributeNamespace}-custom-class"] = "historical-breadcrumb";
         return $linkAttributes;
+
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         /**
          * The title (unfortunately) is deleted from the anchor
@@ -110,10 +131,10 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         return self::RECENT_PAGES_VISITED;
     }
 
-    public function getSvg()
+    public function getSvg(): string
     {
         /** @var string icon file */
-        return Site::getComboImagesDirectory()->resolve('history.svg')->toString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('history.svg')->toAbsoluteId();
     }
 
     /**
@@ -124,7 +145,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
      */
     public function createLink($id, $name, $class = null): string
     {
-        $page = Page::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
         if ($name == "start") {
             $name = "Home Page";
         } else {
@@ -132,11 +153,11 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         }
 
         try {
-            $attributes = MarkupRef::createFromPageId($id)->toAttributes(self::CANONICAL);
-        } catch (ExceptionCombo $e) {
+            $attributes = LinkMarkup::createFromPageIdOrPath($id)->toAttributes(self::CANONICAL);
+        } catch (ExceptionCompile $e) {
             return LogUtility::wrapInRedForHtml("Error on breadcrumb markup ref. Message: {$e->getMessage()}");
         }
-        if($class!==null){
+        if ($class !== null) {
             $attributes->addClassName($class);
         }
 

@@ -1,7 +1,8 @@
+
 window.addEventListener("DOMContentLoaded", function () {
 
 
-    document.querySelectorAll(".lightbox-combo").forEach((lightBoxAnchor) => {
+    document.querySelectorAll(".lightbox-cs").forEach((lightBoxAnchor) => {
 
         let drag = false;
 
@@ -33,9 +34,11 @@ window.addEventListener("DOMContentLoaded", function () {
             }
         });
         let openLightbox = function () {
-            let lightBoxId = combo.toHtmlId(`combo-lightbox`);
 
-            let lightBoxModel = combo.getOrCreateModal(lightBoxId);
+            const combo = /** @type {import('combo.d.ts')} */ (window.combo);
+            let lightBoxId = combo.Html.toHtmlId(`combo-lightbox`);
+
+            let lightBoxModel = combo.Modal.getOrCreate(lightBoxId);
             let src = lightBoxAnchor.getAttribute("href");
             let img = lightBoxAnchor.querySelector("img");
             let alt = "Image";
@@ -43,7 +46,8 @@ window.addEventListener("DOMContentLoaded", function () {
                 alt = img.getAttribute("alt");
             }
             let namespace = "-bs"
-            let bsVersion = parseInt(bootstrap.Modal.VERSION.substr(0, 1), 10);
+            const bootstrap = /** @type {import('bootstrap.d.ts')} */ (window.bootstrap);
+            let bsVersion = parseInt(bootstrap.Modal.VERSION.substring(0, 1), 10);
             if (bsVersion < 5) {
                 namespace = "";
             }
@@ -51,11 +55,12 @@ window.addEventListener("DOMContentLoaded", function () {
             let svgStyle = "max-height:95vh;max-width:95vw";
             if (src.match(/svg/i) !== null) {
                 // a svg does not show without width
-                // because the intrinsic svg can be really small, we put a min with
+                // because the intrinsic svg can be tiny, we put a min with
                 svgStyle += ';width: 100%;min-width: 75vw'
             }
+            let dataDismissAttribute = `data${namespace}-dismiss`;
             let html = `
-<button type="button" class="lightbox-close-combo" data${namespace}-dismiss="modal" aria-label="Close">
+<button type="button" class="lightbox-close-cs" ${dataDismissAttribute}="modal" aria-label="Close">
     <span aria-hidden="true">&times;</span>
 </button>
 <img src="${src}" alt="${alt}" style="${svgStyle}"/>

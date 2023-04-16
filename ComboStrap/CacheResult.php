@@ -41,7 +41,7 @@ class CacheResult
 
     public function getPath(): LocalPath
     {
-        return LocalPath::create($this->cacheParser->cache);
+        return LocalPath::createFromPathString($this->cacheParser->cache);
     }
 
     public function getMode(): string
@@ -49,9 +49,9 @@ class CacheResult
         return $this->cacheParser->mode;
     }
 
-    public function getSlotId(): string
+    public function getMarkupPath(): MarkupPath
     {
-        return $this->cacheParser->page;
+        return MarkupPath::createMarkupFromId($this->cacheParser->page);
     }
 
     public function getResult(): bool

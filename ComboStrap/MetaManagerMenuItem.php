@@ -32,7 +32,7 @@ class MetaManagerMenuItem extends AbstractItem
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
-        $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
+        $snippetManager->attachJavascriptFromComponentId(self::CANONICAL);
         parent::__construct();
     }
 
@@ -68,7 +68,7 @@ class MetaManagerMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return Site::getComboImagesDirectory()->resolve('tag-text.svg')->toString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('tag-text.svg')->toAbsoluteId();
     }
 
 

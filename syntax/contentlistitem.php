@@ -3,6 +3,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 
 /**
@@ -18,7 +19,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
     const DOKU_TAG = "contentlistitem";
     const MARKI_TAG = "content-list-item";
     const ALL_TAGS = array(self::MARKI_TAG, "list-item", "li");
-
+    const LIST_GROUP_ITEM_CLASS = "list-group-item";
 
 
     /**
@@ -36,9 +37,9 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - The plugin can be used inside paragraphs (inline or inside)
-     *  * 'block'  - Open paragraphs need to be closed before plugin output (box) - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     * * 'normal' - Inline
+     *  * 'block' - Block (p are not created inside)
+     *  * 'stack' - Block (p can be created inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      * @see https://www.dokuwiki.org/devel:syntax_plugins#ptype
@@ -91,7 +92,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
          * This is the old tags
          */
         foreach (self::ALL_TAGS as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
@@ -128,7 +129,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $attributes = TagAttributes::createFromTagMatch($match);
-                $tag = PluginUtility::getTag($match);
+                $tag = PluginUtility::getMarkupTag($match);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),
@@ -176,7 +177,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
-                    $tagAttributes->addClassName("list-group-item");
+                    $tagAttributes->addClassName(self::LIST_GROUP_ITEM_CLASS);
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");
                     break;
                 case DOKU_LEXER_EXIT :

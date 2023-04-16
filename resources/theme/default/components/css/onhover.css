@@ -1,0 +1,12 @@
+
+.combo-hover-easing {
+    transition: all .2s ease;
+}
+
+.combo-float {
+    transform: translateY(-3px) !important;
+}
+
+.combo-grow {
+    transform: scale(1.05);
+}

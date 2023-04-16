@@ -1,12 +1,12 @@
 <?php
 
 use ComboStrap\DisqusIdentifier;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataUtility;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
-use ComboStrap\Page;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * Disqus integration
@@ -114,7 +114,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 list($attributes) = $data;
                 /** @var Doku_Renderer_xhtml $renderer */
 
-                $page = Page::createPageFromRequestedPage();
+                $page = MarkupPath::createFromRequestedPage();
 
                 /**
                  * Disqus configuration
@@ -132,14 +132,16 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 /**
                  * @deprecated the page id is used
                  */
-                $disqusIdentifier = $page->getMetadata(DisqusIdentifier::PROPERTY_NAME);
+                $disqusIdentifier = MetadataDokuWikiStore::getOrCreateFromResource($page)
+                    ->getFromName(DisqusIdentifier::PROPERTY_NAME);
                 if (empty($disqusIdentifier)) {
 
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];
                     if (empty($disqusIdentifier)) {
-                        $disqusIdentifier = $page->getPageId();
-                        if ($disqusIdentifier === null) {
-                            LogUtility::msg("The page id has not been yet set, therefore the disqus forum can not render", LogUtility::LVL_MSG_ERROR, self::TAG);
+                        try {
+                            $disqusIdentifier = $page->getPageId();
+                        } catch (ExceptionNotExists $e) {
+                            // the page does not exists
                             return false;
                         }
                     }
@@ -156,7 +158,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
 
                 $title = $attributes[self::ATTRIBUTE_TITLE];
                 if (empty($title)) {
-                    $title = action_plugin_combo_metatitle::getTitle();
+                    $title = action_plugin_combo_metatitle::getHtmlTitle();
                     if (!empty($title)) {
                         $disqusConfig .= "this.page.title = $title;";
                     }
@@ -198,7 +200,7 @@ EOD;
                 $renderer->doc .= '<div id="disqus_thread"></div>';
 
                 return true;
-                break;
+
             case 'metadata':
 
         }

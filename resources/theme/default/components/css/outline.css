@@ -1,0 +1,31 @@
+.outline-heading-cs {
+    background-color: inherit;
+    /* The content will go outside of the parent
+     The border will stop to the end of the content */
+    /*noinspection CssInvalidPropertyValue*/
+    /* The content may become so long that it goes outside the parent
+    max width prevent it */
+    max-width: 100%;
+    text-decoration: underline #8cacbb solid;
+    color: #000;
+    font-weight: bold;
+}
+
+section.outline-level-3-cs, section.outline-level-4-cs, section.outline-level-5-cs, section.outline-level-6-cs {
+    margin-left: 15px;
+}
+
+/* No margin left on small screen */
+@media (min-width: 0px) and (max-width: 576px) {
+
+    .outline-section-cs {
+        margin-left: 0 !important;
+    }
+
+}
+
+.outline-section-cs, .outline-header-cs {
+    position: relative;
+}
+
+

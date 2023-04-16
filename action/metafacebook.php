@@ -1,13 +1,16 @@
 <?php
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\Image;
+use ComboStrap\ExecutionContext;
+use ComboStrap\SiteConfig;
+use ComboStrap\WikiPath;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\IFetcherLocalImage;
+use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\Mime;
-use ComboStrap\Page;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
@@ -64,22 +67,14 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
     function metaFacebookProcessing($event)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $ID is null for media
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+            $templateForWebPage = $executionContext->getExecutingPageTemplate();
+        } catch (ExceptionNotFound $e) {
             return;
         }
 
-
-        $page = Page::createPageFromId($ID);
-        if (!$page->exists()) {
-            return;
-        }
-
-        /**
-         * No social for bars
-         */
-        if ($page->isSecondarySlot()) {
+        if (!$templateForWebPage->isSocial()) {
             return;
         }
 
@@ -88,6 +83,12 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          * "og:url" is already created in the {@link action_plugin_combo_metacanonical}
          * "og:description" is already created in the {@link action_plugin_combo_metadescription}
          */
+        try {
+            $requestedPath = $templateForWebPage->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            return;
+        }
+        $page = MarkupPath::createPageFromPathObject($requestedPath);
         $facebookMeta = array(
             "og:title" => StringUtility::truncateString($page->getTitleOrDefault(), 70)
         );
@@ -97,7 +98,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $facebookMeta["og:description"] = $descriptionOrElseDokuWiki;
         }
 
-        $title = Site::getTitle();
+
+        $title = Site::getName();
         if (!empty($title)) {
             $facebookMeta["og:site_name"] = $title;
         }
@@ -109,11 +111,22 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         switch ($pageType) {
             case PageType::ARTICLE_TYPE:
                 // https://ogp.me/#type_article
-                $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
-                $modifiedTime = $page->getModifiedTimeOrDefault();
-                if ($modifiedTime !== null) {
-                    $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
+                try {
+                    $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the publication date for the page ($page)", self::CANONICAL);
+
                 }
+                try {
+                    $modifiedTime = $page->getModifiedTimeOrDefault();
+                    $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the modification date for the page ($page)", self::CANONICAL);
+                }
+
+
                 $facebookMeta["og:type"] = $pageType;
                 break;
             default:
@@ -123,20 +136,20 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
 
-        /**
-         * @var Image[]
-         */
-        $facebookImages = $page->getImagesOrDefaultForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
+        $facebookImages = $page->getImagesForTheFollowingUsages([PageImageUsage::FACEBOOK, PageImageUsage::SOCIAL, PageImageUsage::ALL]);
         if (empty($facebookImages)) {
-            $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
+            $defaultFacebookImage = SiteConfig::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
-                DokuPath::addRootSeparatorIfNotPresent($defaultFacebookImage);
-                $image = Image::createImageFromId($defaultFacebookImage);
-                if ($image->exists()) {
-                    $facebookImages[] = $image;
+                $dokuPath = WikiPath::createMediaPathFromId($defaultFacebookImage);
+                if (FileSystems::exists($dokuPath)) {
+                    try {
+                        $facebookImages[] = IFetcherLocalImage::createImageFetchFromPath($dokuPath);
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::error("We were unable to add the default facebook image ($defaultFacebookImage) because of the following error: {$e->getMessage()}", self::CANONICAL);
+                    }
                 } else {
                     if ($defaultFacebookImage != ":logo-facebook.png") {
-                        LogUtility::msg("The default facebook image ($defaultFacebookImage) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        LogUtility::error("The default facebook image ($defaultFacebookImage) does not exist", self::CANONICAL);
                     }
                 }
             }
@@ -147,72 +160,80 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
              * One of image/jpeg, image/gif or image/png
              * As stated here: https://developers.facebook.com/docs/sharing/webmasters#images
              **/
-            $facebookMime = [Mime::JPEG, Mime::GIF, Mime::PNG];
+            $facebookMimes = [Mime::JPEG, Mime::GIF, Mime::PNG];
             foreach ($facebookImages as $facebookImage) {
 
-                if (!in_array($facebookImage->getPath()->getMime()->toString(), $facebookMime)) {
+                $path = $facebookImage->getSourcePath();
+                if (!FileSystems::exists($path)) {
+                    LogUtility::error("The image ($path) does not exist and was not added", self::CANONICAL);
+                    continue;
+                }
+                try {
+                    $mime = FileSystems::getMime($path);
+                } catch (ExceptionNotFound $e) {
+                    LogUtility::internalError($e->getMessage());
+                    continue;
+                }
+                if (!in_array($mime->toString(), $facebookMimes)) {
                     continue;
                 }
 
-                /** @var Image $facebookImage */
-                if (!($facebookImage->isRaster())) {
-                    LogUtility::msg("Internal: The image ($facebookImage) is not a raster image and this should not be the case for facebook", LogUtility::LVL_MSG_ERROR);
-                    continue;
+                $toSmall = false;
+
+                // There is a minimum size constraint of 200px by 200px
+                // The try is in case we can't get the width and height
+                try {
+                    $intrinsicWidth = $facebookImage->getIntrinsicWidth();
+                    $intrinsicHeight = $facebookImage->getIntrinsicHeight();
+                } catch (ExceptionCompile $e) {
+                    LogUtility::error("No image was added for facebook. Error while retrieving the dimension of the image: {$e->getMessage()}", self::CANONICAL);
+                    break;
                 }
 
-                if (!$facebookImage->exists()) {
-                    LogUtility::msg("The image ($facebookImage) does not exist and was not added", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                if ($intrinsicWidth < 200) {
+                    $toSmall = true;
                 } else {
-
-                    $toSmall = false;
-
-                    // There is a minimum size constraint of 200px by 200px
-                    // The try is in case we can't get the width and height
-                    try {
-                        $intrinsicWidth = $facebookImage->getIntrinsicWidth();
-                        $intrinsicHeight = $facebookImage->getIntrinsicHeight();
-                    } catch (ExceptionCombo $e) {
-                        LogUtility::msg("No image was added for facebook. Error while retrieving the dimension of the image: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        break;
-                    }
-
-                    if ($intrinsicWidth < 200) {
+                    $facebookMeta["og:image:width"] = $intrinsicWidth;
+                    if ($intrinsicHeight < 200) {
                         $toSmall = true;
                     } else {
-                        $facebookMeta["og:image:width"] = $intrinsicWidth;
-                        if ($intrinsicHeight < 200) {
-                            $toSmall = true;
-                        } else {
-                            $facebookMeta["og:image:height"] = $intrinsicHeight;
-                        }
+                        $facebookMeta["og:image:height"] = $intrinsicHeight;
                     }
+                }
 
-                    if ($toSmall) {
-                        $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
+                if ($toSmall) {
+                    $message = "The facebook image ($facebookImage) is too small (" . $intrinsicWidth . " x " . $intrinsicHeight . "). The minimum size constraint is 200px by 200px";
+                    try {
+                        $firstImagePath = $page->getFirstImage()->getSourcePath();
                         if (
-                            $facebookImage->getPath()->toAbsolutePath()->toString()
-                            !==
-                            $page->getFirstImage()->getPath()->toAbsolutePath()->toString()
+                            $path->toAbsolutePath()->toAbsoluteId() !== $firstImagePath->toAbsolutePath()->toAbsoluteId()
                         ) {
-                            LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            // specified image
+                            LogUtility::error($message, self::CANONICAL);
                         } else {
+                            // first image
                             LogUtility::log2BrowserConsole($message);
                         }
+                    } catch (ExceptionNotFound $e) {
+                        // no first image
+                        LogUtility::error($message, self::CANONICAL);
                     }
+                }
 
 
-                    /**
-                     * We may don't known the dimensions
-                     */
-                    if (!$toSmall) {
-                        $mime = $facebookImage->getPath()->getMime()->toString();
-                        if (!empty($mime)) {
-                            $facebookMeta["og:image:type"] = $mime;
-                        }
-                        $facebookMeta["og:image"] = $facebookImage->getAbsoluteUrl();
-                        // One image only
-                        break;
+                /**
+                 * We may don't known the dimensions
+                 */
+                if (!$toSmall) {
+                    $facebookMeta["og:image:type"] = $mime->toString();
+                    try {
+                        $facebookMeta["og:image"] = $facebookImage->getFetchUrl()->toAbsoluteUrlString();
+                    } catch (ExceptionCompile $e) {
+                        // Oeps
+                        LogUtility::internalError("Og Image could not be added. Error: {$e->getMessage()}", self::CANONICAL);
                     }
+                    // One image only
+                    break;
                 }
 
             }
@@ -221,8 +242,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         $facebookMeta["fb:app_id"] = self::FACEBOOK_APP_ID;
 
-        $facebookDefaultLocale = "en_US";
-        $locale = $page->getLocale($facebookDefaultLocale);
+        // FYI default if not set by facebook: "en_US"
+        $locale = ComboStrap\Locale::createForPage($page, "_")->getValueOrDefault();
         $facebookMeta["og:locale"] = $locale;
 
 

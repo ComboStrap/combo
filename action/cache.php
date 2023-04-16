@@ -1,26 +1,14 @@
 <?php
 
-use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
-use ComboStrap\CacheMedia;
 use ComboStrap\CacheMenuItem;
 use ComboStrap\CacheReportHtmlDataBlockArray;
-use ComboStrap\Cron;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\File;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Http;
 use ComboStrap\Identity;
-use ComboStrap\Iso8601Date;
-use ComboStrap\LogUtility;
-use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
-use ComboStrap\PageDescription;
-use ComboStrap\PageH1;
-use ComboStrap\PageTitle;
+use ComboStrap\IFetcher;
 use ComboStrap\PluginUtility;
-use ComboStrap\ResourceName;
-use ComboStrap\Site;
-use dokuwiki\Cache\CacheRenderer;
+use ComboStrap\SiteConfig;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -87,7 +75,11 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $slotId = $data->page;
-        $cacheReporter = CacheManager::getOrCreate()->getCacheResultsForSlot($slotId);
+        if(empty($slotId)){
+            // on edit mode, the page is emtpy
+            return;
+        }
+        $cacheReporter = CacheManager::getFromContextExecution()->getCacheResultsForSlot($slotId);
         $cacheReporter->setData($event);
 
 
@@ -102,10 +94,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function addCacheLogHtmlDataBlock(Doku_Event $event, $params)
     {
 
-        if(!PluginUtility::isRenderingRequestedPageProcess()){
+        $isPublic = ExecutionContext::getActualOrCreateFromEnv()
+            ->isPublicationAction();
+        if(!$isPublic){
             return;
         }
-        $cacheSlotResults = CacheReportHtmlDataBlockArray::getFromRuntime();
+        $cacheSlotResults = CacheReportHtmlDataBlockArray::getFromContext();
         $cacheJson = \ComboStrap\Json::createFromArray($cacheSlotResults);
 
         if (PluginUtility::isDevOrTest()) {
@@ -135,7 +129,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $script = $_SERVER["SCRIPT_NAME"];
         if (in_array($script, self::STATIC_SCRIPT_NAMES)) {
             // To be extra sure, they must have the buster key
-            if (isset($_REQUEST[CacheMedia::CACHE_BUSTER_KEY])) {
+            if (isset($_REQUEST[IFetcher::CACHE_BUSTER_KEY])) {
                 self::deleteVaryHeader();
             }
         }
@@ -153,7 +147,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      */
     public static function deleteVaryHeader(): void
     {
-        if (PluginUtility::getConfValue(action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED, 1)) {
+        if (SiteConfig::getConfValue(action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED, 1)) {
             Http::removeHeaderIfPresent("Vary");
         }
     }

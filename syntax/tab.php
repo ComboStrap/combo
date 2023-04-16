@@ -4,15 +4,10 @@
  *
  */
 
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
+use ComboStrap\TabsTag;
+use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
-
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  *
@@ -89,10 +84,10 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if ($mode = PluginUtility::getModeFromTag(syntax_plugin_combo_tabs::TAG)) {
-            $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
-        }
+
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
 
     }
 
@@ -132,9 +127,7 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED:
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match, $handler);
-
-
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -171,13 +164,13 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
+                    $renderer->doc .= TabsTag::openNavigationalTabElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                    $renderer->doc .= TabsTag::closeNavigationalTabElement();
                     break;
             }
             return true;

@@ -32,7 +32,7 @@ class QualityMenuItem extends AbstractItem
     const CLASS_HTML_LOW = "combo-quality-item-low";
 
     /**
-     * @var Page
+     * @var MarkupPath
      */
     private $page;
 
@@ -43,10 +43,10 @@ class QualityMenuItem extends AbstractItem
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
-        $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
-        $this->page = Page::createPageFromRequestedPage();
+        $snippetManager->attachJavascriptFromComponentId(self::CANONICAL);
+        $this->page = MarkupPath::createFromRequestedPage();
         if($this->page->isLowQualityPage()){
-            $snippetManager->attachCssSnippetForRequest(self::CANONICAL);
+            $snippetManager->attachCssInternalStylesheet(self::CANONICAL);
         }
         parent::__construct();
 
@@ -99,13 +99,13 @@ class QualityMenuItem extends AbstractItem
 
         if ($this->page->isLowQualityPage()) {
             /** @var string icon file */
-            return Site::getComboImagesDirectory()->resolve( 'quality-alert.svg')->toString();
+            return DirectoryLayout::getComboImagesDirectory()->resolve( 'quality-alert.svg')->toAbsoluteId();
         } else {
             /**
              * @var string icon file
              * !!! Same icon used in the landing page !!!
              */
-            return Site::getComboImagesDirectory()->resolve('quality.svg')->toString();
+            return DirectoryLayout::getComboImagesDirectory()->resolve('quality.svg')->toAbsoluteId();
         }
     }
 

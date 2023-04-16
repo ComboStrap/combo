@@ -1,11 +1,15 @@
 <?php
 
-use ComboStrap\BrandColors;
+use ComboStrap\BrandingColors;
 use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ColorSystem;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\TagAttributes;
 
 
@@ -40,22 +44,25 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
 
     public static function getOpenTagHighlight(string $tag): string
     {
+        $config = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
         $htmlTag = self::HTML_TAG;
-        if (!Site::isBrandingColorInheritanceEnabled()) {
+        if (!$config->isBrandingColorInheritanceEnabled()) {
             return "<$htmlTag>";
         }
-        $primaryColor = Site::getPrimaryColor();
-        if ($primaryColor === null) {
+        try {
+            $primaryColor = $config->getPrimaryColor();
+        } catch (ExceptionNotFound $e) {
             return "<$htmlTag>";
         }
         $tagAttributes = TagAttributes::createEmpty($tag);
         try {
-            $colorRgb = BrandColors::toBackgroundColor($primaryColor);
+            $colorRgb = ColorSystem::toBackgroundColor($primaryColor);
             $tagAttributes->addComponentAttributeValue(ColorRgb::BACKGROUND_COLOR, $colorRgb
                 ->toRgbHex());
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error on highlight color calculation");
+        } catch (ExceptionCompile $e) {
+            LogUtility::msg("Error on highlight color calculation", self::CANONICAL, $e);
         }
+
         return $tagAttributes->toHtmlEnterTag($htmlTag);
     }
 
@@ -108,7 +115,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
 
     public function connectTo($mode)
     {
-        $enabled = PluginUtility::getConfValue(self::CONF_HIGHLIGHT_WIKI_ENABLE, self::CONF_DEFAULT_HIGHLIGHT_WIKI_ENABLE_VALUE);
+        $enabled = SiteConfig::getConfValue(self::CONF_HIGHLIGHT_WIKI_ENABLE, self::CONF_DEFAULT_HIGHLIGHT_WIKI_ENABLE_VALUE);
         if ($enabled) {
             $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
@@ -127,7 +134,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
      * Handle the syntax
      *
      * At the end of the parser, the `section_open` and `section_close` calls
-     * are created in {@link action_plugin_combo_headingpostprocessing}
+     * are created in {@link action_plugin_combo_instructionspostprocessing}
      * and the text inside for the toc is captured
      *
      * @param string $match
@@ -156,7 +163,7 @@ class syntax_plugin_combo_highlightwiki extends DokuWiki_Syntax_Plugin
     public function render($format, $renderer, $data): bool
     {
 
-        switch($format) {
+        switch ($format) {
             case "xhtml":
             {
                 /**

@@ -1,36 +1,51 @@
 <?php
 
-require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../../vendor/autoload.php');
 
-use ComboStrap\AdsUtility;
+use ComboStrap\Tag\AdTag;
+use ComboStrap\Api\QualityMessageHandler;
+use ComboStrap\BlockquoteTag;
+use ComboStrap\Bootstrap;
+use ComboStrap\BrandingColors;
 use ComboStrap\Canonical;
 use ComboStrap\ColorRgb;
+use ComboStrap\ContainerTag;
+use ComboStrap\FetcherRailBar;
+use ComboStrap\FetcherSvg;
 use ComboStrap\FloatAttribute;
-use ComboStrap\Icon;
+use ComboStrap\HeadingTag;
+use ComboStrap\IconDownloader;
 use ComboStrap\Identity;
 use ComboStrap\LazyLoad;
-use ComboStrap\MarkupRef;
+use ComboStrap\LinkMarkup;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
-use ComboStrap\PageImages;
+use ComboStrap\MediaMarkup;
+use ComboStrap\Meta\Field\TwitterImage;
+use ComboStrap\MetadataFrontmatterStore;
+use ComboStrap\Outline;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\Tag\RelatedTag;
+use ComboStrap\TemplateEngine;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
+use ComboStrap\PrismTags;
 use ComboStrap\RasterImageLink;
-use ComboStrap\Region;
-use ComboStrap\Shadow;
-use ComboStrap\SvgDocument;
+use ComboStrap\Meta\Field\Region;
+use ComboStrap\RouterBestEndPage;
+use ComboStrap\TagAttribute\Shadow;
+use ComboStrap\SiteConfig;
+use ComboStrap\Snippet;
 use ComboStrap\SvgImageLink;
-use ComboStrap\UrlManagerBestEndPage;
 
 
 /**
  * @var array
  */
-$lang[syntax_plugin_combo_related::MAX_LINKS_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - The maximum of related links shown';
-$lang[syntax_plugin_combo_related::EXTRA_PATTERN_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - Another pattern';
+$lang[RelatedTag::MAX_LINKS_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - The maximum of related links shown';
+$lang[RelatedTag::EXTRA_PATTERN_CONF] = PluginUtility::getDocumentationHyperLink("related", "Related Component") . ' - Another pattern';
 
 /**
  * Disqus
@@ -41,7 +56,7 @@ $lang[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = PluginUtility::getD
 /**
  * Url Manager
  */
-$lang[action_plugin_combo_router::ROUTER_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::CANONICAL, action_plugin_combo_router::NAME ) . ' - If unchecked, the URL manager will be disabled';
+$lang[action_plugin_combo_router::ROUTER_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::CANONICAL, action_plugin_combo_router::NAME) . ' - If unchecked, the URL manager will be disabled';
 $lang['ActionReaderFirst'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - First redirection action for a reader';
 $lang['ActionReaderSecond'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - Second redirection action for a reader if the first action don\'t success.';
 $lang['ActionReaderThird'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - Third redirection action for a reader if the second action don\'t success.';
@@ -57,23 +72,25 @@ $lang['WeightFactorForSameNamespace'] = PluginUtility::getDocumentationHyperLink
 $lang[Canonical::CONF_CANONICAL_LAST_NAMES_COUNT] = PluginUtility::getDocumentationHyperLink("automatic:canonical", 'Automatic Canonical') . ' - The number of last part of a page path to create a ' . PluginUtility::getDocumentationHyperLink("canonical", "canonical") . ' (0 to disable)';
 $lang[action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_canonical::CANONICAL, 'Canonical') . ' - If enable and if set, the canonical will be reported to the Google Analytics Plugin as page path';
 
-$lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDocumentationHyperLink("best:end:page:name", action_plugin_combo_router::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::PERMANENT_REDIRECT_CANONICAL, "permanent redirect") . ' (0 to disable)';
+$lang[RouterBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDocumentationHyperLink("best:end:page:name", action_plugin_combo_router::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::PERMANENT_REDIRECT_CANONICAL, "permanent redirect") . ' (0 to disable)';
 
 
 /**
  * Icon
  */
-$lang[Icon::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
-$lang[Icon::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The default icon library from where the icon is downloaded if not specified';
+$lang[IconDownloader::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
+$lang[IconDownloader::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getDocumentationHyperLink("icon#configuration", "UI Icon Component") . ' - The default icon library from where the icon is downloaded if not specified';
 
 /**
  * Front end Optimization
  */
-$lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getDocumentationHyperLink("frontend:optimization", "Frontend Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
-$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getDocumentationHyperLink("frontend:optimization", "Frontend Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
+$lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
+$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
+$lang[action_plugin_combo_snippetsbootstrap::CONF_PRELOAD_CSS] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - Load the style late (Not recommended, the page will go faster but will flicker)';
+$lang[action_plugin_combo_snippetsbootstrap::CONF_DISABLE_BACKEND_JAVASCRIPT] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::FRONT_END_OPTIMIZATION_CANONICAL, "Frontend Optimization") . ' - Delete backend javascript library for public users';
 
 /**
- * Metdataviewer
+ * Metadata viewer
  */
 $lang[syntax_plugin_combo_metadata::CONF_METADATA_DEFAULT_ATTRIBUTES] = PluginUtility::getDocumentationHyperLink("metadata:viewer", "Metadata Viewer") . ' - The default attributes of the metadata component';
 
@@ -85,7 +102,7 @@ $lang[syntax_plugin_combo_badge::CONF_DEFAULT_ATTRIBUTES_KEY] = PluginUtility::g
 /**
  * Ads
  */
-$lang[AdsUtility::CONF_IN_ARTICLE_PLACEHOLDER] = PluginUtility::getDocumentationHyperLink("automatic:in-article:ad", "Automatic In-article Ad") . ' - Show a placeholder if the in-article ad page was not found';
+$lang[AdTag::CONF_IN_ARTICLE_PLACEHOLDER] = PluginUtility::getDocumentationHyperLink("automatic:in-article:ad", "Automatic In-article Ad") . ' - Show a placeholder if the in-article ad page was not found';
 
 /**
  * Code enabled
@@ -95,7 +112,7 @@ $lang[Prism::CONF_BATCH_PROMPT] = PluginUtility::getDocumentationHyperLink("pris
 $lang[Prism::CONF_BASH_PROMPT] = PluginUtility::getDocumentationHyperLink("prism", "Prism Component") . ' - The default prompt for the bash language';
 $lang[Prism::CONF_POWERSHELL_PROMPT] = PluginUtility::getDocumentationHyperLink("prism", "Prism Component") . ' - The default prompt for the powershell language';
 $lang[syntax_plugin_combo_code::CONF_CODE_ENABLE] = PluginUtility::getDocumentationHyperLink("code", "Code Component") . ' - Enable or disable the code component';
-$lang[syntax_plugin_combo_file::CONF_FILE_ENABLE] = PluginUtility::getDocumentationHyperLink("file", "File Component") . ' - Enable or disable the file component';
+$lang[PrismTags::CONF_FILE_ENABLE] = PluginUtility::getDocumentationHyperLink("file", "File Component") . ' - Enable or disable the file component';
 
 
 /**
@@ -116,30 +133,25 @@ $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE] = PluginUtility::getDocum
 /**
  * Excluded rules
  */
-$lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - If chosen, the quality rules will not be monitored.)";
-$lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
+$lang[QualityMessageHandler::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - If chosen, the quality rules will not be monitored.)";
+$lang[QualityMessageHandler::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getDocumentationHyperLink("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
 
 /**
  * Link
  */
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
-$lang[MarkupRef::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
-$lang[MarkupRef::CONF_PREVIEW_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Add a page preview on all internal links when a user is hovering";
+$lang[LinkMarkup::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
+$lang[LinkMarkup::CONF_PREVIEW_LINK] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "Link") . " - Add a page preview on all internal links when a user is hovering";
 
 /**
  * Twitter
  */
-$lang[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - The media id (path) to the logo shown in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - Your twitter handle name used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = PluginUtility::getDocumentationHyperLink("twitter", "Twitter") . " - Your twitter handle id used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the `do not track` attribute";
-$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the theme for embedded twitter widget";
-$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the border-color for embedded twitter widget";
+$lang[BlockquoteTag::CONF_TWEET_WIDGETS_THEME] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the theme for embedded twitter widget";
+$lang[BlockquoteTag::CONF_TWEET_WIDGETS_BORDER] = PluginUtility::getDocumentationHyperLink("tweet", "Tweet") . " - Set the border-color for embedded twitter widget";
 
-/**
- * Page Image
- */
-$lang[PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL, "Metadata Image") . " - Disable the use of the first image as a page image";
 
 /**
  * Default
@@ -172,21 +184,26 @@ $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getDocumentationHyperLink(Sha
  * Svg
  */
 $lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - Load a svg only when they become visible");
-$lang[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - The maximum size in Kb of the SVG to be included as markup in the web page");
-$lang[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Injection - Replace the image as svg in the HTML when downloaded to be add styling capabilities");
-$lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Security - The name of the group of users that can upload SVG");
-$lang[SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
-$lang[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");
-$lang[SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
-$lang[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element deleted if empty");
-$lang[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
-$lang[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
 
+$lang[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Injection - Replace the image as svg in the HTML when downloaded to be add styling capabilities");
+
+$lang[FetcherSvg::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
+$lang[FetcherSvg::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");
+$lang[FetcherSvg::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
+$lang[FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element deleted if empty");
+$lang[FetcherSvg::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
+$lang[FetcherSvg::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getDocumentationHyperLink(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
+
+
+/**
+ * Performance
+ */
+$lang[SiteConfig::HTML_MAX_KB_SIZE_FOR_INLINE_ELEMENT] = PluginUtility::getDocumentationHyperLink("performance", "Page Load Performance - The max size in kb for inlining - If the size of the resource (svg, javascript, css) is lower than this size, it will be inlined in the web page.");
 
 /**
  * Lazy load image
  */
-$lang[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Load the raster image only when they become visible");
+$lang[LazyLoad::CONF_RASTER_ENABLE] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Load the raster image only when they become visible");
 $lang[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Retina Support: If checked, the images downloaded will match the display capabilities (the size DPI correction will not be applied)");
 $lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = PluginUtility::getDocumentationHyperLink(RasterImageLink::CANONICAL, "Raster Image - Responsive image sizing: The image margin applied to screen size");
 
@@ -199,7 +216,7 @@ $lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getDocumen
  * Image
  */
 $lang[syntax_plugin_combo_media::CONF_IMAGE_ENABLE] = PluginUtility::getDocumentationHyperLink(MediaLink::CANONICAL, "Image - If unchecked, the image component will be disabled");
-$lang[MediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getDocumentationHyperLink(MediaLink::CANONICAL, "Image - The default link option from an internal image.");
+$lang[MediaMarkup::CONF_DEFAULT_LINKING] = PluginUtility::getDocumentationHyperLink(MediaLink::CANONICAL, "Image - The default link option from an internal image.");
 
 /**
  * Float
@@ -209,15 +226,15 @@ $lang[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getDocumen
 /**
  * Outline
  */
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - if checked, outline numbering will be applied");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 2");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 3");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 4");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 5");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 6");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The separator between counters");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The prefix of the outline numbering");
-$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The suffix of the outline numbering");
+$lang[Outline::CONF_OUTLINE_NUMBERING_ENABLE] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - if checked, outline numbering will be applied");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 2");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 3");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 4");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 5");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The counter style for the level 6");
+$lang[Outline::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The separator between counters");
+$lang[Outline::CONF_OUTLINE_NUMBERING_PREFIX] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The prefix of the outline numbering");
+$lang[Outline::CONF_OUTLINE_NUMBERING_SUFFIX] = PluginUtility::getDocumentationHyperLink(Outline::CANONICAL, "Outline - The suffix of the outline numbering");
 
 
 /**
@@ -253,22 +270,58 @@ $lang[PageUrlType::CONF_CANONICAL_URL_TYPE] = PluginUtility::getDocumentationHyp
 /**
  * Frontmatter
  */
-$lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::CANONICAL, "If checked, the metadata manager will create a frontmatter on submit.");
+$lang[MetadataFrontmatterStore::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::CANONICAL, "If checked, the metadata manager will create a frontmatter on submit.");
 
 /**
  * Heading
  */
-$lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_heading::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
+$lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = PluginUtility::getDocumentationHyperLink(HeadingTag::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
 
 /**
  * Colors
  */
-$lang[ColorRgb::PRIMARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
-$lang[ColorRgb::SECONDARY_COLOR_CONF]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
-$lang[ColorRgb::BRANDING_COLOR_INHERITANCE_ENABLE_CONF ]= PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Enable or disable the branding colors inheritance");
+$lang[BrandingColors::PRIMARY_COLOR_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the primary branding color");
+$lang[ColorRgb::SECONDARY_COLOR_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Set the secondary branding color");
+$lang[BrandingColors::BRANDING_COLOR_INHERITANCE_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(ColorRgb::BRANDING_COLOR_CANONICAL, "Enable or disable the branding colors inheritance");
 
 /**
  * Highlight
  */
-$lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_highlightwiki::CANONICAL, "Enable or disable the wiki highlight component");
-?>
+$lang[syntax_plugin_combo_highlightwiki::CONF_HIGHLIGHT_WIKI_ENABLE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_highlightwiki::CANONICAL, "Enable or disable the wiki highlight component");
+
+/**
+ * Container
+ */
+$lang[ContainerTag::DEFAULT_LAYOUT_CONTAINER_CONF] = PluginUtility::getDocumentationHyperLink(ContainerTag::CANONICAL, "Set the horizontal alignment of the layout");
+
+/**
+ * Railbar
+ */
+$lang[FetcherRailBar::CONF_PRIVATE_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL, 'Enable private railbar');
+$lang[FetcherRailBar::CONF_BREAKPOINT_RAIL_BAR] = PluginUtility::getDocumentationHyperLink(FetcherRailBar::CANONICAL, 'Breakpoint when the railbar toggle from offcanvas to fixed component');
+
+/**
+ * Stylesheet and bootstrap
+ */
+$lang[Bootstrap::CONF_BOOTSTRAP_VERSION_STYLESHEET] = PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "Bootstrap") . ' - the Bootstrap version and its corresponding stylesheet';
+
+
+$lang[action_plugin_combo_snippetsbootstrap::CONF_JQUERY_DOKU] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_snippetsbootstrap::JQUERY_CANONICAL, "Jquery") . ' - use the DokuWiki Jquery version instead of Bootstrap';
+
+
+$lang[Snippet::CONF_USE_CDN] = PluginUtility::getDocumentationHyperLink(Snippet::CANONICAL, "Cdn") . ' If checked, the snippets (js, css) are served from the CDN URL if known';
+
+$lang[SiteConfig::CONF_ENABLE_THEME_SYSTEM] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_docustom::TEMPLATE_CANONICAL, "Templating Module") . ' If checked, the combo template engine will be used and the dokuwiki template';
+
+
+$lang[SiteConfig::REM_CONF] = PluginUtility::getDocumentationHyperLink(SiteConfig::REM_CANONICAL, "Responsive Font Sizes") . ' The default font size for your HTML pages';
+
+$lang[TemplateEngine::CONF_THEME] = PluginUtility::getDocumentationHyperLink(TemplateEngine::CANONICAL, "Theme") . ' Choose the theme applied to your app';
+
+/**
+ * Security
+ */
+$lang[Identity::CONF_DESIGNER_GROUP_NAME] = PluginUtility::getDocumentationHyperLink("designer", "Security - The name of the designer group. Users that can inject HTML, Javascript and SVG");
+
+
+$lang[AdTag::CONF_IN_ARTICLE_ENABLED] = PluginUtility::getDocumentationHyperLink(AdTag::CANONICAL,"Ad - Turn on or off the ad features");

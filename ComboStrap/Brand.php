@@ -10,15 +10,17 @@ class Brand
     const NEWSLETTER_BRAND_NAME = "newsletter";
     const EMAIL_BRAND_NAME = "email";
 
-    public const BRAND_ABBREVIATIONS_MAPPING = [
-        "hn" => "hackernews",
-        "mail" => "email",
-        "wp" => "wikipedia"
-    ];
+
     /**
      * The brand of the current application/website
      */
     public const CURRENT_BRAND = "current";
+    const CANONICAL = "brand";
+    const ABBR_PROPERTY = 'abbr';
+    /**
+     * @var array an array of brand abbreviation as key and their name as value
+     */
+    private static array $BRAND_ABBR;
 
 
     private $secondaryColor;
@@ -27,38 +29,36 @@ class Brand
     /**
      * @var array
      */
-    public static $brandDictionary;
+    public static array $brandDictionary;
     /**
      * @var bool
      */
-    private $unknown = false;
+    private bool $unknown = false;
     /**
      * @var mixed
      */
     private $brandDict;
 
+
     /**
      * Brand constructor.
      * @param string $name
-     * @throws ExceptionCombo
      */
-    public function __construct(string $name)
+    private function __construct(string $name)
     {
-        $this->name = strtolower($name);
-        if (isset(self::BRAND_ABBREVIATIONS_MAPPING[$this->name])) {
-            $this->name = self::BRAND_ABBREVIATIONS_MAPPING[$this->name];
-        }
+
+        $this->name = $name;
 
         /**
          * Get the brands
          */
-        Brand::$brandDictionary = Brand::getBrandDictionary();
+        $brandDictionary = Brand::getBrandDictionary();
 
 
         /**
          * Build the data for the brand
          */
-        $this->brandDict = Brand::$brandDictionary[$this->name];
+        $this->brandDict = $brandDictionary[$this->name];
         switch ($this->name) {
             case self::CURRENT_BRAND:
                 $this->brandUrl = Site::getBaseUrl();
@@ -82,36 +82,72 @@ class Brand
 
     /**
      * @return string[]
-     * @throws ExceptionCombo
      */
     public static function getAllKnownBrandNames(): array
     {
 
-        $brandsDict = self::getBrandNamesFromDictionary();
-        $brandsAbbreviations = array_keys(self::BRAND_ABBREVIATIONS_MAPPING);
-        return array_merge(
-            $brandsDict,
-            $brandsAbbreviations,
-            [self::CURRENT_BRAND]
-        );
+        $brands = self::getAllBrands();
+        $brandNames = [self::CURRENT_BRAND];
+        foreach ($brands as $brand) {
+            $brandNames[] = $brand->getName();
+            try {
+                $brandNames[] = $brand->getAbbr();
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+        }
+        return $brandNames;
+
     }
 
+
     /**
-     * @throws ExceptionCombo
+     * @return Brand[]
      */
-    public static function getBrandNamesFromDictionary(): array
+    public static function getAllBrands(): array
     {
         $brandDictionary = self::getBrandDictionary();
-        return array_keys($brandDictionary);
+        $brands = [];
+        foreach (array_keys($brandDictionary) as $brandName) {
+            $brands[] = self::create($brandName);
+        }
+        return $brands;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @param $type - the button type (ie one of {@link BrandButton::TYPE_BUTTONS}
+     * @return array - the brand names that can be used as type in the brand button
+     */
+    public static function getBrandNamesForButtonType($type): array
+    {
+        $brands = self::getAllBrands();
+        $brandNamesForType = [];
+        foreach ($brands as $brand) {
+            if ($brand->supportButtonType($type)) {
+                $brandNamesForType[] = $brand->getName();
+                try {
+                    $brandNamesForType[] = $brand->getAbbr();
+                } catch (ExceptionNotFound $e) {
+                    // ok
+                }
+            }
+        }
+        return $brandNamesForType;
+    }
+
+    /**
+     *
      */
     public static function getBrandDictionary(): array
     {
-        if (Brand::$brandDictionary === null) {
-            Brand::$brandDictionary = Dictionary::getFrom("brands");
+        if (!isset(Brand::$brandDictionary)) {
+            try {
+                Brand::$brandDictionary = Dictionary::getFrom("brands");
+            } catch (ExceptionCompile $e) {
+                // Should never happens
+                Brand::$brandDictionary = [];
+                LogUtility::error("We can't load the brands dictionary. Error: " . $e->getMessage(), self::CANONICAL, $e);
+            }
         }
         return Brand::$brandDictionary;
     }
@@ -125,13 +161,43 @@ class Brand
      */
     private $name;
 
-    /**
-     * @throws ExceptionCombo
-     */
+
     public static function create(string $brandName): Brand
     {
-        return new Brand($brandName);
+
+        $brandNameQualified = strtolower($brandName);
+        $brandNameQualified = Brand::getBrandNameFromAbbr($brandNameQualified);
+        $objectIdentifier = self::CANONICAL . "-" . $brandNameQualified;
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+            return $executionContext->getRuntimeObject($objectIdentifier);
+        } catch (ExceptionNotFound $e) {
+            $brandObject = new Brand($brandNameQualified);
+            $executionContext->setRuntimeObject($objectIdentifier, $brandObject);
+            return $brandObject;
+        }
+
     }
+
+    private static function getBrandNameFromAbbr(string $name)
+    {
+        if (!isset(self::$BRAND_ABBR)) {
+            $brandDictionary = self::getBrandDictionary();
+            foreach ($brandDictionary as $brandName => $brandProperties) {
+                $abbr = $brandProperties[self::ABBR_PROPERTY];
+                if (empty($abbr)) {
+                    continue;
+                }
+                self::$BRAND_ABBR[$abbr] = $brandName;
+            }
+        }
+        if (isset(self::$BRAND_ABBR[$name])) {
+            return self::$BRAND_ABBR[$name];
+        }
+        return $name;
+
+    }
+
 
     /**
      * If the brand name is unknown (ie custom)
@@ -172,14 +238,14 @@ class Brand
     /**
      * Brand button title
      * @return string
-     * @var string $type - the button type
+     * @var ?string $type - the button type
      */
-    public function getTitle(string $type): ?string
+    public function getTitle(string $type = null): ?string
     {
         if ($this->name === self::CURRENT_BRAND) {
             return Site::getTitle();
         }
-        if ($this->brandDict !== null) {
+        if ($this->brandDict !== null && $type !== null) {
             if (isset($this->brandDict[$type])) {
                 return $this->brandDict[$type]["popup"];
             }
@@ -199,12 +265,13 @@ class Brand
         }
 
         // Unknown or current brand / unknown color
-        $primaryColor = Site::getPrimaryColor();
-        if ($primaryColor !== null) {
-            return $primaryColor;
+        try {
+            return ExecutionContext::getExecutionContext()
+                ->getConfig()
+                ->getPrimaryColor();
+        } catch (ExceptionNotFound $e) {
+            return null;
         }
-
-        return null;
 
     }
 
@@ -214,23 +281,19 @@ class Brand
     }
 
     /**
-     * @param string $type - the button type
+     * @param string|null $type - the button type
      * @return string|null
      */
-    public function getIconName(string $type): ?string
+    public function getIconName(?string $type): ?string
     {
 
         switch ($this->name) {
             case self::CURRENT_BRAND:
-                $image = Site::getLogoAsSvgImage();
-                if ($image !== null) {
-                    $path = $image->getPath();
-                    if ($path instanceof DokuPath) {
-                        /**
-                         * End with svg, not seen as an external icon
-                         */
-                        return $path->getDokuwikiId();
-                    }
+                try {
+                    return Site::getLogoAsSvgImage()
+                        ->getWikiId();
+                } catch (ExceptionNotFound $e) {
+                    // no logo installed
                 }
                 break;
             default:
@@ -263,6 +326,18 @@ class Brand
             case BrandButton::TYPE_BUTTON_BRAND:
                 return true;
         }
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    private function getAbbr()
+    {
+        $value = $this->brandDict['abbr'];
+        if (empty($value)) {
+            throw new ExceptionNotFound("No abbreviations");
+        }
+        return $value;
     }
 
 

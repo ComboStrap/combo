@@ -1,0 +1,34 @@
+<html lang="{{lang}}">
+<head>
+    <title>{{title}}</title>
+    {{> head-partial }}
+    {{> page-side-md-collapsable-head }}
+</head>
+<body class="{{body-classes}}">
+{{> page-header-partial }}
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <aside id="page-side" class="d-print-none">
+        {{> page-side-md-collapsable }}
+    </aside>
+    <main id="page-main">
+        <header id="main-header">
+            {{> main-header-partial }}
+        </header>
+        {{> toc-partial }}
+        <div id="main-content">
+            {{{ main-content-html }}}
+        </div>
+        <div id="main-side" class="d-print-none">
+            {{{ main-side-html }}}
+        </div>
+        <footer id="main-footer" class="d-print-none">
+            {{{ main-footer-html }}}
+        </footer>
+    </main>
+    {{> railbar-partial }}
+</div>
+{{>page-footer-partial}}
+{{>body-beforeend-partial}}
+</body>
+</html>
+

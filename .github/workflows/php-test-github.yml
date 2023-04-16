@@ -1,0 +1,106 @@
+name: PHP Test
+
+on:
+  workflow_dispatch: # Manually running a workflow from the UI
+  pull_request:
+    branches: [ "main" ]
+
+permissions: # Setting permissions for the token
+  contents: read # needed to fetch code
+
+# A list of the jobs that run in the workflow file.
+jobs:
+  test: # The identifier of the job
+
+    name: Test on php ${{ matrix.php-versions }} # The name of the job
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
+      matrix:
+         # 2 jobs will run, one for each include entry
+         # because we don't specify any matrix variables
+         # All configurations under include will run
+         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
+         include:
+           - php: "7.4"
+             phpunit: "7.5.20"
+#           - php: "8.2"
+#             phpunit: "7.5.20"
+      fail-fast: false
+
+    env:
+      COMBO_HOME: lib/plugins/combo
+      #GITHUB_CONTEXT: ${{ toJSON(github) }}
+
+    steps:
+
+#      - name: Context Dump
+#        run: echo "$GITHUB_CONTEXT"
+
+      # https://github.com/marketplace/actions/setup-php-action#matrix-setup
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, intl, PDO, pdo_sqlite, pdo_mysql, pdo_pgsql, bz2
+          ini-values: pcre.jit=0
+          tools: phpunit:${{ matrix.phpunit }}
+
+      # Php Problem Matchers
+      # https://github.com/marketplace/actions/setup-php-action#problem-matchers
+      # Problem matchers are json configurations which identify errors and warnings in your logs
+      # and surface them prominently in the GitHub Actions UI by highlighting them and creating code annotations.
+      - name: Setup problem matchers for PHP
+        run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+      - name: Setup problem matchers for PHPUnit
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      # Cloning Dokuwiki
+      - name: Checkout Dokuwiki
+        uses: actions/checkout@v3
+        with:
+          repository: dokuwiki/dokuwiki
+
+      # Cloning this repository to the runner
+      # https://github.com/actions/checkout
+      - name: Checkout Combo
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.COMBO_HOME }}
+
+
+      # Runs command-line programs using the operating system's shell.
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+      - name: Post installation (Download Requirements)
+        run: |
+          chmod +x ${COMBO_HOME}/.github/bootstrap.sh
+          source ${COMBO_HOME}/.github/bootstrap.sh
+        # https://docs.github.com/en/actions/security-guides/encrypted-secrets#using-encrypted-secrets-in-a-workflow
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+        working-directory: .
+        shell: bash
+
+      # Node
+      - uses: actions/setup-node@v3
+        with:
+          node-version: latest
+      # Yarn (should happen after combo as we install in combo)
+      - name: Yarn install
+        run: |
+          npm install --global yarn
+          cd ${COMBO_HOME} && yarn install
+
+      # Get the list of locales
+      - name: Installed Locale
+        run: locale -a
+
+      # No better formatter
+      # This one does not work: https://github.com/mheap/phpunit-matcher-action
+      # with verbose, you see the configuration file used at the beginning
+      - name: Test
+        run: |
+          phpunit --version
+          phpunit --stderr --configuration _test/phpunit.xml --verbose --debug --bootstrap ${COMBO_HOME}/_test/bootstrap.php ${COMBO_HOME}/_test

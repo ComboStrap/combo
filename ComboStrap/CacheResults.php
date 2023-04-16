@@ -12,11 +12,13 @@ use dokuwiki\Cache\CacheParser;
 class CacheResults
 {
 
+    const CANONICAL = "cache-results";
+
     private $cacheResults;
     /**
      * @var string
      */
-    private $wikiId;
+    private string $wikiId;
 
     /**
      * CacheReporter constructor.
@@ -29,6 +31,7 @@ class CacheResults
 
     public function setData(\Doku_Event $event)
     {
+
 
         $cacheParser = $event->data;
         /**
@@ -44,21 +47,28 @@ class CacheResults
             /**
              * Add snippet and output dependencies
              */
-            if ($cacheParser->mode === HtmlDocument::mode) {
+            if ($cacheParser->mode === FetcherMarkup::XHTML_MODE) {
+
                 $page = $cacheParser->page;
-                $htmlDocument = Page::createPageFromId($page)
-                    ->getHtmlDocument();
+                try {
+                    $markupFetcher = MarkupPath::createMarkupFromId($page)->createHtmlFetcherWithRequestedPathAsContextPath();
+                } catch (ExceptionNotExists $e) {
+                    // should not happen
+                    LogUtility::internalError("The executing path should exist as it's executed",self::CANONICAL, $e);
+                    return;
+                }
 
                 /**
                  * @var CacheParser[] $cacheStores
                  */
-                $cacheStores = [$htmlDocument->getSnippetCacheStore(), $htmlDocument->getDependenciesCacheStore()];
+                $cacheStores = [$markupFetcher->getSnippetCacheStore(), $markupFetcher->getDependenciesCacheStore()];
                 foreach ($cacheStores as $cacheStore) {
-                    if(file_exists($cacheStore->cache)) {
+                    if (file_exists($cacheStore->cache)) {
                         $this->cacheResults[$cacheStore->mode] = (new CacheResult($cacheStore))
                             ->setResult($event->result);
                     }
                 }
+
             }
         }
     }
@@ -83,6 +93,14 @@ class CacheResults
     public function getResultForMode(string $mode): ?CacheResult
     {
         return $this->cacheResults[$mode];
+    }
+
+    /**
+     * @return string
+     */
+    public function getWikiId(): string
+    {
+        return $this->wikiId;
     }
 
 }

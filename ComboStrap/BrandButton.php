@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metatwitter;
+use ComboStrap\TagAttribute\StyleAttribute;
 
 /**
  *
@@ -84,18 +85,16 @@ class BrandButton
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
-    public function __construct(
-        string $brandName,
-        string $typeButton)
+    public function __construct(string $brandName, string $typeButton)
     {
 
         $this->brand = Brand::create($brandName);
 
         $this->type = strtolower($typeButton);
         if (!in_array($this->type, self::TYPE_BUTTONS)) {
-            throw new ExceptionCombo("The button type ($this->type} is unknown.");
+            throw new ExceptionCompile("The button type ($this->type} is unknown.");
         }
 
 
@@ -113,14 +112,14 @@ class BrandButton
                 if ($typeIcon === self::ICON_NONE_VALUE) {
                     continue;
                 }
-                $variants[] = [\syntax_plugin_combo_brand::ICON_ATTRIBUTE => $typeIcon, TagAttributes::TYPE_KEY => $widget];
+                $variants[] = [BrandTag::ICON_ATTRIBUTE => $typeIcon, TagAttributes::TYPE_KEY => $widget];
             }
         }
         return $variants;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createBrandButton(string $brand): BrandButton
     {
@@ -129,7 +128,7 @@ class BrandButton
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setWidget($widget): BrandButton
     {
@@ -139,13 +138,13 @@ class BrandButton
         $this->widget = $widget;
         $widget = trim(strtolower($widget));
         if (!in_array($widget, self::WIDGETS)) {
-            throw new ExceptionCombo("The {$this->type} widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
+            throw new ExceptionCompile("The {$this->type} widget ($widget} is unknown. The possible widgets value are " . implode(",", self::WIDGETS));
         }
         return $this;
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setIconType($iconType): BrandButton
     {
@@ -155,7 +154,7 @@ class BrandButton
         $this->iconType = $iconType;
         $iconType = trim(strtolower($iconType));
         if (!in_array($iconType, self::ICON_TYPES)) {
-            throw new ExceptionCombo("The icon type ($iconType) is unknown. The possible icons value are " . implode(",", self::ICON_TYPES));
+            throw new ExceptionCompile("The icon type ($iconType) is unknown. The possible icons value are " . implode(",", self::ICON_TYPES));
         }
         return $this;
     }
@@ -173,13 +172,13 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createShareButton(
         string $brandName,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
-        ?int $width = null): BrandButton
+        ?int   $width = null): BrandButton
     {
         return (new BrandButton($brandName, self::TYPE_BUTTON_SHARE))
             ->setWidget($widget)
@@ -188,14 +187,14 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function createFollowButton(
         string $brandName,
         string $handle = null,
         string $widget = self::WIDGET_BUTTON_VALUE,
         string $icon = self::ICON_SOLID_VALUE,
-        ?int $width = null): BrandButton
+        ?int   $width = null): BrandButton
     {
         return (new BrandButton($brandName, self::TYPE_BUTTON_FOLLOW))
             ->setHandle($handle)
@@ -205,13 +204,14 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     *
      *
      * Dictionary has been made with the data found here:
      *   * https://github.com/ellisonleao/sharer.js/blob/main/sharer.js#L72
      *   * and
+     * @throws ExceptionBadArgument
      */
-    public function getBrandEndpointForPage(Page $requestedPage = null): ?string
+    public function getBrandEndpointForPage(MarkupPath $requestedPage = null): ?string
     {
 
         /**
@@ -219,28 +219,29 @@ class BrandButton
          */
         $urlTemplate = $this->brand->getWebUrlTemplate($this->type);
         if ($urlTemplate === null) {
-            throw new ExceptionCombo("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
+            throw new ExceptionBadArgument("The brand ($this) does not support the $this->type button (The $this->type URL is unknown)");
         }
         switch ($this->type) {
 
             case self::TYPE_BUTTON_SHARE:
                 if ($requestedPage === null) {
-                    throw new ExceptionCombo("The page requested should not be null for a share button when requesting the endpoint uri.");
+                    throw new ExceptionBadArgument("The page requested should not be null for a share button when requesting the endpoint uri.");
                 }
                 $canonicalUrl = $this->getSharedUrlForPage($requestedPage);
                 $templateData["url"] = $canonicalUrl;
                 $templateData["title"] = $requestedPage->getTitleOrDefault();
-                $description = $requestedPage->getDescription();
-                if ($description === null) {
-                    $description = "";
+
+                try {
+                    $templateData["description"] = $requestedPage->getDescription();
+                } catch (ExceptionNotFound $e) {
+                    $templateData["description"] = "";
                 }
-                $templateData["description"] = $description;
+
                 $templateData["text"] = $this->getTextForPage($requestedPage);
+
                 $via = null;
-                switch ($this->brand->getName()) {
-                    case \action_plugin_combo_metatwitter::CANONICAL:
-                        $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
-                        break;
+                if ($this->brand->getName() == \action_plugin_combo_metatwitter::CANONICAL) {
+                    $via = substr(action_plugin_combo_metatwitter::COMBO_STRAP_TWITTER_HANDLE, 1);
                 }
                 if ($via !== null && $via !== "") {
                     $templateData["via"] = $via;
@@ -249,14 +250,14 @@ class BrandButton
                     $templateData[$key] = urlencode($value);
                 }
 
-                return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
+                return Template::create($urlTemplate)->setProperties($templateData)->render();
 
             case self::TYPE_BUTTON_FOLLOW:
                 if ($this->handle === null) {
                     return $urlTemplate;
                 }
-                $templateData["handle"] = $this->handle;
-                return TemplateUtility::renderStringTemplateFromDataArray($urlTemplate, $templateData);
+                $templateData[Tag\FollowTag::HANDLE_ATTRIBUTE] = $this->handle;
+                return Template::create($urlTemplate)->setProperties($templateData)->render();
             default:
                 // The type is mandatory and checked at creation,
                 // it should not happen, we don't throw an error
@@ -272,7 +273,7 @@ class BrandButton
         return $this->brand->__toString();
     }
 
-    public function getLinkTitle(): string
+    public function getLabel(): string
     {
         $title = $this->title;
         if ($title !== null && trim($title) !== "") {
@@ -296,7 +297,7 @@ class BrandButton
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public
     function getStyle(): string
@@ -392,7 +393,7 @@ EOF;
 
     /**
      * The identifier of the {@link BrandButton::getStyle()} script
-     * used as script id in the {@link SnippetManager}
+     * used as script id in the {@link SnippetSystem}
      * @return string
      */
     public
@@ -407,11 +408,11 @@ EOF;
     public
     function getIdentifierClass(): string
     {
-        return "{$this->getStyleScriptIdentifier()}-combo";
+        return StyleAttribute::addComboStrapSuffix($this->getStyleScriptIdentifier());
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionNotFound
      */
     public
     function getIconAttributes(): array
@@ -423,10 +424,10 @@ EOF;
             $iconName = $this->brand->getIconName($this->iconType);
             $brandNames = Brand::getAllKnownBrandNames();
             if ($iconName === null && in_array($this->getBrand(), $brandNames)) {
-                throw new ExceptionComboNotFound("No {$this->iconType} icon could be found for the known brand ($this)");
+                throw new ExceptionNotFound("No {$this->iconType} icon could be found for the known brand ($this)");
             }
         }
-        $attributes = [\syntax_plugin_combo_icon::ICON_NAME_ATTRIBUTE => $iconName];
+        $attributes = [FetcherSvg::NAME_ATTRIBUTE => $iconName];
         $textColor = $this->getTextColor();
         if ($textColor !== null) {
             $attributes[ColorRgb::COLOR] = $textColor;
@@ -457,10 +458,12 @@ EOF;
     public
     function getWidgetClass(): string
     {
-        if ($this->widget === self::WIDGET_BUTTON_VALUE) {
-            return "btn";
-        }
-        return "";
+        /**
+         * The btn bootstrap class:
+         * * makes a link a button
+         * * and normalize the button styling
+         */
+        return "btn";
     }
 
 
@@ -502,60 +505,59 @@ EOF;
         if ($this->iconType === self::ICON_NONE_VALUE) {
             return false;
         }
-        if ($this->iconType !== null) {
-            if ($this->brand->getIconName($this->iconType) !== null) {
-                return true;
-            }
+
+        if ($this->brand->getIconName($this->iconType) !== null) {
+            return true;
         }
+
         if (!FileSystems::exists($this->getResourceIconFile())) {
             return false;
         }
         return true;
     }
 
+
+    /**
+     */
     public
-    function getTextForPage(Page $requestedPage): ?string
+    function getTextForPage(MarkupPath $requestedPage): string
     {
-        $text = $requestedPage->getTitleOrDefault();
-        $description = $requestedPage->getDescription();
-        if ($description !== null) {
-            $text .= " > $description";
+
+        try {
+            return "{$requestedPage->getTitleOrDefault()} > {$requestedPage->getDescription()}";
+        } catch (ExceptionNotFound $e) {
+            // no description, may be ?
+            return $requestedPage->getTitleOrDefault();
         }
-        return $text;
 
     }
 
     public
-    function getSharedUrlForPage(Page $requestedPage): ?string
+    function getSharedUrlForPage(MarkupPath $requestedPage): string
     {
-        return $requestedPage->getCanonicalUrl([], true);
+        return $requestedPage->getCanonicalUrl()->toAbsoluteUrlString();
     }
 
     /**
-     * Return the link HTML attributes
-     * @throws ExceptionCombo
+     * Return the button HTML attributes
+     * @throws ExceptionCompile
      */
     public
-    function getLinkAttributes(Page $requestedPage = null): TagAttributes
+    function getHtmlAttributes(MarkupPath $requestedPage = null): TagAttributes
     {
 
 
         $logicalTag = $this->type;
-        $linkAttributes = TagAttributes::createEmpty($logicalTag);
-        $linkAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
-        $linkAttributes->addComponentAttributeValue(TagAttributes::CLASS_KEY, "{$this->getWidgetClass()} {$this->getIdentifierClass()}");
-        $linkTitle = $this->getLinkTitle();
-        $linkAttributes->addComponentAttributeValue("title", $linkTitle);
+        $buttonAttributes = TagAttributes::createEmpty($logicalTag);
+        $buttonAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, $logicalTag);
+        $buttonAttributes->addClassName("{$this->getWidgetClass()} {$this->getIdentifierClass()}");
+        $label = $this->getLabel();
         switch ($this->type) {
             case self::TYPE_BUTTON_SHARE:
 
                 if ($requestedPage === null) {
-                    throw new ExceptionCombo("The page requested should not be null for a share button");
+                    throw new ExceptionCompile("The page requested should not be null for a share button");
                 }
-
-                $ariaLabel = "Share on " . ucfirst($this->getBrand());
-                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
-                $linkAttributes->addComponentAttributeValue("rel", "nofollow");
 
                 switch ($this->getBrand()) {
                     case "whatsapp":
@@ -563,8 +565,8 @@ EOF;
                          * Direct link
                          * For whatsapp, the sharer link is not the good one
                          */
-                        $linkAttributes->addComponentAttributeValue("target", "_blank");
-                        $linkAttributes->addComponentAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
+                        $buttonAttributes->addOutputAttributeValue("target", "_blank");
+                        $buttonAttributes->addOutputAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
                         break;
                     default:
                         /**
@@ -574,41 +576,41 @@ EOF;
                         /**
                          * Opens in a popup
                          */
-                        $linkAttributes->addComponentAttributeValue("rel", "noopener");
+                        $buttonAttributes->addOutputAttributeValue("rel", "noopener");
 
-                        PluginUtility::getSnippetManager()->attachJavascriptLibraryForSlot(
+                        PluginUtility::getSnippetManager()->attachRemoteJavascriptLibrary(
                             "sharer",
                             "https://cdn.jsdelivr.net/npm/sharer.js@0.5.0/sharer.min.js",
                             "sha256-AqqY/JJCWPQwZFY/mAhlvxjC5/880Q331aOmargQVLU="
                         );
-
-                        $linkAttributes->addComponentAttributeValue("data-sharer", $this->getBrand()); // the id
-                        $linkAttributes->addComponentAttributeValue("data-link", "false");
-                        $linkAttributes->addComponentAttributeValue("data-title", $this->getTextForPage($requestedPage));
+                        $buttonAttributes->addOutputAttributeValue("aria-label", $label);
+                        $buttonAttributes->addOutputAttributeValue("data-sharer", $this->getBrand()); // the id
+                        $buttonAttributes->addOutputAttributeValue("data-link", "false");
+                        $buttonAttributes->addOutputAttributeValue("data-title", $this->getTextForPage($requestedPage));
                         $urlToShare = $this->getSharedUrlForPage($requestedPage);
-                        $linkAttributes->addComponentAttributeValue("data-url", $urlToShare);
+                        $buttonAttributes->addOutputAttributeValue("data-url", $urlToShare);
                         //$linkAttributes->addComponentAttributeValue("href", "#"); // with # we style navigate to the top
-                        $linkAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
+                        $buttonAttributes->addStyleDeclarationIfNotSet("cursor", "pointer"); // show a pointer (without href, there is none)
                 }
-                return $linkAttributes;
+                return $buttonAttributes;
             case self::TYPE_BUTTON_FOLLOW:
 
-                $ariaLabel = "Follow us on " . ucfirst($this->getBrand());
-                $linkAttributes->addComponentAttributeValue("aria-label", $ariaLabel);
-                $linkAttributes->addComponentAttributeValue("target", "_blank");
-                $linkAttributes->addComponentAttributeValue("rel", "nofollow");
+                $buttonAttributes->addOutputAttributeValue("title", $label);
+                $buttonAttributes->addOutputAttributeValue("target", "_blank");
+                $buttonAttributes->addOutputAttributeValue("rel", "nofollow");
                 $href = $this->getBrandEndpointForPage();
                 if ($href !== null) {
-                    $linkAttributes->addComponentAttributeValue("href", $href);
+                    $buttonAttributes->addOutputAttributeValue("href", $href);
                 }
-                return $linkAttributes;
+                return $buttonAttributes;
             case self::TYPE_BUTTON_BRAND:
                 if ($this->brand->getBrandUrl() !== null) {
-                    $linkAttributes->addComponentAttributeValue("href", $this->brand->getBrandUrl());
+                    $buttonAttributes->addOutputAttributeValue("href", $this->brand->getBrandUrl());
                 }
-                return $linkAttributes;
+                $buttonAttributes->addOutputAttributeValue("title", $label);
+                return $buttonAttributes;
             default:
-                return $linkAttributes;
+                return $buttonAttributes;
 
         }
 
@@ -616,7 +618,7 @@ EOF;
     }
 
 
-    private
+    public
     function getType(): string
     {
         return $this->type;
@@ -640,11 +642,11 @@ EOF;
         return $this;
     }
 
-    private function getResourceIconFile(): DokuPath
+    private function getResourceIconFile(): WikiPath
     {
         $iconName = $this->getResourceIconName();
-        $iconPath = str_replace(Icon::COMBO . ":", "", $iconName) . ".svg";
-        return DokuPath::createComboResource($iconPath);
+        $iconPath = str_replace(IconDownloader::COMBO, "", $iconName) . ".svg";
+        return WikiPath::createComboResource($iconPath);
     }
 
     public function setSecondaryColor(string $secondaryColor): BrandButton
@@ -655,8 +657,8 @@ EOF;
 
     private function getResourceIconName(): string
     {
-        $comboLibrary = Icon::COMBO;
-        return "$comboLibrary:brand:{$this->getBrand()}:{$this->iconType}";
+        $comboLibrary = IconDownloader::COMBO;
+        return "$comboLibrary:brand:{$this->getBrand()->getName()}:{$this->iconType}";
     }
 
 
@@ -674,6 +676,28 @@ EOF;
             return $this->secondaryColor;
         }
         return $this->brand->getSecondaryColor();
+    }
+
+    /**
+     * The button is sometimes:
+     * * a HTML button
+     * * and other times a HTML link
+     *
+     * It seems that the button is mostly for data-sharer (share button)
+     *
+     * A Link should have an href otherwise the SEO scan will not be happy
+     * A button should have a aria-label
+     *
+     * @param $tagAttributes
+     * @return string
+     */
+    public function getHtmlElement($tagAttributes): string
+    {
+        if ($tagAttributes->hasAttribute("href")) {
+            return "a";
+        } else {
+            return "button";
+        }
     }
 
 

@@ -4,49 +4,55 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
+
 class Locale extends MetadataText
 {
 
     const PROPERTY_NAME = "locale";
 
-    public static function createForPage(Page $page)
+    private string $separator = "_";
+
+    public static function createForPage(MarkupPath $page, string $separator = "_"): Locale
     {
         return (new Locale())
+            ->setSeparator($separator)
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_LANGUAGE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata.";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Locale";
     }
 
-    public function getValue(): ?string
+    /**
+     * @return string
+     */
+    public function getValue(): string
     {
 
-        $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof Page)) {
-            return null;
+        $page = $this->getResource();
+        if (!($page instanceof MarkupPath)) {
+            LogUtility::internalError("The locale is only implemented for page resources");
+            return $this->getDefaultValue();
         }
-        $lang = $resourceCombo->getLangOrDefault();
-        if (!empty($lang)) {
+        $lang = $page->getLangOrDefault();
+        $country = $page->getRegionOrDefault();
 
-            $country = $resourceCombo->getRegionOrDefault();
-            if (empty($country)) {
-                $country = $lang;
-            }
-            return $lang . "_" . strtoupper($country);
-        }
-        return null;
+        return $lang . $this->separator . strtoupper($country);
+
+
     }
 
 
@@ -55,29 +61,50 @@ class Locale extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
 
-    public function getDefaultValue(): ?string
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
         /**
          * The value of {@link locale_get_default()} is with an underscore
          * We follow this lead
          */
-        return Site::getLocale("_");
+        return Site::getLocale($this->separator);
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "locale";
     }
 
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        return $this->getValue();
+    }
 
+    public function setSeparator(string $separator): Locale
+    {
+        $this->separator = $separator;
+        return $this;
+    }
+
+
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
 }

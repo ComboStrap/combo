@@ -3,25 +3,90 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+
 /**
  * Class ThirdMediaLink
  * @package ComboStrap
- * Not yet implemented but used to
- * returns a media link object and not null
- * otherwise, we get an error
+ *
  */
 class ThirdMediaLink extends MediaLink
 {
 
+
     public function renderMediaTag(): string
     {
-        $msg = "The media with the mime (" . $this->getMedia()->getPath()->getMime() . ") is not yet implemented";
-        LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR);
-        return $msg;
+
+        $mediaMarkup = $this->mediaMarkup;
+        $tagAttributes = $this->mediaMarkup->getExtraMediaTagAttributes();
+
+        $urlString = $mediaMarkup->getFetchUrl()->toString();
+        $path = $mediaMarkup->getPath();
+        $tagAttributes->addOutputAttributeValue("href", $urlString);
+
+        try {
+            $label = $mediaMarkup->getLabel();
+        } catch (ExceptionNotFound $e) {
+            $label = $path->getLastName();
+        }
+        $tagAttributes->addOutputAttributeValue("title", $label);
+
+        // dokuwiki class
+        $tagAttributes
+            ->addClassName("media")
+            ->addClassName("mediafile")
+            ->addClassName("wikilink2");
+        try {
+            // dokuwiki icon
+            $extension = FileSystems::getMime($path);
+            $tagAttributes->addClassName("mf_$extension");
+        } catch (ExceptionNotFound $e) {
+            LogUtility::warning("No icon could be added to the media link. Error: {$e->getMessage()}");
+        }
+
+        if (!FileSystems::exists($path)) {
+            $tagAttributes->addClassName(LinkMarkup::getHtmlClassNotExist());
+        }
+
+        return $tagAttributes->toHtmlEnterTag("a") . $label . "</a>";
+
     }
 
-    public function getUrl(): string{
-        return "";
+
+    /**
+     */
+    public function getFetchUrl(): Url
+    {
+
+
+        $path = $this->mediaMarkup->getPath();
+        if(!$path instanceof WikiPath){
+            return $this->mediaMarkup->getFetchUrl();
+        }
+
+        try {
+            $mime = FileSystems::getMime($path);
+        } catch (ExceptionNotFound $e) {
+            return parent::getFetchUrl();
+        }
+
+        switch ($mime->toString()) {
+            case Mime::PDF:
+                try {
+                    return (new FetcherPdf())
+                        ->buildFromUrl($this->mediaMarkup->getFetchUrl())
+                        ->getFetchUrl();
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::internalError($e->getMessage());
+                    return FetcherRawLocalPath::createFromPath($path)
+                        ->getFetchUrl();
+                }
+            default:
+                return FetcherRawLocalPath::createFromPath($path)
+                    ->getFetchUrl();
+        }
+
+
     }
 
 

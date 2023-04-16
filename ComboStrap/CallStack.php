@@ -51,14 +51,10 @@ class CallStack
     const CALLSTACK_WRITER = "writer";
     const CALLSTACK_MAIN = "main";
     public const MESSAGE_PREFIX_CALLSTACK_NOT_CONFORM = "Your DokuWiki installation is too old or a writer plugin does not conform";
+    const DOCUMENT_START = "document_start";
+    const DOCUMENT_END = "document_end";
 
     private $handler;
-
-    /**
-     * The max key of the calls
-     * @var int|null
-     */
-    private $maxIndex = 0;
 
     /**
      * @var array the call stack
@@ -81,10 +77,6 @@ class CallStack
      */
     private $startWasReached = false;
 
-    /**
-     * @var string the type of callstack
-     */
-    private $callStackType = "unknown";
 
     /**
      * A callstack is a pointer implementation to manipulate
@@ -142,11 +134,15 @@ class CallStack
          */
         if ($callsPropertyFromCallWriterExists) {
 
+            // $this->callStackType = self::CALLSTACK_WRITER;
+
             $writerCalls = &$callWriter->calls;
             $this->callStack = &$writerCalls;
-            $this->callStackType = self::CALLSTACK_WRITER;
+
 
         } else {
+
+            // $this->callStackType = self::CALLSTACK_MAIN;
 
             /**
              * Check the calls property of the handler
@@ -167,29 +163,20 @@ class CallStack
              * Initiate the callstack
              */
             $this->callStack = &$handler->calls;
-            $this->callStackType = self::CALLSTACK_MAIN;
+
 
         }
 
-        $this->maxIndex = ArrayUtility::array_key_last($this->callStack);
         $this->moveToEnd();
 
 
     }
 
     public
-    static function createFromMarkup($marki): CallStack
+    static function createFromMarkup($markup): CallStack
     {
 
-        $modes = p_get_parsermodes();
-        $handler = new Doku_Handler();
-        $parser = new Parser($handler);
-
-        //add modes to parser
-        foreach ($modes as $mode) {
-            $parser->addMode($mode['mode'], $mode['obj']);
-        }
-        $parser->parse($marki);
+        $handler = \ComboStrap\Parser::parseMarkupToHandler($markup);
         return self::createFromHandler($handler);
 
     }
@@ -212,8 +199,26 @@ class CallStack
     public static function createFromInstructions(?array $callStackArray): CallStack
     {
         return CallStack::createEmpty()
-            ->appendInstructionsFromNativeArray($callStackArray);
+            ->appendAtTheEndFromNativeArrayInstructions($callStackArray);
 
+    }
+
+    /**
+     * @param CallStack $callStack
+     * @param int $int
+     * @return string - the content of the call stack as if it was in the file
+     */
+    public static function getFileContent(CallStack $callStack, int $int): string
+    {
+        $callStack->moveToStart();
+        $capturedContent = "";
+        while (strlen($capturedContent) < $int && ($actualCall = $callStack->next()) != false) {
+            $actualCapturedContent = $actualCall->getCapturedContent();
+            if ($actualCapturedContent !== null) {
+                $capturedContent .= $actualCapturedContent;
+            }
+        }
+        return $capturedContent;
     }
 
 
@@ -327,7 +332,7 @@ class CallStack
     }
 
     /**
-     * @return Call - get a reference to the actual call
+     * @return Call|null - get a reference to the actual call
      * This function returns a {@link Call call} object
      * by reference, meaning that every update will also modify the element
      * in the stack
@@ -363,15 +368,27 @@ class CallStack
             if ($result === false) {
                 return false;
             } else {
-                return $this->getActualCall();
+                try {
+                    return $this->getActualCall();
+                } catch (ExceptionCompile $e) {
+                    // should not happen because we check that we are not at the start/end of the stack
+                    LogUtility::msg($e->getMessage());
+                    return false;
+                }
             }
         } else {
             $next = next($this->callStack);
             if ($next === false) {
                 $this->endWasReached = true;
-                return $next;
+                return false;
             } else {
-                return $this->getActualCall();
+                try {
+                    return $this->getActualCall();
+                } catch (ExceptionCompile $e) {
+                    // should not happen because we check that we are at the start/end of the stack
+                    LogUtility::msg($e->getMessage());
+                    return false;
+                }
             }
         }
 
@@ -512,16 +529,20 @@ class CallStack
     {
 
         /**
-         * Edgde case
+         * Edge case
          */
         if (empty($this->callStack)) {
+            return false;
+        }
+
+        if($this->endWasReached){
             return false;
         }
 
         $actualCall = $this->getActualCall();
         $enterState = $actualCall->getState();
         if (!in_array($enterState, CallStack::TAG_STATE)) {
-            LogUtility::msg("A next sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+            LogUtility::msg("A next sibling can be asked only from a tag call. The state is $enterState", LogUtility::LVL_MSG_ERROR, "support");
             return false;
         }
         $level = 0;
@@ -573,7 +594,17 @@ class CallStack
             array_splice($this->callStack, $offset, 0, [$call->toCallArray()]);
             // array splice reset the pointer
             // we move it to the actual element (ie the key is offset +1)
-            $this->moveToOffset($offset + 1);
+            try {
+                $targetOffset = $offset + 1;
+                $this->moveToOffset($targetOffset);
+            } catch (ExceptionBadArgument $e) {
+                /**
+                 * We don't throw because we should be able to add before at any index
+                 */
+                if (PluginUtility::isDevOrTest()) {
+                    LogUtility::error("Unable to move the callback pointer to the offset ($targetOffset)", self::CANONICAL);
+                }
+            }
 
         }
         return $call;
@@ -582,10 +613,18 @@ class CallStack
     /**
      * Move pointer by offset
      * @param $offset
+     * @throws ExceptionBadArgument
      */
     private
     function moveToOffset($offset)
     {
+        if ($offset < 0) {
+            if ($offset === -1) {
+                $this->moveToStart();
+                return;
+            }
+            throw new ExceptionBadArgument("The offset value of ($offset) is off limit");
+        }
         $this->resetPointer();
         for ($i = 0; $i < $offset; $i++) {
             $result = $this->next();
@@ -599,8 +638,7 @@ class CallStack
      * Move pointer by key
      * @param $targetKey
      */
-    private
-    function moveToKey($targetKey)
+    public function moveToKey($targetKey)
     {
         $this->resetPointer();
         for ($i = 0; $i < $targetKey; $i++) {
@@ -613,28 +651,38 @@ class CallStack
     }
 
     /**
-     * Insert After. The pointer stays at the current state.
-     * If you don't need to process the call that you just
+     * Insert After. The pointer stays at the current location.
+     * If you need to process the call that you just
      * inserted, you may want to call {@link CallStack::next()}
      * @param Call $call
+     * @return void - next to go the inserted element
      */
     public
-    function insertAfter($call)
+    function insertAfter(Call $call): void
     {
         $actualKey = key($this->callStack);
-        if ($actualKey == null) {
-            if ($this->endWasReached == true) {
-                $this->callStack[] = $call->toCallArray();
-            } else {
-                LogUtility::msg("Callstack: Actual key is null, we can't insert after null");
-            }
-        } else {
+        if ($actualKey !== null) {
             $offset = array_search($actualKey, array_keys($this->callStack), true);
             array_splice($this->callStack, $offset + 1, 0, [$call->toCallArray()]);
             // array splice reset the pointer
             // we move it to the actual element
             $this->moveToKey($actualKey);
+            return;
         }
+
+        if ($this->endWasReached === true) {
+            $this->callStack[] = $call->toCallArray();
+            return;
+        }
+        if ($this->startWasReached === true) {
+            // since 4+
+            array_unshift($this->callStack, $call->toCallArray());
+            $this->previous();
+            return;
+        }
+        LogUtility::msg("Callstack: Actual key is null, we can't insert after null");
+
+
     }
 
     public
@@ -776,7 +824,7 @@ class CallStack
         while ($this->next()) {
             $actualCall = $this->getActualCall();
             if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
-                $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                $actualCall->addAttribute(MediaMarkup::LINKING_KEY, MediaMarkup::LINKING_NOLINK_VALUE);
             }
         }
     }
@@ -786,16 +834,35 @@ class CallStack
      * @param array $instructions
      * @return CallStack
      */
-    public function appendInstructionsFromNativeArray(array $instructions): CallStack
+    public function appendAtTheEndFromNativeArrayInstructions(array $instructions): CallStack
     {
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
         return $this;
     }
 
     /**
+     * @param array $instructions
+     * @return $this
+     * The key is the actual
+     */
+    public function insertAfterFromNativeArrayInstructions(array $instructions): CallStack
+    {
+        $offset = null;
+        $actualKey = $this->getActualKey();
+        if ($actualKey !== null) {
+            $offset = $actualKey + 1;
+        }
+        array_splice($this->callStack, $offset, 0, $instructions);
+        if ($actualKey !== null) {
+            $this->moveToKey($actualKey);
+        }
+        return $this;
+    }
+
+    /**
      * @param Call $call
      */
-    public function appendCallAtTheEnd($call)
+    public function appendCallAtTheEnd(Call $call)
     {
         $this->callStack[] = $call->toCallArray();
     }
@@ -814,7 +881,7 @@ class CallStack
             $actualCall = $this->getActualCall();
             $enterState = $actualCall->getState();
             if (!in_array($enterState, CallStack::TAG_STATE)) {
-                LogUtility::msg("A previous sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+                LogUtility::msg("A previous sibling can be asked only from a tag call. The state is $enterState", LogUtility::LVL_MSG_ERROR, "support");
                 return false;
             }
         }
@@ -991,7 +1058,15 @@ class CallStack
     {
         $targetKey = $call->getKey();
         $actualKey = $this->getActualKey();
-        $diff = $targetKey - $actualKey ;
+        if ($actualKey === null) {
+            if ($this->endWasReached) {
+                $actualKey = sizeof($this->callStack);
+            }
+            if ($this->startWasReached) {
+                $actualKey = -1;
+            }
+        }
+        $diff = $targetKey - $actualKey;
         for ($i = 0; $i < abs($diff); $i++) {
             if ($diff > 0) {
                 $this->next();
@@ -999,7 +1074,69 @@ class CallStack
                 $this->previous();
             }
         }
+        if ($this->endWasReached) {
+            return null;
+        }
+        if ($this->startWasReached) {
+            return null;
+        }
         return $this->getActualCall();
+    }
+
+
+    /**
+     * Delete all call before (Don't delete the passed call)
+     * @param Call $call
+     * @return void
+     */
+    public function deleteAllCallsBefore(Call $call)
+    {
+        $key = $call->getKey();
+        $offset = array_search($key, array_keys($this->callStack), true);
+        if ($offset !== false) {
+            /**
+             * We delete from the next
+             * {@link array_splice()} delete also the given offset
+             */
+            array_splice($this->callStack, 0, $offset);
+        } else {
+            LogUtility::msg("The call ($call) could not be found in the callStack. We couldn't therefore delete the before");
+        }
+
+    }
+
+    public function isAtEnd(): bool
+    {
+        return $this->endWasReached;
+    }
+
+    public function empty()
+    {
+        $this->callStack = [];
+    }
+
+    /**
+     * @return Call[]
+     */
+    public function getChildren(): array
+    {
+        $children = [];
+        $firstChildTag = $this->moveToFirstChildTag();
+        if ($firstChildTag == false) {
+            return $children;
+        }
+        $children[] = $firstChildTag;
+        while ($actualCall = $this->moveToNextSiblingTag()) {
+            $children[] = $actualCall;
+        }
+        return $children;
+    }
+
+    public function appendCallsAtTheEnd(array $calls)
+    {
+        foreach($calls as $call){
+            $this->appendCallAtTheEnd($call);
+        }
     }
 
 

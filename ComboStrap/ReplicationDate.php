@@ -1,10 +1,9 @@
 <?php
 
+namespace ComboStrap;
 
-use ComboStrap\MetaManagerForm;
-use ComboStrap\Metadata;
-use ComboStrap\MetadataDateTime;
-use ComboStrap\Page;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataDateTime;
 
 /**
  * Class ReplicationDate
@@ -19,28 +18,28 @@ class ReplicationDate extends MetadataDateTime
     public const PROPERTY_NAME = "date_replication";
     public const REPLICATION_CANONICAL = "replication";
 
-    public static function createFromPage(Page $page)
+    public static function createFromPage(MarkupPath $page)
     {
         return (new ReplicationDate())
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_INTEGRATION_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The modification date of the database row";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Database Replication Date";
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::REPLICATION_CANONICAL;
     }
@@ -50,18 +49,27 @@ class ReplicationDate extends MetadataDateTime
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::RUNTIME_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
 
+    /**
+     * @return mixed
+     * @throws ExceptionNotFound
+     */
     public function getDefaultValue()
     {
-        return null;
+        throw new ExceptionNotFound("No default replication date");
+    }
+
+    static public function isOnForm(): bool
+    {
+        return true;
     }
 }

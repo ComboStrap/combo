@@ -2,6 +2,7 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Xml\XmlSystems;
 use dokuwiki\Extension\Plugin;
 
 class Message
@@ -11,8 +12,8 @@ class Message
     const SIGNATURE_CLASS = "signature";
     const TAG = "message";
     const TYPE_ERROR = "error";
-    private $content = [];
-    private $type;
+    private array $content = [];
+    private string $type;
 
     const TYPE_INFO = 'Info';
     const TYPE_WARNING = 'Warning';
@@ -142,7 +143,7 @@ class Message
     function toHtmlBox(): string
     {
 
-        PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+        PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
         $message = "";
 
         $tagAttributes = TagAttributes::createEmpty("message")
@@ -181,7 +182,7 @@ class Message
              * In dev, to spot the XHTML compliance error
              */
             if (PluginUtility::isDevOrTest()) {
-                $isXml = XmlUtility::isXml($message);
+                $isXml = XmlSystems::isXml($message);
                 if (!$isXml) {
                     LogUtility::msg("This message is not xml compliant ($message)");
                     $message = <<<EOF
@@ -216,7 +217,7 @@ EOF;
         return $this->addContent($text, Mime::PLAIN_TEXT);
     }
 
-    public function sendLogMsg()
+    public function sendToLogUtility()
     {
         $content = $this->getContent(Mime::PLAIN_TEXT);
         switch ($this->type) {
@@ -238,8 +239,8 @@ EOF;
     public function getDocumentationHyperLink(): ?string
     {
         if ($this->canonical !== null) {
-            $canonicalPath = DokuPath::createFromUnknownRoot($this->canonical);
-            $label = $canonicalPath->toLabel();
+            $canonicalPath = WikiPath::createFromUnknownRoot($this->canonical);
+            $label = ResourceName::getFromPath($canonicalPath);
             return PluginUtility::getDocumentationHyperLink($this->canonical, $label, false);
         } else {
             return null;
@@ -262,15 +263,15 @@ EOF;
         if ($this->status !== null) {
             return $this->status;
         }
-        if ($this->type === null) {
-            return HttpResponse::STATUS_ALL_GOOD;
+        if (!isset($this->type)) {
+            return HttpResponseStatus::ALL_GOOD;
         }
         switch ($this->type) {
             case self::TYPE_ERROR:
-                return HttpResponse::STATUS_INTERNAL_ERROR;
+                return HttpResponseStatus::INTERNAL_ERROR;
             case self::TYPE_INFO:
             default:
-                return HttpResponse::STATUS_ALL_GOOD;
+                return HttpResponseStatus::ALL_GOOD;
         }
 
     }

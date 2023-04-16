@@ -52,7 +52,7 @@ class FloatAttribute
                     case "start":
                     case "end":
                     case "none":
-                        $defaultBreakpoint = PluginUtility::getConfValue(self::CONF_FLOAT_DEFAULT_BREAKPOINT, "sm");
+                        $defaultBreakpoint = SiteConfig::getConfValue(self::CONF_FLOAT_DEFAULT_BREAKPOINT, "sm");
                         $floatValue = "{$defaultBreakpoint}-$floatValue";
                         break;
                 }

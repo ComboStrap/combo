@@ -32,14 +32,14 @@ class LowQualityPage
     const CONF_LOW_QUALITY_PAGE_PROTECTION_MODE = "lowQualityPageProtectionMode";
 
     const CONF_LOW_QUALITY_PAGE_LINK_TYPE = "lowQualityPageLinkType";
-    const CLASS_NAME = "low-quality-page";
+    const CLASS_SUFFIX = "low-quality-page";
     public const LOW_QUALITY_PAGE_CANONICAL = "low_quality_page";
     public const LQPP_CANONICAL = "lqpp";
 
     public static function getLowQualityProtectionMode()
     {
-        if (PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
-            return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
+        if (SiteConfig::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
+            return SiteConfig::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
         } else {
             return false;
         }
@@ -53,14 +53,14 @@ class LowQualityPage
     public static function isProtectionEnabled()
     {
 
-        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true);
+        return SiteConfig::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true);
 
     }
 
     public static function getLowQualityLinkType()
     {
 
-        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE, PageProtection::PAGE_PROTECTION_LINK_NORMAL);
+        return SiteConfig::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE, PageProtection::PAGE_PROTECTION_LINK_NORMAL);
 
     }
 

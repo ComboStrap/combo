@@ -7,8 +7,8 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\Tooltip;
+use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_tooltip
@@ -96,6 +96,11 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
         return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+    public function accepts($mode): bool
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
     function getSort(): int
     {
         return 201;
@@ -105,7 +110,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }

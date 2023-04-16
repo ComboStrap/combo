@@ -4,57 +4,65 @@
 namespace ComboStrap;
 
 
-use renderer_plugin_combo_analytics;
-
 abstract class PathAbs implements Path
 {
 
 
-    public function getExtension()
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getExtension(): string
     {
-        return pathinfo($this->getLastName(), PATHINFO_EXTENSION);
+        $extension = pathinfo($this->getLastName(), PATHINFO_EXTENSION);
+        if ($extension === "") {
+            throw new ExceptionNotFound("No extension found");
+        }
+        return $extension;
+
+    }
+
+    /**
+     * @return Mime based on the {@link PathAbs::getExtension()}
+     * @throws ExceptionNotFound
+     * @deprecated see {@link FileSystems::getMime()}
+     */
+    public function getMime(): Mime
+    {
+
+        return FileSystems::getMime($this);
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getLastNameWithoutExtension(): string
+    {
+        $lastName = $this->getLastName();
+        $lastPoint = strrpos($lastName, '.');
+        if ($lastPoint === false) {
+            return $lastName;
+        }
+        return substr($lastName, 0, $lastPoint);
     }
 
     /**
      *
-     * @return Mime based on the {@link PathAbs::getExtension()}
      */
-    public function getMime(): ?Mime
+    public function getNamesWithoutExtension()
     {
-        $extension = $this->getExtension();
-        switch ($extension) {
-            case ImageSvg::EXTENSION:
-                /**
-                 * Svg is authorized when viewing but is not part
-                 * of the {@link File::getKnownMime()}
-                 */
-                return new Mime(Mime::SVG);
-            case JavascriptLibrary::EXTENSION:
-                return new Mime(Mime::JAVASCRIPT);
-            case renderer_plugin_combo_analytics::RENDERER_NAME_MODE:
-            case Json::EXTENSION:
-                return new Mime(Mime::JSON);
-            case "txt":
-                return new Mime(Mime::PLAIN_TEXT);
-            case "xhtml":
-            case "html":
-                return new Mime(Mime::HTML);
-            case "png":
-                return new Mime(Mime::PNG);
-            case "css":
-                return new Mime(Mime::CSS);
-            default:
-                $mime = mimetype($this->getLastName(), true)[1];
-                if ($mime === null || $mime === false) {
-                    return null;
-                }
-                return new Mime($mime);
+        $names = $this->getNames();
+        $sizeof = sizeof($names);
+        if ($sizeof == 0) {
+            return $names;
         }
-    }
-
-    public function getLastNameWithoutExtension()
-    {
-        return pathinfo($this->getLastName(), PATHINFO_FILENAME);
+        $lastName = $names[$sizeof - 1];
+        $index = strrpos($lastName, ".");
+        if ($index === false) {
+            return $names;
+        }
+        $names[$sizeof - 1] = substr($lastName, 0, $index);
+        return $names;
     }
 
     public function __toString()
@@ -65,21 +73,50 @@ abstract class PathAbs implements Path
 
     public function toUriString(): string
     {
-        return $this->toString();
+        return $this->toAbsoluteId();
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCast when
+     * Utility {@link WikiPath::createFromPathObject()}
      */
-    function toDokuPath(): DokuPath
+    function toWikiPath(): WikiPath
     {
-        if($this instanceof DokuPath){
+        if ($this instanceof WikiPath) {
             return $this;
         }
-        if($this instanceof LocalPath){
-            return $this->toDokuPath();
+        if ($this instanceof LocalPath) {
+            try {
+                return $this->toWikiPath();
+            } catch (ExceptionBadArgument|ExceptionCast $e) {
+                throw new ExceptionCast($e);
+            }
         }
-        throw new ExceptionCombo("This is not a doku path or local path");
+        if ($this instanceof MarkupPath) {
+            try {
+                return $this->getPathObject()->toWikiPath();
+            } catch (ExceptionCast $e) {
+                throw new ExceptionCast($e);
+            }
+        }
+        throw new ExceptionCast("This is not a wiki path or local path");
+    }
+
+    /**
+     * @throws ExceptionCast when
+     */
+    function toLocalPath(): LocalPath
+    {
+        if ($this instanceof LocalPath) {
+            return $this;
+        }
+        if ($this instanceof WikiPath) {
+            return $this->toLocalPath();
+        }
+        if ($this instanceof MarkupPath) {
+            return $this->getPathObject()->toLocalPath();
+        }
+        throw new ExceptionCast("Unable to cast to LocalPath as this path is not a wiki path or a local path but a " . get_class($this));
     }
 
 

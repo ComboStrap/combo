@@ -1,15 +1,12 @@
 <?php
 
+namespace ComboStrap;
 
-use ComboStrap\DokuPath;
-use ComboStrap\MetaManagerForm;
-use ComboStrap\Metadata;
-use ComboStrap\MetadataWikiPath;
-use ComboStrap\PageTitle;
-use ComboStrap\ResourceCombo;
-use ComboStrap\StringUtility;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\Meta\Api\MetadataWikiPath;
 
-class Slug extends MetadataWikiPath
+class Slug extends MetadataText
 {
 
     public const PROPERTY_NAME = "slug";
@@ -21,7 +18,7 @@ class Slug extends MetadataWikiPath
             ->setResource($resource);
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::PROPERTY_NAME;
     }
@@ -36,55 +33,55 @@ class Slug extends MetadataWikiPath
     public static function toSlugPath($string): ?string
     {
         if (empty($string)) return null;
-        $excludedCharacters = array_merge(DokuPath::getReservedWords(), StringUtility::SEPARATORS_CHARACTERS);
-        $excludedCharacters[] = DokuPath::SLUG_SEPARATOR;
-        $parts = explode(DokuPath::PATH_SEPARATOR, $string);
+        $excludedCharacters = array_merge(WikiPath::getReservedWords(), StringUtility::SEPARATORS_CHARACTERS);
+        $excludedCharacters[] = WikiPath::SLUG_SEPARATOR;
+        $parts = explode(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $string);
         $parts = array_map(function ($e) use ($excludedCharacters) {
             $wordsPart = StringUtility::getWords(
                 $e,
                 $excludedCharacters
             );
             // Implode and Lower case
-            return strtolower(implode(DokuPath::SLUG_SEPARATOR, $wordsPart));
+            return strtolower(implode(WikiPath::SLUG_SEPARATOR, $wordsPart));
         }, $parts);
 
-        $slug = implode(DokuPath::PATH_SEPARATOR, $parts);
+        $slug = implode(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $parts);
         // Space to separator
         //$slugWithoutSpace = str_replace(" ", DokuPath::SLUG_SEPARATOR, $slugWithoutSpaceAroundParts);
         // No double separator
         //$slugWithoutDoubleSeparator = preg_replace("/" . DokuPath::SLUG_SEPARATOR . "{2,}/", DokuPath::SLUG_SEPARATOR, $slugWithoutSpace);
-        DokuPath::addRootSeparatorIfNotPresent($slug);
+        WikiPath::addRootSeparatorIfNotPresent($slug);
         return $slug;
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The slug is used in the url of the page (if chosen)";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Slug Path";
     }
 
     public function setFromStoreValue($value): Metadata
     {
-        return $this->buildFromStoreValue($value);
+        return $this->setFromStoreValueWithoutException($value);
     }
 
     public function setValue($value): Metadata
     {
-        return $this->buildFromStoreValue($value);
+        return $this->setFromStoreValueWithoutException($value);
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
-        return parent::buildFromStoreValue(self::toSlugPath($value));
+        return parent::setFromStoreValueWithoutException(self::toSlugPath($value));
     }
 
 
@@ -93,23 +90,28 @@ class Slug extends MetadataWikiPath
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
-    public function getDefaultValue(): ?string
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
-        $title = PageTitle::createForPage($this->getResource())
+        $title = PageTitle::createForMarkup($this->getResource())
             ->getValueOrDefault();
-        if ($title === null) {
-            return null;
-        }
         return self::toSlugPath($title);
+    }
+
+    static public function isOnForm(): bool
+    {
+        return true;
     }
 }

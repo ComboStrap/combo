@@ -3,9 +3,9 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\ColorRgb;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\LogUtility;
+use ComboStrap\BrandingColors;
+use ComboStrap\ColorSystem;
+use ComboStrap\ExecutionContext;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
@@ -19,7 +19,11 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
 
-        $controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'handleCssForDoAction');
+        /**
+         * See {@link \ComboStrap\SnippetSystem::attachCssInternalStylesheet()}
+         * for more explanation on the choice of the event
+         */
+        $controller->register_hook('ACTION_HEADERS_SEND', 'BEFORE', $this, 'handleCssForDoAction');
 
     }
 
@@ -34,12 +38,17 @@ class action_plugin_combo_docss extends DokuWiki_Action_Plugin
         global $ACT;
         switch ($ACT) {
             case "media":
-                PluginUtility::getSnippetManager()->attachCssSnippetForRequest("do-media");
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheet("do-media");
+                break;
+            case "edit":
+            case "preview":
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheet("do-edit");
                 break;
             case "admin":
                 $defaultColor = "black";
-                $iconColor = Site::getPrimaryColor($defaultColor);
-                $colorText = Site::getPrimaryColorForText($defaultColor);
+                $config = ExecutionContext::getActualOrCreateFromEnv()->getConfig();
+                $iconColor = $config->getPrimaryColorOrDefault($defaultColor);
+                $colorText = ColorSystem::toTextColor($iconColor);
                 $css = <<<EOF
 ul.admin_tasks, ul.admin_plugins {
     list-style: none;
@@ -60,7 +69,7 @@ ul.admin_tasks a:hover, ul.admin_plugins a:hover{
     fill: {$iconColor->toRgbHex()};
 }
 EOF;
-                PluginUtility::getSnippetManager()->attachCssSnippetForRequest("do-admin", $css);
+                PluginUtility::getSnippetManager()->attachCssInternalStylesheet("do-admin", $css);
                 break;
         }
 

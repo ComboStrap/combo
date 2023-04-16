@@ -1,5 +1,3 @@
-/* global combo */
-// noinspection JSUnresolvedVariable
 
 window.addEventListener("DOMContentLoaded", function () {
 
@@ -17,14 +15,17 @@ window.addEventListener("DOMContentLoaded", function () {
             }
 
             const viewerCallEndpoint = "combo-meta-viewer";
+            const combo = /** @type {import('combo.d.ts')} */ (window.combo);
             let viewerCall = combo
-                .createDokuRequest(viewerCallEndpoint)
+                .DokuUrl
+                .createAjax(viewerCallEndpoint)
                 .setProperty("id", pageId)
+                .toRequest();
             let jsonFormMeta = await viewerCall.getJson();
 
 
-            let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
-            let formHtmlElement = combo.createFormFromJson(formViewerId, jsonFormMeta).toHtmlElement();
+            let formViewerId = combo.Html.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
+            let formHtmlElement = combo.Form.createFromJson(formViewerId, jsonFormMeta).toHtmlElement();
 
             /**
              * Submit Button
@@ -37,7 +38,9 @@ window.addEventListener("DOMContentLoaded", function () {
             submitButton.addEventListener("click", async function (event) {
                 event.preventDefault();
                 let formData = new FormData(formHtmlElement);
-                let response = await combo.createDokuRequest(viewerCallEndpoint)
+                let response = await combo.DokuUrl
+                    .createAjax(viewerCallEndpoint)
+                    .toRequest()
                     .setMethod("post")
                     .sendFormDataAsJson(formData);
                 modalViewer.reset();
@@ -85,8 +88,9 @@ window.addEventListener("DOMContentLoaded", function () {
             } catch (/** @type Error */ e) {
                 modalMessage.push(e.message)
             }
-
-            combo.createTemporaryModal()
+            const combo = /** @type {import('combo.d.ts')} */ (window.combo);
+            combo.Modal
+                .createTemporary()
                 .setCallBackOnClose(callBack)
                 .centered()
                 .addBody(modalMessage.join("<br>"))
@@ -100,8 +104,9 @@ window.addEventListener("DOMContentLoaded", function () {
              * The manager modal root
              * (used in button)
              */
-            let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
-            let managerModal = combo.getOrCreateModal(modalManagerId)
+            const combo = /** @type {import('combo.d.ts')} */ (window.combo);
+            let modalManagerId = combo.Html.toHtmlId(`combo-meta-manager-page-${pageId}`);
+            let managerModal = combo.Modal.getOrCreate(modalManagerId)
                 .addDialogClass("modal-fullscreen-md-down");
             if (managerModal.wasBuild()) {
                 managerModal.show();
@@ -112,19 +117,21 @@ window.addEventListener("DOMContentLoaded", function () {
              * The viewer
              * We create it here because it needs to be reset if there is a submit on the manager.
              */
-            let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
-            let modalViewer = combo.getOrCreateModal(modalViewerId)
+            let modalViewerId = combo.Html.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
+            let modalViewer = combo.Modal.getOrCreate(modalViewerId)
                 .addDialogClass("modal-fullscreen-md-down");
 
             /**
              * Creating the form
              */
             let formMetadata = await combo
-                .createDokuRequest(metaManagerCall)
+                .DokuUrl
+                .createAjax(metaManagerCall)
                 .setProperty("id", pageId)
+                .toRequest()
                 .getJson();
-            let formId = combo.toHtmlId(`${modalManagerId}-form`);
-            let form = combo.createFormFromJson(formId, formMetadata);
+            let formId = combo.Html.toHtmlId(`${modalManagerId}-form`);
+            let form = combo.Form.createFromJson(formId, formMetadata);
             let htmlFormElement = form.toHtmlElement();
 
 
@@ -151,7 +158,8 @@ window.addEventListener("DOMContentLoaded", function () {
             submitButton.addEventListener("click", async function (event) {
                 event.preventDefault();
                 let formData = new FormData(htmlFormElement);
-                let response = await combo.createDokuRequest(metaManagerCall)
+                let response = await combo.DokuUrl.createAjax(metaManagerCall)
+                    .toRequest()
                     .setMethod("post")
                     .sendFormDataAsJson(formData);
                 managerModal.reset();
@@ -189,6 +197,10 @@ window.addEventListener("DOMContentLoaded", function () {
 
             metadataControlItem.addEventListener("click", function (event) {
                 event.preventDefault();
+                if(!('JSINFO' in window)){
+                    throw new Error("JSINFO is not available")
+                }
+                const JSINFO = window.JSINFO;
                 void openMetadataManager(JSINFO.id)
                     .catch(e => {
                         if (e instanceof Error) {

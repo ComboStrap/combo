@@ -4,9 +4,23 @@
 namespace ComboStrap;
 
 
-use ModificationDate;
-use ReplicationDate;
-use Slug;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataSystem;
+use ComboStrap\Meta\Field\Aliases;
+use ComboStrap\Meta\Field\AncestorImage;
+use ComboStrap\Meta\Field\FacebookImage;
+use ComboStrap\Meta\Field\FeaturedImage;
+use ComboStrap\Meta\Field\SocialCardImage;
+use ComboStrap\Meta\Field\FeaturedRasterImage;
+use ComboStrap\Meta\Field\FeaturedSvgImage;
+use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Field\PageImages;
+use ComboStrap\Meta\Field\PageTemplateName;
+use ComboStrap\Meta\Field\Region;
+use ComboStrap\Meta\Field\TwitterImage;
+use ComboStrap\Meta\Form\FormMeta;
+use ComboStrap\Meta\Form\FormMetaTab;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 class MetaManagerForm
 {
@@ -19,21 +33,31 @@ class MetaManagerForm
     public const TAB_INTEGRATION_VALUE = "integration";
     public const TAB_QUALITY_VALUE = "quality";
     public const TAB_IMAGE_VALUE = "image";
-    private $page;
+    private MarkupPath $page;
 
-    private const FORM_METADATA_LIST = [ResourceName::PROPERTY_NAME,
+
+    private const META_ORDERS = [ResourceName::PROPERTY_NAME,
         PageTitle::PROPERTY_NAME,
+        Lead::PROPERTY_NAME,
         PageH1::PROPERTY_NAME,
+        Label::PROPERTY_NAME,
         PageDescription::PROPERTY_NAME,
         PageKeywords::PROPERTY_NAME,
         PagePath::PROPERTY_NAME,
         Canonical::PROPERTY_NAME,
         Slug::PROPERTY_NAME,
         PageUrlPath::PROPERTY_NAME,
-        PageLayout::PROPERTY_NAME,
+        PageTemplateName::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
-        PageCreationDate::PROPERTY_NAME,
-        PageImages::PROPERTY_NAME,
+        CreationDate::PROPERTY_NAME,
+        FeaturedImage::PROPERTY_NAME,
+        FeaturedRasterImage::PROPERTY_NAME,
+        FeaturedSvgImage::PROPERTY_NAME,
+        FeaturedIcon::PROPERTY_NAME,
+        TwitterImage::PROPERTY_NAME,
+        FacebookImage::PROPERTY_NAME,
+        AncestorImage::PROPERTY_NAME,
+        FirstImage::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
         PageType::PROPERTY_NAME,
         PagePublicationDate::PROPERTY_NAME,
@@ -48,7 +72,8 @@ class MetaManagerForm
         ReplicationDate::PROPERTY_NAME,
         PageId::PROPERTY_NAME,
         CacheExpirationFrequency::PROPERTY_NAME,
-        CacheExpirationDate::PROPERTY_NAME
+        CacheExpirationDate::PROPERTY_NAME,
+        PageLevel::PROPERTY_NAME
     ];
 
     /**
@@ -65,7 +90,7 @@ class MetaManagerForm
         $this->targetFormDataStore = MetadataFormDataStore::getOrCreateFromResource($page);
     }
 
-    public static function createForPage(Page $page): MetaManagerForm
+    public static function createForPage(MarkupPath $page): MetaManagerForm
     {
         return new MetaManagerForm($page);
     }
@@ -81,15 +106,15 @@ class MetaManagerForm
          * with a new frontmatter
          * The frontmatter data should be first replicated into the metadata file
          */
-        $instructions = $this->page->getInstructionsDocument();
-        if (!$instructions->shouldProcess()) {
-            $instructions->process();
-        }
+        $fetcherMarkup = $this->page->getInstructionsDocument();
+        $fetcherMarkup->getInstructions();
+
 
         /**
          * Creation
          */
-        $formMeta = FormMeta::create($this->page->getDokuwikiId())
+        $name = $this->page->getPathObject()->toAbsoluteId();
+        $formMeta = FormMeta::create($name)
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 
 
@@ -97,19 +122,43 @@ class MetaManagerForm
          * The manager
          */
         $dokuwikiFsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
-        foreach (self::FORM_METADATA_LIST as $formsMetaDatum) {
+        $metadataNameInOrder = self::META_ORDERS;
 
-            $metadata = Metadata::getForName($formsMetaDatum);
-            if ($metadata === null) {
-                LogUtility::msg("The metadata ($formsMetaDatum} was not found");
+
+        foreach ($metadataNameInOrder as $metadataName) {
+            try {
+                $metadataObject = MetadataSystem::getForName($metadataName);
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("The metadata ($metadataName) was not found");
                 continue;
             }
-            $metadata
+            if(!$metadataObject::isOnForm()){
+                LogUtility::internalError("This metadata should not be on the order list as it's not for the form");
+                continue;
+            }
+            $metadataObject
                 ->setResource($this->page)
                 ->setReadStore($dokuwikiFsStore)
                 ->buildFromReadStore()
                 ->setWriteStore($this->targetFormDataStore);
-            $formMeta->addFormFieldFromMetadata($metadata);
+            $formMeta->addFormFieldFromMetadata($metadataObject);
+        }
+
+        /**
+         * Metadata that are not in the order list
+         */
+        foreach (MetadataSystem::getMetadataClasses() as $metadata) {
+            if (!$metadata::isOnForm()) {
+                continue;
+            }
+            if (!in_array($metadata::getName(), $metadataNameInOrder)) {
+                $metadataObject = (new $metadata())
+                    ->setResource($this->page)
+                    ->setReadStore($dokuwikiFsStore)
+                    ->buildFromReadStore()
+                    ->setWriteStore($this->targetFormDataStore);
+                $formMeta->addFormFieldFromMetadata($metadataObject);
+            }
         }
 
 
@@ -138,8 +187,9 @@ class MetaManagerForm
             )
             ->addTab(
                 FormMetaTab::create(self::TAB_IMAGE_VALUE)
-                    ->setLabel("Image")
-                    ->setWidthField(12)
+                    ->setLabel("Images")
+                    ->setWidthLabel(3)
+                    ->setWidthField(9)
             )
             ->addTab(
                 FormMetaTab::create(self::TAB_QUALITY_VALUE)

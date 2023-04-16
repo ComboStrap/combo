@@ -15,6 +15,8 @@ namespace ComboStrap;
 
 use Doku_Form;
 use dokuwiki\Form\Form;
+use dokuwiki\Form\InputElement;
+use dokuwiki\Ui\UserProfile;
 use TestRequest;
 
 class Identity
@@ -32,19 +34,20 @@ class Identity
     const JS_NAVIGATION_INDICATOR = "navigation";
 
     const FORM_IDENTITY_CLASS = "form-identity";
+    public const FIELD_SET_TO_DELETE = ["fieldsetopen", "fieldsetclose"];
+    public const CONF_DESIGNER_GROUP_NAME = "combo-conf-006";
 
     /**
      * Is logged in
      * @return boolean
      */
-    public static function isLoggedIn()
+    public static function isLoggedIn(): bool
     {
-        $loggedIn = false;
-        global $INPUT;
-        if ($INPUT->server->has('REMOTE_USER')) {
-            $loggedIn = true;
+        global $_SERVER;
+        if (empty($_SERVER['REMOTE_USER'])) {
+            return false;
         }
-        return $loggedIn;
+        return true;
     }
 
     /**
@@ -65,17 +68,29 @@ class Identity
         /**
          * used by {@link getSecurityToken()}
          */
-        global $INPUT;
-        $INPUT->server->set('REMOTE_USER', $user);
-        // same as $_SERVER['REMOTE_USER'] = $user;
-
-
-        // $_SERVER[] = $user;
-        // global $USERINFO;
-        // $USERINFO['grps'] = array('admin', 'user');
+        // same as
+        // global $INPUT;
+        // $INPUT->server->set('REMOTE_USER', $user);
+        $_SERVER['REMOTE_USER'] = $user;
 
         // global $INFO;
         // $INFO['ismanager'] = true;
+
+
+        /**
+         *
+         * Userinfo
+         *
+         * Email is Mandatory otherwise the {@link UserProfile}
+         * does not work
+         *
+         * USERINFO is also available via $INFO['userinfo']
+         * See {@link basicinfo()}
+         */
+        global $USERINFO;
+        $USERINFO['mail'] = "email@example.com";
+        // $USERINFO['grps'] = array('admin', 'user');
+
 
     }
 
@@ -99,15 +114,26 @@ class Identity
     /**
      * @return bool if edit auth
      */
-    public static function isWriter($pageId = null): bool
+    public static function isWriter($wikiId = null): bool
     {
-        if ($pageId == null) {
-            $pageId = Page::createPageFromGlobalDokuwikiId();
+
+        if ($wikiId === null) {
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+            try {
+                $wikiId = $executionContext->getRequestedPath()->getWikiId();
+            } catch (ExceptionNotFound $e) {
+                return false;
+            }
         }
+        /**
+         * There is also
+         * $INFO['writable'] === true
+         * See true if writable See https://www.dokuwiki.org/devel:environment#info
+         */
         if ($_SERVER['REMOTE_USER']) {
-            $perm = auth_quickaclcheck($pageId);
+            $perm = auth_quickaclcheck($wikiId);
         } else {
-            $perm = auth_aclcheck($pageId, '', null);
+            $perm = auth_aclcheck($wikiId, '', null);
         }
 
         if ($perm >= AUTH_EDIT) {
@@ -135,17 +161,11 @@ class Identity
 
     }
 
-    public static function isManager()
+    public static function isManager(): bool
     {
-        global $INFO;
-        if ($INFO !== null) {
-            return $INFO['ismanager'];
-        } else {
-            /**
-             * In test
-             */
-            return auth_ismanager();
-        }
+
+        return auth_ismanager();
+
     }
 
     public static function getUser(): string
@@ -161,81 +181,12 @@ class Identity
     private static function getUserGroups()
     {
         global $USERINFO;
-        return is_array($USERINFO) ? $USERINFO['grps'] : array();
+        return is_array($USERINFO) && isset($USERINFO['grps']) ? $USERINFO['grps'] : array();
     }
 
-    /**
-     * @param Doku_Form|Form $form
-     * @param string $classPrefix
-     * @param bool $includeLogo
-     * @return string
-     */
-    public static function getHeaderHTML($form, $classPrefix, $includeLogo = true)
+    public static function isReader(string $wikiId): bool
     {
-
-        $class = get_class($form);
-        switch ($class) {
-            case Doku_Form::class:
-                /**
-                 * Old one
-                 * @var Doku_Form $form
-                 */
-                $legend = $form->_content[0]["_legend"];
-                if (!isset($legend)) {
-                    return "";
-                }
-
-                $title = $legend;
-                break;
-            case Form::class;
-                /**
-                 * New One
-                 * @var Form $form
-                 */
-                $pos = $form->findPositionByType("fieldsetopen");
-                if ($pos == false) {
-                    return "";
-                }
-
-                $title = $form->getElementAt($pos)->val();
-                break;
-            default:
-                LogUtility::msg("Internal Error: Unknown form class " . $class);
-                return "";
-        }
-
-        /**
-         * Logo
-         */
-        $logoHtmlImgTag = "";
-        if (
-            PluginUtility::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
-            &&
-            $includeLogo === true
-        ) {
-            $logoHtmlImgTag = Site::getLogoHtml();
-        }
-        /**
-         * Don't use `header` in place of
-         * div because this is a HTML5 tag
-         *
-         * On php 5.6, the php test library method {@link \phpQueryObject::htmlOuter()}
-         * add the below meta tag
-         * <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-         *
-         */
-        return <<<EOF
-<div class="$classPrefix-header">
-    $logoHtmlImgTag
-    <h1>$title</h1>
-</div>
-EOF;
-
-    }
-
-    public static function isReader(string $pageId): bool
-    {
-        $perm = self::getPerm($pageId);
+        $perm = self::getPermissions($wikiId);
 
         if ($perm >= AUTH_READ) {
             return true;
@@ -245,63 +196,29 @@ EOF;
 
     }
 
-    private static function getPerm(string $pageId)
+    private static function getPermissions(string $wikiId): int
     {
-        if ($pageId == null) {
-            $pageId = Page::createPageFromRequestedPage()->getDokuwikiId();
+        if ($wikiId == null) {
+            $wikiId = MarkupPath::createFromRequestedPage()->getWikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
-            $perm = auth_quickaclcheck($pageId);
+            $perm = auth_quickaclcheck($wikiId);
         } else {
-            $perm = auth_aclcheck($pageId, '', null);
+            $perm = auth_aclcheck($wikiId, '', null);
         }
         return $perm;
     }
 
-    public static function addPrimaryColorCssRuleIfSet(?string $content): ?string
+    public static function getSecurityTokenForAdminUser(): string
     {
-        if ($content === null) {
-            return null;
-        }
-        $primaryColor = Site::getPrimaryColor();
-        if ($primaryColor !== null) {
-            $identityClass = self::FORM_IDENTITY_CLASS;
-            $cssFormControl = BrandColors::getCssFormControlFocusColor($primaryColor);
-            $content .= <<<EOF
-.$identityClass button[type="submit"]{
-   background-color: {$primaryColor->toCssValue()};
-   border-color: {$primaryColor->toCssValue()};
-}
-$cssFormControl
-EOF;
-        }
-        return $content;
+        $request = null;
+        Identity::becomeSuperUser($request, 'admin');
+        return getSecurityToken();
     }
 
-    public static function getHtmlStyleTag(string $componentId): string
+    public static function isAnonymous(): bool
     {
-        $loginCss = Snippet::createInternalCssSnippet($componentId);
-        $content = $loginCss->getInternalInlineAndFileContent();
-        $content = Identity::addPrimaryColorCssRuleIfSet($content);
-        $class = $loginCss->getClass();
-        return <<<EOF
-<style class="$class">
-$content
-</style>
-EOF;
-
-    }
-
-    public static function addIdentityClass(&$class, string $formClass)
-    {
-
-        $formClass = Identity::FORM_IDENTITY_CLASS . " " . $formClass;
-        if (isset($class)) {
-            $class .= " " . $formClass;
-        } else {
-            $class = $formClass;
-        }
-
+        return !self::isLoggedIn();
     }
 
 

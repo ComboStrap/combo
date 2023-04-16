@@ -4,19 +4,12 @@
  *
  */
 
+use ComboStrap\ExecutionContext;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
-
-if (!defined('DOKU_PLUGIN')) {
-    define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-}
-
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
@@ -41,10 +34,6 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
     const TAG = 'accordion';
 
-    /**
-     * @var int a counter to give an id to the accordion card
-     */
-    private $accordionCounter = 0;
 
     /**
      * Syntax Type.
@@ -67,12 +56,12 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
         /**
          * header mode is disable to take over
@@ -91,9 +80,9 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     * * 'normal' - The plugin can be used inside paragraphs
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *  * 'normal' - Inline
+     *  * 'block' - Block (p are not created inside)
+     *  * 'stack' - Block (p can be created inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
@@ -122,7 +111,7 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
@@ -157,19 +146,21 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $this->accordionCounter++;
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = TagAttributes::createFromTagMatch($match)
+                    ->setLogicalTag(self::TAG);
 
                 // Attributes has at
                 // https://getbootstrap.com/docs/4.6/components/collapse/#accordion-example
-                PluginUtility::addClass2Attributes("accordion", $attributes);
-                if (!in_array("id", $attributes)) {
-                    $attributes["id"] = self::TAG . $this->accordionCounter;
+                $attributes->addClassName("accordion");
+
+                if (!$attributes->hasComponentAttribute(TagAttributes::ID_KEY)) {
+                    $idKey = ExecutionContext::getActualOrCreateFromEnv()->getIdManager()->generateNewHtmlIdForComponent(self::TAG);
+                    $attributes->addComponentAttributeValue(TagAttributes::ID_KEY, $idKey);
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -200,7 +191,7 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         if ($format == 'xhtml') {
@@ -209,14 +200,15 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES])
+                        ->setLogicalTag(self::TAG);
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div");
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
-                    $renderer->doc .= '</div>' . DOKU_LF;
+                    $renderer->doc .= '</div>';
                     break;
             }
 

@@ -5,6 +5,9 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metagoogle;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataJson;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 /**
  *
@@ -40,7 +43,9 @@ class LdJson extends MetadataJson
     public const DATE_PUBLISHED_KEY = "datePublished";
     public const DATE_MODIFIED_KEY = "dateModified";
 
-    public static function createForPage(Page $page): LdJson
+    public const CANONICAL = action_plugin_combo_metagoogle::CANONICAL;
+
+    public static function createForPage(MarkupPath $page): LdJson
     {
         return (new LdJson())
             ->setResource($page);
@@ -48,9 +53,9 @@ class LdJson extends MetadataJson
 
     /**
      * @param array $ldJson
-     * @param Page $page
+     * @param MarkupPath $page
      */
-    public static function addImage(array &$ldJson, Page $page)
+    public static function addImage(array &$ldJson, MarkupPath $page)
     {
         /**
          * Image must belong to the page
@@ -71,26 +76,44 @@ class LdJson extends MetadataJson
             Mime::WEBP,
             Mime::SVG,
         ];
-        $imagesSet = $page->getImagesOrDefaultForTheFollowingUsages([PageImageUsage::ALL, PageImageUsage::SOCIAL, PageImageUsage::GOOGLE]);
+        $imagesSet = $page->getImagesForTheFollowingUsages([PageImageUsage::ALL, PageImageUsage::SOCIAL, PageImageUsage::GOOGLE]);
         $schemaImages = array();
-        foreach ($imagesSet as $image) {
+        foreach ($imagesSet as $pageImage) {
 
-            $mime = $image->getPath()->getMime()->toString();
+            try {
+                $pageImagePath = $pageImage->getSourcePath()->toWikiPath();
+            } catch (ExceptionCast $e) {
+                LogUtility::internalError("The page image should come from a wiki path", self::CANONICAL, $e);
+                continue;
+            }
+            try {
+                $mime = $pageImagePath->getMime()->toString();
+            } catch (ExceptionNotFound $e) {
+                // should not happen
+                LogUtility::internalError("The page image mime could not be determined. Error:" . $e->getMessage(), self::CANONICAL, $e);
+                $mime = "unknown";
+            }
             if (in_array($mime, $supportedMime)) {
-                if ($image->exists()) {
+                if (FileSystems::exists($pageImagePath)) {
+                    try {
+                        $fetcherPageImage = IFetcherLocalImage::createImageFetchFromPath($pageImagePath);
+                    } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+                        LogUtility::error("The image ($pageImagePath) could not be added as page image. Error: {$e->getMessage()}");
+                        continue;
+                    }
                     $imageObjectSchema = array(
                         "@type" => "ImageObject",
-                        "url" => $image->getAbsoluteUrl()
+                        "url" => $fetcherPageImage->getFetchUrl()->toAbsoluteUrlString()
                     );
-                    if (!empty($image->getIntrinsicWidth())) {
-                        $imageObjectSchema["width"] = $image->getIntrinsicWidth();
+                    if (!empty($fetcherPageImage->getIntrinsicWidth())) {
+                        $imageObjectSchema["width"] = $fetcherPageImage->getIntrinsicWidth();
                     }
-                    if (!empty($image->getIntrinsicHeight())) {
-                        $imageObjectSchema["height"] = $image->getIntrinsicHeight();
+                    if (!empty($fetcherPageImage->getIntrinsicHeight())) {
+                        $imageObjectSchema["height"] = $fetcherPageImage->getIntrinsicHeight();
                     }
                     $schemaImages[] = $imageObjectSchema;
                 } else {
-                    LogUtility::msg("The image ($image) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, action_plugin_combo_metagoogle::CANONICAL);
+                    LogUtility::msg("The image ($pageImagePath) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, action_plugin_combo_metagoogle::CANONICAL);
                 }
             }
         }
@@ -105,34 +128,34 @@ class LdJson extends MetadataJson
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return action_plugin_combo_metagoogle::CANONICAL;
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "Advanced Page metadata definition with the json-ld format";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Json-ld";
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
@@ -152,28 +175,32 @@ class LdJson extends MetadataJson
 
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
 
         if ($value === null) {
             $resourceCombo = $this->getResource();
-            if (($resourceCombo instanceof Page)) {
-                // Deprecated, old organization syntax
-                if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
-                    $store = $this->getReadStore();
-                    $metadata = $store->getFromPersistentName( self::OLD_ORGANIZATION_PROPERTY);
-                    if ($metadata !== null) {
-                        $organization = array(
-                            "organization" => $metadata
-                        );
-                        $ldJsonOrganization = $this->mergeWithDefaultValueAndGet($organization);
-                        $value = Json::createFromArray($ldJsonOrganization)->toPrettyJsonString();
-                    }
-
+            if (($resourceCombo instanceof MarkupPath)) {
+                /**
+                 * Deprecated, old organization syntax
+                 * We could add this predicate
+                 *
+                 * but we don't want to lose any data
+                 * (ie if the page was set to no be an organization table,
+                 * the frontmatter would not take it)
+                 */
+                $store = $this->getReadStore();
+                $metadata = $store->getFromName(self::OLD_ORGANIZATION_PROPERTY);
+                if ($metadata !== null) {
+                    $organization = array(
+                        "organization" => $metadata
+                    );
+                    $ldJsonOrganization = $this->mergeWithDefaultValueAndGet($organization);
+                    $value = Json::createFromArray($ldJsonOrganization)->toPrettyJsonString();
                 }
             }
         }
-        parent::buildFromStoreValue($value);
+        parent::setFromStoreValueWithoutException($value);
         return $this;
 
 
@@ -186,15 +213,16 @@ class LdJson extends MetadataJson
     public function getLdJsonMergedWithDefault()
     {
 
-        $value = $this->getValue();
-        $actualValueAsArray = null;
-        if ($value !== null) {
+        try {
+            $value = $this->getValue();
             try {
                 $actualValueAsArray = Json::createFromString($value)->toArray();
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("The string value is not a valid Json. Value: $value");
+            } catch (ExceptionCompile $e) {
+                LogUtility::error("The string value is not a valid Json. Value: $value", self::CANONICAL);
                 return $value;
             }
+        } catch (ExceptionNotFound $e) {
+            $actualValueAsArray = [];
         }
         $actualValueAsArray = $this->mergeWithDefaultValueAndGet($actualValueAsArray);
         return Json::createFromArray($actualValueAsArray)->toPrettyJsonString();
@@ -204,11 +232,27 @@ class LdJson extends MetadataJson
     private function mergeWithDefaultValueAndGet($actualValue = null): ?array
     {
         $page = $this->getResource();
-        if (!($page instanceof Page)) {
+        if (!($page instanceof MarkupPath)) {
             return $actualValue;
         }
 
-        $type = $page->getTypeOrDefault();
+        $readStore = $this->getReadStore();
+        $type = PageType::createForPage($page)
+            ->setReadStore(MetadataDokuWikiStore::class)
+            ->getValueOrDefault();
+        if (!($readStore instanceof MetadataDokuWikiStore)) {
+            /**
+             * Edge case we set the readstore because in a frontmatter,
+             * the type may have been set
+             */
+            try {
+                $type = PageType::createForPage($page)
+                    ->setReadStore($readStore)
+                    ->getValue();
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+        }
         switch (strtolower($type)) {
             case PageType::WEBSITE_TYPE:
 
@@ -299,25 +343,37 @@ class LdJson extends MetadataJson
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => $schemaType,
-                    'url' => $page->getAbsoluteCanonicalUrl(),
+                    'url' => $page->getAbsoluteCanonicalUrl()->toString(),
                     "headline" => $page->getTitleOrDefault(),
-                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(Iso8601Date::getFormat())
+
                 );
+
+                try {
+                    $ldJson[self::DATE_PUBLISHED_KEY] = $page
+                        ->getPublishedElseCreationTime()
+                        ->format(Iso8601Date::getFormat());
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the publication date for the page ($page). Error: {$e->getMessage()}", self::CANONICAL);
+                }
 
                 /**
                  * Modified Time
                  */
-                $modifiedTime = $page->getModifiedTimeOrDefault();
-                if ($modifiedTime != null) {
+                try {
+                    $modifiedTime = $page->getModifiedTimeOrDefault();
                     $ldJson[self::DATE_MODIFIED_KEY] = $modifiedTime->format(Iso8601Date::getFormat());
-                };
+                } catch (ExceptionNotFound $e) {
+                    // Internal error, the page should exist
+                    LogUtility::error("Internal Error: We were unable to define the modification date for the page ($page)", self::CANONICAL);
+                }
 
                 /**
                  * Publisher info
                  */
                 $publisher = array(
                     "@type" => "Organization",
-                    "name" => Site::getTitle()
+                    "name" => Site::getName()
                 );
                 $logoUrlAsPng = Site::getLogoUrlAsPng();
                 if (!empty($logoUrlAsPng)) {
@@ -336,32 +392,37 @@ class LdJson extends MetadataJson
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => "Event");
-                $eventName = $page->getName();
-                if (!blank($eventName)) {
+                try {
+                    $eventName = $page->getName();
                     $ldJson["name"] = $eventName;
-                } else {
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The name metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
-                $eventDescription = $page->getDescription();
-                if (blank($eventDescription)) {
+
+                try {
+                    $eventDescription = $page->getDescription();
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The description metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
+
                 $ldJson["description"] = $eventDescription;
-                $startDate = $page->getStartDateAsString();
-                if ($startDate === null) {
+                try {
+                    $startDate = $page->getStartDate();
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The date_start metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
-                $ldJson["startDate"] = $page->getStartDateAsString();
+                $ldJson["startDate"] = $startDate->format(Iso8601Date::getFormat());
 
-                $endDate = $page->getEndDateAsString();
-                if ($endDate === null) {
+                try {
+                    $endDate = $page->getEndDate();
+                } catch (ExceptionNotFound $e) {
                     LogUtility::msg("The date_end metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return null;
                 }
-                $ldJson["endDate"] = $page->getEndDateAsString();
+                $ldJson["endDate"] = $endDate->format(Iso8601Date::getFormat());
 
 
                 self::addImage($ldJson, $page);
@@ -374,7 +435,7 @@ class LdJson extends MetadataJson
                 $ldJson = array(
                     '@context' => 'https://schema.org',
                     '@type' => $type,
-                    'url' => $page->getAbsoluteCanonicalUrl()
+                    'url' => $page->getAbsoluteCanonicalUrl()->toString()
                 );
                 break;
         }
@@ -384,15 +445,17 @@ class LdJson extends MetadataJson
          * https://developers.google.com/search/docs/data-types/speakable
          */
         $speakableXpath = array();
-        if (!empty($page->getTitleOrDefault())) {
-            $speakableXpath[] = "/html/head/title";
-        }
-        if (!empty($page->getDescription())) {
+        $speakableXpath[] = "/html/head/title";
+        try {
+            PageDescription::createForPage($page)
+                ->getValue();
             /**
              * Only the description written otherwise this is not speakable
              * you can have link and other strangeness
              */
             $speakableXpath[] = "/html/head/meta[@name='description']/@content";
+        } catch (ExceptionNotFound $e) {
+            // ok, no description
         }
         $ldJson[self::SPEAKABLE] = array(
             "@type" => "SpeakableSpecification",
@@ -408,6 +471,11 @@ class LdJson extends MetadataJson
         return $ldJson;
     }
 
+
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
 
 
 }

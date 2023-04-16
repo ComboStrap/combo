@@ -1,60 +1,9 @@
 {
-    "name": "combo",
+    "name": "combo-test",
     "version": "1.0.0",
-    "description": "combo",
-    "types": "./resources/library/combo/dist/types.d.ts",
+    "description": "Jsdom is used to execute pages in test",
     "private": true,
-    "scripts": {
-        "watch": "parcel watch",
-        "build": "parcel build --target combo",
-        "test": "jest"
-    },
     "devDependencies": {
-        "@babel/core": "^7.16.0",
-        "@babel/preset-env": "^7.16.0",
-        "@popperjs/core": "^2.10.2",
-        "@testing-library/dom": "^8.11.1",
-        "@testing-library/jest-dom": "^5.15.0",
-        "@testing-library/user-event": "^13.5.0",
-        "@types/bootstrap": "^5.1.6",
-        "babel-jest": "^27.3.1",
-        "bootstrap": "^5.1.3",
-        "jest": "^27.3.1",
-        "parcel": "^2.0.0"
-    },
-    "alias": {
-        "bootstrap": {
-            "global": "bootstrap"
-        }
-    },
-    "jest": {
-        "testEnvironment": "jsdom",
-        "testEnvironmentOptions": {
-            "userAgent": "Agent/007"
-        },
-        "testMatch": [
-            "**/resources/library/combo/__tests__/*.[jt]s?(x)"
-        ],
-        "setupFilesAfterEnv": [
-            "./resources/library/combo/jest/JestExtend.js"
-        ]
-    },
-    "browserslist": "> 0.5%, last 2 versions, not dead",
-    "combo": "./resources/library/combo/dist/combo.min.js",
-    "targets": {
-        "combo": {
-            "source": "./resources/library/combo/combo.js",
-            "context": "browser",
-            "outputFormat": "global",
-            "includeNodeModules": true,
-            "isLibrary": false
-        }
-    },
-    "dependencies": {
-        "nanoid": "^3.1.30"
-    },
-    "peerDependencies": {
-        "@popperjs/core": "^2.10.2",
-        "bootstrap": "^5.1.3"
+        "jsdom": "^21.1.1"
     }
 }

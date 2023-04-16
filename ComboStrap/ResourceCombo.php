@@ -4,16 +4,23 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+
 /**
  * Interface ComboResource
  * @package ComboStrap
  *
- * Not Resource
- * because
+ * It's called ResourceCombo and not Resource because of
  * https://www.php.net/manual/en/language.types.resource.php
+ *
+ * A resource is a just a wrapper around path that adds metadata functionalities
+ *
+ * @deprecated it's just a {@link Path} with a {@link PageId} that can be accessed with the web server, therefore it should be a {@link WikiPath}
  */
 interface ResourceCombo
 {
+
 
     public function getReadStoreOrDefault(): MetadataStore;
 
@@ -21,22 +28,13 @@ interface ResourceCombo
      * @return Path - a generic path system where the content raw resource is stored
      * ie the file system url, the dokuwiki url
      */
-    public function getPath(): Path;
+    public function getPathObject(): Path;
 
     /**
-     * @return mixed - the unique id
+     * @return Metadata - the global unique id
      */
     public function getUid(): Metadata;
 
-    /**
-     * A buster value used in URL
-     * to avoid cache (cache bursting)
-     *
-     * It should be unique for each version of the resource
-     *
-     * @return string
-     */
-    function getBuster(): string;
 
     /**
      * @return string - the resource type/name
@@ -60,7 +58,7 @@ interface ResourceCombo
     /**
      * @return Metadata
      */
-    public function getUidObject();
+    public function getUidObject(): Metadata;
 
 
 }

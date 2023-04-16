@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\DirectoryLayout;
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
@@ -27,7 +28,8 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     /**
      * @var PageRules
      */
-    private $pageRuleManager;
+    private PageRules $pageRuleManager;
+
 
 
     /**
@@ -41,7 +43,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         // enable direct access to language strings
         // of use of $this->getLang
         $this->setupLocale();
-        $this->currentDate = date("c");
+
 
 
     }
@@ -53,7 +55,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     private function initiatePageRuleManager()
     {
 
-        if ($this->pageRuleManager == null) {
+        if (!isset($this->pageRuleManager)) {
 
             $this->pageRuleManager = new PageRules();
 
@@ -64,7 +66,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     /**
      * Access for managers allowed
      */
-    function forAdminOnly()
+    function forAdminOnly(): bool
     {
         return false;
     }
@@ -72,7 +74,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     /**
      * return sort order for position in admin menu
      */
-    function getMenuSort()
+    function getMenuSort(): int
     {
         return 140;
     }
@@ -82,14 +84,14 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
      * @param string $language
      * @return string
      */
-    function getMenuText($language)
+    function getMenuText($language): string
     {
         return ucfirst(PluginUtility::$PLUGIN_NAME) . " - " . $this->lang['PageRules'];
     }
 
     public function getMenuIcon()
     {
-        return Site::getComboImagesDirectory()->resolve('page-next.svg')->toString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('page-next.svg')->toAbsoluteId();
     }
 
 
@@ -263,7 +265,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('delete.svg')->toString()));
+                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('delete.svg')->toAbsoluteId()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="Delete"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');
@@ -271,7 +273,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
                     ptln('			<form action="" method="post" style="display: inline-block">');
                     ptln('<input type="hidden" name="sectok" value="' . getSecurityToken() . '" />');
                     ptln('<button style="background: none;border: 0;">');
-                    ptln(inlineSVG(Site::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toString()));
+                    ptln(inlineSVG(DirectoryLayout::getComboImagesDirectory()->resolve('file-document-edit-outline.svg')->toAbsoluteId()));
                     ptln('</button>');
                     ptln('				<input type="hidden" name="upsert"  value="Yes" />');
                     ptln('				<input type="hidden" name="' . PageRules::ID_NAME . '"  value="' . $id . '" />');

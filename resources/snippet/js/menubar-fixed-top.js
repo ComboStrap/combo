@@ -1,10 +1,12 @@
 (function IIFE() {
 
-    let done = false;
+    let bodyElementWasChanged = false;
     let fixedMenuSelector = `.navbar[data-type="fixed-top"]`;
 
     /**
+     * anchor scroll:
      * Add the target style before anchor navigation
+     * otherwise the content is below the menubar
      */
     window.addEventListener("DOMContentLoaded", function () {
 
@@ -30,10 +32,20 @@
      */
     window.addEventListener("scroll", function () {
 
-        if (done) {
+        if (bodyElementWasChanged) {
             return;
         }
-        done = true;
+        // Case on mobile when the menu is expanded
+        // in this case, we don't calculate the offset
+        // otherwise it would take the height of the menu bar
+        let activeElement = document.activeElement;
+        if(
+            activeElement.classList.contains('navbar-toggler')
+            && activeElement.getAttribute("aria-expanded")==="true"
+        ){
+            return;
+        }
+        bodyElementWasChanged = true;
 
         /**
          * The request animation frame is there to

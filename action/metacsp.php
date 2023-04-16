@@ -4,7 +4,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  *
@@ -85,6 +84,9 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
                 // the page cannot be used in a iframe (clickjacking),
                 "content-security-policy: frame-ancestors 'none'",
                 // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
+                // indicate whether or not a browser should be allowed to render
+                // a page in a <frame>, <iframe>, <embed> or <object>. Sites can use this to avoid
+                // click-jacking attacks, by ensuring that their content is not embedded into other sites.
                 "X-Frame-Options: SAMEORIGIN",
                 // stops a browser from trying to MIME-sniff the content type and forces it to stick with the declared content-type
                 "X-Content-Type-Options: nosniff",

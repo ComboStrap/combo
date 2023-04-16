@@ -6,10 +6,11 @@
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
+use ComboStrap\Html;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 require_once(__DIR__ . '/../ComboStrap/StringUtility.php');
 require_once(__DIR__ . '/../ComboStrap/Prism.php');
@@ -89,7 +90,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
     {
 
         if ($this->getConf(self::CONF_CODE_ENABLE)) {
-            $pattern = PluginUtility::getContainerTagPattern(self::CODE_TAG);
+            $pattern = XmlTagProcessing::getContainerTagPattern(self::CODE_TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
@@ -125,7 +126,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match, true, self::FILE_PATH_KEY);
+                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match, true, self::FILE_PATH_KEY, [], true);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes
@@ -139,8 +140,9 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                  * export of code functionality
                  * and display = none
                  */
-                $tag = new Tag(self::CODE_TAG, array(), $state, $handler);
-                $tagAttributes = $tag->getParent()->getAttributes();
+                $callStack = CallStack::createFromHandler($handler);
+                $parentTag = $callStack->moveToParent();
+                $tagAttributes = $parentTag->getAttributes();
                 $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
                 return $data;
 
@@ -198,7 +200,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                         // Delete the eol at the beginning and end
                         // otherwise we get a big block
                         $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
-                        $renderer->doc .= PluginUtility::htmlEncode($payload);
+                        $renderer->doc .= Html::encode($payload);
                     }
                     break;
 

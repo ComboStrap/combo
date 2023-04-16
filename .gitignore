@@ -2,3 +2,7 @@
 .env
 node_modules
 .parcel-cache/
+.turbo
+build/**
+dist/**
+.next/**

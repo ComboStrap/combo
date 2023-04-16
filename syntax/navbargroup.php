@@ -7,9 +7,10 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\XmlTagProcessing;
 
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 
 /**
@@ -44,7 +45,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
      * Allow which kind of plugin inside
      * All
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
@@ -58,9 +59,14 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'normal';
+    }
+
+    public function accepts($mode): bool
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
     /**
@@ -93,26 +99,13 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
         if (in_array($mode, $authorizedMode)) {
 
-            $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+            $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
         }
 
     }
 
-    public function accepts($mode)
-    {
-
-        $accept = syntax_plugin_combo_preformatted::disablePreformatted($mode);
-
-        // P element are not welcome in a navbar
-        if ($mode == "eol") {
-            $accept = false;
-        }
-
-        return $accept;
-
-    }
 
     public function postConnect()
     {

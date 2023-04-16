@@ -1,0 +1,46 @@
+.railbar-cs {
+    text-align: right;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+}
+
+.railbar-cs li {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.railbar-cs li a {
+    display: block;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    line-height: 35px;
+    height: 36px;
+    color: rgba(0,0,0,0.65);
+    font-weight: 400;
+    font-size: 1rem;
+    text-decoration: none;
+}
+
+.railbar-cs li a span {
+    margin: 0 8px;
+}
+
+.railbar-cs li a svg {
+    width: 28px;
+    height: 28px;
+    margin: 0 8px;
+    display: inline-block;
+    vertical-align: middle;
+    fill: rgba(0,0,0,0.35);
+}
+
+.railbar-cs li a:active,.railbar li a:focus,.railbar li a:hover {
+    background-color: #ccc;
+    text-decoration: underline;
+}
+
+.railbar li a:active span,.railbar li a:focus span,.railbar li a:hover span {
+    display: inline-block;
+}

@@ -1,0 +1,17 @@
+/* No gutter on x otherwise there is a overflow on the right */
+#page-core {
+    --bs-gutter-x: 0;
+}
+
+/**
+* When we have a landing page, the railbar
+* which is by default on the right side is not visible
+* This setting will set up inside and make it visible alongside the page
+* We may also just put it completely in the offcanvas
+* See for the HTML code {@link TplUtility::getRailBar()}
+* for $ACT = show
+ */
+#railbar-fixed {
+    right: 44px !important;
+    top: 30px !important;
+}

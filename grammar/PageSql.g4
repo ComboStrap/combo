@@ -76,7 +76,8 @@ functionNames: DATE | DATETIME;
 // Tables
 PAGES:            P A G E S;
 BACKLINKS:        B A C K L I N K S;
-tableNames: PAGES | BACKLINKS;
+DESCENDANTS:       D E S C E N D A N T S;
+tableNames: PAGES | BACKLINKS | DESCENDANTS;
 
 // LITERALS
 fragment Letter : 'a'..'z' | 'A'..'Z';
@@ -215,7 +216,9 @@ predicate: sqlNames
 
 columns: column (COMMA column)*;
 
-predicates: WHERE predicate ((AND|OR) predicate)*;
+predicateGroup: LPAREN predicate ((AND|OR) predicate)* RPAREN;
+
+predicates: WHERE (predicate|predicateGroup) ((AND|OR) (predicate|predicateGroup))*;
 
 tables: FROM tableNames;
 
@@ -226,7 +229,7 @@ tables: FROM tableNames;
 */
 limit: LIMIT Number;
 
-orderBys: ORDER BY orderByDef (COMMA orderByDef)* ;
+orderBys: ORDER (RANDOM|BY orderByDef (COMMA orderByDef)*) ;
 
 orderByDef: SqlName (ASC | DESC)? ;
 

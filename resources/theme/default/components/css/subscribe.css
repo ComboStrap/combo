@@ -1,0 +1,25 @@
+.subscribe-cs form {
+    display: flex;
+    justify-content: center;
+    height: 44px;
+}
+
+.subscribe-cs form input[type="email"] {
+    border: 1px solid var(--bs-link-color);
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.subscribe-cs form input[type="email"]:focus {
+    box-shadow: unset
+}
+.subscribe-cs form button {
+    border: 1px solid var(--bs-link-color);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color:var(--bs-link-color);
+}
+.subscribe-cs form button:hover {
+    border: 1px solid var(--bs-link-color);
+    background-color:var(--bs-link-color);
+}

@@ -2,14 +2,14 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\Background;
 use ComboStrap\CallStack;
 use ComboStrap\ColorRgb;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttribute\BackgroundAttribute;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_note
@@ -21,6 +21,10 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
 
     const TAG = "note";
     const COMPONENT = "combo_note";
+    const INFO_TYPE = "info";
+    const IMPORTANT_TYPE = "important";
+    const WARNING_TYPE = "warning";
+    const TIP_TYPE = "tip";
 
     /**
      * Syntax Type.
@@ -28,7 +32,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -66,7 +70,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         return 201;
     }
 
-    public function accepts($mode)
+    public function accepts($mode): bool
     {
         /**
          * header mode is disable to take over
@@ -83,7 +87,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
     }
 
@@ -101,12 +105,12 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultAttributes = array("type" => "info");
-                $inlineAttributes = PluginUtility::getTagAttributes($match);
-                $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
+                $defaultAttributes = array(TagAttributes::TYPE_KEY => self::INFO_TYPE);
+                $knwonTypes = [self::INFO_TYPE, self::TIP_TYPE, self::IMPORTANT_TYPE, self::WARNING_TYPE];
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knwonTypes);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -147,21 +151,21 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::TAG);
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
                     $attributes->addClassName("alert");
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
                     // Switch for the color
                     switch ($type) {
-                        case "important":
+                        case self::IMPORTANT_TYPE:
                             $type = "warning";
                             break;
-                        case "warning":
+                        case self::WARNING_TYPE:
                             $type = "danger";
                             break;
                     }
 
-                    if ($type != "tip") {
+                    if ($type != self::TIP_TYPE) {
                         $attributes->addClassName("alert-" . $type);
                     } else {
                         // There is no alert-tip color
@@ -172,8 +176,8 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                         if (!$attributes->hasComponentAttribute("border-color")) {
                             $attributes->addComponentAttributeValue("border-color", "#FFF78c"); // lum - 186
                         }
-                        if (!$attributes->hasComponentAttribute(Background::BACKGROUND_COLOR)) {
-                            $attributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "#fff79f"); // lum - 195
+                        if (!$attributes->hasComponentAttribute(BackgroundAttribute::BACKGROUND_COLOR)) {
+                            $attributes->addComponentAttributeValue(BackgroundAttribute::BACKGROUND_COLOR, "#fff79f"); // lum - 195
                         }
                     }
 

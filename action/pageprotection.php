@@ -2,13 +2,14 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\DokuPath;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FileSystems;
+use ComboStrap\WikiPath;
 use ComboStrap\Identity;
 use ComboStrap\LowQualityPage;
-use ComboStrap\Page;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
-
 
 
 /**
@@ -85,7 +86,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
              */
             return;
         }
-        $page = Page::createPageFromId($id);
+        $page = MarkupPath::createMarkupFromId($id);
 
         if ($page->isLowQualityPage()) {
             if (LowQualityPage::getLowQualityProtectionMode() == PageProtection::CONF_VALUE_HIDDEN) {
@@ -132,15 +133,22 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         }
 
         $id = $event->data['id'];
+        if ($id == null) {
+            /**
+             * Happens in test when rendering
+             * with instructions only
+             */
+            return;
+        }
 
-        $dokuPath = DokuPath::createFromUnknownRoot($id);
+        $dokuPath = WikiPath::createFromUnknownRoot($id);
         if ($dokuPath->isPage()) {
 
             /**
              * It should be only a page
              * https://www.dokuwiki.org/devel:event:auth_acl_check
              */
-            $page = Page::createPageFromId($id);
+            $page = MarkupPath::createMarkupFromId($id);
 
             if ($page->isLowQualityPage()) {
                 if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
@@ -170,8 +178,8 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $pageItems = $event->data["items"];
         foreach ($pageItems as $key => $pageItem) {
             $url = $pageItem->url;
-            $dokuPath = DokuPath::createFromUrl($url);
-            $page = Page::createPageFromId($dokuPath->getDokuwikiId());
+            $dokuPath = WikiPath::createFromUrl($url);
+            $page = MarkupPath::createMarkupFromId($dokuPath->getWikiId());
             if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
 
                 unset($event->data["items"][$key]);
@@ -227,9 +235,9 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         foreach ($pagesToBeAdded as $key => $data) {
 
             // To prevent an Illegal string offset 'id'
-            if(isset($data["id"])) {
+            if (isset($data["id"])) {
 
-                $page = Page::createPageFromId($data["id"]);
+                $page = MarkupPath::createMarkupFromId($data["id"]);
 
                 if ($page->isLowQualityPage() && $isLowQualityProtectionEnabled) {
                     $protectionMode = LowQualityPage::getLowQualityProtectionMode();
@@ -268,7 +276,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
          */
         if (is_array($event->result)) {
             foreach (array_keys($event->result) as $idx) {
-                $page = Page::createPageFromId($idx);
+                $page = MarkupPath::createMarkupFromId($idx);
                 if ($page->isLowQualityPage()) {
                     $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
                     if (in_array($securityConf, $protectionModes)) {
@@ -298,19 +306,18 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     function handleRobotsMeta(&$event, $param)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
-            // $ID is null
+        $requestedPath = ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
+
+        if (!FileSystems::exists($requestedPath)) {
             return;
         }
 
-        $page = Page::createPageFromId($ID);
+        $page = MarkupPath::createPageFromPathObject($requestedPath);
 
         /**
          * No management for slot page
          */
-        if ($page->isSecondarySlot()) {
+        if ($page->isSlot()) {
             return;
         }
 

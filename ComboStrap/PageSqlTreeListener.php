@@ -27,6 +27,9 @@ use ComboStrap\PageSqlParser\PageSqlParser;
 final class PageSqlTreeListener implements ParseTreeListener
 {
     const BACKLINKS = "backlinks";
+    const DESCENDANTS = "descendants";
+    const DEPTH = "depth";
+    const CANONICAL = PageSql::CANONICAL;
     /**
      * @var PageSqlLexer
      */
@@ -67,7 +70,16 @@ final class PageSqlTreeListener implements ParseTreeListener
      * backlinks or pages
      * @var string
      */
-    private $type;
+    private $tableName;
+    /**
+     * @var string - to store the predicate column
+     */
+    private $actualPredicateColumn;
+    /**
+     * @var MarkupPath|null
+     */
+    private ?MarkupPath $requestedPage;
+
 
     /**
      * SqlTreeListener constructor.
@@ -75,12 +87,18 @@ final class PageSqlTreeListener implements ParseTreeListener
      * @param PageSqlLexer $lexer
      * @param PageSqlParser $parser
      * @param string $sql
+     * @param MarkupPath|null $pageContext
      */
-    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql)
+    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql, MarkupPath $pageContext = null)
     {
         $this->lexer = $lexer;
         $this->parser = $parser;
         $this->pageSqlString = $sql;
+        if ($pageContext == null) {
+            $this->requestedPage = MarkupPath::createPageFromPathObject(ExecutionContext::getActualOrCreateFromEnv()->getContextPath());
+        } else {
+            $this->requestedPage = $pageContext;
+        }
     }
 
 
@@ -119,21 +137,30 @@ final class PageSqlTreeListener implements ParseTreeListener
                 switch ($this->ruleState) {
                     case PageSqlParser::RULE_predicates:
 
-                        // variable name
-                        $variableName = strtolower($text);
                         if (substr($this->physicalSql, -1) === "\n") {
                             $this->physicalSql .= "\t";
                         }
-                        if ($this->type === self::BACKLINKS) {
+
+                        // variable name
+                        $variableName = strtolower($text);
+                        if ($variableName === DatabasePageRow::IS_HOME_COLUMN) {
+                            /**
+                             * Deprecation of is_home for is_index
+                             */
+                            $variableName = DatabasePageRow::IS_INDEX_COLUMN;
+                        }
+                        $this->actualPredicateColumn = $variableName;
+                        if ($this->tableName === self::BACKLINKS) {
                             $variableName = "p." . $variableName;
                         }
+                        if ($variableName === self::DEPTH) {
+                            $variableName = "level";
+                        }
                         $this->physicalSql .= "{$variableName} ";
-
                         break;
-                    case
-                    PageSqlParser::RULE_orderBys:
+                    case PageSqlParser::RULE_orderBys:
                         $variableName = strtolower($text);
-                        if ($this->type === self::BACKLINKS) {
+                        if ($this->tableName === self::BACKLINKS) {
                             $variableName = "p." . $variableName;
                         }
                         $this->physicalSql .= "\t{$variableName} ";
@@ -155,6 +182,9 @@ final class PageSqlTreeListener implements ParseTreeListener
                     case PageSqlParser::RULE_predicates:
                         $this->physicalSql .= "{$text} ";
                 }
+                break;
+            case PageSqlParser::RANDOM:
+                $this->physicalSql .= "\trandom()";
                 break;
             case PageSqlParser::StringLiteral:
                 switch ($this->ruleState) {
@@ -189,7 +219,7 @@ final class PageSqlTreeListener implements ParseTreeListener
             case PageSqlParser::ASC:
                 $this->physicalSql .= "{$text}";
                 break;
-            case PageSqlParser:: COMMA:
+            case PageSqlParser::COMMA:
                 switch ($this->ruleState) {
                     case PageSqlParser::RULE_columns:
                         return;
@@ -209,7 +239,36 @@ final class PageSqlTreeListener implements ParseTreeListener
                         $this->physicalSql .= "{$text}";
                         return;
                     case PageSqlParser::RULE_predicates:
-                        $this->parameters[] = $text;
+                        switch ($this->actualPredicateColumn) {
+                            case self::DEPTH:
+                                if ($this->requestedPage !== null) {
+                                    $level = PageLevel::createForPage($this->requestedPage)->getValue();
+                                    try {
+                                        $predicateValue = DataType::toInteger($text);
+                                    } catch (ExceptionCompile $e) {
+                                        // should not happen due to the parsing but yeah
+                                        LogUtility::msg("The value of the depth attribute ($text) is not an integer", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                        $predicateValue = 0;
+                                    }
+                                    $this->parameters[] = $predicateValue + $level;
+                                } else {
+                                    LogUtility::msg("The requested page is unknown and is mandatory with the depth attribute", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                    $this->parameters[] = $text;
+                                }
+                                break;
+                            default:
+                                try {
+                                    if (strpos($text, ".") !== false) {
+                                        $this->parameters[] = DataType::toFloat($text);
+                                    } else {
+                                        $this->parameters[] = DataType::toInteger($text);
+                                    }
+                                } catch (ExceptionBadArgument $e) {
+                                    LogUtility::error("The value of the column $this->actualPredicateColumn ($text) could not be transformed as a number. Error: {$e->getMessage()}", self::CANONICAL);
+                                    $this->parameters[] = $text;
+                                }
+                                break;
+                        }
                         $this->physicalSql .= "?";
                         return;
                     default:
@@ -263,39 +322,77 @@ final class PageSqlTreeListener implements ParseTreeListener
                 $this->physicalSql .= "from\n";
                 break;
             case PageSqlParser::RULE_predicates:
-                if ($this->type === self::BACKLINKS) {
-                    /**
-                     * Backlinks query adds already a where clause
-                     */
-                    $this->physicalSql .= "\tand ";
-                } else {
-                    $this->physicalSql .= "where\n";
+                /**
+                 * Backlinks/Descendant query adds already a where clause
+                 */
+                switch ($this->tableName) {
+                    case self::BACKLINKS:
+                        $this->physicalSql .= "\tand ";
+                        break;
+                    case self::DESCENDANTS:
+                        $this->physicalSql .= "\tand (";
+                        break;
+                    default:
+                        $this->physicalSql .= "where\n";
+                        break;
                 }
                 break;
-            case PageSqlParser::RULE_functionNames:
+            case
+            PageSqlParser::RULE_functionNames:
                 // Print the function name
                 $this->physicalSql .= $ctx->getText();
                 break;
             case PageSqlParser::RULE_tableNames:
                 // Print the table name
                 $tableName = strtolower($ctx->getText());
-                $this->type = $tableName;
-                if ($tableName === self::BACKLINKS) {
-                    $tableName = <<<EOF
+                $this->tableName = $tableName;
+                switch ($tableName) {
+                    case self::BACKLINKS:
+                        $tableName = <<<EOF
     pages p
     join page_references pr on pr.page_id = p.page_id
 where
     pr.reference = ?
 
 EOF;
-                    $id = PluginUtility::getRequestedWikiId();
-                    if (empty($id)) {
-                        LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
-                    }
-                    DokuPath::addRootSeparatorIfNotPresent($id);
-                    $this->parameters[] = $id;
-                } else {
-                    $tableName = "\t$tableName\n";
+
+                        if ($this->requestedPage !== null) {
+                            $this->parameters[] = $this->requestedPage->getPathObject()->toAbsoluteId();
+                        } else {
+                            LogUtility::msg("The page is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
+                            $this->parameters[] = "unknown page";
+                        }
+                        break;
+                    case self::DESCENDANTS:
+                        if ($this->requestedPage !== null) {
+
+                            if (!$this->requestedPage->isIndexPage()) {
+                                LogUtility::warning("Descendants should be asked from an index page.", PageSql::CANONICAL);
+                            }
+
+                            $path = $this->requestedPage->getPathObject();
+                            $this->parameters[] = $path->toAbsoluteId();
+                            try {
+                                $likePredicatequery = $path->getParent()->resolve("%")->toAbsoluteId();
+                            } catch (ExceptionNotFound $e) {
+                                // root
+                                $likePredicatequery = "%";
+                            }
+                            $this->parameters[] = $likePredicatequery;
+                            $level = PageLevel::createForPage($this->requestedPage)->getValue();
+                            $this->parameters[] = $level;
+
+                        } else {
+                            LogUtility::msg("The page is unknown. A Page SQL with a depth attribute should be asked within a page request scope. The start depth has been set to 0", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
+                            $this->parameters[] = "";
+                            $this->parameters[] = "";
+                            $this->parameters[] = "";
+                        }
+                        $tableName = "\tpages\nwhere\n\tpath != ?\n\tand path like ?\n\tand level >= ?\n";
+                        break;
+                    default:
+                        $tableName = "\t$tableName\n";
+                        break;
                 }
                 $this->physicalSql .= $tableName;
                 break;
@@ -317,8 +414,13 @@ EOF;
     {
         $ruleIndex = $ctx->getRuleIndex();
         switch ($ruleIndex) {
-            case PageSqlParser::RULE_predicates:
             case PageSqlParser::RULE_orderBys:
+                $this->physicalSql .= "\n";
+                break;
+            case PageSqlParser::RULE_predicates:
+                if ($this->tableName == self::DESCENDANTS) {
+                    $this->physicalSql .= ")";
+                }
                 $this->physicalSql .= "\n";
                 break;
         }
@@ -339,7 +441,7 @@ EOF;
 
     public function getTable(): ?string
     {
-        return $this->type;
+        return $this->tableName;
     }
 
     /**

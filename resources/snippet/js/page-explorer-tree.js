@@ -2,7 +2,7 @@
 window.addEventListener("load", function () {
     let currentId = JSINFO["id"];
     let currentIdParts = currentId.split(":").filter(el => el.length !== 0);
-    document.querySelectorAll(".page-explorer-tree-combo").forEach(element => {
+    document.querySelectorAll(".page-explorer-tree-cs").forEach(element => {
         let baseId = element.dataset.wikiId;
         let baseParts = baseId.split(":").filter(el => el.length !== 0);
         let processedIdArray = [];

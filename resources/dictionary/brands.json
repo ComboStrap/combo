@@ -1,5 +1,6 @@
 {
     "facebook": {
+        "abbr": "fb",
         "url": "https://facebook.com",
         "share": {
             "web": "https://facebook.com/sharer/sharer.php?u=$url",
@@ -21,6 +22,7 @@
         }
     },
     "twitter": {
+        "abbr": "twttr",
         "url": "https://twitter.com",
         "share": {
             "web": "https://twitter.com/intent/tweet/?url=$url&text=$title%0A$description%0A&via=$via",
@@ -60,6 +62,7 @@
         }
     },
     "email": {
+        "abbr": "mail",
         "url": "mailto:",
         "share": {
             "web": "mailto:?subject=$title&body=$description%20$url",
@@ -71,6 +74,7 @@
         }
     },
     "github": {
+        "abbr": "gh",
         "url": "https://github.com",
         "doc": "https://github.com/logos",
         "colors": {
@@ -97,6 +101,7 @@
         }
     },
     "instagram": {
+        "abbr": "insta",
         "url": "https://www.instagram.com",
         "follow": {
             "web": "https://www.instagram.com/$handle/"
@@ -113,6 +118,7 @@
         }
     },
     "wikipedia": {
+        "abbr": "wp",
         "url": "https://wikipedia.org",
         "colors": {
             "primary": "#000000",
@@ -127,6 +133,7 @@
         }
     },
     "hackernews": {
+        "abbr": "hn",
         "url": "https://news.ycombinator.com",
         "share": {
             "web": "https://news.ycombinator.com/submitlink?u=$url&t=$text",
@@ -188,6 +195,7 @@
         }
     },
     "pinterest": {
+        "abbr": "pin",
         "url": "https://pinterest.com",
         "share": {
             "web": "https://pinterest.com/pin/create/button/?url=$url&media=$url&description=$text",

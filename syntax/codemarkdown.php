@@ -4,9 +4,9 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
 
 // must be run within Dokuwiki
+use ComboStrap\Html;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/StringUtility.php');
@@ -179,7 +179,7 @@ class syntax_plugin_combo_codemarkdown extends DokuWiki_Syntax_Plugin
 
         if ($format == 'xhtml') {
 
-            /** @var Doku_Renderer_xhtml $renderer */
+            /** @var $renderer Doku_Renderer_xhtml */
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
@@ -192,7 +192,7 @@ class syntax_plugin_combo_codemarkdown extends DokuWiki_Syntax_Plugin
                     // Delete the eol at the beginning and end
                     // otherwise we get a big block
                     $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
-                    $renderer->doc .= PluginUtility::htmlEncode($payload);
+                    $renderer->doc .= Html::encode($payload);
                     break;
 
                 case DOKU_LEXER_EXIT :

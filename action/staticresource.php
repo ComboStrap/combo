@@ -1,16 +1,23 @@
 <?php
 
-use ComboStrap\CacheMedia;
-use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherRaster;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
+use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
+use ComboStrap\IFetcher;
 use ComboStrap\LocalPath;
 use ComboStrap\LogUtility;
+use ComboStrap\Mime;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\SiteConfig;
+use ComboStrap\Web\Url;
+use ComboStrap\WikiPath;
 use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -35,9 +42,10 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     const CANONICAL = "cache";
 
     /**
-     * Enable an infinite cache on static resources (image, script, ...) with a {@link CacheMedia::CACHE_BUSTER_KEY}
+     * Enable an infinite cache on static resources (image, script, ...) with a {@link IFetcher::CACHE_BUSTER_KEY}
      */
     public const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
+    const NO_TRANSFORM = "no-transform";
 
 
     /**
@@ -61,33 +69,72 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
     }
 
-
+    /**
+     * @param Doku_Event $event
+     * https://www.dokuwiki.org/devel:event:fetch_media_status
+     */
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        if (!isset($_GET[DokuPath::DRIVE_ATTRIBUTE])) {
+        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
+        $fetcher = $_GET[IFetcher::FETCHER_KEY];
+        if ($drive === null && $fetcher === null) {
             return;
         }
-        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
-        if (!in_array($drive, DokuPath::DRIVES)) {
-            // The other resources have ACL
-            // and this endpoint is normally only for
-            $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+        if ($fetcher === FetcherRaster::CANONICAL) {
+            // not yet implemented
             return;
         }
-        $mediaId = $event->data['media'];
-        $mediaPath = DokuPath::createDokuPath($mediaId, $drive);
-        $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toString();
-        if (FileSystems::exists($mediaPath)) {
-            $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
-            $event->data['statusmessage'] = '';
-            $event->data['mime'] = $mediaPath->getMime();
-        }
-        if ($drive === DokuPath::CACHE_DRIVE) {
+
+        /**
+         * Security
+         */
+        if ($drive === WikiPath::CACHE_DRIVE) {
             $event->data['download'] = false;
             if (!Identity::isManager()) {
-                $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
+                $event->data['status'] = HttpResponseStatus::NOT_AUTHORIZED;
+                return;
             }
+        }
+
+
+        /**
+         * Add the extra attributes
+         */
+        $fetchUrl = Url::createFromGetOrPostGlobalVariable();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        try {
+
+            $fetcher = $executionContext->createPathMainFetcherFromUrl($fetchUrl);
+            $fetchPath = $fetcher->getFetchPath();
+            $event->data['file'] = $fetchPath->toAbsoluteId();
+            $event->data['status'] = HttpResponseStatus::ALL_GOOD;
+            $mime = $fetcher->getMime();
+            $event->data["mime"] = $mime->toString();
+            /**
+             * TODO: set download as parameter of the fetch url
+             */
+            if ($mime->isImage() || in_array($mime->toString(), [Mime::JAVASCRIPT, Mime::CSS])) {
+                $event->data['download'] = false;
+            } else {
+                $event->data['download'] = true;
+            }
+            $event->data['statusmessage'] = '';
+        } catch (\Exception $e) {
+
+            $executionContext
+                ->response()
+                ->setException($e)
+                ->setStatusAndBodyFromException($e)
+                ->end();
+
+            //$event->data['file'] = WikiPath::createComboResource("images:error-bad-format.svg")->toLocalPath()->toAbsolutePath()->toQualifiedId();
+            $event->data['file'] = "error.json";
+            $event->data['statusmessage'] = $e->getMessage();
+            //$event->data['status'] = $httpResponse->getStatus();
+            $event->data['mime'] = Mime::JSON;
+
+
         }
 
     }
@@ -95,11 +142,14 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleSendFile(Doku_Event $event, $params)
     {
 
-
+        if (ExecutionContext::getActualOrCreateFromEnv()->response()->hasEnded()) {
+            // when there is an error for instance
+            return;
+        }
         /**
          * If there is no buster key, the infinite cache is off
          */
-        $busterKey = $_GET[CacheMedia::CACHE_BUSTER_KEY];
+        $busterKey = $_GET[IFetcher::CACHE_BUSTER_KEY];
         if ($busterKey === null) {
             return;
         }
@@ -108,12 +158,15 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * The media to send
          */
         $originalFile = $event->data["orig"]; // the original file
-        $physicalFile = $event->data["file"]; // the file modified
+        $physicalFile = $event->data["file"]; // the file modified or the file to send
         if (empty($physicalFile)) {
             $physicalFile = $originalFile;
         }
-        $mediaToSend = LocalPath::createFromPath($physicalFile);
+        $mediaToSend = LocalPath::createFromPathString($physicalFile);
         if (!FileSystems::exists($mediaToSend)) {
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::internalError("The media ($mediaToSend) does not exist", self::CANONICAL);
+            }
             return;
         }
 
@@ -121,17 +174,17 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        $drive = $_GET[DokuPath::DRIVE_ATTRIBUTE];
+        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
         if ($drive === null) {
 
-            $confValue = PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1);
+            $confValue = SiteConfig::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1);
             if (!$confValue) {
                 return;
             }
 
             try {
-                $dokuPath = $mediaToSend->toDokuPath();
-            } catch (ExceptionCombo $e) {
+                $dokuPath = $mediaToSend->toWikiPath();
+            } catch (ExceptionCompile $e) {
                 // not a dokuwiki file ?
                 LogUtility::msg("Error: {$e->getMessage()}");
                 return;
@@ -162,15 +215,20 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         $expires = time() + $infiniteMaxAge;
         header('Expires: ' . gmdate("D, d M Y H:i:s", $expires) . ' GMT');
         $cacheControlDirective = ["public", "max-age=$infiniteMaxAge", "immutable"];
-        if ($mediaToSend->getExtension() === "js") {
-            // if a SRI is given and that a proxy is
-            // reducing javascript, it will not match
-            // no-transform will avoid that
-            $cacheControlDirective[] = "no-transform";
+        try {
+            if ($mediaToSend->getExtension() === "js") {
+                // if a SRI is given and that a proxy is
+                // reducing javascript, it will not match
+                // no-transform will avoid that
+                $cacheControlDirective[] = self::NO_TRANSFORM;
+            }
+        } catch (ExceptionNotFound $e) {
+            LogUtility::warning("The media ($mediaToSend) does not have any extension.");
         }
         header("Cache-Control: " . implode(", ", $cacheControlDirective));
         Http::removeHeaderIfPresent("Pragma");
 
+        $excutingContext = ExecutionContext::getActualOrCreateFromEnv();
         /**
          * The Etag cache validator
          *
@@ -181,8 +239,20 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Last-Modified is not needed for the same reason
          *
          */
-        $etag = self::getEtagValue($mediaToSend, $_REQUEST);
-        header("ETag: $etag");
+        try {
+            $etag = self::getEtagValue($mediaToSend, $_REQUEST);
+            header("ETag: $etag");
+        } catch (ExceptionNotFound $e) {
+            // internal error
+            $excutingContext->response()
+                ->setStatus(HttpResponseStatus::INTERNAL_ERROR)
+                ->setEvent($event)
+                ->setCanonical(self::CANONICAL)
+                ->setBodyAsJsonMessage("We were unable to get the etag because the media was not found. Error: {$e->getMessage()}")
+                ->end();
+            return;
+        }
+
 
         /**
          * Conditional Request ?
@@ -191,11 +261,13 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
-
-                HttpResponse::create(HttpResponse::STATUS_NOT_MODIFIED)
+                $excutingContext
+                    ->response()
+                    ->setStatus(HttpResponseStatus::NOT_MODIFIED)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
-                    ->sendMessage("File not modified");
+                    ->setBodyAsJsonMessage("File not modified")
+                    ->end();
                 return;
             }
         }
@@ -205,7 +277,17 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Download or display feature
          * (Taken over from SendFile)
          */
-        $mime = $mediaToSend->getMime();
+        try {
+            $mime = FileSystems::getMime($mediaToSend);
+        } catch (ExceptionNotFound $e) {
+            $excutingContext->response()
+                ->setStatus(HttpResponseStatus::INTERNAL_ERROR)
+                ->setEvent($event)
+                ->setCanonical(self::CANONICAL)
+                ->setBodyAsJsonMessage("Mime not found")
+                ->end();
+            return;
+        }
         $download = $event->data["download"];
         if ($download && $mime->toString() !== "image/svg+xml") {
             header('Content-Disposition: attachment;' . rfc2231_encode(
@@ -227,12 +309,12 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Use x-sendfile header to pass the delivery to compatible web servers
          * (Taken over from SendFile)
          */
-        http_sendfile($mediaToSend->toAbsolutePath()->toString());
+        http_sendfile($mediaToSend->toAbsolutePath()->toAbsoluteId());
 
         /**
          * Send the file
          */
-        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toString(), "rb");
+        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toAbsoluteId(), "rb");
         if ($filePointer) {
             http_rangeRequest($filePointer, FileSystems::getSize($mediaToSend), $mime->toString());
             /**
@@ -256,8 +338,10 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 }
             }
         } else {
-            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
-                ->sendMessage("Could not read $mediaToSend - bad permissions?");
+            $excutingContext->response()
+                ->setStatus(HttpResponseStatus::INTERNAL_ERROR)
+                ->setBodyAsJsonMessage("Could not read $mediaToSend - bad permissions?")
+                ->end();
         }
 
     }
@@ -266,25 +350,28 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
      * @param Path $mediaFile
      * @param Array $properties - the query properties
      * @return string
+     * @throws ExceptionNotFound
      */
     public
     static function getEtagValue(Path $mediaFile, array $properties): string
     {
+        clearstatcache();
         $etagString = FileSystems::getModifiedTime($mediaFile)->format('r');
         ksort($properties);
         foreach ($properties as $key => $value) {
+
             /**
              * Media is already on the URL
              * tok is just added when w and h are on the url
              * Buster is the timestamp
              */
-            if (in_array($key, ["media", "tok", CacheMedia::CACHE_BUSTER_KEY])) {
+            if (in_array($key, ["media", "tok", IFetcher::CACHE_BUSTER_KEY])) {
                 continue;
             }
             /**
              * If empty means not used
              */
-            if (empty($value)) {
+            if (trim($value) === "") {
                 continue;
             }
             $etagString .= "$key=$value";

@@ -6,8 +6,9 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
-if (!defined('DOKU_INC')) die();
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_text
@@ -85,7 +86,7 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
     {
 
         foreach (self::TAGS as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $pattern = XmlTagProcessing::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
@@ -106,7 +107,7 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $attributes = TagAttributes::createFromTagMatch($match,[],[],true);
                 $callStackArray = $attributes->toCallStackArray();
 
                 return array(

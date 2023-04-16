@@ -22,47 +22,62 @@ class CacheLog
         self::EXTENSION_ATT,
         self::OPERATION_ATT,
         self::MESSAGE_ATT
-        ];
+    ];
+    const CANONICAL = "support";
 
-    public static function deleteCacheIfExistsAndLog(PageCompilerDocument $outputDocument, string $event, string $message)
+    public static function deleteCacheIfExistsAndLog(IFetcher $fetcher, string $event, string $message)
     {
-        $instructionsFile = $outputDocument->getCachePath();
-        if (FileSystems::exists($instructionsFile)) {
-            FileSystems::delete($instructionsFile);
-            try {
-                CacheLog::logCacheEvent(
-                    $event,
-                    $outputDocument->getPage()->getPath()->toString(),
-                    $outputDocument->getExtension(),
-                    CacheManager::CACHE_DELETION,
-                    $message
-                );
-            } catch (ExceptionCombo $e) {
-                // should not fired
-                LogUtility::log2file("Error while logging cache event. Error: {$e->getMessage()}");
-            }
+
+        try {
+            $contentCachePath = $fetcher->getContentCachePath();
+        } catch (ExceptionNotSupported $e) {
+            return;
         }
-    }
 
-    public static function renderCacheAndLog(PageCompilerDocument $outputDocument, string $event, string $message)
-    {
-        $outputDocument->process();
+        if (!FileSystems::exists($contentCachePath)) {
+            return;
+        }
+
+        FileSystems::delete($contentCachePath);
         try {
             CacheLog::logCacheEvent(
                 $event,
-                $outputDocument->getPage()->getPath()->toString(),
-                $outputDocument->getExtension(),
+                $contentCachePath->toAbsoluteId(),
+                $fetcher->getMime()->getExtension(),
+                CacheManager::CACHE_DELETION,
+                $message
+            );
+        } catch (ExceptionCompile $e) {
+            // should not fired
+            LogUtility::log2file("Error while logging cache event. Error: {$e->getMessage()}");
+        }
+
+
+    }
+
+    public static function renderCacheAndLog(IFetcherSource $fetcher, string $event, string $message)
+    {
+        try {
+            $fetcher->process();
+        } catch (ExceptionNotSupported $e) {
+            return;
+        }
+        try {
+            CacheLog::logCacheEvent(
+                $event,
+                $fetcher->getSourcePath()->toAbsoluteId(),
+                $fetcher->getMime()->getExtension(),
                 CacheManager::CACHE_CREATION,
                 $message
             );
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // should not fired
             LogUtility::log2file("Error while logging cache event. Error: {$e->getMessage()}");
         }
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function logCacheEvent(string $event, string $path, string $format, string $operation, string $message)
     {
@@ -90,13 +105,13 @@ class CacheLog
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public static function getCacheLog(): array
     {
         $sqlite = Sqlite::createOrGetBackendSqlite();
         if ($sqlite === null) {
-            throw new ExceptionCombo("Sqlite is not available");
+            throw new ExceptionCompile("Sqlite is not available");
         }
 
 
@@ -104,15 +119,15 @@ class CacheLog
          * Execute
          */
         $attributes[] = DatabasePageRow::ROWID;
-        $attributes = array_merge($attributes,self::CACHE_LOG_ATTRIBUTES);
+        $attributes = array_merge($attributes, self::CACHE_LOG_ATTRIBUTES);
         $select = Sqlite::createSelectFromTableAndColumns(self::CACHE_LOG_TABLE, $attributes);
         $request = $sqlite->createRequest()
             ->setQuery($select);
         try {
             return $request->execute()
                 ->getRows();
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("Unable to get the cache log. Error:" . $e->getMessage(),self::CANONICAL,0,$e);
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionCompile("Unable to get the cache log. Error:" . $e->getMessage(), self::CANONICAL, 0, $e);
         } finally {
             $request->close();
         }

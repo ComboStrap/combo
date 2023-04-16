@@ -1,16 +1,26 @@
 <?php
 
-use ComboStrap\Image;
-use ComboStrap\MediaLink;
+use ComboStrap\BlockquoteTag;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotExists;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherRaster;
+use ComboStrap\Meta\Field\TwitterImage;
+use ComboStrap\Site;
+use ComboStrap\SiteConfig;
+use ComboStrap\WikiPath;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\IFetcherLocalImage;
+use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
-use ComboStrap\PageImage;
+use ComboStrap\MarkupPath;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
+use ComboStrap\ResourceName;
 use ComboStrap\StringUtility;
-use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
 
 require_once(__DIR__ . '/../ComboStrap/Site.php');
 
@@ -33,10 +43,6 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
      * The handle id
      */
     const CONF_TWITTER_SITE_ID = "twitterSiteId";
-    /**
-     * The image
-     */
-    const CONF_DEFAULT_TWITTER_IMAGE = "defaultTwitterImage";
 
     /**
      * Don't track
@@ -88,23 +94,27 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
     function metaTwitterProcessing($event)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $ID is null for media
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        try {
+            $templateForWebPage = $executionContext->getExecutingPageTemplate();
+            if(!$templateForWebPage->isSocial()){
+                return;
+            }
+            $page = MarkupPath::createPageFromPathObject($templateForWebPage->getRequestedContextPath());
+        } catch (ExceptionNotFound $e) {
             return;
         }
 
 
-        $page = Page::createPageFromId($ID);
-
-        if (!$page->exists()) {
+        if (!FileSystems::exists($page)) {
             return;
         }
 
         /**
          * No social for bars
          */
-        if ($page->isSecondarySlot()) {
+        if ($page->isSlot()) {
             return;
         }
 
@@ -130,8 +140,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Twitter site
          */
-        $siteTwitterHandle = PluginUtility::getConfValue(self::CONF_TWITTER_SITE_HANDLE);
-        $siteTwitterId = PluginUtility::getConfValue(self::CONF_TWITTER_SITE_ID);
+        $siteTwitterHandle = $this->getConf(self::CONF_TWITTER_SITE_HANDLE);
+        $siteTwitterId = $this->getConf(self::CONF_TWITTER_SITE_ID);
         if (!empty($siteTwitterHandle)) {
             $twitterMeta[self::META_SITE] = $siteTwitterHandle;
 
@@ -147,49 +157,43 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Card image
          */
-        $twitterImages = $page->getImagesOrDefaultForTheFollowingUsages([PageImageUsage::TWITTER, PageImageUsage::ALL, PageImageUsage::SOCIAL]);
-        if (empty($twitterImages)) {
-            $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
-            if (!empty($defaultImageIdConf)) {
-                $twitterImage = Image::createImageFromId($defaultImageIdConf);
-                if ($twitterImage->exists()) {
-                    $twitterImages[] = $twitterImage;
-                } else {
-                    if ($defaultImageIdConf != ":apple-touch-icon.png") {
-                        LogUtility::msg("The default twitter image ($defaultImageIdConf) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    }
-                }
-            }
-
+        try {
+            $twitterImagePath = TwitterImage::createFromResource($page)->getValueOrDefault();
+        } catch (ExceptionNotFound $e) {
+            // no twitter image
+            return;
         }
-        if (!empty($twitterImages)) {
-            foreach ($twitterImages as $twitterImage) {
-                if ($twitterImage->exists()) {
-                    $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
-                    $title = $twitterImage->getAltNotEmpty();
-                    if (!empty($title)) {
-                        $twitterMeta[self::META_IMAGE_ALT] = $title;
-                    }
-                    // One image only
-                    break;
-                }
-            }
+
+        if (!FileSystems::exists($twitterImagePath)) {
+            LogUtility::error("The twitter image ($twitterImagePath) does not exists.", self::CANONICAL);
+            return;
+        }
+
+        try {
+            $twitterMeta[self::META_IMAGE] = FetcherRaster::createImageFetchFromPath($twitterImagePath)->getFetchUrl()->toAbsoluteUrlString();
+        } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+            LogUtility::error("Error with the twitter image url. " . $e->getMessage(), self::CANONICAL, $e);
+            return;
+        }
+
+        $title = ResourceName::getFromPath($twitterImagePath);
+        if (!empty($title)) {
+            $twitterMeta[self::META_IMAGE_ALT] = $title;
         }
 
         /**
          * https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
          */
         // don't track
-        $twitterMeta[self::META_DNT] = PluginUtility::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK);
+        $twitterMeta[self::META_DNT] = $this->getConf(self::CONF_TWITTER_DONT_NOT_TRACK, self::CONF_ON);
         // turn off csp warning
         $twitterMeta[self::META_WIDGET_CSP] = "on";
 
         /**
          * Embedded Tweet Theme
          */
-
-        $twitterMeta[self::META_WIDGETS_THEME] = PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME);
-        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER);
+        $twitterMeta[self::META_WIDGETS_THEME] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_THEME, BlockquoteTag::CONF_TWEET_WIDGETS_THEME_DEFAULT);
+        $twitterMeta[self::META_WIDGETS_BORDER_COLOR] = $this->getConf(BlockquoteTag::CONF_TWEET_WIDGETS_BORDER, BlockquoteTag::CONF_TWEET_WIDGETS_BORDER_DEFAULT);
 
         /**
          * Add the properties

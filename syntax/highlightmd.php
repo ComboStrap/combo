@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 
 /**
@@ -24,7 +25,7 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
      * Only on one line, otherwise
      * if it's not closed, it will eat all other syntaqx
      */
-    const ENTRY_PATTERN = "`[^\n]*(?=`)(?!\n)";
+    const ENTRY_PATTERN = "`[^`\n]*(?=`)(?!\n)";
 
     const EXIT_PATTERN = "`";
     const CANONICAL = self::TAG;
@@ -93,7 +94,7 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
      * Handle the syntax
      *
      * At the end of the parser, the `section_open` and `section_close` calls
-     * are created in {@link action_plugin_combo_headingpostprocessing}
+     * are created in {@link action_plugin_combo_instructionspostprocessing}
      * and the text inside for the toc is captured
      *
      * @param string $match
@@ -161,35 +162,6 @@ class syntax_plugin_combo_highlightmd extends DokuWiki_Syntax_Plugin
         }
 
         return false;
-    }
-
-    /**
-     * @param $match
-     * @return int
-     */
-    public
-    function getLevelFromMatch($match)
-    {
-        return 7 - strlen(trim($match));
-    }
-
-
-    private
-    function enableWikiHeading($mode)
-    {
-
-
-        /**
-         * Basically all mode that are not `base`
-         * To not take the dokuwiki heading
-         */
-        if (!(in_array($mode, ['base', 'header', 'table']))) {
-            return true;
-        } else {
-            return PluginUtility::getConfValue(self::CONF_WIKI_HIGHLIGHT_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
-        }
-
-
     }
 
 

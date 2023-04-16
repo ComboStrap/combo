@@ -1,0 +1,46 @@
+main > *, #page-core {
+    min-width: 0; /** not auto */
+}
+
+
+
+
+
+@media (min-width: 992px) {
+
+    main {
+
+        grid-area: page-main;
+        display: grid;
+        grid-template-columns: [main] 7fr [side] minmax(auto,2fr);
+        grid-auto-flow: row;
+        gap: 1rem;
+        grid-template-areas: unset;
+        margin-left: 1rem;
+        margin-right: 1rem;
+
+    }
+
+    #main-toc {
+        grid-column: side;
+        grid-row: 1 / span 5;
+        position: sticky;
+        top: 5rem;
+        z-index: 2;
+        height: fit-content;
+    }
+
+    #main-header {
+        grid-column: main;
+    }
+
+    #main-content {
+        grid-column: main;
+    }
+
+    #main-footer {
+        grid-column: main;
+    }
+
+
+}

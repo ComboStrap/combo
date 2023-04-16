@@ -12,11 +12,32 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Tag\BoxTag;
+use ComboStrap\TagAttribute\Align;
+use ComboStrap\TagAttribute\Animation;
+use ComboStrap\TagAttribute\BackgroundAttribute;
+use ComboStrap\TagAttribute\Boldness;
+use ComboStrap\TagAttribute\Hero;
+use ComboStrap\TagAttribute\Shadow;
+use ComboStrap\TagAttribute\StyleAttribute;
+use ComboStrap\TagAttribute\TextAlign;
+use ComboStrap\TagAttribute\Toggle;
+use ComboStrap\TagAttribute\Underline;
+use ComboStrap\TagAttribute\Vertical;
+use ComboStrap\Web\Url;
+use ComboStrap\Xml\XmlDocument;
+use ComboStrap\Xml\XmlElement;
 use dokuwiki\Extension\SyntaxPlugin;
-use syntax_plugin_combo_cell;
 
 /**
- * An helper to create manipulate component and html attributes
+ * An utility:
+ * * to parse the jsx/component markup match
+ * * to enforce user security (ie `style` is not allowed)
+ * * to get from component attributes to html attributes
+ *
+ *
+ * This is the equivalent of an {@link XmlElement}
+ * but does not need any {@link XmlDocument} to be created
  *
  * You can:
  *   * declare component attribute after parsing
@@ -44,33 +65,35 @@ class TagAttributes
     const STRICT = "strict";
 
     /**
-     * The logical attributes that:
-     *   * are not becoming HTML attributes
-     *   * are never deleted
+     * The logical attributes that are not becoming HTML attributes
      * (ie internal reserved words)
      *
-     * TODO: they should be advertised by the syntax component
+     * TODO: They should be advertised by the syntax component
      */
     const RESERVED_ATTRIBUTES = [
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
-        MediaLink::LINKING_KEY, // internal to image
-        CacheMedia::CACHE_KEY, // internal also
-        \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
-        syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE,
+        MediaMarkup::LINKING_KEY, // internal to image
+        IFetcherAbs::CACHE_KEY, // internal also
+        Tag\WebCodeTag::RENDERING_MODE_ATTRIBUTE,
+        Vertical::VERTICAL_ATTRIBUTE,
         self::OPEN_TAG,
         self::HTML_BEFORE,
         self::HTML_AFTER,
         Dimension::RATIO_ATTRIBUTE,
         self::STRICT,
-        SvgDocument::PRESERVE_ATTRIBUTE,
+        FetcherSvg::REQUESTED_PRESERVE_ATTRIBUTE,
         \syntax_plugin_combo_link::CLICKABLE_ATTRIBUTE,
-        MarkupRef::PREVIEW_ATTRIBUTE,
-        \syntax_plugin_combo_link::ATTRIBUTE_HREF_TYPE,
+        LinkMarkup::PREVIEW_ATTRIBUTE,
         Skin::SKIN_ATTRIBUTE,
         ColorRgb::PRIMARY_VALUE,
         ColorRgb::SECONDARY_VALUE,
-        Dimension::ZOOM_ATTRIBUTE
+        Dimension::ZOOM_ATTRIBUTE,
+        Tag\FollowTag::HANDLE_ATTRIBUTE,
+        \syntax_plugin_combo_menubar::BREAKPOINT_ATTRIBUTE,
+        ContainerTag::CONTAINER_ATTRIBUTE,
+        HeadingTag::HEADING_TEXT_ATTRIBUTE,
+        self::GENERATED_ID_KEY
     ];
 
     /**
@@ -79,13 +102,23 @@ class TagAttributes
      * and check if the {@link SyntaxPlugin::getPType()} is normal
      */
     const INLINE_LOGICAL_ELEMENTS = [
-        ImageSvg::CANONICAL,
-        ImageRaster::CANONICAL,
-        Image::CANONICAL,
+        FetcherSvg::CANONICAL,
+        FetcherRaster::CANONICAL,
+        \syntax_plugin_combo_media::TAG,
         \syntax_plugin_combo_link::TAG, // link button for instance
-        \syntax_plugin_combo_button::TAG,
-        \syntax_plugin_combo_heading::TAG
+        ButtonTag::MARKUP_LONG
     ];
+
+    /**
+     * Container
+     * Heading is a block but not a container
+     */
+    const CONTAINER_LOGICAL_ELEMENTS = [
+        BoxTag::TAG,
+        CardTag::CARD_TAG,
+        BlockquoteTag::TAG,
+    ];
+
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";
 
@@ -126,15 +159,49 @@ class TagAttributes
     /**
      * Attribute with multiple values
      */
-    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY, self::REL];
+    const MULTIPLE_VALUES_ATTRIBUTES = [self::CLASS_KEY, self::REL, Align::ALIGN_ATTRIBUTE];
 
     /**
      * Link relation attributes
      * https://html.spec.whatwg.org/multipage/links.html#linkTypes
      */
     const REL = "rel";
-    const STYLE_ATTRIBUTE = "style";
 
+    /**
+     * The default id if no one is specified
+     */
+    const GENERATED_ID_KEY = "generated_id";
+
+    /**
+     * The attributes that may flow into an HTML output
+     * TODO: href comes from {@link \syntax_plugin_combo_brand}, it should be corrected to use {@link LinkMarkup}
+     */
+    const HTML_ATTRIBUTES = [
+        TagAttributes::CLASS_KEY,
+        StyleAttribute::STYLE_ATTRIBUTE,
+        TagAttributes::ID_KEY,
+        TagAttributes::TITLE_KEY,
+        "href",
+        "rel", // anchor
+        "name", // iframe
+        "frameborder", // iframe
+        "target" // a
+    ];
+
+    /**
+     * Attribute that cannot be deleted
+     * TODO: This is because the request object and the response object are the same. We should add the request attribute in the {@link \TagAttributes}
+     */
+    const PROTECTED_ATTRIBUTES = [
+        TagAttributes::TYPE_KEY
+    ];
+    const NAME_ATTRIBUTE = "name";
+
+    /**
+     * The dokuwiki name attribute to store
+     * text node data
+     */
+    public const DOKUWIKI_TEXT_NODE_ATTRIBUTE = "_data";
 
     /**
      * A global static counter
@@ -144,14 +211,14 @@ class TagAttributes
 
 
     /**
-     * @var array attribute that were set on a component
+     * @var ArrayCaseInsensitive attribute that were set on a component
      */
-    private $componentAttributesCaseInsensitive;
+    private ArrayCaseInsensitive $componentAttributesCaseInsensitive;
 
     /**
      * @var array the style declaration array
      */
-    private $styleDeclaration = array();
+    private array $styleDeclaration = array();
 
     /**
      * @var bool - set when the transformation from component attribute to html attribute
@@ -195,6 +262,12 @@ class TagAttributes
      * @var bool - adding  the default class for the logical tag
      */
     private $defaultStyleClassShouldBeAdded = true;
+    private $knownTypes;
+
+    /**
+     * @var string - the inner Text (used for script or style tag mostly)
+     */
+    private string $innerText;
 
 
     /**
@@ -220,17 +293,9 @@ class TagAttributes
                 unset($this->componentAttributesCaseInsensitive[$key]);
                 continue;
             }
-            if ($key === self::STYLE_ATTRIBUTE) {
+            if ($key === StyleAttribute::STYLE_ATTRIBUTE) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
-                $stylingProperties = explode(";", $value);
-                foreach ($stylingProperties as $stylingProperty) {
-                    if (empty($stylingProperty)) {
-                        // case with a trailing comma. ie `width:18rem;`
-                        continue;
-                    }
-                    [$key, $value] = preg_split("/:/", $stylingProperty, 2);
-                    $this->addStyleDeclarationIfNotSet($key, $value);
-                }
+                LogUtility::warning("The style attribute cannot be set or used due to security. Uses the combostrap style attribute or set a class attibute instead.");
             }
         }
 
@@ -238,20 +303,22 @@ class TagAttributes
 
     /**
      * @param $match - the {@link SyntaxPlugin::handle()} match
-     * @param array $defaultAttributes
-     * @param array|null $knownTypes
+     * @param array $defaultAttributes - the default attributes values
+     * @param array $knownTypes - the known types
+     * @param bool $allowFirstBooleanAttributesAsType - if the first attribute is a boolean, make it a type
      * @return TagAttributes
      */
-    public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = null): TagAttributes
+    public static function createFromTagMatch($match, array $defaultAttributes = [], array $knownTypes = [], bool $allowFirstBooleanAttributesAsType = false): TagAttributes
     {
-        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes);
-        $tag = PluginUtility::getTag($match);
+        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match, $knownTypes, $allowFirstBooleanAttributesAsType);
+        $tag = PluginUtility::getMarkupTag($match);
         $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
-        return self::createFromCallStackArray($mergedAttributes, $tag);
+        return (new TagAttributes($mergedAttributes, $tag))
+            ->setKnownTypes($knownTypes);
     }
 
 
-    public static function createEmpty($logicalTag = "")
+    public static function createEmpty($logicalTag = ""): TagAttributes
     {
         if ($logicalTag !== "") {
             return new TagAttributes([], $logicalTag);
@@ -274,7 +341,33 @@ class TagAttributes
             LogUtility::msg("The renderArray variable passed is not an array ($callStackArray)");
             $callStackArray = [];
         }
-        return new TagAttributes($callStackArray, $logicalTag);
+        /**
+         * Style is not allowed in a TagAttributes
+         *
+         * Because callstack is safe,
+         * style have been added by plugin
+         * For instance, the card had a `max-width style of 100%` to the image
+         *
+         * We capture it and add them afterwards
+         */
+        if (isset($callStackArray[StyleAttribute::STYLE_ATTRIBUTE])) {
+            $style = $callStackArray[StyleAttribute::STYLE_ATTRIBUTE];
+            unset($callStackArray[StyleAttribute::STYLE_ATTRIBUTE]);
+        }
+
+        $tagAttributes = new TagAttributes($callStackArray, $logicalTag);
+
+        /**
+         * Add the styles
+         */
+        if(isset($style)){
+            $stylingProperties = StyleAttribute::HtmlStyleValueToArray($style);
+            foreach ($stylingProperties as $styleKey => $styleValue) {
+                $tagAttributes->addStyleDeclarationIfNotSet($styleKey, $styleValue);
+            }
+        }
+
+        return $tagAttributes;
     }
 
 
@@ -282,20 +375,11 @@ class TagAttributes
      * For CSS a unit is mandatory (not for HTML or SVG attributes)
      * @param $value
      * @return string return a CSS property with pixel as unit if the unit is not specified
+     * @throws ExceptionBadArgument
      */
     public static function toQualifiedCssValue($value): string
     {
-        /**
-         * A length value may be also `fit-content`
-         * we just check that if there is only number,
-         * we add the pixel
-         * Same as {@link is_numeric()} ?
-         */
-        if (is_numeric($value)) {
-            return $value . "px";
-        } else {
-            return $value;
-        }
+        return ConditionalLength::createFromString($value)->toCssLength();
 
     }
 
@@ -325,7 +409,7 @@ class TagAttributes
      * @param TagAttributes $tagAttributes
      * @return TagAttributes
      */
-    public static function createFromTagAttributes(TagAttributes $tagAttributes): TagAttributes
+    public static function createFromTagAttributeString(TagAttributes $tagAttributes): TagAttributes
     {
         $newTagAttributes = new TagAttributes($tagAttributes->getComponentAttributes(), $tagAttributes->getLogicalTag());
         foreach ($tagAttributes->getStyleDeclarations() as $property => $value) {
@@ -334,34 +418,9 @@ class TagAttributes
         return $newTagAttributes;
     }
 
-    /**
-     * Merge class name
-     * @param string $newNames - the name that we want to add
-     * @param ?string $actualNames - the actual names
-     * @return string - the class name list
-     *
-     * for instance:
-     *   * newNames = foo blue
-     *   * actual Name = foo bar
-     * return
-     *   * foo bar blue
-     */
-    static function mergeClassNames(string $newNames, ?string $actualNames): string
+    public static function isEmptyValue($attributeValue): bool
     {
-        if (!is_string($newNames)) {
-            LogUtility::msg("The value ($newNames) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        }
-        /**
-         * It may be in the form "value1 value2"
-         */
-        $newValues = StringUtility::explodeAndTrim($newNames, " ");
-        if (!empty($actualNames)) {
-            $actualValues = StringUtility::explodeAndTrim(trim($actualNames), " ");
-        } else {
-            $actualValues = [];
-        }
-        $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
-        return implode(" ", $newValues);
+        return empty($attributeValue) && !is_bool($attributeValue);
     }
 
     public function addClassName($className): TagAttributes
@@ -372,23 +431,29 @@ class TagAttributes
 
     }
 
-    public function getClass()
+    /**
+     * @throws ExceptionNull
+     */
+    public function getClass($default = null)
     {
-        return $this->getValue(self::CLASS_KEY);
+        $value = $this->getValue(self::CLASS_KEY, $default);
+        if ($value !== null) {
+            return $value;
+        }
+        throw new ExceptionNull("No class was found");
     }
 
-    public function getStyle(): ?string
+    /**
+     * @return string
+     * @throws ExceptionNotFound
+     */
+    public function getStyle(): string
     {
-        if (sizeof($this->styleDeclaration) != 0) {
-            return PluginUtility::array2InlineStyle($this->styleDeclaration);
-        } else {
-            /**
-             * null is needed to see if the attribute was set or not
-             * because an attribute may have the empty string
-             * Example: the wiki id of the root namespace
-             */
-            return null;
+
+        if (sizeof($this->styleDeclaration) === 0) {
+            throw new ExceptionNotFound("No style");
         }
+        return Html::array2InlineStyle($this->styleDeclaration);
 
     }
 
@@ -407,7 +472,7 @@ class TagAttributes
     public function addComponentAttributeValue($attributeName, $attributeValue): TagAttributes
     {
 
-        if (empty($attributeValue) && !is_bool($attributeValue)) {
+        if (TagAttributes::isEmptyValue($attributeValue)) {
             LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead if it's the wanted behavior", LogUtility::LVL_MSG_WARNING, "support");
         }
 
@@ -421,7 +486,7 @@ class TagAttributes
          * Type of data: list (class) or atomic (id)
          */
         if (in_array($attributeName, self::MULTIPLE_VALUES_ATTRIBUTES)) {
-            $this->componentAttributesCaseInsensitive[$attLower] = self::mergeClassNames($attributeValue, $actual);
+            $this->componentAttributesCaseInsensitive[$attLower] = Html::mergeClassNames($attributeValue, $actual);
         } else {
             if (!empty($actual)) {
                 LogUtility::msg("The attribute ($attLower) stores an unique value and has already a value ($actual). to set another value ($attributeValue), use the `set` operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -433,13 +498,14 @@ class TagAttributes
 
     }
 
-    public function setComponentAttributeValue($attributeName, $attributeValue)
+    public function setComponentAttributeValue($attributeName, $attributeValue): TagAttributes
     {
         $attLower = strtolower($attributeName);
         $actualValue = $this->getValue($attributeName);
         if ($actualValue === null || $actualValue !== TagAttributes::UN_SET) {
             $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
         }
+        return $this;
     }
 
     public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
@@ -449,16 +515,17 @@ class TagAttributes
         }
     }
 
-    public function hasComponentAttribute($attributeName)
+    public function hasComponentAttribute($attributeName): bool
     {
         $isset = isset($this->componentAttributesCaseInsensitive[$attributeName]);
-        if ($isset === false) {
+        if ($isset === false && $this->knownTypes === null) {
             /**
              * Edge effect
              * if this is a boolean value and the first value, it may be stored in the type
              */
             if (isset($this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY])) {
                 if ($attributeName == $this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY]) {
+                    LogUtility::warning("Internal Error: The tag ({$this->getLogicalTag()}) has a boolean attribute ($attributeName) defined as a type. The possible types should be defined for this tag as it's deprecated.");
                     return true;
                 }
             }
@@ -500,6 +567,8 @@ class TagAttributes
         Position::processStickiness($this);
         Position::processPosition($this);
         Display::processDisplay($this);
+        Vertical::processVertical($this);
+        Horizontal::processHorizontal($this);
 
         /**
          * Block processing
@@ -509,8 +578,9 @@ class TagAttributes
         FloatAttribute::processFloat($this);
         Align::processAlignAttributes($this);
         Spacing::processSpacingAttributes($this);
+        Hero::processHero($this);
         Opacity::processOpacityAttribute($this);
-        Background::processBackgroundAttributes($this);
+        BackgroundAttribute::processBackgroundAttributes($this);
         Shadow::process($this);
 
         /**
@@ -548,6 +618,7 @@ class TagAttributes
             $this->addStyleDeclarationIfNotSet("transform", $transformValue);
         }
 
+
         /**
          * Tooltip
          */
@@ -556,13 +627,17 @@ class TagAttributes
         /**
          * Add the type class used for CSS styling
          */
-        StyleUtility::addStylingClass($this);
+        StyleAttribute::addStylingClass($this);
 
         /**
          * Add the style has html attribute
          * before processing
          */
-        $this->addOutputAttributeValueIfNotEmpty("style", $this->getStyle());
+        try {
+            $this->addOutputAttributeValueIfNotEmpty("style", $this->getStyle());
+        } catch (ExceptionNotFound $e) {
+            // no style
+        }
 
         /**
          * Create a non-sorted temporary html attributes array
@@ -585,9 +660,29 @@ class TagAttributes
                 continue;
             }
 
-            // Reserved attribute
-            if (!in_array($key, self::RESERVED_ATTRIBUTES)) {
+            // We only add the common HTML attribute
+            if (in_array($key, self::HTML_ATTRIBUTES) || strpos($key, 'data-') === 0) {
                 $tempHtmlArray[$key] = $value;
+            } else {
+
+                if (!in_array($key, [
+                    TagAttributes::TYPE_KEY,
+                    TagAttributes::GENERATED_ID_KEY,
+                    TagAttributes::OPEN_TAG
+                ])) {
+
+                    /**
+                     * Note for developers:
+                     *    * If it must be in the HTML output, you should add it via the output attribute methods during processing.
+                     *    * Otherwise you need for now to get and delete it
+                     */
+                    $message = "The component attribute ($key) is unknown or does not apply ";
+                    if (isset($this->logicalTag)) {
+                        $message = "$message for the component ({$this->logicalTag}).";
+                    }
+                    LogUtility::warning($message);
+
+                }
             }
 
         }
@@ -596,6 +691,7 @@ class TagAttributes
         /**
          * Sort by attribute
          * https://datacadamia.com/web/html/attribute#order
+         * https://codeguide.co/#html-attribute-order
          */
         $sortedArray = array();
         $once = "once";
@@ -672,11 +768,24 @@ class TagAttributes
      */
     public function addOutputAttributeValue($key, $value): TagAttributes
     {
+
         if (blank($value)) {
-            LogUtility::msg("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
+            LogUtility::error("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty / boolean function if the value can be empty");
         }
-        $this->outputAttributes[$key] = $value;
+
+        $actualValue = $this->outputAttributes[$key];
+        if ($actualValue === null) {
+            $this->outputAttributes[$key] = $value;
+            return $this;
+        }
+
+        if (!in_array($key, self::MULTIPLE_VALUES_ATTRIBUTES)) {
+            LogUtility::internalError("The output attribute ($key) was already set with the value ($actualValue), we have added the value ($value)");
+        }
+
+        $this->outputAttributes[$key] = "$value $actualValue";
         return $this;
+
     }
 
 
@@ -702,19 +811,14 @@ class TagAttributes
         }
     }
 
-    /**
-     * @return array - the storage format returned from the {@link SyntaxPlugin::handle()}  method
-     */
-    public function toInternalArray()
-    {
-        return $this->componentAttributesCaseInsensitive;
-    }
 
     /**
      * Get the value and remove it from the attributes
      * @param $attributeName
      * @param $default
      * @return string|array|null
+     *
+     * TODO: we should create a new response object and not deleting data from the request
      */
     public function getValueAndRemove($attributeName, $default = null)
     {
@@ -723,14 +827,12 @@ class TagAttributes
         if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->getValue($attributeName);
 
-            if (!in_array($attributeName, self::RESERVED_ATTRIBUTES)) {
+            if (!in_array($attributeName, self::PROTECTED_ATTRIBUTES)) {
                 /**
                  * Don't remove for instance the `type`
                  * because it may be used elsewhere
                  */
                 unset($this->componentAttributesCaseInsensitive[$attributeName]);
-            } else {
-                LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead", LogUtility::LVL_MSG_WARNING, "support");
             }
 
         }
@@ -744,26 +846,48 @@ class TagAttributes
      */
     public function toCallStackArray(): array
     {
+
+        $generatedId = $this->getValue(TagAttributes::GENERATED_ID_KEY);
+        if ($generatedId === null) {
+
+            $componentName = $this->logicalTag;
+            if ($componentName === null) {
+                $componentName = "unknown-component";
+            }
+            $id = ExecutionContext::getActualOrCreateFromEnv()
+                ->getIdManager()
+                ->generateNewHtmlIdForComponent($componentName);
+            $this->addComponentAttributeValue(TagAttributes::GENERATED_ID_KEY, $id);
+
+        }
+
         $array = array();
         $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
         foreach ($originalArray as $key => $value) {
             /**
              * Only null value are not passed
              * width can be zero, wiki-id can be the empty string (ie root namespace)
+             *
+             * Value can be array, number, string
              */
             if (!is_null($value)) {
-                $array[$key] = StringUtility::toString($value);
+                $array[$key] = $value;
             }
         }
         /**
          * html attribute may also be in the callstack
          */
         foreach ($this->outputAttributes as $key => $value) {
-            $array[$key] = StringUtility::toString($value);
+            $array[$key] = $value;
         }
-        $style = $this->getStyle();
-        if ($style != null) {
-            $array["style"] = $style;
+        try {
+            $array["style"] = $this->getStyle();
+        } catch (ExceptionNotFound $e) {
+            // no style
+        }
+
+        if (isset($this->innerText)) {
+            $array[self::DOKUWIKI_TEXT_NODE_ATTRIBUTE] = $this->innerText;
         }
         return $array;
     }
@@ -785,6 +909,13 @@ class TagAttributes
         ArrayUtility::addIfNotSet($this->styleDeclaration, $property, $value);
     }
 
+    public
+    function setStyleDeclaration($property, $value): TagAttributes
+    {
+        $this->styleDeclaration[$property] = $value;
+        return $this;
+    }
+
 
     public
     function hasStyleDeclaration($styleDeclaration): bool
@@ -792,8 +923,7 @@ class TagAttributes
         return isset($this->styleDeclaration[$styleDeclaration]);
     }
 
-    public
-    function getAndRemoveStyleDeclaration($styleDeclaration)
+    public function getAndRemoveStyleDeclaration($styleDeclaration)
     {
         $styleValue = $this->styleDeclaration[$styleDeclaration];
         unset($this->styleDeclaration[$styleDeclaration]);
@@ -864,7 +994,7 @@ class TagAttributes
     function toHtmlEnterTag($htmlTag): string
     {
 
-        $enterTag = "<" . $htmlTag;
+        $enterTag = "<" . trim($htmlTag);
         $attributeString = $this->toHTMLAttributeString();
         if (!empty($attributeString)) {
             $enterTag .= " " . $attributeString;
@@ -903,8 +1033,7 @@ class TagAttributes
 
     }
 
-    public
-    function getLogicalTag()
+    public function getLogicalTag()
     {
         return $this->logicalTag;
     }
@@ -916,8 +1045,11 @@ class TagAttributes
         return $this;
     }
 
-    public
-    function removeComponentAttribute($attribute)
+    /**
+     * @param $attribute
+     * @return mixed|null - the value deleted / null if it does not exist
+     */
+    public function removeComponentAttribute($attribute)
     {
         $lowerAtt = strtolower($attribute);
         if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
@@ -930,8 +1062,10 @@ class TagAttributes
              * and may has been categorized as the type
              */
             if (!$this->getType() == $lowerAtt) {
-                LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message");
             }
+            return null;
+
 
         }
 
@@ -990,22 +1124,18 @@ class TagAttributes
 
     /**
      * @param $attributeName
-     * @return false|string[] - an array of values
+     * @param null $default
+     * @return null|string[] - an array of values
+     * @throws ExceptionBadArgument
      */
     public
-    function getValuesAndRemove($attributeName)
+    function getValuesAndRemove($attributeName, $default = null): array
     {
 
-        /**
-         * Trim
-         */
-        $trim = trim($this->getValueAndRemove($attributeName));
+        $trim = $this->getValues($attributeName, $default);
+        $this->removeAttributeIfPresent($attributeName);
+        return $trim;
 
-        /**
-         * Replace all suite of space that have more than 2 characters
-         */
-        $value = preg_replace("/\s{2,}/", " ", $trim);
-        return explode(" ", $value);
 
     }
 
@@ -1045,13 +1175,12 @@ class TagAttributes
     function removeAttributeIfPresent($string): TagAttributes
     {
         $this->removeComponentAttributeIfPresent($string);
-        $this->removeHTMLAttributeIfPresent($string);
+        $this->removeOutputAttributeIfPresent($string);
         return $this;
 
     }
 
-    private
-    function removeHTMLAttributeIfPresent($string)
+    public function removeOutputAttributeIfPresent($string)
     {
         $lowerAtt = strtolower($string);
         if (isset($this->outputAttributes[$lowerAtt])) {
@@ -1109,10 +1238,10 @@ class TagAttributes
      * @param string $key add an html attribute with the empty string
      */
     public
-    function addEmptyOutputAttributeValue($key)
+    function addBooleanOutputAttributeValue(string $key): TagAttributes
     {
 
-        $this->outputAttributes[$key] = '';
+        $this->outputAttributes[$key] = null;
         return $this;
 
     }
@@ -1131,16 +1260,22 @@ class TagAttributes
     public
     function getBooleanValueAndRemoveIfPresent($attribute, $default = null)
     {
-        $value = $this->getValueAndRemoveIfPresent($attribute);
-        if ($value === null) {
-            return $default;
-        } else {
-            return DataType::toBoolean($value);
-        }
+        $value = $this->getBooleanValue($attribute, $default);
+        $this->removeAttributeIfPresent($attribute);
+        return $value;
     }
 
     public
-    function hasAttribute($attribute)
+    function getBooleanValue($attribute, $default = null)
+    {
+        $value = $this->getValue($attribute);
+        if ($value !== null) {
+            return DataType::toBoolean($value);
+        }
+        return $default;
+    }
+
+    public function hasAttribute($attribute): bool
     {
         $hasAttribute = $this->hasComponentAttribute($attribute);
         if ($hasAttribute === true) {
@@ -1150,10 +1285,21 @@ class TagAttributes
         }
     }
 
-    private
     function hasHtmlAttribute($attribute): bool
     {
         return isset($this->outputAttributes[$attribute]);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    function getOutputAttribute($attribute)
+    {
+        $value = $this->outputAttributes[$attribute];
+        if ($value === null) {
+            throw new ExceptionNotFound("No output attribute with the key ($attribute)");
+        }
+        return $value;
     }
 
     /**
@@ -1184,7 +1330,7 @@ class TagAttributes
         $returnedArray = [];
         foreach ($arrayToEscape as $name => $value) {
 
-            $encodedName = PluginUtility::htmlEncode($name);
+            $encodedName = Html::encode($name);
 
             /**
              * Boolean does not need to be encoded
@@ -1220,7 +1366,7 @@ class TagAttributes
                 $encodeValue = false;
             }
             if ($encodeValue) {
-                $value = PluginUtility::htmlEncode($value);
+                $value = Html::encode($value);
             }
             if ($subKey == null) {
                 $returnedArray[$encodedName] = $value;
@@ -1239,7 +1385,7 @@ class TagAttributes
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function getValueAsInteger(string $WIDTH_KEY, ?int $default = null): ?int
     {
@@ -1264,6 +1410,111 @@ class TagAttributes
     {
         $this->defaultStyleClassShouldBeAdded = $bool;
         return $this;
+    }
+
+    public function getDefaultGeneratedId()
+    {
+        return $this->getValue(TagAttributes::GENERATED_ID_KEY);
+    }
+
+    public function setKnownTypes(?array $knownTypes): TagAttributes
+    {
+        $this->knownTypes = $knownTypes;
+        return $this;
+    }
+
+    public function removeType(): TagAttributes
+    {
+        $this->removeAttributeIfPresent(self::TYPE_KEY);
+        return $this;
+    }
+
+    /**
+     * @param $attributeName
+     * @param array|null $default
+     * @return string[]
+     * @throws ExceptionBadArgument
+     */
+    public function getValues($attributeName, ?array $default = null): ?array
+    {
+        /**
+         * Replace all suite of space that have more than 2 characters
+         */
+        $value = $this->getValue($attributeName);
+        if ($value === null) {
+            return $default;
+        }
+        if (!is_string($value)) {
+            throw new ExceptionBadArgument("The attribute ($attributeName) does not contain a string, we can't return multiple values");
+        }
+        $value = preg_replace("/\s{2,}/", " ", trim($value));
+        return explode(" ", $value);
+
+    }
+
+    public function getComponentAttributeValueAndRemoveIfPresent(string $attribute, $default = null)
+    {
+        $value = $this->getComponentAttributeValue($attribute, $default);
+        $this->removeComponentAttributeIfPresent($attribute);
+        return $value;
+    }
+
+    public function toUrl(): Url
+    {
+        $url = Url::createEmpty();
+        foreach ($this->componentAttributesCaseInsensitive as $key => $value) {
+            $url->addQueryParameter($key, $value);
+        }
+        return $url;
+    }
+
+    public function hasComponentAttributeAndRemove(string $key): bool
+    {
+        $hasAttribute = $this->hasComponentAttribute($key);
+        if ($hasAttribute) {
+            $this->removeComponentAttribute($key);
+        }
+        return $hasAttribute;
+    }
+
+    /**
+     * @param string $text - the text node content
+     * @return $this
+     */
+    public function setInnerText(string $text): TagAttributes
+    {
+        $this->innerText = $text;
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getInnerText(): string
+    {
+        if (!isset($this->innerText)) {
+            throw new ExceptionNotFound("No inner text is set");
+        }
+        return $this->innerText;
+    }
+
+
+    public function setId(string $id): TagAttributes
+    {
+        return $this->setComponentAttributeValue("id", $id);
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getId()
+    {
+        $id = $this->getValue(TagAttributes::ID_KEY);
+        if ($id === null) {
+            throw new ExceptionNotFound("no id");
+        }
+        return $id;
+
     }
 
 

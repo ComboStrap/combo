@@ -4,10 +4,15 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use syntax_plugin_combo_frontmatter;
 
 class PageDescription extends MetadataText
 {
+
     /**
      * The description sub key in the dokuwiki meta
      * that has the description text
@@ -36,7 +41,7 @@ class PageDescription extends MetadataText
      * (You may set it via the metadata manager and get this origin)
      */
     public const DESCRIPTION_COMBO_ORIGIN = syntax_plugin_combo_frontmatter::CANONICAL;
-    private $defaultValue;
+    private ?string $defaultValue = null;
 
     public static function createForPage($page): PageDescription
     {
@@ -44,17 +49,17 @@ class PageDescription extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The description is a paragraph that describe your page. It's advertised to external application and used in templating.";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Description";
     }
@@ -64,60 +69,88 @@ class PageDescription extends MetadataText
         return self::DESCRIPTION_PROPERTY;
     }
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY;
     }
 
-    public function getDataType(): string
+    public static function getDataType(): string
     {
         return DataType::PARAGRAPH_TYPE_VALUE;
     }
 
 
-    public function getMutable(): bool
+    public static function isMutable(): bool
     {
         return true;
     }
 
+
     /**
-     * @return string|null - the dokuwiki calculated description
-     *
+     * @return string
      */
-    public function getDefaultValue(): ?string
+    public function getValueOrDefault(): string
+    {
+
+        try {
+            $value = $this->getValue();
+            if (empty($value)) {
+                return $this->getDefaultValue();
+            }
+            return $value;
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+
+
+    }
+
+
+    /**
+     * @return string - the dokuwiki calculated description
+     * or the resource name if none (case when there is no text at all for instance with only a icon)
+     */
+    public function getDefaultValue(): string
     {
 
         $this->buildCheck();
+        if ($this->defaultValue === "" || $this->defaultValue === null) {
+            return PageTitle::createForMarkup($this->getResource())
+                ->getValueOrDefault();
+        }
         return $this->defaultValue;
 
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
 
         $metaDataStore = $this->getReadStore();
-        if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
-            parent::buildFromStoreValue($value);
+        if (!$metaDataStore->isDokuWikiStore()) {
+            parent::setFromStoreValueWithoutException($value);
             return $this;
         }
 
-        if ($value !== null && is_array($value)) {
+        if (is_array($value)) {
             $description = $value[self::ABSTRACT_KEY];
             if ($description !== null) {
-                $this->descriptionOrigin = $value[self::DESCRIPTION_ORIGIN];
-                parent::buildFromStoreValue($description);
-                return $this;
+                $descriptionOrigin = $value[self::DESCRIPTION_ORIGIN];
+                if ($descriptionOrigin !== null) {
+                    $this->descriptionOrigin = $descriptionOrigin;
+                    parent::setFromStoreValueWithoutException($description);
+                    return $this;
+                }
             }
         }
         /**
          * Plugin Plugin Description Integration
          */
-        $value = $metaDataStore->getFromPersistentName(self::PLUGIN_DESCRIPTION_META);
+        $value = $metaDataStore->getFromName(self::PLUGIN_DESCRIPTION_META);
         if ($value !== null) {
             $keywords = $value["keywords"];
             if ($keywords !== null) {
-                parent::buildFromStoreValue($keywords);
+                parent::setFromStoreValueWithoutException($keywords);
                 $this->descriptionOrigin = self::PLUGIN_DESCRIPTION_META;
                 return $this;
             }
@@ -126,7 +159,7 @@ class PageDescription extends MetadataText
         /**
          * No description set, null
          */
-        parent::buildFromStoreValue(null);
+        parent::setFromStoreValueWithoutException(null);
 
         /**
          * Default value is derived from the meta store
@@ -154,7 +187,7 @@ class PageDescription extends MetadataText
                     $this->buildFromReadStore();
                 }
                 if ($this->descriptionOrigin === PageDescription::DESCRIPTION_COMBO_ORIGIN) {
-                    throw new ExceptionCombo("The description cannot be empty", PageDescription::DESCRIPTION_PROPERTY);
+                    throw new ExceptionCompile("The description cannot be empty", PageDescription::DESCRIPTION_PROPERTY);
                 } else {
                     // The original description is from Dokuwiki, we don't send an error
                     // otherwise all page without a first description would get an error
@@ -170,40 +203,42 @@ class PageDescription extends MetadataText
     }
 
     /**
-     * @return string|array
+     * @return ?string|array
      */
     public function toStoreValue()
     {
         $metaDataStore = $this->getWriteStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
+            // A string
             return parent::toStoreValue();
         }
         /**
          * For dokuwiki, this is an array
          */
-        return array(
-            self::ABSTRACT_KEY => $this->getValue(),
-            self::DESCRIPTION_ORIGIN => PageDescription::DESCRIPTION_COMBO_ORIGIN
-        );
+        try {
+            return array(
+                self::ABSTRACT_KEY => $this->getValue(),
+                self::DESCRIPTION_ORIGIN => PageDescription::DESCRIPTION_COMBO_ORIGIN
+            );
+        } catch (ExceptionNotFound $e) {
+            return null;
+        }
     }
 
-    public function getCanonical(): string
-    {
-        return $this->getName();
-    }
+
 
     public function getDescriptionOrigin(): string
     {
         return $this->descriptionOrigin;
     }
 
-    private function getGeneratedValueFromDokuWikiStore(MetadataDokuWikiStore $metaDataStore): ?string
+    private function getGeneratedValueFromDokuWikiStore(MetadataStore $metaDataStore): ?string
     {
 
         /**
          * The generated is in the current metadata
          */
-        $descriptionArray = $metaDataStore->getCurrentFromName(self::PROPERTY_NAME);
+        $descriptionArray = $metaDataStore->getFromName(self::PROPERTY_NAME);
         if (empty($descriptionArray)) {
             return null;
         }
@@ -222,14 +257,18 @@ class PageDescription extends MetadataText
         $description = str_replace("\n", " ", $value);
         // suppress the h1
         $resourceCombo = $this->getResource();
-        if ($resourceCombo instanceof Page) {
+        if ($resourceCombo instanceof MarkupPath) {
             $description = str_replace($resourceCombo->getH1OrDefault(), "", $description);
         }
         // Suppress the star, the tab, About
         $description = preg_replace('/(\*|\t|About)/im', "", $description);
         // Suppress all double space and trim
-        return trim(preg_replace('/  /m', " ", $description));
+        return trim(preg_replace('/ /m', " ", $description));
     }
 
 
+    public static function isOnForm(): bool
+    {
+        return true;
+    }
 }

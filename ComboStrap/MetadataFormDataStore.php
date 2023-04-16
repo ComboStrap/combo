@@ -3,6 +3,9 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+
 /**
  * Class MetadataFormStore
  * @package ComboStrap
@@ -54,5 +57,12 @@ class MetadataFormDataStore extends MetadataSingleArrayStore
         return $default;
     }
 
+    public function isHierarchicalTextBased(): bool
+    {
+        /**
+         * It's a list of field that is not hiearchical
+         */
+        return false;
+    }
 
 }

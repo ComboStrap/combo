@@ -7,7 +7,6 @@ namespace ComboStrap;
 class Console
 {
 
-    static $on = false;
 
     /**
      * Print to the console even if OB (Output buffer) is used
@@ -15,19 +14,28 @@ class Console
      */
     public static function log($message)
     {
-        if (self::$on) {
+        $consoleOn = ExecutionContext::getActualOrCreateFromEnv()->isConsoleOn();
+        if ($consoleOn) {
             fputs(STDOUT, "Console Info: " . $message . PHP_EOL);
         }
     }
 
+    /**
+     * @deprecated for {@link ExecutionContext::setConsoleOff()}
+     * @return void
+     */
     public static function setOff()
     {
-        self::$on = false;
+        ExecutionContext::getActualOrCreateFromEnv()->setConsoleOff();
     }
 
+    /**
+     * @deprecated for {@link ExecutionContext::setConsoleOn()}
+     * @return void
+     */
     public static function setOn()
     {
-        self::$on = true;
+        ExecutionContext::getActualOrCreateFromEnv()->setConsoleOn();
     }
 
     public static function isConsoleRun(): bool

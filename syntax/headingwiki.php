@@ -1,8 +1,11 @@
 <?php
 
 use ComboStrap\CallStack;
+use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use ComboStrap\TagAttributes;
 
 
@@ -29,6 +32,18 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     const CONF_WIKI_HEADING_ENABLE = "headingWikiEnable";
     const CONF_DEFAULT_WIKI_ENABLE_VALUE = 1;
 
+
+    /**
+     * When we takes over the dokuwiki heading
+     * we are also taking over the sectioning
+     * and allows {@link syntax_plugin_combo_section}
+     * @return int - 1 or 0
+     */
+    public static function isEnabled(): int
+    {
+        return SiteConfig::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
+    }
+
     public function getSort(): int
     {
         /**
@@ -40,7 +55,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
     public function getType(): string
     {
-        return syntax_plugin_combo_heading::SYNTAX_TYPE;
+        return HeadingTag::SYNTAX_TYPE;
     }
 
 
@@ -58,7 +73,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      */
     public function getPType(): string
     {
-        return syntax_plugin_combo_heading::SYNTAX_PTYPE;
+        return HeadingTag::SYNTAX_PTYPE;
     }
 
     /**
@@ -95,7 +110,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      * Handle the syntax
      *
      * At the end of the parser, the `section_open` and `section_close` calls
-     * are created in {@link action_plugin_combo_headingpostprocessing}
+     * are created in {@link action_plugin_combo_instructionspostprocessing}
      * and the text inside for the toc is captured
      *
      * @param string $match
@@ -112,10 +127,14 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 /**
                  * Title regexp
                  */
-                $attributes[syntax_plugin_combo_heading::LEVEL] = $this->getLevelFromMatch($match);
-                $callStack = CallStack::createFromHandler($handler);
+                $level = $this->getLevelFromMatch($match);
 
-                $context = syntax_plugin_combo_heading::getContext($callStack);
+                $attributes = TagAttributes::createEmpty(self::TAG)
+                    ->addComponentAttributeValue(HeadingTag::LEVEL,$level)
+                    ->toCallStackArray();
+
+                $callStack = CallStack::createFromHandler($handler);
+                $context = HeadingTag::getContext($callStack);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -129,24 +148,22 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $callStack = CallStack::createFromHandler($handler);
-
-                $returnedData = syntax_plugin_combo_heading::handleExit($callStack);
-
+                $returnedData = HeadingTag::handleExit($handler);
 
                 /**
                  * Control of the Number of `=` before and after
                  */
+                $callStack = CallStack::createFromHandler($handler);
                 $callStack->moveToEnd();
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $levelFromMatch = $this->getLevelFromMatch($match);
-                $levelFromStartTag = $openingTag->getAttribute(syntax_plugin_combo_heading::LEVEL);
+                $levelFromStartTag = $openingTag->getAttribute(HeadingTag::LEVEL);
                 if ($levelFromMatch != $levelFromStartTag) {
                     $content = "";
                     while ($actualCall = $callStack->next()) {
                         $content .= $actualCall->getCapturedContent();
                     }
-                    LogUtility::msg("The number of `=` character for a wiki heading is not the same before ($levelFromStartTag) and after ($levelFromMatch) the content ($content).", LogUtility::LVL_MSG_INFO, syntax_plugin_combo_heading::CANONICAL);
+                    LogUtility::msg("The number of `=` character for a wiki heading is not the same before ($levelFromStartTag) and after ($levelFromMatch) the content ($content).", LogUtility::LVL_MSG_INFO, HeadingTag::CANONICAL);
                 }
 
                 return $returnedData;
@@ -158,64 +175,69 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     public function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        if ($format == "xhtml") {
-            /**
-             * @var Doku_Renderer_xhtml $renderer
-             */
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
+        switch ($format) {
+            case "xhtml":
+                /**
+                 * @var Doku_Renderer_xhtml $renderer
+                 */
+                $state = $data[PluginUtility::STATE];
+                $context = $data[PluginUtility::CONTEXT];
+                switch ($state) {
 
-                case DOKU_LEXER_ENTER:
-                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, syntax_plugin_combo_heading::TAG);
-                    $context = $data[PluginUtility::CONTEXT];
-                    $pos = $data[PluginUtility::POSITION];
-                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer, $pos);
-                    return true;
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    return true;
-                case DOKU_LEXER_EXIT:
-                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-                    $renderer->doc .= syntax_plugin_combo_heading::renderClosingTag($tagAttributes);
-                    return true;
+                    case DOKU_LEXER_ENTER:
+                        $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, HeadingTag::HEADING_TAG);
+                        $pos = $data[PluginUtility::POSITION];
+                        HeadingTag::processRenderEnterXhtml($context, $tagAttributes, $renderer, $pos);
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+                        $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes, $context);
+                        return true;
 
-            }
-        } else if ($format == renderer_plugin_combo_analytics::RENDERER_FORMAT) {
+                }
+                return false;
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
-            /**
-             * @var renderer_plugin_combo_analytics $renderer
-             */
-            syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
+                /**
+                 * @var renderer_plugin_combo_analytics $renderer
+                 */
+                HeadingTag::processMetadataAnalytics($data, $renderer);
+                return true;
 
-        } else if ($format == "metadata") {
+            case "metadata":
 
-            /**
-             * @var Doku_Renderer_metadata $renderer
-             */
-            syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
+                /**
+                 * @var Doku_Renderer_metadata $renderer
+                 */
+                HeadingTag::processHeadingEnterMetadata($data, $renderer);
+                return true;
 
-        } else if ($format == renderer_plugin_combo_xml::FORMAT) {
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
-                case DOKU_LEXER_ENTER:
-                    $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
-                    $renderer->doc .= "<h$level>";
-                    break;
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatchedXml($data);
-                    break;
-                case DOKU_LEXER_EXIT:
-                    $level = $data[PluginUtility::ATTRIBUTES][syntax_plugin_combo_heading::LEVEL];
-                    $renderer->doc .= "</h$level>";
-                    break;
+            case renderer_plugin_combo_xml::FORMAT:
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        $level = $data[PluginUtility::ATTRIBUTES][HeadingTag::LEVEL];
+                        $renderer->doc .= "<h$level>";
+                        return true;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::renderUnmatchedXml($data);
+                        return true;
+                    case DOKU_LEXER_EXIT:
+                        $level = $data[PluginUtility::ATTRIBUTES][HeadingTag::LEVEL];
+                        $renderer->doc .= "</h$level>";
+                        return true;
 
-            }
-
+                }
+                return false;
+            default:
+                return false;
         }
 
-        return false;
     }
 
     /**
@@ -223,7 +245,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      * @return int
      */
     public
-    function getLevelFromMatch($match)
+    function getLevelFromMatch($match): int
     {
         return 7 - strlen(trim($match));
     }
@@ -241,7 +263,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
         if (!(in_array($mode, ['base', 'header', 'table']))) {
             return true;
         } else {
-            return PluginUtility::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
+            return SiteConfig::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
         }
 
 

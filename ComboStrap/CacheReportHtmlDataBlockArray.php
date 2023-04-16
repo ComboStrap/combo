@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Xml\XmlDocument;
+
 class CacheReportHtmlDataBlockArray
 {
 
@@ -23,52 +25,65 @@ class CacheReportHtmlDataBlockArray
      * @return array - a array that will be transformed as json HTML data block
      * to be included in a HTML page in order to insert cache results in the html page
      */
-    public static function getFromRuntime(): array
+    public static function getFromContext(): array
     {
-        $cacheManager = CacheManager::getOrCreate();
+        $cacheManager = ExecutionContext::getActualOrCreateFromEnv()
+            ->getCacheManager();
         $cacheReporters = $cacheManager->getCacheResults();
-        if ($cacheReporters === null) {
-            return [];
-        }
         $htmlDataBlock = [];
         foreach ($cacheReporters as $cacheReporter) {
 
-            foreach ($cacheReporter->getResults() as $result) {
+            $cacheResults = $cacheReporter->getResults();
+            foreach ($cacheResults as $result) {
 
                 $modifiedDate = "";
                 if ($result->getPath() !== null) {
-                    $modifiedTime = FileSystems::getModifiedTime($result->getPath());
-                    if ($modifiedTime !== null) {
-                        // the file exists
+                    try {
+                        $modifiedTime = FileSystems::getModifiedTime($result->getPath());
                         $modifiedDate = $modifiedTime->format(Iso8601Date::getFormat());
+                    } catch (ExceptionNotFound $e) {
+                        // the file exists
                     }
                 }
                 $mode = $result->getMode();
-                $slotId = $result->getSlotId();
-
-                $cacheFile = null;
-                try {
-                    $dokuPath = $result->getPath()->toDokuPath();
-                    $cacheFile = $dokuPath->getDokuwikiId();
-                } catch (ExceptionCombo $e) {
-                    LogUtility::msg("The path ({$result->getPath()}) could not be transformed as wiki path. Error:{$e->getMessage()}");
+                $sourcePath = $result->getMarkupPath()->getPathObject();
+                /**
+                 * If this is not a wiki path, we try to transform it as wiki path
+                 * to get a shorter path (ie id) in the report
+                 */
+                if (!($sourcePath instanceof WikiPath)) {
+                    try {
+                        $sourcePath = WikiPath::createFromPathObject($sourcePath);
+                    } catch (ExceptionBadArgument $e) {
+                        // could not be transformed as wiki path (missing a drive)
+                    }
                 }
+                $cacheFile = $result->getPath();
+                try {
+                    $cacheFile = $cacheFile->toWikiPath();
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::error("Cache reporter: The cache file could not be transformed as a wiki path. Error: " . $e->getMessage());
+                }
+
+
                 $data = [
                     self::RESULT_STATUS => $result->getResult(),
                     self::DATE_MODIFIED => $modifiedDate,
-                    self::CACHE_FILE => $cacheFile
+                    self::CACHE_FILE => $cacheFile->toAbsoluteId()
                 ];
 
-                if ($mode === HtmlDocument::mode) {
-                    $dependencies = $cacheManager
-                        ->getCacheDependenciesForSlot($slotId)
-                        ->getDependencies();
-                    if ($dependencies !== null) {
-                        $data[self::DEPENDENCY_ATT] = $dependencies;
+                if ($mode === FetcherMarkup::XHTML_MODE) {
+                    try {
+                        $dependencies = FetcherMarkup::createXhtmlMarkupFetcherFromPath($sourcePath, $sourcePath)
+                            ->getOutputCacheDependencies()
+                            ->getDependencies();
+                    } catch (ExceptionNotExists $e) {
+                        continue;
                     }
+                    $data[self::DEPENDENCY_ATT] = $dependencies;
                 }
 
-                $htmlDataBlock[$slotId][$mode] = $data;
+                $htmlDataBlock[$sourcePath->toAbsoluteId()][$mode] = $data;
 
             }
 
@@ -79,17 +94,14 @@ class CacheReportHtmlDataBlockArray
 
     /**
      * An utility function to extract the cache data block from test responses
-     * @param \TestResponse $response
+     * @param XmlDocument $xmlDom
      * @return mixed
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
-    public static function extractFromResponse(\TestResponse $response)
+    public static function extractFromHtmlDom(XmlDocument $xmlDom)
     {
-        $metaCacheMain = $response->queryHTML('script[type="' . CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON . '"]');
-        if ($metaCacheMain->count() != 1) {
-            throw new ExceptionCombo("The data cache was not found");
-        }
-        $cacheJsonTextValue = $metaCacheMain->elements[0]->childNodes->item(0)->textContent;
-        return json_decode(XmlUtility::extractTextWithoutCdata($cacheJsonTextValue), true);
+        $metaCacheMain = $xmlDom->querySelector('script[type="' . CacheReportHtmlDataBlockArray::APPLICATION_COMBO_CACHE_JSON . '"]');
+        $cacheJsonTextValue = $metaCacheMain->getNodeValueWithoutCdata();
+        return json_decode($cacheJsonTextValue, true);
     }
 }

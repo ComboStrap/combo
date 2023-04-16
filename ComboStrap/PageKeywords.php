@@ -4,37 +4,40 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataMultiple;
+
 class PageKeywords extends MetadataMultiple
 {
 
     public const PROPERTY_NAME = "keywords";
 
 
-    public static function createForPage(Page $page)
+    public static function createForPage(MarkupPath $page)
     {
         return (new PageKeywords())
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
 
-    public function getDataType(): string
+    static public function getDataType(): string
     {
         // in a form, we send a list of words
         return DataType::TEXT_TYPE_VALUE;
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The keywords added to your page (separated by a comma)";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Keywords";
     }
@@ -54,17 +57,21 @@ class PageKeywords extends MetadataMultiple
     {
 
         $resource = $this->getResource();
-        if (!($resource instanceof Page)) {
+        if (!($resource instanceof MarkupPath)) {
             return null;
         }
         $keyWords = explode(" ", $resource->getNameOrDefault());
-        $actualPage = $resource;
-        while (($parentPage = $actualPage->getParentPage()) !== null) {
+        $parentPage = $resource;
+        while (true) {
+            try {
+                $parentPage = $parentPage->getParent();
+            } catch (ExceptionNotFound $e) {
+                break;
+            }
             if (!$parentPage->isRootHomePage()) {
                 $parentKeyWords = explode(" ", $parentPage->getNameOrDefault());
                 $keyWords = array_merge($keyWords, $parentKeyWords);
             }
-            $actualPage = $parentPage;
         }
         $keyWords = array_map(function ($element) {
             return strtolower($element);
@@ -72,33 +79,36 @@ class PageKeywords extends MetadataMultiple
         return array_unique($keyWords);
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         try {
             $this->array = $this->toArrayOrNull($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getMessage());
         }
         return $this;
     }
 
 
-
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::PROPERTY_NAME;
     }
 
 
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
 }

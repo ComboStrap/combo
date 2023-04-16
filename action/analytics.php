@@ -1,8 +1,5 @@
 <?php
 
-use Combostrap\AnalyticsMenuItem;
-use ComboStrap\Identity;
-use ComboStrap\Page;
 
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
@@ -16,7 +13,18 @@ use ComboStrap\Page;
  */
 
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
+
+/**
+ * Mandatory, don't known why ? Otherwise it does not work
+ * The class is not found
+ */
+require_once(__DIR__ . '/../ComboStrap/AnalyticsMenuItem.php');
+
+use Combostrap\AnalyticsMenuItem;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
+use ComboStrap\Identity;
 
 /**
  * Class action_plugin_combo_analytics
@@ -42,6 +50,13 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     public function handle_rail_bar(Doku_Event $event, $param)
     {
+
+
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        if (!$executionContext->isPublicationAction()) {
+            // a search for instance
+            return;
+        }
 
         if (!Identity::isWriter()) {
             return;

@@ -3,6 +3,10 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataStore;
+use ComboStrap\Meta\Api\MetadataStoreAbs;
+
 /**
  * Class TemplateStore
  * @package ComboStrap
@@ -24,12 +28,12 @@ class TemplateStore extends MetadataStoreAbs implements MetadataStore
     }
 
 
-    public function getFromPersistentName(string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
         LogUtility::msg("You can't get a value with a template store");
     }
 
-    public function setFromPersistentName(string $name, $value)
+    public function setFromPersistentName(string $name, $value, $default = null)
     {
         LogUtility::msg("You can't set a value with a template store");
     }

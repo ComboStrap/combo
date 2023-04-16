@@ -4,7 +4,9 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_qualitymessage;
+use ComboStrap\Api\QualityMessageHandler;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataBoolean;
 
 class QualityDynamicMonitoringOverwrite extends MetadataBoolean
 {
@@ -15,30 +17,30 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
     public const PROPERTY_NAME = "dynamic_quality_monitoring";
     public const EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT = true;
 
-    public static function createFromPage(Page $page)
+    public static function createFromPage(MarkupPath $page): QualityDynamicMonitoringOverwrite
     {
         return (new QualityDynamicMonitoringOverwrite())
             ->setResource($page);
     }
 
-    public function getTab(): ?string
+    static public function getTab(): ?string
     {
         return MetaManagerForm::TAB_QUALITY_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "If checked, the quality message will not be shown for the page.";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Disable the quality control of this page";
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
-        return action_plugin_combo_qualitymessage::CANONICAL;
+        return QualityMessageHandler::CANONICAL;
     }
 
 
@@ -47,18 +49,39 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
+    /**
+     * @return bool
+     */
+    public function getValueOrDefault(): bool
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
+    /**
+     * @return bool
+     */
     public function getDefaultValue(): bool
     {
         return self::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT;
     }
+
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
+
 }

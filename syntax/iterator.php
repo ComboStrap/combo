@@ -1,21 +1,29 @@
 <?php
 
 
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionSqliteNotAvailable;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherMarkup;
+use ComboStrap\FragmentTag;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\CacheManager;
-use ComboStrap\CacheDependencies;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\ExceptionCombo;
+use ComboStrap\MarkupDynamicRender;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
-use ComboStrap\PageImages;
+use ComboStrap\MarkupPath;
+use ComboStrap\PageImageTag;
+use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\PageSqlTreeListener;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\TagAttributes;
-use ComboStrap\Template;
-use ComboStrap\TemplateUtility;
+use ComboStrap\WikiPath;
+use ComboStrap\XmlTagProcessing;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -74,11 +82,49 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
      */
     const CANONICAL = "iterator";
     const PAGE_SQL = "page-sql";
-    const VARIABLE_NAMES = "variable-names";
+    const PAGE_SQL_ATTRIBUTES = "page-sql-attributes";
     const COMPLEX_MARKUP_FOUND = "complex-markup-found";
     const BEFORE_TEMPLATE_CALLSTACK = "header-callstack";
     const AFTER_TEMPLATE_CALLSTACK = "footer-callstack";
     const TEMPLATE_CALLSTACK = "template-callstack";
+
+
+    /**
+     * @param TagAttributes $tagAttributes
+     * @return WikiPath the context path for element that are in a fragment
+     */
+    public static function getContextPathForComponentThatMayBeInFragment(TagAttributes $tagAttributes): WikiPath
+    {
+        $pathString = $tagAttributes->getComponentAttributeValueAndRemoveIfPresent(PagePath::PROPERTY_NAME);
+        if ($pathString != null) {
+            try {
+                return WikiPath::createMarkupPathFromPath($pathString);
+            } catch (ExceptionBadArgument $e) {
+                LogUtility::warning("Error while creating the path for the page image with the path value ($pathString)", PageImageTag::CANONICAL, $e);
+            }
+        }
+
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+
+        try {
+            $markupHandler = $executionContext->getExecutingMarkupHandler();
+            $contextData = $markupHandler
+                ->getContextData();
+            $path = $contextData[PagePath::PROPERTY_NAME];
+            if ($path !== null) {
+                try {
+                    return WikiPath::createMarkupPathFromPath($path);
+                } catch (ExceptionBadArgument $e) {
+                    LogUtility::internalError("The path string should be absolute, we should not get this error", PageImageTag::CANONICAL, $e);
+                }
+            }
+            return $markupHandler->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            // no markup handler
+        }
+        return $executionContext->getContextPath();
+
+    }
 
 
     /**
@@ -96,9 +142,9 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - The plugin can be used inside paragraphs (inline or inside)
-     *  * 'block'  - Open paragraphs need to be closed before plugin output (box) - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     * * 'normal' - Inline
+     *  * 'block' - Block (p are not created inside)
+     *  * 'stack' - Block (p can be created inside)
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      * @see https://www.dokuwiki.org/devel:syntax_plugins#ptype
@@ -137,7 +183,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
@@ -195,24 +241,37 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  * such as sql and template instructions
                  */
                 $pageSql = null;
+                $pageSqlAttribute = [];
                 $beforeTemplateCallStack = [];
                 $templateStack = [];
                 $afterTemplateCallStack = [];
                 $parsingState = "before";
                 $complexMarkupFound = false;
-                $variableNames = [];
                 while ($actualCall = $callStack->next()) {
                     $tagName = $actualCall->getTagName();
+
+                    if ($tagName === syntax_plugin_combo_edit::TAG) {
+                        /**
+                         * Not capturing the edit button because the markup is generated
+                         */
+                        continue;
+                    }
+
                     switch ($tagName) {
                         case syntax_plugin_combo_iteratordata::TAG:
-                            if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
-                                $pageSql = $actualCall->getCapturedContent();
+                            switch ($actualCall->getState()) {
+                                case DOKU_LEXER_UNMATCHED:
+                                    $pageSql = $actualCall->getCapturedContent();
+                                    break;
+                                case DOKU_LEXER_ENTER:
+                                    $pageSqlAttribute = $actualCall->getAttributes();
+                                    break;
                             }
                             continue 2;
-                        case syntax_plugin_combo_template::TAG:
+                        case FragmentTag::FRAGMENT_TAG:
                             $parsingState = "after";
                             if ($actualCall->getState() === DOKU_LEXER_EXIT) {
-                                $templateStack = $actualCall->getPluginData(syntax_plugin_combo_template::CALLSTACK);
+                                $templateStack = $actualCall->getPluginData(FragmentTag::CALLSTACK);
                                 /**
                                  * Do we have markup where the instructions should be generated at once
                                  * and not line by line
@@ -225,25 +284,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                         $complexMarkupFound = true;
                                     }
 
-                                    /**
-                                     * Capture variable names
-                                     * to be able to find their value
-                                     * in the metadata if they are not in sql
-                                     */
-                                    $textWithVariables = $templateCall->getCapturedContent();
-                                    $attributes = $templateCall->getAttributes();
-                                    if ($attributes !== null) {
-                                        $sep = " ";
-                                        foreach ($attributes as $key => $attribute) {
-                                            $textWithVariables .= $sep . $key . $sep . $attribute;
-                                        }
-                                    }
-
-                                    if (!empty($textWithVariables)) {
-                                        $template = Template::create($textWithVariables);
-                                        $variablesDetected = $template->getVariablesDetected();
-                                        $variableNames = array_merge($variableNames, $variablesDetected);
-                                    }
                                 }
                             }
                             continue 2;
@@ -256,21 +296,25 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             break;
                     }
                 }
-                $variableNames = array_unique($variableNames);
 
                 /**
                  * Wipe the content of iterator
                  */
                 $callStack->deleteAllCallsAfter($openTag);
 
+                /**
+                 * Enter Tag is the driver tag
+                 * (To be able to add class by third party component)
+                 */
+                $openTag->setPluginData(self::PAGE_SQL, $pageSql);
+                $openTag->setPluginData(self::PAGE_SQL_ATTRIBUTES, $pageSqlAttribute);
+                $openTag->setPluginData(self::COMPLEX_MARKUP_FOUND, $complexMarkupFound);
+                $openTag->setPluginData(self::BEFORE_TEMPLATE_CALLSTACK, $beforeTemplateCallStack);
+                $openTag->setPluginData(self::AFTER_TEMPLATE_CALLSTACK, $afterTemplateCallStack);
+                $openTag->setPluginData(self::TEMPLATE_CALLSTACK, $templateStack);
+
                 return array(
-                    PluginUtility::STATE => $state,
-                    self::PAGE_SQL => $pageSql,
-                    self::VARIABLE_NAMES => $variableNames,
-                    self::COMPLEX_MARKUP_FOUND => $complexMarkupFound,
-                    self::BEFORE_TEMPLATE_CALLSTACK => $beforeTemplateCallStack,
-                    self::AFTER_TEMPLATE_CALLSTACK => $afterTemplateCallStack,
-                    self::TEMPLATE_CALLSTACK => $templateStack
+                    PluginUtility::STATE => $state
                 );
 
         }
@@ -293,12 +337,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
         if ($format === "xhtml") {
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_ENTER:
+                case DOKU_LEXER_EXIT:
                     return true;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     return true;
-                case DOKU_LEXER_EXIT:
+                case DOKU_LEXER_ENTER:
 
                     $pageSql = $data[self::PAGE_SQL];
 
@@ -317,30 +361,52 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     /**
                      * Sqlite available ?
                      */
-                    $sqlite = Sqlite::createOrGetSqlite();
-                    if ($sqlite === null) {
+                    try {
+                        $sqlite = Sqlite::createOrGetSqlite();
+                    } catch (ExceptionSqliteNotAvailable $e) {
                         $renderer->doc .= "The iterator component needs Sqlite to be able to work";
                         return false;
                     }
 
+                    $executionContext = ExecutionContext::getActualOrCreateFromEnv();
 
                     /**
                      * Create the SQL
                      */
                     try {
-                        $pageSql = PageSql::create($pageSql);
+                        $tagAttributes = TagAttributes::createFromCallStackArray($data[self::PAGE_SQL_ATTRIBUTES]);
+                        $path = $tagAttributes->getValue(PagePath::PROPERTY_NAME);
+                        if ($path !== null) {
+                            $contextualPage = MarkupPath::createPageFromAbsoluteId($path);
+                        } else {
+                            $contextualPage = MarkupPath::createPageFromPathObject($executionContext->getContextPath());
+                        }
+                        $pageSql = PageSql::create($pageSql, $contextualPage);
                     } catch (Exception $e) {
                         $renderer->doc .= "The page sql is not valid. Error Message: {$e->getMessage()}. Page Sql: ($pageSql)";
                         return false;
                     }
 
                     $table = $pageSql->getTable();
-                    $cacheManager = CacheManager::getOrCreate();
-                    switch ($table) {
-                        case PageSqlTreeListener::BACKLINKS:
-                            $cacheManager->addDependencyForCurrentSlot(CacheDependencies::BACKLINKS_DEPENDENCY);
-                            break;
-                        default:
+
+                    try {
+                        $cacheDependencies = $executionContext
+                            ->getExecutingMarkupHandler()
+                            ->getOutputCacheDependencies();
+
+                        switch ($table) {
+                            case PageSqlTreeListener::BACKLINKS:
+                                $cacheDependencies->addDependency(MarkupCacheDependencies::BACKLINKS_DEPENDENCY);
+                                // The requested page dependency could be determined by the backlinks dependency
+                                $cacheDependencies->addDependency(MarkupCacheDependencies::REQUESTED_PAGE_DEPENDENCY);
+                                break;
+                            case PageSqlTreeListener::DESCENDANTS:
+                                $cacheDependencies->addDependency(MarkupCacheDependencies::PAGE_SYSTEM_DEPENDENCY);
+                                break;
+                            default:
+                        }
+                    } catch (ExceptionNotFound $e) {
+                        // not a fetcher markup run
                     }
 
                     /**
@@ -357,73 +423,31 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                             $rowsInDb = $request
                                 ->execute()
                                 ->getRows();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $renderer->doc .= "The sql statement generated returns an error. Sql statement: $executableSql";
                             return false;
                         } finally {
                             $request->close();
                         }
 
-                        $variableNames = $data[self::VARIABLE_NAMES];
                         $rows = [];
                         foreach ($rowsInDb as $sourceRow) {
-                            $analytics = $sourceRow["ANALYTICS"];
+
                             /**
-                             * @deprecated
                              * We use id until path is full in the database
                              */
                             $id = $sourceRow["ID"];
-                            $page = Page::createPageFromId($id);
-                            if ($page->isHidden()) {
+                            $contextualPage = MarkupPath::createMarkupFromId($id);
+                            if ($contextualPage->isHidden()) {
                                 continue;
                             }
-                            $standardMetadata = $page->getMetadataForRendering();
-
-                            $jsonArray = json_decode($analytics, true);
-                            $targetRow = [];
-                            foreach ($variableNames as $variableName) {
-
-                                if ($variableName === PageImages::PROPERTY_NAME) {
-                                    LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
-                                    continue;
-                                }
-
-                                /**
-                                 * Data in the pages tables
-                                 */
-                                if (isset($sourceRow[strtoupper($variableName)])) {
-                                    $variableValue = $sourceRow[strtoupper($variableName)];
-                                    $targetRow[$variableName] = $variableValue;
-                                    continue;
-                                }
-
-                                /**
-                                 * In the analytics
-                                 */
-                                $value = $jsonArray["metadata"][$variableName];
-                                if (!empty($value)) {
-                                    $targetRow[$variableName] = $value;
-                                    continue;
-                                }
-
-                                /**
-                                 * Computed
-                                 * (if the table is empty because of migration)
-                                 */
-                                $value = $standardMetadata[$variableName];
-                                if (isset($value)) {
-                                    $targetRow[$variableName] = $value;
-                                    continue;
-                                }
-
-                                /**
-                                 * Bad luck
-                                 */
-                                $targetRow[$variableName] = "$variableName attribute is unknown.";
-
-
+                            if (!$contextualPage->exists()) {
+                                LogUtility::error("Internal Error: the page selected ($contextualPage) was not added. It does not exist and was deleted from the database index.", self::CANONICAL);
+                                $contextualPage->getDatabasePage()->delete();
+                                continue;
                             }
-                            $rows[] = $targetRow;
+                            $standardMetadata = $contextualPage->getMetadataForRendering();
+                            $rows[] = $standardMetadata;
                         }
                     } catch (Exception $e) {
                         $renderer->doc .= "Error during Sql Execution. Error: {$e->getMessage()}";
@@ -437,7 +461,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $elementCounts = sizeof($rows);
                     if ($elementCounts === 0) {
                         $parametersString = implode(", ", $parameters);
-                        LogUtility::msg("The physical query (Sql: {$pageSql->getExecutableSql()}, Parameters: $parametersString) does not return any data", LogUtility::LVL_MSG_INFO, syntax_plugin_combo_iterator::CANONICAL);
+                        LogUtility::debug("The physical query (Sql: {$pageSql->getExecutableSql()}, Parameters: $parametersString) does not return any data", syntax_plugin_combo_iterator::CANONICAL);
                         return true;
                     }
 
@@ -450,25 +474,24 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= "No template was found in this iterator.";
                         return false;
                     }
-                    $iteratorHeaderInstructions = $data[self::BEFORE_TEMPLATE_CALLSTACK];
-
-
-                    $iteratorTemplateGeneratedInstructions = [];
 
 
                     /**
-                     * List and table syntax in template ?
+                     * Split template
+                     * Splits the template into header, main and footer
+                     * in case of complex header
                      */
+                    $templateHeader = array();
+                    $templateMain = $iteratorTemplateInstructions;
+                    $templateFooter = array();
                     $complexMarkupFound = $data[self::COMPLEX_MARKUP_FOUND];
                     if ($complexMarkupFound) {
 
                         /**
-                         * Splits the template into header, main and footer
                          * @var Call $actualCall
                          */
                         $templateCallStack = CallStack::createFromInstructions($iteratorTemplateInstructions);
-                        $templateHeader = array();
-                        $templateMain = array();
+
                         $actualStack = array();
                         $templateCallStack->moveToStart();
                         while ($actualCall = $templateCallStack->next()) {
@@ -476,20 +499,33 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                 case "listitem_open":
                                 case "tablerow_open":
                                     $templateHeader = $actualStack;
-                                    $actualStack = [$actualCall];
+                                    $actualStack = [$actualCall->toCallArray()];
                                     continue 2;
                                 case "listitem_close":
                                 case "tablerow_close":
-                                    $actualStack[] = $actualCall;
+                                    $actualStack[] = $actualCall->toCallArray();
                                     $templateMain = $actualStack;
                                     $actualStack = [];
                                     continue 2;
                                 default:
-                                    $actualStack[] = $actualCall;
+                                    $actualStack[] = $actualCall->toCallArray();
                             }
                         }
                         $templateFooter = $actualStack;
+                    }
 
+                    $contextPath = $executionContext->getContextPath();
+
+                    /**
+                     * Rendering
+                     */
+                    $renderDoc = "";
+
+                    /**
+                     * Header
+                     */
+                    $iteratorHeaderInstructions = $data[self::BEFORE_TEMPLATE_CALLSTACK];
+                    if (!empty($iteratorHeaderInstructions)) {
                         /**
                          * Table with an header
                          * If this is the case, the table_close of the header
@@ -497,7 +533,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                          * deleted to create one table
                          */
                         if (!empty($templateHeader)) {
-                            $firstTemplateCall = $templateHeader[0];
+                            $firstTemplateCall = Call::createFromInstruction($templateHeader[0]);
                             if ($firstTemplateCall->getComponentName() === "table_open") {
                                 $lastIterationHeaderElement = sizeof($iteratorHeaderInstructions) - 1;
                                 $lastIterationHeaderInstruction = Call::createFromInstruction($iteratorHeaderInstructions[$lastIterationHeaderElement]);
@@ -507,86 +543,89 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                 }
                             }
                         }
-
-                        /**
-                         * Loop and recreate the call stack in instructions  form for rendering
-                         */
-                        $iteratorTemplateGeneratedInstructions = [];
-                        foreach ($templateHeader as $templateHeaderCall) {
-                            $iteratorTemplateGeneratedInstructions[] = $templateHeaderCall->toCallArray();
+                        try {
+                            $renderDoc .= FetcherMarkup::confChild()
+                                ->setRequestedInstructions($iteratorHeaderInstructions)
+                                ->setRequestedContextPath($contextPath)
+                                ->setRequestedMimeToXhtml()
+                                ->setIsDocument(false)
+                                ->build()
+                                ->getFetchString();
+                        } catch (ExceptionCompile $e) {
+                            LogUtility::error("Error while rendering the iterator header. Error: {$e->getMessage()}", self::CANONICAL, $e);
+                            return false;
                         }
-                        foreach ($rows as $row) {
-                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
-                            $iteratorTemplateGeneratedInstructions = array_merge($iteratorTemplateGeneratedInstructions, $templateInstructionForInstance);
-                        }
-                        foreach ($templateFooter as $templateFooterCall) {
-                            $iteratorTemplateGeneratedInstructions[] = $templateFooterCall->toCallArray();
-                        }
-
-
-                    } else {
-
-                        /**
-                         * No Complex Markup
-                         * We can use the calls form
-                         */
-
-
-                        /**
-                         * Append the new instructions by row
-                         */
-                        foreach ($rows as $row) {
-                            $templateInstructionForInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($iteratorTemplateInstructions, $row);
-                            $iteratorTemplateGeneratedInstructions = array_merge($iteratorTemplateGeneratedInstructions, $templateInstructionForInstance);
-                        }
-
-
                     }
+
                     /**
-                     * Rendering
+                     * Template
                      */
-                    $totalInstructions = [];
-                    // header
-                    if (!empty($iteratorHeaderInstructions)) {
-                        $totalInstructions = $iteratorHeaderInstructions;
+                    try {
+                        $renderDoc .= FetcherMarkup::confChild()
+                            ->setRequestedInstructions($templateHeader)
+                            ->setRequestedContextPath($contextPath)
+                            ->setRequestedMimeToXhtml()
+                            ->setIsDocument(false)
+                            ->build()
+                            ->getFetchString();
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::error("Error while rendering the template header. Error: {$e->getMessage()}", self::CANONICAL);
+                        return false;
                     }
-                    // content
-                    if (!empty($iteratorTemplateGeneratedInstructions)) {
-                        $totalInstructions = array_merge($totalInstructions, $iteratorTemplateGeneratedInstructions);
+                    foreach ($rows as $row) {
+                        try {
+                            $renderDoc .= FetcherMarkup::confChild()
+                                ->setRequestedInstructions($templateMain)
+                                ->setContextData($row)
+                                ->setRequestedContextPath($contextPath)
+                                ->setRequestedMimeToXhtml()
+                                ->setIsDocument(false)
+                                ->build()
+                                ->getFetchString();
+                        } catch (ExceptionCompile $e) {
+                            LogUtility::error("Error while rendering a data row. Error: {$e->getMessage()}", self::CANONICAL);
+                            continue;
+                        }
                     }
-                    // footer
+                    try {
+                        $renderDoc .= FetcherMarkup::confChild()
+                            ->setRequestedInstructions($templateFooter)
+                            ->setRequestedContextPath($contextPath)
+                            ->setRequestedMimeToXhtml()
+                            ->setIsDocument(false)
+                            ->build()
+                            ->getFetchString();
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::error("Error while rendering the template footer. Error: {$e->getMessage()}", self::CANONICAL);
+                        return false;
+                    }
+
+
+                    /**
+                     * Iterator Footer
+                     */
                     $callStackFooterInstructions = $data[self::AFTER_TEMPLATE_CALLSTACK];
                     if (!empty($callStackFooterInstructions)) {
-                        $totalInstructions = array_merge($totalInstructions, $callStackFooterInstructions);
-                    }
-                    if (!empty($totalInstructions)) {
-
-                        /**
-                         * Advertise the total count to the
-                         * {@link syntax_plugin_combo_carrousel}
-                         * for the bullets if any
-                         */
-                        $totalCallStack = CallStack::createFromInstructions($totalInstructions);
-                        $totalCallStack->moveToEnd();
-                        while ($actualCall = $totalCallStack->previous()) {
-                            if (
-                                $actualCall->getTagName() === syntax_plugin_combo_carrousel::TAG
-                                && in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])
-                            ) {
-                                $actualCall->setPluginData(syntax_plugin_combo_carrousel::ELEMENT_COUNT, $elementCounts);
-                                if ($actualCall->getState() === DOKU_LEXER_ENTER) {
-                                    break;
-                                }
-                            }
-                        }
-
                         try {
-                            $renderer->doc .= PluginUtility::renderInstructionsToXhtml($totalCallStack->getStack());
-                        } catch (ExceptionCombo $e) {
-                            $renderer->doc .= "Error while rendering the iterators instructions. Error: {$e->getMessage()}";
+                            $renderDoc .= FetcherMarkup::confChild()
+                                ->setRequestedInstructions($callStackFooterInstructions)
+                                ->setRequestedContextPath($contextPath)
+                                ->setRequestedMimeToXhtml()
+                                ->setIsDocument(false)
+                                ->build()
+                                ->getFetchString();
+                        } catch (ExceptionCompile $e) {
+                            LogUtility::error("Error while rendering the iterator footer. Error: {$e->getMessage()}", self::CANONICAL);
+                            return false;
                         }
                     }
+
+                    /**
+                     * Renderer
+                     */
+                    $renderer->doc .= $renderDoc;
                     return true;
+
             }
         }
         // unsupported $mode

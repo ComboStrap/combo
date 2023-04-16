@@ -2,10 +2,13 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Identity;
 use ComboStrap\Index;
 use ComboStrap\LogUtility;
+use ComboStrap\LinkMarkup;
 use ComboStrap\Message;
+use ComboStrap\MarkupPath;
 use dokuwiki\Extension\ActionPlugin;
 
 
@@ -146,8 +149,9 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
             // Add a list of page with the same name to the message
             // if the redirections is not planned
-            if ($redirectSource !== action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
-                $this->addToMessagePagesWithSameName($message, $pageIdOrigin);
+            if ($redirectSource != action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
+                $pageOrigin = MarkupPath::createMarkupFromId($pageIdOrigin);
+                $this->addToMessagePagesWithSameName($message, $pageOrigin);
             }
 
             if ($event->data === 'show' || $event->data === 'edit' || $event->data === 'search') {
@@ -157,7 +161,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     ->setCanonical(action_plugin_combo_router::CANONICAL)
                     ->setSignatureName(action_plugin_combo_router::URL_MANAGER_NAME)
                     ->toHtmlBox();
-                ptln($html);
+                LogUtility::infoToPublic($html, action_plugin_combo_router::CANONICAL);
             }
 
 
@@ -170,9 +174,9 @@ class action_plugin_combo_routermessage extends ActionPlugin
     /**
      * Add the page with the same page name but in an other location
      * @param Message $message
-     * @param $pageIdOrigin
+     * @param MarkupPath $pageOrigin
      */
-    function addToMessagePagesWithSameName(Message $message, $pageIdOrigin)
+    function addToMessagePagesWithSameName(Message $message, MarkupPath $pageOrigin)
     {
 
         if (!$this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {
@@ -181,50 +185,62 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
         global $ID;
         // The page name
-        $pageName = noNS($pageIdOrigin);
-        $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageIdOrigin);
+        $pageName = $pageOrigin->getNameOrDefault();
+        $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageOrigin);
 
-        if (count($pagesWithSameName) > 0) {
-
-            $message->setType(Message::TYPE_WARNING);
-
-            // Assign the value to a variable to be able to use the construct .=
-            if ($message->getPlainTextContent() <> '') {
-                $message->addHtmlContent('<br/><br/>');
+        if (count($pagesWithSameName) === 1) {
+            $page = $pagesWithSameName[0];
+            if ($page->getWikiId() === $ID) {
+                // the page itself
+                return;
             }
-            $message->addHtmlContent($this->lang['message_pagename_exist_one']);
-            $message->addHtmlContent('<ul>');
-
-            $i = 0;
-            foreach ($pagesWithSameName as $pageId => $title) {
-                if ($pageId === $ID) {
-                    continue;
-                }
-                $i++;
-                if ($i > 10) {
-                    $message->addHtmlContent('<li>' .
-                        tpl_link(
-                            wl($pageIdOrigin) . "?do=search&q=" . rawurldecode($pageName),
-                            "More ...",
-                            'class="" rel="nofollow" title="More..."',
-                            $return = true
-                        ) . '</li>');
-                    break;
-                }
-                if ($title == null) {
-                    $title = $pageId;
-                }
-                $message->addHtmlContent('<li>' .
-                    tpl_link(
-                        wl($pageId),
-                        $title,
-                        'class="" rel="nofollow" title="' . $title . '"',
-                        $return = true
-                    ) . '</li>');
-            }
-            $message->addHtmlContent('</ul>');
         }
 
+            if (count($pagesWithSameName) > 0) {
+
+                $message->setType(Message::TYPE_WARNING);
+
+                // Assign the value to a variable to be able to use the construct .=
+                if ($message->getPlainTextContent() <> '') {
+                    $message->addHtmlContent('<br/><br/>');
+                }
+                $message->addHtmlContent($this->lang['message_pagename_exist_one']);
+                $message->addHtmlContent('<ul>');
+
+                $i = 0;
+                $listPagesHtml = "";
+                foreach ($pagesWithSameName as $page) {
+
+                    if ($page->getWikiId() === $ID) {
+                        continue;
+                    }
+                    $i++;
+                    if ($i > 10) {
+                        $listPagesHtml .= '<li>' .
+                            tpl_link(
+                                "?do=search&q=" . rawurldecode($pageName),
+                                "More ...",
+                                'class="" rel="nofollow" title="More..."',
+                                $return = true
+                            ) . '</li>';
+                        break;
+                    }
+
+                    try {
+                        $markupRef = LinkMarkup::createFromPageIdOrPath($page->getWikiId());
+                        $tagAttributes = $markupRef
+                            ->toAttributes()
+                            ->addOutputAttributeValue("rel", "nofollow");
+                        $listPagesHtml .= "<li>{$tagAttributes->toHtmlEnterTag("a")}{$markupRef->getDefaultLabel()}</a></li>";
+                    } catch (ExceptionBadSyntax $e) {
+                        LogUtility::internalError("Internal Error: Unable to get a markup ref for the page ($page). Error: {$e->getMessage()}");
+                    }
+
+                }
+                $message->addHtmlContent($listPagesHtml);
+                $message->addHtmlContent('</ul>');
+
+        }
     }
 
 

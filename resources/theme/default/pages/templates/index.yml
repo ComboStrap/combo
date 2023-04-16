@@ -1,0 +1,4 @@
+elements:
+    - 'page-header'
+    - 'page-footer'
+    - 'page-side'

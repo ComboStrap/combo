@@ -13,6 +13,11 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataDateTime;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use DateTime;
+
 /**
  *
  * Publication Date
@@ -34,14 +39,14 @@ class PagePublicationDate extends MetadataDateTime
     const LATE_PUBLICATION_PROTECTION_ACRONYM = "lpp";
     const CONF_LATE_PUBLICATION_PROTECTION_MODE = "latePublicationProtectionMode";
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
-    const LATE_PUBLICATION_CLASS_NAME = "late-publication";
+    const LATE_PUBLICATION_CLASS_PREFIX_NAME = "late-publication";
 
 
     public static function getLatePublicationProtectionMode()
     {
 
-        if (PluginUtility::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
-            return PluginUtility::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE);
+        if (SiteConfig::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
+            return SiteConfig::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE);
         } else {
             return false;
         }
@@ -50,27 +55,27 @@ class PagePublicationDate extends MetadataDateTime
 
     public static function isLatePublicationProtectionEnabled()
     {
-        return PluginUtility::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true);
+        return SiteConfig::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true);
     }
 
-    public static function createFromPage(Page $page)
+    public static function createFromPage(MarkupPath $page)
     {
         return (new PagePublicationDate())
             ->setResource($page);
     }
 
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The publication date";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Publication Date";
     }
@@ -81,23 +86,23 @@ class PagePublicationDate extends MetadataDateTime
     }
 
 
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
         $store = $this->getReadStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
-            return parent::buildFromStoreValue($value);
+            return parent::setFromStoreValueWithoutException($value);
         }
 
         if ($value === null) {
             /**
              * Old metadata key
              */
-            $value = $store->getFromPersistentName(PagePublicationDate::OLD_META_KEY);
+            $value = $store->getFromName(PagePublicationDate::OLD_META_KEY);
         }
 
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
 
@@ -105,19 +110,31 @@ class PagePublicationDate extends MetadataDateTime
     }
 
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
-    public function getDefaultValue(): ?\DateTime
+    public function getDefaultValue(): DateTime
     {
-        return PageCreationDate::create()
+        $lastName = $this->getResource()->getPathObject()->getLastNameWithoutExtension();
+        $result = preg_match("/(\d{4}-\d{2}-\d{2}).*/i", $lastName, $matches);
+        if ($result === 1) {
+            $date = $matches[1];
+            try {
+                return Iso8601Date::createFromString($date)->getDateTime();
+            } catch (ExceptionBadSyntax $e) {
+                // should not happen
+                LogUtility::error("Internal Error: the date format is not valid. Error: {$e->getMessage()}", self::CANONICAL);
+            }
+        }
+
+        return CreationDate::create()
             ->setResource($this->getResource())
             ->getValueOrDefault();
     }
@@ -127,10 +144,14 @@ class PagePublicationDate extends MetadataDateTime
         return [PagePublicationDate::OLD_META_KEY];
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "published";
     }
 
 
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
 }

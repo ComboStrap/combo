@@ -12,6 +12,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -35,6 +36,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  */
 class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
 {
+
     const TAG = "footer";
 
 
@@ -44,7 +46,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType()
+    function getType(): string
     {
         return 'container';
     }
@@ -54,7 +56,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
      * Allow which kind of plugin inside
      * All
      */
-    public function getAllowedTypes()
+    public function getAllowedTypes(): array
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
@@ -68,7 +70,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType()
+    function getPType(): string
     {
         return 'stack';
     }
@@ -79,7 +81,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
      * the mode with the lowest sort number will win out
      * the container (parent) must then have a lower number than the child
      */
-    function getSort()
+    function getSort(): int
     {
         return 100;
     }
@@ -93,7 +95,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }

@@ -6,12 +6,12 @@
  * @author  Nicolas GERARD
  */
 
-use ComboStrap\ExceptionCombo;
-use ComboStrap\SnippetManager;
-use ComboStrap\MarkupRef;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\SnippetSystem;
+use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 
-if (!defined('DOKU_INC')) die();
+
 
 
 class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
@@ -87,7 +87,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
 
                 // /i not case sensitive
-                $attributePattern = "\\s*(\w+)\\s*=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*";
+                $attributePattern = "\\s*(\w+)\\s*=\\s*['\"]{1}([^`\"]*)['\"]{1}\\s*";
                 $result = preg_match_all('/' . $attributePattern . '/i', $match, $matches);
                 if ($result != 0) {
                     foreach ($matches[1] as $key => $parameterKey) {
@@ -133,7 +133,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL :
 
 
-                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheetForSlot(self::MINIMAP_TAG_NAME);
+                    PluginUtility::getSnippetManager()->attachCssInternalStyleSheet(self::MINIMAP_TAG_NAME);
 
 
                     global $ID;
@@ -186,14 +186,14 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $pageId = $pageArray['id'];
 
                         }
-                        $markupRef = new MarkupRef($pageId);
+                        $markupRef = new LinkMarkup($pageId);
 
 
 
                         /**
                          * Label
                          */
-                        $label = $markupRef->getLabel();
+                        $label = $markupRef->getDefaultLabel();
                         // Suppress the parts in the name with the regexp defines in the 'suppress' params
                         if ($attributes['suppress']) {
                             $substrPattern = '/' . $attributes['suppress'] . '/i';
@@ -210,7 +210,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                          */
                         try {
                             $linkAttribute = $markupRef->toAttributes();
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $miniMapList .= \ComboStrap\LogUtility::wrapInRedForHtml("Error. {$e->getMessage()}");
                             continue;
                         }
@@ -218,7 +218,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         // The style will then change
                         $active = '';
                         if ($callingId == $pageId) {
-                            $linkAttribute->addEmptyOutputAttributeValue('active');
+                            $linkAttribute->addBooleanOutputAttributeValue('active');
                         }
 
                         // Not all page are printed
@@ -291,12 +291,12 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                             $panelHeaderContent = 'No Home Page found';
                         }
                     } else {
-                        $startLink = new MarkupRef($startId);
+                        $startLink = new LinkMarkup($startId);
                         try {
                             $panelHeaderContent = $startLink->toAttributes()->toHtmlEnterTag("a");
-                            $panelHeaderContent .= $startLink->getLabel();
+                            $panelHeaderContent .= $startLink->getDefaultLabel();
                             $panelHeaderContent .= "</a>";
-                        } catch (ExceptionCombo $e) {
+                        } catch (ExceptionCompile $e) {
                             $panelHeaderContent = "Error: {$e->getMessage()}";
                         }
                         // We are not counting the header page
@@ -333,7 +333,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
      * Return all pages and/of sub-namespaces (subdirectory) of a namespace (ie directory)
      * Adapted from feed.php
      *
-     * @param $namespace The container of the pages
+     * @param string $namespace The container of the pages
      * @param string $sort 'natural' to use natural order sorting (default); 'date' to sort by filemtime
      * @param $listdirs - Add the directory to the list of files
      * @return array An array of the pages for the namespace
@@ -367,7 +367,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
     /**
      * Return the id of the start page of a namespace
      *
-     * @param $id an id of a namespace (directory)
+     * @param string $id an id of a namespace (directory)
      * @return string the id of the home page
      */
     function getNamespaceStartId($id)

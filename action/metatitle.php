@@ -1,13 +1,17 @@
 <?php
 
-use ComboStrap\Page;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\Html;
+use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
 
 /**
  * Class action_plugin_combo_metatitle
- * Set and manage the meta title
+ * Set and manage the title of an HTML page
  * The event is triggered in the strap template
  */
 class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
@@ -23,27 +27,33 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
 
     function handleTitle(&$event, $param)
     {
-        $event->data = self::getTitle();
+        $event->data = self::getHtmlTitle();
     }
 
-    static function getTitle(): string
+
+    static function getHtmlTitle(): string
     {
 
         // Page Title
         // Root Home page
-        $currentPage = Page::createPageFromGlobalDokuwikiId();
+        $currentPage = MarkupPath::createFromRequestedPage();
+
         $pageTitle = $currentPage->getTitleOrDefault();
 
         // Namespace name
-        $parentPage = $currentPage->getParentPage();
-        if($parentPage!=null){
+        try {
+            $parentPage = $currentPage->getParent();
             $pageTitle .= self::TITLE_SEPARATOR . $parentPage->getNameOrDefault();
+        } catch (ExceptionNotFound $e) {
+            // no parent
         }
+
         // Site name
         if (!empty(Site::getName())) {
             $pageTitle .= self::TITLE_SEPARATOR . Site::getName();
         }
 
-        return PluginUtility::htmlEncode($pageTitle);
+        return Html::encode($pageTitle);
+
     }
 }

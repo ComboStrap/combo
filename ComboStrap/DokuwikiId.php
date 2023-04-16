@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
 use DateTime;
 
 /**
@@ -28,9 +30,21 @@ class DokuwikiId extends MetadataText
         return null;
     }
 
-    public function getValue(): ?string
+    public function getValue(): string
     {
-        return $this->getResource()->getPath()->getDokuwikiId();
+        $path = $this->getResource()->getPathObject();
+        if($path instanceof WikiPath){
+            return $path->getWikiId();
+        }
+        if($path instanceof LocalPath){
+            try {
+                return $path->toWikiPath()->getWikiId();
+            } catch (ExceptionBadArgument $e) {
+                throw new ExceptionNotFound($e->getMessage());
+            }
+        }
+        throw new ExceptionNotFound("Unknown path, the dokuwiki id cannot be determined");
+
     }
 
 
@@ -40,29 +54,31 @@ class DokuwikiId extends MetadataText
     }
 
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
 
-    public function getTab(): ?string
+    public static function getTab(): ?string
     {
         return null;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The id of a resource represents the path of a resource from its root directory";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Wiki Id";
     }
 
-    public function getMutable(): bool
+    public static function isMutable(): bool
     {
         return false;
     }
+
+
 }

@@ -4,6 +4,9 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
+
 class PageType extends MetadataText
 {
 
@@ -34,17 +37,43 @@ class PageType extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab(): string
+    public function setWriteStore($store): PageType
+    {
+        // Just to return the good type
+        return parent::setWriteStore($store);
+    }
+
+    /**
+     * @return string
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
+    }
+
+
+    public function setReadStore($store): PageType
+    {
+        // Just to return the good type
+        return parent::setReadStore($store);
+    }
+
+
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The type of page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Type";
     }
@@ -54,33 +83,36 @@ class PageType extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return true;
     }
 
-    public function getDefaultValue(): ?string
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
         $resource = $this->getResource();
-        if(!($resource instanceof Page)){
-            return null;
+        if (!($resource instanceof MarkupPath)) {
+            return self::OTHER_TYPE;
         }
 
         if ($resource->isRootHomePage()) {
             return PageType::WEBSITE_TYPE;
-        } else if ($resource->isHomePage()) {
+        } else if ($resource->isIndexPage()) {
             return PageType::HOME_TYPE;
         } else {
-            $defaultPageTypeConf = PluginUtility::getConfValue(PageType::CONF_DEFAULT_PAGE_TYPE, PageType::CONF_DEFAULT_PAGE_TYPE_DEFAULT);
+            $defaultPageTypeConf = SiteConfig::getConfValue(PageType::CONF_DEFAULT_PAGE_TYPE, PageType::CONF_DEFAULT_PAGE_TYPE_DEFAULT);
             if (!empty($defaultPageTypeConf)) {
                 return $defaultPageTypeConf;
             } else {
-                return null;
+                return self::ARTICLE_TYPE;
             }
         }
     }
@@ -88,7 +120,7 @@ class PageType extends MetadataText
     /**
      * The canonical for page type
      */
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return "page:type";
     }
@@ -109,5 +141,10 @@ class PageType extends MetadataText
         ];
         sort($types);
         return $types;
+    }
+
+    static public function isOnForm(): bool
+    {
+        return true;
     }
 }

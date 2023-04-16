@@ -7,10 +7,12 @@
  * @author     Nicolas GERARD
  */
 
-use ComboStrap\BrandColors;
 use ComboStrap\Identity;
+use ComboStrap\IdentityFormsHelper;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
+use ComboStrap\SiteConfig;
 use dokuwiki\Form\Form;
 use dokuwiki\Form\InputElement;
 use dokuwiki\Menu\Item\Login;
@@ -32,6 +34,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
     const FORM_LOGIN_CLASS = "form-" . self::TAG;
 
     const CONF_ENABLE_LOGIN_FORM = "enableLoginForm";
+    const FIELD_SET_TO_DELETE = ["fieldsetopen", "fieldsetclose"];
 
 
     /**
@@ -46,7 +49,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
 
 
         $form->params["class"] = Identity::FORM_IDENTITY_CLASS . " " . self::FORM_LOGIN_CLASS;
@@ -55,7 +58,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
         /**
          * Heading
          */
-        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
+        $newFormContent[] = IdentityFormsHelper::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
 
         /**
          * Field
@@ -150,7 +153,7 @@ EOF;
          *
          * The difference is on the type of object that we got in the event
          */
-        if (PluginUtility::getConfValue(self::CONF_ENABLE_LOGIN_FORM, 1)) {
+        if (SiteConfig::getConfValue(self::CONF_ENABLE_LOGIN_FORM, 1)) {
 
             /**
              * Old event: Deprecated object passed by the event but still in use
@@ -225,61 +228,36 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        print Identity::getHtmlStyleTag(self::TAG);
+        print IdentityFormsHelper::getHtmlStyleTag(self::TAG);
 
 
         $form->addClass(Identity::FORM_IDENTITY_CLASS . " " . self::FORM_LOGIN_CLASS);
 
+
         /**
          * Heading
          */
-        $headerHTML = Identity::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
+        $headerHTML = IdentityFormsHelper::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
         if ($headerHTML != "") {
             $form->addHTML($headerHTML, 1);
         }
 
-        $brPositionElement = [4, 5]; // 4 and 6 but when you delete 4, it's on 5
-        foreach ($brPositionElement as $brPosition) {
-            $fieldBr = $form->getElementAt($brPosition);
-            if ($fieldBr->val() === "<br>\n") {
-                $form->removeElement($brPosition);
-            } else {
-                LogUtility::msg("Internal: the login br $brPosition element was not found and not deleted");
-            }
-        }
 
         /**
-         * Fieldset delete
+         * Fieldset and br delete
          */
-        $elementsTypeToDelete = ["fieldsetopen", "fieldsetclose"];
-        foreach ($elementsTypeToDelete as $type) {
-            $field = $form->findPositionByType($type);
-            if ($field != false) {
-                $form->removeElement($field);
-            }
-        }
+        IdentityFormsHelper::deleteFieldSetAndBrFromForm($form);
 
         /**
          * Field
          */
-        $submitButtonPosition = $form->findPositionByAttribute("type", "submit");
-        if ($submitButtonPosition == false) {
-            LogUtility::msg("Internal error: No submit button found");
-            return;
-        }
-        /**
-         * This is important to keep the submit element intact
-         * for forms integration such as captcha
-         * They search the submit button to insert before it
-         */
-        $form->getElementAt($submitButtonPosition)
-            ->addClass("btn")
-            ->addClass("btn-primary")
-            ->addClass("btn-block")
-            ->addClass("mb-2");
+        IdentityFormsHelper::toBootStrapSubmitButton($form);
 
+        /**
+         * Name
+         */
         $userPosition = $form->findPositionByAttribute("name", "u");
-        if ($userPosition == false) {
+        if ($userPosition === false) {
             LogUtility::msg("Internal error: No user field found");
             return;
         }
@@ -306,7 +284,7 @@ EOF;
 
 
         $pwdPosition = $form->findPositionByAttribute("name", "p");
-        if ($pwdPosition == false) {
+        if ($pwdPosition === false) {
             LogUtility::msg("Internal error: No password field found");
             return;
         }
@@ -333,7 +311,7 @@ EOF;
 
 
         $rememberPosition = $form->findPositionByAttribute("name", "r");
-        if ($rememberPosition == false) {
+        if ($rememberPosition === false) {
             LogUtility::msg("Internal error: No remember field found");
             return;
         }
@@ -363,7 +341,7 @@ EOF;
 //            $newFormContent[] = $resendPwdHtml;
 //        }
 
-
     }
 
 }
+

@@ -3,23 +3,20 @@
 
 namespace ComboStrap;
 
+use ComboStrap\Web\Url;
+
 /**
  * Class LocalPath
  * @package ComboStrap
  * A local file system path
+ *
+ * File protocol Uri:
+ *
+ * file://[HOST]/[PATH]
  */
 class LocalPath extends PathAbs
 {
 
-    /**
-     * For whatever reason, it seems that php uses always the / separator on windows also
-     * but not always (ie  https://www.php.net/manual/en/function.realpath.php output \ on windows)
-     *
-     * Because we want to be able to copy the path and to be able to use
-     * it directly, we {@link LocalPath::normalizedToOs() normalize} it to the OS separator
-     * at build time
-     */
-    public const PHP_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
 
     /**
      * The characters that cannot be in the path for windows
@@ -27,52 +24,177 @@ class LocalPath extends PathAbs
      */
     public const RESERVED_WINDOWS_CHARACTERS = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|"];
 
+    const RELATIVE_CURRENT = ".";
+    const RELATIVE_PARENT = "..";
+    const LINUX_SEPARATOR = "/";
+    const WINDOWS_SEPARATOR = '\\';
+    const CANONICAL = "support";
+
+    /**
+     * @throws ExceptionBadArgument
+     */
+    public static function createFromUri($uri): LocalPath
+    {
+        if (strpos($uri, LocalFileSystem::SCHEME) !== 0) {
+            throw new ExceptionBadArgument("$uri is not a local path uri");
+        }
+        return new LocalPath($uri);
+    }
+
+
+    /**
+     * @throws ExceptionBadArgument
+     * @throws ExceptionCast
+     */
+    public static function createFromPathObject(Path $path): LocalPath
+    {
+        if ($path instanceof LocalPath) {
+            return $path;
+        }
+        if ($path instanceof WikiPath) {
+            return $path->toLocalPath();
+        }
+        throw new ExceptionBadArgument("The path is not a local path nor a wiki path, we can't transform it");
+    }
+
+    /**
+     *
+     * @throws ExceptionNotFound - if the env directory is not found
+     */
+    public static function createDesktopDirectory(): LocalPath
+    {
+        return LocalPath::createHomeDirectory()->resolve("Desktop");
+    }
+
+
+    public function toUriString(): string
+    {
+        return $this->getUrl()->toString();
+    }
+
     private $path;
+    /**
+     * @var mixed
+     */
+    private $sep = DIRECTORY_SEPARATOR;
+
+    private ?string $host = null;
 
     /**
      * LocalPath constructor.
-     * @param $path - relative or absolute
+     * @param string $path - relative or absolute, or a locale file uri
+     * @param string|null $sep - the directory separator - it permits to test linux path on windows, and vice-versa
      */
-    public function __construct($path)
+    public function __construct(string $path, string $sep = null)
     {
-        $this->path = $path;
+        /**
+         * php mon amour,
+         * if we pass a {@link LocalPath}, no error,
+         * it just pass the {@link PathAbs::__toString()}
+         */
+        if (strpos($path, LocalFileSystem::SCHEME) === 0) {
+            try {
+                $path = Url::createFromString($path)->getPath();
+                LogUtility::errorIfDevOrTest("The path given as constructor should not be an uri or a path object");
+            } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                LogUtility::internalError("The uri path could not be created", self::CANONICAL, $e);
+            }
+        }
+        if ($sep != null) {
+            $this->sep = $sep;
+        }
+        // The network share windows/wiki styles with with two \\ and not //
+        $networkShare = "\\\\";
+        if (substr($path, 0, 2) === $networkShare) {
+            // window share
+            $pathWithoutNetworkShare = substr($path, 2);
+            $pathWithoutNetworkShare = str_replace("\\", "/", $pathWithoutNetworkShare);
+            [$this->host, $relativePath] = explode("/", $pathWithoutNetworkShare, 2);
+            $this->path = "/$relativePath";
+            return;
+        }
+        $this->path = self::normalizeToOsSeparator($path);
     }
 
 
     /**
      * @param string $filePath
      * @return LocalPath
-     * @deprecated for {@link LocalPath::createFromPath()}
+     * @deprecated for {@link LocalPath::createFromPathString()}
      */
     public static function create(string $filePath): LocalPath
     {
         return new LocalPath($filePath);
     }
 
-    public static function createFromPath(string $string): LocalPath
+    /**
+     * @param $path
+     * @return array|string|string[]
+     *
+     * For whatever reason, it seems that php/dokuwiki uses always the / separator on windows also
+     * but not always (ie  https://www.php.net/manual/en/function.realpath.php output \ on windows)
+     *
+     * Because we want to be able to copy the path value and to be able to use
+     * it directly, we normalize it to the OS separator at build time
+     */
+    private function normalizeToOsSeparator($path)
     {
-        return new LocalPath($string);
+        if ($path === self::RELATIVE_CURRENT || $path === self::RELATIVE_PARENT) {
+            return realpath($path);
+        }
+        $directorySeparator = $this->getDirectorySeparator();
+        if ($directorySeparator === self::WINDOWS_SEPARATOR) {
+            return str_replace(self::LINUX_SEPARATOR, self::WINDOWS_SEPARATOR, $path);
+        } else {
+            return str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $path);
+        }
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function createHomeDirectory(): LocalPath
+    {
+        $home = getenv("HOME");
+        if ($home === false) {
+            $home = getenv("USERPROFILE");
+        }
+        if ($home === false) {
+            throw new ExceptionNotFound(" The home directory variable could not be found");
+        }
+        return LocalPath::createFromPathString($home);
+    }
+
+
+    public static function createFromPathString(string $string, string $sep = null): LocalPath
+    {
+        return new LocalPath($string, $sep);
     }
 
     function getScheme(): string
     {
-        return LocalFs::SCHEME;
+        return LocalFileSystem::SCHEME;
     }
 
-    function getLastName()
+    function getLastName(): string
     {
         $names = $this->getNames();
         $sizeof = sizeof($names);
         if ($sizeof === 0) {
-            return null;
+            throw new ExceptionNotFound("No last name for the path ($this)");
         }
         return $names[$sizeof - 1];
 
     }
 
-    public function getExtension()
+
+    public function getExtension(): string
     {
-        return pathinfo($this->path, PATHINFO_EXTENSION);
+        $extension = pathinfo($this->path, PATHINFO_EXTENSION);
+        if ($extension === "") {
+            throw new ExceptionNotFound("No extension found for the path ($this)");
+        }
+        return $extension;
     }
 
     function getNames()
@@ -81,22 +203,18 @@ class LocalPath extends PathAbs
         return explode($directorySeparator, $this->path);
     }
 
-    function getDokuwikiId()
-    {
-        throw new ExceptionComboRuntime("Not implemented");
-    }
 
-
-    function toString(): string
+    function toAbsoluteId(): string
     {
         return $this->path;
     }
 
-    public function getParent(): ?Path
+    public function getParent(): Path
     {
         $absolutePath = pathinfo($this->path, PATHINFO_DIRNAME);
-        if (empty($absolutePath)) {
-            return null;
+        if ($absolutePath === $this->path || empty($absolutePath)) {
+            // the directory on windows of the root (ie C:\) is (C:\), yolo !
+            throw new ExceptionNotFound("No parent");
         }
         return new LocalPath($absolutePath);
     }
@@ -108,70 +226,74 @@ class LocalPath extends PathAbs
             return $this;
         }
 
-        return $this->toCanonicalPath();
+        return $this->toCanonicalAbsolutePath();
 
-    }
-
-    /**
-     * @return string
-     */
-    private function getDirectorySeparator(): string
-    {
-        $directorySeparator = self::PHP_SYSTEM_DIRECTORY_SEPARATOR;
-        if (
-            $directorySeparator === '\\'
-            &&
-            strpos($this->path, "/") !== false
-        ) {
-            $directorySeparator = "/";
-        }
-        return $directorySeparator;
     }
 
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionBadArgument - if the path is not inside a drive
      */
-    public function toDokuPath(): DokuPath
+    public function toWikiPath(): WikiPath
     {
-        $driveRoots = DokuPath::getDriveRoots();
-        foreach ($driveRoots as $driveRoot => $drivePath) {
-            try {
-                $relativePath = $this->relativize($drivePath);
-                return DokuPath::createDokuPath($relativePath->toString(), $driveRoot);
-            } catch (ExceptionCombo $e) {
-                // not a relative path
-            }
-
-        }
-        throw new ExceptionCombo("The local path ($this) is not inside a doku path drive");
-
-
+        return WikiPath::createFromPathObject($this);
     }
 
     public function resolve(string $name): LocalPath
     {
 
-        $newPath = $this->toCanonicalPath()->toString() . self::PHP_SYSTEM_DIRECTORY_SEPARATOR . $name;
-        return self::createFromPath($newPath);
+        $newPath = $this->toCanonicalAbsolutePath()->toAbsoluteId() . $this->getDirectorySeparator() . utf8_encodeFN($name);
+        return self::createFromPathString($newPath);
 
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionBadArgument - if the path cannot be relativized
      */
     public function relativize(LocalPath $localPath): LocalPath
     {
-        $actualPath = $this->toCanonicalPath();
-        $localPath = $localPath->toCanonicalPath();
 
-        if (!(strpos($actualPath->toString(), $localPath->toString()) === 0)) {
-            throw new ExceptionCombo("The path ($localPath) is not a parent path of the actual path ($actualPath)");
+        /**
+         * One of the problem of relativization is
+         * that it may be:
+         * * logical (when using a symling)
+         * * physical
+         */
+        if (!$this->isAbsolute() || $this->isShortName()) {
+            /**
+             * This is not a logical resolution
+             * (if the path is logically not absolute and is a symlink,
+             * we have a problem)
+             */
+            $actualPath = $this->toCanonicalAbsolutePath();
+        } else {
+            $actualPath = $this;
         }
-        $sepCharacter = 1; // delete the sep characters
-        $relativePath = substr($actualPath->toString(), strlen($localPath->toString()) + $sepCharacter);
-        $relativePath = str_replace(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, DokuPath::PATH_SEPARATOR, $relativePath);
-        return LocalPath::createFromPath($relativePath);
+        if (!$localPath->isAbsolute() || $localPath->isShortName()) {
+            $localPath = $localPath->toCanonicalAbsolutePath();
+        }
+
+        if (strpos($actualPath->toAbsoluteId(), $localPath->toAbsoluteId()) === 0) {
+            if ($actualPath->toAbsoluteId() === $localPath->toAbsoluteId()) {
+                return LocalPath::createFromPathString("");
+            }
+            $sepCharacter = 1; // delete the sep characters
+            $relativePath = substr($actualPath->toAbsoluteId(), strlen($localPath->toAbsoluteId()) + $sepCharacter);
+            $relativePath = str_replace($this->getDirectorySeparator(), WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $relativePath);
+            return LocalPath::createFromPathString($relativePath);
+        }
+        /**
+         * May be a symlink link
+         */
+        if ($this->isSymlink()) {
+            $realPath = $this->toCanonicalAbsolutePath();
+            return $realPath->relativize($localPath);
+        }
+        if ($localPath->isSymlink()) {
+            $localPath = $localPath->toCanonicalAbsolutePath();
+            $this->relativize($localPath);
+        }
+        throw new ExceptionBadArgument("The path ($localPath) is not a parent path of the actual path ($actualPath)");
 
     }
 
@@ -179,11 +301,9 @@ class LocalPath extends PathAbs
     {
         /**
          * /
-         * \
-         * or a:/
-         * or z:\
+         * or a-z:\
          */
-        if (preg_match("/^\/|[a-z]:[\\\\\/]|\\\\/i", $this->path)) {
+        if (preg_match("/^(\/|[a-z]:\\\\?).*/i", $this->path)) {
             return true;
         }
         return false;
@@ -195,17 +315,42 @@ class LocalPath extends PathAbs
      * (ie windows short name or the path separator is not consistent (ie / in place of \ on windows)
      *
      * This function makes the path canonical meaning that two canonical path can be compared.
+     * This is also needed when you path a path string to a php function such as `clearstatcache`
+     *
+     * If this is a symlink, it will resolve it to the real path
      */
-    public function toCanonicalPath(): LocalPath
+    public function toCanonicalAbsolutePath(): LocalPath
     {
 
         /**
          * realpath() is just a system/library call to actual realpath() function supported by OS.
          * real path handle also the windows name ie USERNAME~
          */
+        $isSymlink = $this->isSymlink();
         $realPath = realpath($this->path);
+        if($isSymlink){
+            /**
+             *
+             * What fucked is fucked up
+             *
+             * With the symlink
+             * D:/dokuwiki-animals/combo.nico.lan/data/pages
+             * if you pass it to realpath:
+             * ```
+             * realpath("D:/dokuwiki-animals/combo.nico.lan/data/pages")
+             * ```
+             * you get: `d:\dokuwiki\website\pages`
+             * if you pass the result again in realpath
+             * ```
+             * realpath(d:\dokuwiki\website\pages)
+             * ```
+             * we get another result `D:\dokuwiki\website\pages`
+             *
+             */
+            $realPath = realpath($realPath);
+        }
         if ($realPath !== false) {
-            return LocalPath::createFromPath($realPath);
+            return LocalPath::createFromPathString($realPath);
         }
 
         /**
@@ -249,7 +394,7 @@ class LocalPath extends PathAbs
             if ($counter > 200) {
                 $message = "Bad absolute local path file ($this->path)";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($message);
+                    throw new ExceptionRuntime($message);
                 } else {
                     LogUtility::msg($message);
                 }
@@ -262,13 +407,72 @@ class LocalPath extends PathAbs
         }
         if ($parts !== null) {
             if (!$isRoot) {
-                $realPath .= self::PHP_SYSTEM_DIRECTORY_SEPARATOR;
+                $realPath .= $this->getDirectorySeparator();
             }
             $parts = array_reverse($parts);
-            $realPath .= implode(self::PHP_SYSTEM_DIRECTORY_SEPARATOR, $parts);
+            $realPath .= implode($this->getDirectorySeparator(), $parts);
         }
-        return LocalPath::createFromPath($realPath);
+        return LocalPath::createFromPathString($realPath);
+    }
+
+    public function getDirectorySeparator()
+    {
+        return $this->sep;
     }
 
 
+    function getUrl(): Url
+    {
+
+        /**
+         * file://host/path
+         */
+        $uri = LocalFileSystem::SCHEME . '://';
+        try {
+            // Windows share host
+            $uri = "$uri{$this->getHost()}";
+        } catch (ExceptionNotFound $e) {
+            // ok
+        }
+        $pathNormalized = str_replace(self::WINDOWS_SEPARATOR, self::LINUX_SEPARATOR, $this->path);
+        if ($pathNormalized[0] !== "/") {
+            $uri = $uri . "/" . $pathNormalized;
+        } else {
+            $uri = $uri . $pathNormalized;
+        }
+        try {
+            return Url::createFromString($uri);
+        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
+            $message = "Local Uri Path has a bad syntax ($uri)";
+            // should not happen
+            LogUtility::internalError($message);
+            throw new ExceptionRuntime($message);
+        }
+
+    }
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    function getHost(): string
+    {
+        if ($this->host === null) {
+            throw new ExceptionNotFound("No host. Localhost should be the default");
+        }
+        return $this->host;
+    }
+
+    public function isSymlink(): bool
+    {
+        return is_link($this->path);
+    }
+
+    private function isShortName(): bool
+    {
+        /**
+         * See short name in windows
+         * https://datacadamia.com/os/windows/path#pathname
+         */
+        return strpos($this->path, "~1") !== false;
+    }
 }

@@ -32,7 +32,7 @@ class BacklinkMenuItem extends AbstractItem
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
-        $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
+        $snippetManager->attachJavascriptFromComponentId(self::CANONICAL);
         parent::__construct();
     }
 
@@ -68,7 +68,7 @@ class BacklinkMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return Site::getComboImagesDirectory()->resolve('backlink.svg')->toString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('backlink.svg')->toAbsoluteId();
     }
 
 

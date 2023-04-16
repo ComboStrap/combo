@@ -33,19 +33,19 @@ class Index
         return self::$index;
     }
 
-    public function getPagesForMedia(Media $media): array
+    public function getPagesForMedia(WikiPath $media): array
     {
-        $dokuwikiId = $media->getPath()->getDokuwikiId();
+        $dokuwikiId = $media->getWikiId();
         return $this->indexer->lookupKey('relation_media', $dokuwikiId);
     }
 
     /**
      * Return a list of page id that have the same last name
      *
-     * @param string $pageIdSource
-     * @return array
+     * @param MarkupPath $pageToMatch
+     * @return MarkupPath[]
      */
-    public function getPagesWithSameLastName(string $pageIdSource): array
+    public function getPagesWithSameLastName(MarkupPath $pageToMatch): array
     {
         /**
          * * A shortcut to:
@@ -56,31 +56,31 @@ class Index
          */
 
         // There is two much pages with the start name
-        $name = noNS($pageIdSource);
-        if ($name === Site::getHomePageName()) {
+        $lastName = $pageToMatch->getPathObject()->getLastName();
+        if ($lastName === Site::getIndexPageName()) {
             return [];
         }
 
-        $pages = $this->indexer->getPages();
+        $pageIdList = $this->indexer->getPages();
 
-        $matchesPages = [];
-        foreach ($pages as $pageId) {
-            if ($pageIdSource === $pageId) {
+        $matchedPages = [];
+        foreach ($pageIdList as $pageId) {
+            if ($pageToMatch->getWikiId() === $pageId) {
                 continue;
             }
-            $page = DokuPath::createPagePathFromId($pageId);
-            if ($page->getLastName() === $name) {
-                $matchesPages[] = $pageId;
+            $actualPage = MarkupPath::createMarkupFromId($pageId);
+            if ($actualPage->getPathObject()->getLastName() === $lastName) {
+                $matchedPages[] = $actualPage;
             }
         }
-        return $matchesPages;
+        return $matchedPages;
 
     }
 
-    public function deletePage(Page $page)
+    public function deletePage(MarkupPath $page)
     {
 
-        $this->indexer->deletePage($page->getDokuwikiId());
+        $this->indexer->deletePage($page->getWikiId());
 
     }
 }

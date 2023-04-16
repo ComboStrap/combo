@@ -1,11 +1,12 @@
 <?php
 
-use ComboStrap\AdsUtility;
+use ComboStrap\Tag\AdTag;
 use ComboStrap\FsWikiUtility;
-use ComboStrap\XhtmlUtility;
+use ComboStrap\HeadingTag;
+use ComboStrap\Xml\XhtmlUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\TableUtility;
-use ComboStrap\TocUtility;
+use ComboStrap\Tag\TableTag;
+use ComboStrap\Toc;
 
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -95,19 +96,6 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
     function header($text, $level, $pos, $returnonly = false)
     {
 
-        /**
-         * Save the H1 even if the heading dokuwiki is not enable
-         */
-        if (!PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE)) {
-            /**
-             * $ACT == 'show'
-             * Otherwise we may capture the title of the admin page ...
-             */
-            global $ACT;
-            if ($ACT == 'show') {
-                syntax_plugin_combo_heading::processHeadingMetadataH1($level, $text);
-            }
-        }
 
         // We are going from 2 to 3
         // The parent is 2
@@ -145,7 +133,7 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
          * Rendering is done by the parent
          * And should be the last one
          * Because we delete the heading
-         * with {@link syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes()}
+         * with {@link HeadingTag::reduceToFirstOpeningTagAndReturnAttributes()}
          * in order to be able to add the toc and section
          *
          */
@@ -171,31 +159,9 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         $this->doc = '';
         $rollingLineCount = 0;
         $currentLineCountSinceLastAd = 0;
-        $adsCounter = 0;
         foreach ($this->sections as $sectionNumber => $section) {
 
             $sectionContent = $section['content'];
-
-
-            if ($section['level'] == 1 and $section['position'] == 1) {
-
-                // Add the hierarchical breadcrumb detail after the first header
-                global $conf;
-
-                // Deprecated
-                // As the main slot is read before the main header and footer
-                // there is no way to known at the end if it was used
-                //
-                //
-                // if ($conf['youarehere']) {
-                //    $sectionContent .= syntax_plugin_combo_breadcrumb::toBreadCrumbHtml();
-                // }
-
-                if (TocUtility::showToc($this)) {
-                    $sectionContent .= TocUtility::renderToc($this);
-                }
-
-            }
 
             # Split by element line
             # element p, h, br, tr, li, pre (one line for pre)
@@ -204,54 +170,16 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
             $rollingLineCount += $sectionLineCount;
 
             // The content
-            if ($this->getConf('ShowCount') == 1 && $isSidebar == FALSE) {
+            if ($this->getConf('ShowCount') == 1) {
                 $this->doc .= "<p>Section " . $sectionNumber . ": (" . $sectionLineCount . "|" . $currentLineCountSinceLastAd . "|" . $rollingLineCount . ")</p>";
             }
             $this->doc .= $sectionContent;
-
-            // No ads on private page
-
-
-            $isLastSection = $sectionNumber === count($this->sections) - 1;
-            if (AdsUtility::showAds(
-                $sectionLineCount,
-                $currentLineCountSinceLastAd,
-                $sectionNumber,
-                $adsCounter,
-                $isLastSection
-            )) {
-
-
-                // Counter
-                $adsCounter += 1;
-                $currentLineCountSinceLastAd = 0;
-
-                $attributes = array("name" => AdsUtility::PREFIX_IN_ARTICLE_ADS . $adsCounter);
-                $this->doc .= AdsUtility::render($attributes);
-
-
-            }
 
 
         }
 
         parent::document_end();
 
-    }
-
-    /**
-     * Start a table
-     *
-     * @param int $maxcols maximum number of columns
-     * @param int $numrows NOT IMPLEMENTED
-     * @param int $pos byte position in the original source
-     * @param string|string[]  classes - have to be valid, do not pass unfiltered user input
-     */
-    function table_open($maxcols = null, $numrows = null, $pos = null, $classes = NULL)
-    {
-        // initialize the row counter used for classes
-        $this->_counter['row_counter'] = 0;
-        TableUtility::tableOpen($this, $pos);
     }
 
 

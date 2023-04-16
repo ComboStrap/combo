@@ -1,8 +1,8 @@
 <?php
 
 
-use ComboStrap\ExceptionComboNotFound;
-use ComboStrap\Page;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\MarkupPath;
 use ComboStrap\Site;
 
 /**
@@ -11,12 +11,37 @@ use ComboStrap\Site;
  * In 1.14. we keep the name of the class with canonical to be able to update
  * Above 1.15, in a release branch, you can just modify it
  */
-class action_plugin_combo_metacanonical
+class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
 {
 
 
     const APPLE_MOBILE_WEB_APP_TITLE_META = "apple-mobile-web-app-title";
     const APPLICATION_NAME_META = "application-name";
+
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getContextPageForHeadHtmlMeta(): MarkupPath
+    {
+
+        try {
+            $page = MarkupPath::createFromRequestedPage();
+        } catch (ExceptionNotFound $e) {
+            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
+            // $ID is null
+            // Admin call for instance
+            throw new ExceptionNotFound("No requested page");
+        }
+
+        /**
+         * No metadata for slot page
+         */
+        if ($page->isSlot()) {
+            throw new ExceptionNotFound("Secondary slot");
+        }
+
+        return $page;
+    }
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -32,20 +57,12 @@ class action_plugin_combo_metacanonical
     function htmlHeadMetadataProcessing($event)
     {
 
-        global $ID;
-        if (empty($ID)) {
-            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
-            // $ID is null
+        try {
+            $page = self::getContextPageForHeadHtmlMeta();
+        } catch (ExceptionNotFound $e) {
             return;
         }
 
-        $page = Page::createPageFromId($ID);
-        /**
-         * No metadata for slot page
-         */
-        if ($page->isSecondarySlot()) {
-            return;
-        }
 
         /**
          * Add the canonical metadata value
@@ -63,7 +80,7 @@ class action_plugin_combo_metacanonical
      * https://www.dokuwiki.org/canonical
      *
      */
-    private function canonicalHeadMetadata($event, Page $page)
+    private function canonicalHeadMetadata($event, MarkupPath $page)
     {
 
         /**
@@ -130,27 +147,26 @@ class action_plugin_combo_metacanonical
      * <meta name="application-name" content="appName">
      *
      * @param $event
-     * @param Page $page
+     * @param MarkupPath $page
      * @return void
      */
-    private function appNameMetadata($event, Page $page)
+    private function appNameMetadata($event, MarkupPath $page)
     {
         $applicationName = Site::getName();
-
 
         $applicationMetaNameValues = [
             self::APPLE_MOBILE_WEB_APP_TITLE_META,
             self::APPLICATION_NAME_META
         ];
         $metaNameKeyProperty = "name";
-        foreach ($applicationMetaNameValues as $applicationNameValue){
+        foreach ($applicationMetaNameValues as $applicationNameValue) {
 
             $appMobileWebAppTitle = array($metaNameKeyProperty => $applicationNameValue, "content" => $applicationName);;
             try {
                 $metaKey = $this->getMetaArrayIndex($metaNameKeyProperty, $applicationNameValue, $event->data['meta']);
                 // Update
                 $event->data['meta'][$metaKey] = $appMobileWebAppTitle;
-            } catch (ExceptionComboNotFound $e) {
+            } catch (ExceptionNotFound $e) {
                 // Add
                 $event->data['meta'][] = $appMobileWebAppTitle;
             }
@@ -160,7 +176,7 @@ class action_plugin_combo_metacanonical
     }
 
     /**
-     * @throws ExceptionComboNotFound
+     * @throws \ComboStrap\ExceptionNotFound
      */
     private function getMetaArrayIndex(string $keyToSearch, string $keyValueToSearch, $metas)
     {
@@ -175,7 +191,7 @@ class action_plugin_combo_metacanonical
                 }
             }
         }
-        throw new ExceptionComboNotFound("The meta key {$keyToSearch} with the value {$keyValueToSearch} was not found");
+        throw new ExceptionNotFound("The meta key {$keyToSearch} with the value {$keyValueToSearch} was not found");
     }
 
 

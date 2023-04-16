@@ -10,10 +10,11 @@ use DateTime;
  * Class CacheManager
  * @package ComboStrap
  *
- * The cache manager is public static object
- * that can be used by plugin to report cache dependency {@link CacheManager::addDependencyForCurrentSlot()}
- * reports and influence the cache
- * of all slot for a requested page
+ * The cache manager handles all things cache
+ * This is just another namespace extension of {@link ExecutionContext}
+ * to not have all function in the same place
+ *
+ * Except for the cache dependencies of a {@link FetcherMarkup::getOutputCacheDependencies() Markup}
  */
 class CacheManager
 {
@@ -24,124 +25,45 @@ class CacheManager
 
 
     /**
-     * @var CacheManager
+     * The list of cache runtimes dependencies by slot {@link MarkupCacheDependencies}
      */
-    private static $cacheManager;
+    private array $slotCacheDependencies = [];
 
-
-    /**
-     * The list of cache runtimes dependencies by slot {@link CacheDependencies}
-     */
-    private $slotCacheDependencies;
     /**
      * The list of cache results slot {@link CacheResults}
      */
-    private $slotCacheResults;
+    private array $slotCacheResults = [];
 
     /**
      * @var array hold the result for slot cache expiration
      */
-    private $slotsExpiration;
+    private array $slotsExpiration = [];
+
+
+    private ExecutionContext $executionContext;
+
+    public function __construct(ExecutionContext $executionContext)
+    {
+        $this->executionContext = $executionContext;
+    }
 
 
     /**
      * @return CacheManager
+     * @deprecated use the {@link ExecutionContext::getCacheManager()} instead otherwise you may mix context run
      */
-    public static function getOrCreate(): CacheManager
-    {
-        try {
-            $page = Page::createPageFromRequestedPage();
-            $cacheKey = $page->getDokuwikiId();
-        } catch (ExceptionCombo $e) {
-            /**
-             * In test, we may generate html from snippet without
-             * request. No error in this case
-             */
-            if (!PluginUtility::isTest()) {
-                LogUtility::msg("The cache manager cannot find the requested page. Cache Errors may occurs. Error: {$e->getMessage()}");
-            }
-            $cacheKey = PluginUtility::getRequestId();
-        }
-        $cacheManager = self::$cacheManager[$cacheKey];
-        if ($cacheManager === null) {
-            // new run, delete all old cache managers
-            self::$cacheManager = [];
-            // create
-            $cacheManager = new CacheManager();
-            self::$cacheManager[$cacheKey] = $cacheManager;
-        }
-        return $cacheManager;
-    }
-
-
-    public static function resetAndGet(): CacheManager
-    {
-        self::reset();
-        return self::getOrCreate();
-    }
-
-    /**
-     * @param $id
-     * @return CacheDependencies
-     */
-    public function getCacheDependenciesForSlot($id): CacheDependencies
+    public static function getFromContextExecution(): CacheManager
     {
 
-        $cacheRuntimeDependencies = $this->slotCacheDependencies[$id];
-        if ($cacheRuntimeDependencies === null) {
-            $cacheRuntimeDependencies = new CacheDependencies($id);
-            $this->slotCacheDependencies[$id] = $cacheRuntimeDependencies;
-        }
-        return $cacheRuntimeDependencies;
-
-    }
-
-    /**
-     * In test, we may run more than once
-     * This function delete the cache manager
-     * and is called
-     * when a new request is created {@link \TestUtility::createTestRequest()}
-     */
-    public static function reset()
-    {
-
-        self::$cacheManager = null;
+        return ExecutionContext::getActualOrCreateFromEnv()->getCacheManager();
 
     }
 
 
-    public function isCacheResultPresentForSlot($slotId, $mode): bool
+
+    public function &getCacheResultsForSlot(string $id): CacheResults
     {
-        $cacheReporter = $this->getCacheResultsForSlot($slotId);
-        return $cacheReporter->hasResultForMode($mode);
-    }
-
-
-    public function hasNoCacheResult(): bool
-    {
-        if($this->slotCacheResults===null){
-            return true;
-        }
-        return sizeof($this->slotCacheResults) === 0;
-    }
-
-    /**
-     * @param string $dependencyName
-     * @return CacheManager
-     */
-    public function addDependencyForCurrentSlot(string $dependencyName): CacheManager
-    {
-        $ID = PluginUtility::getCurrentSlotId();
-        $cacheDependencies = $this->getCacheDependenciesForSlot($ID);
-        $cacheDependencies->addDependency($dependencyName);
-        return $this;
-
-    }
-
-
-    public function getCacheResultsForSlot(string $id): CacheResults
-    {
-        $cacheManagerForSlot = $this->slotCacheResults[$id];
+        $cacheManagerForSlot = &$this->slotCacheResults[$id];
         if ($cacheManagerForSlot === null) {
             $cacheManagerForSlot = new CacheResults($id);
             $this->slotCacheResults[$id] = $cacheManagerForSlot;
@@ -150,15 +72,14 @@ class CacheManager
     }
 
     /**
-     * @return null|CacheResults[] - null if the page does not exists
+     * @return CacheResults[] - null if the page does not exists
      */
-    public function getCacheResults(): ?array
+    public function getCacheResults(): array
     {
         return $this->slotCacheResults;
     }
 
     /**
-     * @throws ExceptionCombo
      */
     public function shouldSlotExpire($pageId): bool
     {
@@ -168,31 +89,32 @@ class CacheManager
          * inside dokuwiki, we just return a result for
          * the first call to the function
          *
-         * We use the cache manager as scope element
-         * (ie it's {@link CacheManager::reset()} for each request
          */
         if (isset($this->slotsExpiration[$pageId])) {
             return false;
         }
 
-        $page = Page::createPageFromId($pageId);
-        $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
-            ->getValue();
-        if ($cacheExpirationFrequency === null) {
+        $page = MarkupPath::createMarkupFromId($pageId);
+        try {
+            $cacheExpirationFrequency = CacheExpirationFrequency::createForPage($page)
+                ->getValue();
+        } catch (ExceptionNotFound $e) {
             $this->slotsExpiration[$pageId] = false;
             return false;
         }
 
         $cacheExpirationDateMeta = CacheExpirationDate::createForPage($page);
-        $expirationDate = $cacheExpirationDateMeta->getValue();
-
-        if ($expirationDate === null) {
-
-            $expirationDate = Cron::getDate($cacheExpirationFrequency);
-            $cacheExpirationDateMeta->setValue($expirationDate);
-
+        try {
+            $expirationDate = $cacheExpirationDateMeta->getValue();
+        } catch (ExceptionNotFound $e) {
+            try {
+                $expirationDate = Cron::getDate($cacheExpirationFrequency);
+            } catch (ExceptionBadSyntax $e) {
+                LogUtility::error("The cron expression ($cacheExpirationFrequency) of the page ($page) is not a valid cron expression");
+                return false;
+            }
         }
-
+        $cacheExpirationDateMeta->setValue($expirationDate);
 
         $actualDate = new DateTime();
         if ($expirationDate > $actualDate) {

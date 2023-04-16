@@ -4,8 +4,13 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_linkmove;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\Meta\Store\MetadataDbStore;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use Hidehalo\Nanoid\Client;
-use RuntimeException;
+
 
 class PageId extends MetadataText
 {
@@ -21,6 +26,23 @@ class PageId extends MetadataText
      * Length to get the same probability than uuid v4. Too much ?
      */
     public const PAGE_ID_LENGTH = 21;
+    /**
+     *
+     * The page id abbreviation is used in the url to make them unique.
+     *
+     * A website is not git but an abbreviation of 7
+     * is enough for a website.
+     *
+     * 7 is also the initial length of the git has abbreviation
+     *
+     * It gives a probability of collision of 1 percent
+     * for 24 pages creation by day over a period of 100 year
+     * (You need to create 876k pages).
+     *  with the 36 alphabet
+     * Furthermore, we test on creation the uniqueness on the 7 page id abbreviation
+     *
+     * more ... https://datacadamia.com/crypto/hash/collision
+     */
     public const PAGE_ID_ABBREV_LENGTH = 7;
     public const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
 
@@ -30,13 +52,30 @@ class PageId extends MetadataText
             ->setResource($resource);
     }
 
+    public static function getAbbreviated(string $pageId)
+    {
+        return substr($pageId, 0, PageId::PAGE_ID_ABBREV_LENGTH);
+    }
+
+    /**
+     * Generate and store
+     * Store the page id on the file system
+     */
+    public static function generateAndStorePageId(MarkupPath $markupPath): string
+    {
+        $pageId = self::generateUniquePageId();
+        MetadataDokuWikiStore::getOrCreateFromResource($markupPath)
+            ->setFromPersistentName(PageId::getPersistentName(), $pageId);
+        return $pageId;
+    }
+
 
     /**
      *
      *
      * @param string|null $value
      * @return MetadataText
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValue($value): Metadata
     {
@@ -52,29 +91,23 @@ class PageId extends MetadataText
      * @param $value
      * @return Metadata
      */
-    public function buildFromStoreValue($value): Metadata
+    public function setFromStoreValueWithoutException($value): Metadata
     {
 
         if ($value !== null) {
-            return parent::buildFromStoreValue($value);
+            return parent::setFromStoreValueWithoutException($value);
         }
 
 
         $resource = $this->getResource();
-        if (!($resource instanceof Page)) {
+        if (!($resource instanceof MarkupPath)) {
             LogUtility::msg("Page Id is for now only for the page, this is not a page but {$this->getResource()->getType()}");
             return $this;
         }
 
         // null for non-existing page
-        if (!FileSystems::exists($resource->getPath())) {
-            if (PluginUtility::isDevOrTest()) {
-                global $ACT;
-                if ($ACT !== "edit") {
-                    LogUtility::msg("Dev/Test message only: You can't ask a `page id` with the action $ACT, the page ({$this->getResource()}) does not exist", LogUtility::LVL_MSG_INFO, $this->getCanonical());
-                }
-            }
-            return parent::buildFromStoreValue($value);
+        if (!FileSystems::exists($resource->getPathObject())) {
+            return parent::setFromStoreValueWithoutException($value);
         }
 
 
@@ -86,9 +119,9 @@ class PageId extends MetadataText
         $readStore = $this->getReadStore();
         if (!($readStore instanceof MetadataDokuWikiStore)) {
             $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
-            $value = $metadataFileSystemStore->getFromPersistentName(self::getPersistentName());
+            $value = $metadataFileSystemStore->getFromName(self::getPersistentName());
             if ($value !== null) {
-                return parent::buildFromStoreValue($value);
+                return parent::setFromStoreValueWithoutException($value);
             }
         }
 
@@ -97,79 +130,67 @@ class PageId extends MetadataText
         // frontmatter is the first element that is processed during a run
         try {
             $frontmatter = MetadataFrontmatterStore::createFromPage($resource);
-            $value = $frontmatter->getFromPersistentName(self::getPersistentName());
+            $value = $frontmatter->getFromName(self::getPersistentName());
             if ($value !== null) {
-                return parent::buildFromStoreValue($value);
+                return parent::setFromStoreValueWithoutException($value);
             }
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("Error while reading the frontmatter");
             return $this;
         }
 
         // datastore
         if (!($readStore instanceof MetadataDbStore)) {
-            $dbStore = MetadataDbStore::getOrCreateFromResource($resource);
-            $value = $dbStore->getFromPersistentName(self::getPersistentName());
-            if ($value !== null && $value !== "") {
+            try {
+                $dbStore = MetadataDbStore::getOrCreateFromResource($resource);
+                $value = $dbStore->getFromName(self::getPersistentName());
+                if ($value !== null && $value !== "") {
 
-                $pathDbValue = $dbStore->getFromPersistentName(PagePath::getPersistentName());
+                    $pathDbValue = $dbStore->getFromName(PagePath::getPersistentName());
 
-                /**
-                 * If the page in the database does not exist,
-                 * We think that the page was moved from the file system
-                 * and we return the page id
-                 */
-                $pageDbValue = Page::createPageFromQualifiedPath($pathDbValue);
-                if (!FileSystems::exists($pageDbValue->getPath())) {
-                    return parent::buildFromStoreValue($value);
+                    /**
+                     * If the page in the database does not exist,
+                     * We think that the page was moved from the file system
+                     * and we return the page id
+                     */
+                    $pageDbValue = MarkupPath::createPageFromAbsoluteId($pathDbValue);
+                    if (!FileSystems::exists($pageDbValue->getPathObject())) {
+                        return parent::setFromStoreValueWithoutException($value);
+                    }
+
+                    /**
+                     * The page path in the database exists
+                     * If they are the same, we return the page id
+                     * (because due to duplicate in canonical, the row returned may be from another resource)
+                     */
+                    $resourcePath = $resource->getPathObject()->toAbsoluteId();
+                    if ($pathDbValue === $resourcePath) {
+                        return parent::setFromStoreValueWithoutException($value);
+                    }
                 }
-
-                /**
-                 * The page path in the database exists
-                 * If they are the same, we return the page id
-                 * (because due to duplicate in canonical, the row returned may be from another resource)
-                 */
-                $resourcePath = $resource->getPath()->toString();
-                if ($pathDbValue === $resourcePath) {
-                    return parent::buildFromStoreValue($value);
-                }
+            } catch (ExceptionNotExists|ExceptionSqliteNotAvailable $e) {
+                // no page id or not in the store or whatever
             }
+
         }
 
-        // Value is still null, not in the the frontmatter, not in the database
-        // generate and store
-        $actualValue = self::generateUniquePageId();
-        parent::buildFromStoreValue($actualValue);
-        try {
-            // Store the page id on the file system
-            MetadataDokuWikiStore::getOrCreateFromResource($resource)
-                ->set($this);
-            /**
-             * Create the row in the database (to allow permanent url redirection {@link PageUrlType})
-             */
-            (new DatabasePageRow())
-                ->setPage($resource)
-                ->upsertAttributes([PageId::getPersistentName() => $actualValue]);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Unable to store the page id generated. Message:" . $e->getMessage());
-        }
-
-        return $this;
+        // null ?
+        return parent::setFromStoreValueWithoutException($value);
 
     }
 
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_INTEGRATION_VALUE;
     }
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "An unique identifier for the page";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Page Id";
     }
@@ -179,12 +200,12 @@ class PageId extends MetadataText
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
@@ -195,11 +216,6 @@ class PageId extends MetadataText
     public function getDefaultValue(): ?string
     {
         return null;
-    }
-
-    public function getCanonical(): string
-    {
-        return $this->getName();
     }
 
 
@@ -233,16 +249,23 @@ class PageId extends MetadataText
          */
         $nanoIdClient = new Client();
         $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
-        while (DatabasePageRow::createFromPageId($pageId)->exists()) {
+        /**
+         * The real id is the abbreviated one
+         * Test if there is not yet a page with this value
+         */
+        while (
+        DatabasePageRow::createFromPageIdAbbr(self::getAbbreviated($pageId))->exists()
+        ) {
             $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
         }
+
         return $pageId;
     }
 
     /**
      * Overwrite the page id even if it exists already
      * It should not be possible - used for now in case of conflict in page move
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setValueForce(?string $value): PageId
     {
@@ -253,34 +276,47 @@ class PageId extends MetadataText
     /**
      *
      * @param bool $force - It should not be possible - used for now in case of conflict in page move
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     private function setValueWithOrWithoutForce(?string $value, bool $force = false): PageId
     {
         if ($value === null) {
-            throw new ExceptionCombo("A page id can not be set with a null value (Page: {$this->getResource()})", $this->getCanonical());
+            throw new ExceptionCompile("A page id can not be set with a null value (Page: {$this->getResource()})", $this->getCanonical());
         }
         if (!is_string($value) || !preg_match("/[" . self::PAGE_ID_ALPHABET . "]/", $value)) {
-            throw new ExceptionCombo("The page id value to set ($value) is not an alphanumeric string (Page: {$this->getResource()})", $this->getCanonical());
+            throw new ExceptionCompile("The page id value to set ($value) is not an alphanumeric string (Page: {$this->getResource()})", $this->getCanonical());
         }
-        $actualId = $this->getValue();
+        try {
+            $actualId = $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            $actualId = null;
+        }
 
         if ($force !== true) {
             if ($actualId !== null && $actualId !== $value) {
-                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId}) that has not the same value ($value})", $this->getCanonical());
+                throw new ExceptionCompile("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId}) that has not the same value ($value})", $this->getCanonical());
             }
             if ($actualId !== null) {
-                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId})", $this->getCanonical());
+                throw new ExceptionCompile("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId})", $this->getCanonical());
             }
         } else {
-            if (PluginUtility::isDevOrTest()) {
-                // this should never happened (exception in test/dev)
-                throw new ExceptionComboRuntime("Forcing of the page id should not happen in dev/test", $this->getCanonical());
+
+            /**
+             * This should never happened (exception in test/dev)
+             * Unfortunately, it does not happen in test
+             * but in real life
+             */
+            if (!(action_plugin_combo_linkmove::isMoveOperation())) {
+                LogUtility::internalError("Forcing of the page id should not happen in dev/test", $this->getCanonical());
             }
         }
         return parent::setValue($value);
     }
 
+    /**
+     * @throws ExceptionBadArgument
+     *
+     */
     public function sendToWriteStore(): Metadata
     {
         /**
@@ -289,9 +325,13 @@ class PageId extends MetadataText
          * We prevent the overwriting of a page id
          */
         $actualStoreValue = $this->getReadStore()->get($this);
-        $value = $this->getValue();
+        try {
+            $value = $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            throw new ExceptionBadArgument("No value to store");
+        }
         if ($actualStoreValue !== null && $actualStoreValue !== $value) {
-            throw new ExceptionComboRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
+            throw new ExceptionBadArgument("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
         }
         parent::sendToWriteStore();
         return $this;
@@ -304,5 +344,19 @@ class PageId extends MetadataText
         return $this->getReadStore()->get($this);
     }
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getValue(): string
+    {
 
+        return parent::getValue();
+
+    }
+
+
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
 }

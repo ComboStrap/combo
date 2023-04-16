@@ -1,0 +1,6 @@
+elements:
+    - 'page-header'
+    - 'page-footer'
+    - 'main-header'
+    - 'main-footer'
+    - 'main-toc'

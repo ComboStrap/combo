@@ -24,9 +24,9 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
-     * TODO: Duplicate of {@link Page::isSecondarySlot()}
+     * TODO: Duplicate of {@link MarkupPath::isSlot()} ?
      */
-    public static function isSideBar()
+    public static function isSideBar(): bool
     {
         global $INFO;
         global $ID;
@@ -47,18 +47,22 @@ class FsWikiUtility
      *
      * @param string $path The container of the pages
      * @return array An array of the pages for the namespace
+     * @throws ExceptionBadSyntax if the string is not a namespace path
      */
     static function getChildren(string $path): array
     {
         require_once(DOKU_INC . '/inc/search.php');
         global $conf;
 
+        WikiPath::checkNamespacePath($path);
 
         /**
-         * To a relative file system path
+         * To the wiki id form
          */
-        $dokuPath = DokuPath::createPagePathFromPath($path);
-        $relativeFileSystemPath = str_replace(":", "/", $dokuPath->getDokuwikiId());
+        $dokuPath = WikiPath::createMarkupPathFromPath($path);
+        // delete the last separator
+        $dokuwikiId = substr( $dokuPath->getWikiId(),0,-1);
+        $relativeFileSystemPath = str_replace(":", "/", $dokuwikiId);
 
 
         $data = array();
@@ -90,11 +94,11 @@ class FsWikiUtility
      * ie the index.html
      * @param $namespacePath - in dokuwiki format
      * @return string - the dokuwiki path
-     * @deprecated use {@link Page::getHomePageFromNamespace()} instead
+     * @deprecated use {@link MarkupPath::getIndexPageFromNamespace()} instead
      */
     public static function getHomePagePath($namespacePath): ?string
     {
-        $homePage = Page::getHomePageFromNamespace($namespacePath);
+        $homePage = MarkupPath::getIndexPageFromNamespace($namespacePath);
         if ($homePage->exists()) {
             return $homePage->getAbsolutePath();
         } else {
@@ -126,9 +130,9 @@ class FsWikiUtility
 
     /**
      * @param $namespacePath
-     * @return Page|null the page path of the parent or null if it does not exist
+     * @return MarkupPath|null the page path of the parent or null if it does not exist
      */
-    public static function getParentPagePath($namespacePath): ?Page
+    public static function getParentPagePath($namespacePath): ?MarkupPath
     {
 
         /**
@@ -149,7 +153,7 @@ class FsWikiUtility
             } else {
                 $parentNamespacePath = substr($namespacePath, 0, $pos);
             }
-            return Page::getHomePageFromNamespace($parentNamespacePath);
+            return MarkupPath::getIndexPageFromNamespace($parentNamespacePath);
 
         } else {
             return null;

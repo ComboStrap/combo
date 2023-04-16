@@ -1,0 +1,6 @@
+.toggle-cs.collapsed .collapse-cs {
+    display: none;
+}
+.toggle-cs:not(.collapsed) .expand-cs {
+    display: none;
+}

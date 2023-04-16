@@ -1,26 +1,21 @@
 <?php
 
-use ComboStrap\CacheDependencies;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CacheLog;
-use ComboStrap\CacheManager;
-use ComboStrap\CacheMedia;
-use ComboStrap\CacheMenuItem;
-use ComboStrap\CacheReportHtmlDataBlockArray;
 use ComboStrap\Cron;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\FileSystems;
-use ComboStrap\Http;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
+use ComboStrap\MarkupCacheDependencies;
+use ComboStrap\MarkupPath;
 use ComboStrap\PagePath;
-use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Can we use the parser cache
@@ -51,7 +46,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
 
 
         /**
-         * process the Async event
+         * Process the Async event
          */
         $controller->register_hook(self::SLOT_CACHE_EXPIRATION_EVENT, 'AFTER', $this, 'handleSlotCacheExpiration');
 
@@ -93,19 +88,21 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
             }
         }
 
-        $cacheManager = PluginUtility::getCacheManager();
-        try {
-            $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error while trying to check if the slot ($pageId) should expired. Error: {$e->getMessage()}", self::CANONICAL);
-            return;
-        }
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $cacheManager = $executionContext->getCacheManager();
+        $shouldSlotExpire = $cacheManager->shouldSlotExpire($pageId);
         if ($shouldSlotExpire) {
+            try {
+                $requestedWikiId = $executionContext->getRequestedPath()->getWikiId();
+            } catch (ExceptionNotFound $e) {
+                LogUtility::internalError("Cache expiration: The requested path could not be determined, default context path was set instead.");
+                $requestedWikiId = $executionContext->getContextPath()->getWikiId();
+            }
             Event::createEvent(
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 [
                     PagePath::getPersistentName() => $pageId,
-                    self::REQUESTED_ID => PluginUtility::getRequestedWikiId()
+                    self::REQUESTED_ID => $requestedWikiId
                 ]
             );
         }
@@ -121,13 +118,13 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
 
         /**
          * The cache file may be dependent on the requested id
-         * ie (@link CacheDependencies::OUTPUT_DEPENDENCIES}
+         * ie (@link MarkupCacheDependencies::OUTPUT_DEPENDENCIES}
          */
         global $ID;
         $keep = $ID;
         try {
             $ID = $requestedId;
-            $slot = Page::createPageFromQualifiedPath($slotPath);
+            $slot = MarkupPath::createPageFromAbsoluteId($slotPath);
 
             /**
              * Calculate a new expiration date
@@ -140,7 +137,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
                 ->getValue();
             try {
                 $newDate = Cron::getDate($cacheExpirationFrequency);
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while calculating the new expiration date. Error: {$e->getMessage()}");
                 return;
             }
@@ -151,7 +148,7 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
                 $cacheExpirationDateMeta
                     ->setValue($newDate)
                     ->persist();
-            } catch (ExceptionCombo $e) {
+            } catch (ExceptionCompile $e) {
                 LogUtility::msg("Error while persisting the new expiration date. Error:{$e->getMessage()}");
                 return;
             }
@@ -160,22 +157,26 @@ class action_plugin_combo_cacheexpiration extends DokuWiki_Action_Plugin
              * Cache deletion
              */
             $message = "Expiration Date has expired";
+            $outputDocument = $slot->getInstructionsDocument();
             CacheLog::deleteCacheIfExistsAndLog(
-                $slot->getInstructionsDocument(),
+                $outputDocument,
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 $message);
+            $fetcher = $slot->createHtmlFetcherWithItselfAsContextPath();
             CacheLog::deleteCacheIfExistsAndLog(
-                $slot->getHtmlDocument(),
+                $fetcher,
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 $message);
 
             /**
              * Re-render
              */
+            $fetcher2 = $slot->createHtmlFetcherWithItselfAsContextPath();
             CacheLog::renderCacheAndLog(
-                $slot->getHtmlDocument(),
+                $fetcher2,
                 self::SLOT_CACHE_EXPIRATION_EVENT,
                 $message);
+
 
         } finally {
             $ID = $keep;

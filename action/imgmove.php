@@ -1,25 +1,29 @@
 <?php
 
-use ComboStrap\DokuPath;
-use ComboStrap\ExceptionCombo;
-use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionRuntime;
+use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\MarkupPath;
+use ComboStrap\Meta\Api\MetadataImage;
+use ComboStrap\Meta\Api\MetadataSystem;
+use ComboStrap\Meta\Field\PageImages;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
-use ComboStrap\Page;
-use ComboStrap\Metadata;
-use ComboStrap\PageImages;
 use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
+use ComboStrap\WikiPath;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Handle the move of a image
  */
 class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
 {
-    const CANONICAL = "move";
+    const CANONICAL = "imgmove";
 
     /**
      * As explained https://www.dokuwiki.org/plugin:move
@@ -41,37 +45,80 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
     function fileSystemStoreUpdate(Doku_Event $event, $params)
     {
 
+
         $affectedPagesId = $event->data["affected_pages"];
         $sourceImageId = $event->data["src_id"];
         $targetImageId = $event->data["dst_id"];
-        foreach ($affectedPagesId as $affectedPageId) {
-            $affectedPage = Page::createPageFromId($affectedPageId)
-                ->setReadStore(MetadataDokuWikiStore::class);
 
-            $pageImages = PageImages::createForPage($affectedPage);
+        /**
+         * Advertise the move
+         */
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->setRuntimeObject(action_plugin_combo_linkmove::FILE_MOVE_OPERATION, $sourceImageId);
+        try {
+            foreach ($affectedPagesId as $affectedPageId) {
+                $affectedPage = MarkupPath::createMarkupFromId($affectedPageId)
+                    ->setReadStore(MetadataDokuWikiStore::class);
 
-            $sourceImagePath = ":$sourceImageId";
-            $row = $pageImages->getRow($sourceImagePath);
-
-            if ($row === null) {
-                // This is a move of an image in the markup
-                continue;
-            }
-            $pageImages->remove($sourceImagePath);
-            try {
-                $imageUsage = $row[PageImageUsage::getPersistentName()];
-                $imageUsageValue = null;
-                if ($imageUsage !== null) {
-                    $imageUsageValue = $imageUsage->getValue();
+                foreach (MetadataImage::PERSISTENT_IMAGE_NAMES as $persistentImage) {
+                    try {
+                        $metadata = MetadataSystem::getForName($persistentImage)
+                            ->setResource($affectedPage)
+                            ->setReadStore(MetadataDokuWikiStore::class);
+                    } catch (ExceptionNotFound $e) {
+                        LogUtility::internalError("Hardcoded should exists");
+                        continue;
+                    }
+                    try {
+                        $value = $metadata->getValue();
+                    } catch (ExceptionNotFound $e) {
+                        // no value
+                        continue;
+                    }
+                    if ($value === $sourceImageId) {
+                        try {
+                            $metadata
+                                ->setValue($targetImageId)
+                                ->persist();
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::error("The target path image ($targetImageId) is not a path", self::CANONICAL, $e);
+                        }
+                    }
                 }
-                $pageImages
-                    ->addImage($targetImageId, $imageUsageValue)
-                    ->persist();
-            } catch (ExceptionCombo $e) {
-                LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+
+
+                /**
+                 * Deprecated but yeah
+                 */
+                $pageImages = PageImages::createForPage($affectedPage);
+                $sourceImagePath = ":$sourceImageId";
+                $row = $pageImages->getRow($sourceImagePath);
+                if ($row === null) {
+                    // This is a move of an image in the markup
+                    continue;
+                }
+                $souceImageWikiPath = WikiPath::createMediaPathFromId($sourceImagePath);
+                $pageImages->remove($souceImageWikiPath);
+                try {
+                    $imageUsage = $row[PageImageUsage::getPersistentName()];
+                    $imageUsageValue = null;
+                    if ($imageUsage !== null) {
+                        $imageUsageValue = $imageUsage->getValue();
+                    }
+                    $pageImages
+                        ->addImage($targetImageId, $imageUsageValue)
+                        ->persist();
+                } catch (ExceptionCompile $e) {
+                    LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical(), $e);
+                }
+
             }
-
-
+        } finally {
+            /**
+             * Stop advertising the move
+             */
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->closeAndRemoveRuntimeVariableIfExists(action_plugin_combo_linkmove::FILE_MOVE_OPERATION);
         }
 
     }
@@ -127,47 +174,98 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * The original move method
          * is {@link helper_plugin_move_handler::media()}
          */
-        $page = Page::createPageFromId("move-fake-id");
+        $page = MarkupPath::createMarkupFromId("move-fake-id");
         try {
             $metadataFrontmatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;
         }
-        $pageImagesObject = PageImages::createForPage($page)
-            ->setReadStore($metadataFrontmatterStore);
-        $images = $pageImagesObject->getValueAsPageImages();
-        if ($images === null) {
-            return $match;
-        }
+        $data = $metadataFrontmatterStore->getData();
 
+        /**
+         * Advertise the move
+         */
+        $moveOpeation = true;
+        ExecutionContext::getActualOrCreateFromEnv()
+            ->setRuntimeObject(action_plugin_combo_linkmove::FILE_MOVE_OPERATION, $moveOpeation);
         try {
+            foreach ($data as $key => $value) {
 
-            foreach ($images as $image) {
-                $path = $image->getImage()->getPath();
-                if (!($path instanceof DokuPath)) {
+                try {
+                    $metadata = MetadataSystem::getForName($key)
+                        ->setResource($page)
+                        ->setReadStore($metadataFrontmatterStore)
+                        ->setWriteStore($metadataFrontmatterStore);
+                } catch (ExceptionNotFound $e) {
                     continue;
                 }
-                $imageId = $path->toAbsolutePath()->toString();
+
+                /**
+                 * Old deprecated
+                 */
+                if ($metadata instanceof PageImages) {
+                    $pageImagesObject = $metadata;
+                    $images = $metadata->getValueAsPageImages();
+                    if (empty($images)) {
+                        return $match;
+                    }
+                    try {
+
+                        foreach ($images as $image) {
+                            $path = $image->getImagePath();
+                            $imageId = $path->toAbsolutePath()->toAbsoluteId();
+                            $before = $imageId;
+                            $this->moveImage($imageId, $handler);
+                            if ($before !== $imageId) {
+                                $pageImagesObject->remove($path);
+                                $pageImagesObject->addImage($imageId, $image->getUsages());
+                            }
+                        }
+
+                        $pageImagesObject->sendToWriteStore();
+
+                    } catch (ExceptionCompile $e) {
+                        // Could not resolve the image, image does not exist, ... return the data without modification
+                        if (PluginUtility::isDevOrTest()) {
+                            throw new ExceptionRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
+                        } else {
+                            LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                        }
+                        continue;
+                    }
+                }
+                if (!($metadata instanceof MetadataImage)) {
+                    continue;
+                }
+                try {
+                    $imageId = $metadata->getValue()->toAbsoluteId();
+                } catch (ExceptionNotFound $e) {
+                    continue;
+                }
                 $before = $imageId;
-                $this->moveImage($imageId, $handler);
-                if ($before != $imageId) {
-                    $pageImagesObject->remove($before);
-                    $pageImagesObject->addImage($imageId, $image->getUsages());
+                try {
+                    $this->moveImage($imageId, $handler);
+                    if ($before !== $imageId) {
+                        $metadata->setValue($imageId)->persist();
+                    }
+                } catch (\Exception $e) {
+                    if (PluginUtility::isDevOrTest()) {
+                        throw new ExceptionRuntime($e->getMessage(), self::CANONICAL, 0, $e);
+                    } else {
+                        LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL, $e);
+                    }
+                    continue;
                 }
             }
-
-            $pageImagesObject->sendToWriteStore();
-
-        } catch (ExceptionCombo $e) {
-            // Could not resolve the image, image does not exist, ... return the data without modification
-            if (PluginUtility::isDevOrTest()) {
-                throw new ExceptionComboRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
-            } else {
-                LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-            }
-            return $match;
+        } finally {
+            /**
+             * Close the move
+             */
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->closeAndRemoveRuntimeVariableIfExists(action_plugin_combo_linkmove::FILE_MOVE_OPERATION);
         }
+
 
         /**
          * All good,
@@ -182,15 +280,15 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
      * Move a single image and update the JSon
      * @param $relativeOrAbsoluteWikiId
      * @param helper_plugin_move_handler $handler
-     * @throws ExceptionCombo on bad argument
+     * @throws ExceptionCompile on bad argument
      */
     private function moveImage(&$relativeOrAbsoluteWikiId, helper_plugin_move_handler $handler)
     {
         try {
             $newId = $handler->resolveMoves($relativeOrAbsoluteWikiId, "media");
-            $relativeOrAbsoluteWikiId = DokuPath::IdToAbsolutePath($newId);
+            $relativeOrAbsoluteWikiId = WikiPath::IdToAbsolutePath($newId);
         } catch (Exception $e) {
-            throw new ExceptionCombo("A move error has occurred while trying to move the image ($relativeOrAbsoluteWikiId). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
+            throw new ExceptionCompile("A move error has occurred while trying to move the image ($relativeOrAbsoluteWikiId). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
         }
     }
 

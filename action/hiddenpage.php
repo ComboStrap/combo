@@ -1,10 +1,10 @@
 <?php
 
 
-use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionCompile;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\TplConstant;
+use ComboStrap\SlotSystem;
 use ComboStrap\TplUtility;
 
 /**
@@ -35,21 +35,12 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
         /**
          * Caching the slot and private namespace
          */
-        $pattern = "(" . $conf['sidebar'] . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
-        if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
-            try {
-                Site::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            } catch (ExceptionCombo $e) {
-                return;
-            }
-
-            $pattern .= "|" . TplUtility::getFooterSlotPageName();
-            $pattern .= "|" . TplUtility::getSideKickSlotPageName();
-            $pattern .= "|" . TplUtility::getHeaderSlotPageName();
-            $pattern .= "|" . TplUtility::getMainFooterSlotName();
-            $pattern .= "|" . TplUtility::getMainHeaderSlotName();
-
-        }
+        $pattern = "(" . SlotSystem::getSidebarName() . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
+        $pattern .= "|" . SlotSystem::getPageHeaderSlotName();
+        $pattern .= "|" . SlotSystem::getPageFooterSlotName();
+        $pattern .= "|" . SlotSystem::getMainSideSlotName();
+        $pattern .= "|" . SlotSystem::getMainFooterSlotName();
+        $pattern .= "|" . SlotSystem::getMainHeaderSlotName();
         $pattern .= ")";
         if (preg_match('/' . $pattern . '/ui', ':' . $event->data['id'])) {
             $event->data['hidden'] = true;

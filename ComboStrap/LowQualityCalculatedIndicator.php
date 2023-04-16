@@ -4,74 +4,88 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataBoolean;
+use renderer_plugin_combo_analytics;
+
 class LowQualityCalculatedIndicator extends MetadataBoolean
 {
 
-    public const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
+    public const PROPERTY_NAME = "low_quality_indicator_calculated";
 
-    public static function createFromPage(Page $page)
+    public static function createFromPage(MarkupPath $page)
     {
         return (new LowQualityCalculatedIndicator())
             ->setResource($page);
     }
 
-    public function getTab(): ?string
+    public static function getTab(): ?string
     {
         // not in a form
         return null;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The indicator calculated by the analytics process that tells if a page is of a low quality";
     }
 
-    public function getValue(): ?bool
+    public function getValue(): bool
     {
-        $value = parent::getValue();
-        if ($value !== null) {
-            return $value;
-        }
 
-        /**
-         * Migration code
-         * The indicator {@link LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED} is new
-         * but if the analytics was done, we can get it
-         */
-        $resource = $this->getResource();
-        if (!($resource instanceof Page)) {
-            return null;
-        }
-        $analyticsDocument = $resource->getAnalyticsDocument();
-        if (!FileSystems::exists($analyticsDocument->getCachePath())) {
-            return null;
-        }
         try {
-            return $analyticsDocument->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error while reading the json analytics. {$e->getMessage()}");
-            return null;
+            return parent::getValue();
+        } catch (ExceptionNotFound $e) {
+
+            /**
+             * Migration code
+             * The indicator {@link LowQualityCalculatedIndicator::PROPERTY_NAME} is new
+             * but if the analytics was done, we can get it
+             */
+            $resource = $this->getResource();
+            if (!($resource instanceof MarkupPath)) {
+                throw new ExceptionNotFound("Low Quality is only for page resources");
+            }
+            try {
+                $analyticsDocument = $resource->fetchAnalyticsDocument();
+            } catch (ExceptionNotExists $e) {
+                throw new ExceptionNotFound("No analytics document could be found");
+            }
+
+            $analyticsCache = $analyticsDocument->getContentCachePath();
+            if (!FileSystems::exists($analyticsCache)) {
+                throw new ExceptionNotFound("No analytics document could be found");
+            }
+
+            try {
+                return Json::createFromPath($analyticsCache)->toArray()[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::LOW];
+            } catch (ExceptionCompile $e) {
+                $message = "Error while reading the json analytics. {$e->getMessage()}";
+                LogUtility::internalError($message, self::CANONICAL);
+                throw new ExceptionNotFound($message);
+            }
+
         }
 
     }
 
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Low Quality Indicator";
     }
 
     static public function getName(): string
     {
-        return self::LOW_QUALITY_INDICATOR_CALCULATED;
+        return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }

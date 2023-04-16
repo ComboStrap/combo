@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="{{lang}}">
+{{> head-partial }}
+<body class="{{body-classes}}">
+{{>page-header-partial}}
+<div id="page-core" class="{{ layout-container-class }} position-relative">
+    <main id="page-main">
+        <div id="main-content" class="m-3 dokuwiki">
+            {{{ main-content-html }}}
+        </div>
+    </main>
+    {{> railbar-partial }}
+</div>
+{{>page-footer-partial}}
+{{>body-beforeend-partial}}
+</body>
+</html>

@@ -3,7 +3,8 @@
 
 namespace ComboStrap;
 
-use splitbrain\phpcli\Colors;
+use ComboStrap\TagAttribute\BackgroundAttribute;
+use ComboStrap\TagAttribute\Shadow;
 
 /**
  * Class Skin
@@ -21,37 +22,37 @@ class Skin
     static $colorsWithoutPrimaryAndSecondary = array(
         "info" => array(
             ColorRgb::COLOR => "#0c5460",
-            Background::BACKGROUND_COLOR => "#d1ecf1",
+            BackgroundAttribute::BACKGROUND_COLOR => "#d1ecf1",
             ColorRgb::BORDER_COLOR => "#bee5eb"
         ),
         "tip" => array(
             ColorRgb::COLOR => "#6c6400",
-            Background::BACKGROUND_COLOR => "#fff79f",
+            BackgroundAttribute::BACKGROUND_COLOR => "#fff79f",
             ColorRgb::BORDER_COLOR => "#FFF78c"
         ),
         "warning" => array(
             ColorRgb::COLOR => "#856404",
-            Background::BACKGROUND_COLOR => "#fff3cd",
+            BackgroundAttribute::BACKGROUND_COLOR => "#fff3cd",
             ColorRgb::BORDER_COLOR => "#ffeeba"
         ),
         "success" => array(
             ColorRgb::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#28a745",
+            BackgroundAttribute::BACKGROUND_COLOR => "#28a745",
             ColorRgb::BORDER_COLOR => "#28a745"
         ),
         "danger" => array(
             ColorRgb::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#dc3545",
+            BackgroundAttribute::BACKGROUND_COLOR => "#dc3545",
             ColorRgb::BORDER_COLOR => "#dc3545"
         ),
         "dark" => array(
             ColorRgb::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#343a40",
+            BackgroundAttribute::BACKGROUND_COLOR => "#343a40",
             ColorRgb::BORDER_COLOR => "#343a40"
         ),
         "light" => array(
             ColorRgb::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#f8f9fa",
+            BackgroundAttribute::BACKGROUND_COLOR => "#f8f9fa",
             ColorRgb::BORDER_COLOR => "#f8f9fa"
         )
     );
@@ -62,12 +63,12 @@ class Skin
         $secondaryColorRgbHex = Site::getSecondaryColor("#6c757d")->toRgbHex();
         $brandingColors = array(ColorRgb::PRIMARY_VALUE => array(
             ColorRgb::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => $primaryColorRgbHex,
+            BackgroundAttribute::BACKGROUND_COLOR => $primaryColorRgbHex,
             ColorRgb::BORDER_COLOR => $primaryColorRgbHex
         ),
             ColorRgb::SECONDARY_VALUE => array(
                 ColorRgb::COLOR => "#fff",
-                Background::BACKGROUND_COLOR => $secondaryColorRgbHex,
+                BackgroundAttribute::BACKGROUND_COLOR => $secondaryColorRgbHex,
                 ColorRgb::BORDER_COLOR => $secondaryColorRgbHex
             ));
         return array_merge($brandingColors, self::$colorsWithoutPrimaryAndSecondary);
@@ -83,7 +84,7 @@ class Skin
         if (!$attributes->hasComponentAttribute(self::SKIN_ATTRIBUTE)) {
             return;
         }
-        $skinValue = $attributes->getValue(self::SKIN_ATTRIBUTE);
+        $skinValue = $attributes->getValueAndRemove(self::SKIN_ATTRIBUTE);
         if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
 
             LogUtility::msg("A component type is mandatory when using the skin attribute", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
@@ -114,24 +115,24 @@ class Skin
                 switch ($skinValue) {
                     case "contained":
                         $attributes->addStyleDeclarationIfNotSet(ColorRgb::COLOR, $color[ColorRgb::COLOR]);
-                        $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
+                        $attributes->addStyleDeclarationIfNotSet(BackgroundAttribute::BACKGROUND_COLOR, $color[BackgroundAttribute::BACKGROUND_COLOR]);
                         $attributes->addStyleDeclarationIfNotSet(ColorRgb::BORDER_COLOR, $color[ColorRgb::BORDER_COLOR]);
                         Shadow::addMediumElevation($attributes);
                         break;
                     case self::FILLED_VALUE:
                     case "solid":
                         $attributes->addStyleDeclarationIfNotSet(ColorRgb::COLOR, $color[ColorRgb::COLOR]);
-                        $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
+                        $attributes->addStyleDeclarationIfNotSet(BackgroundAttribute::BACKGROUND_COLOR, $color[BackgroundAttribute::BACKGROUND_COLOR]);
                         $attributes->addStyleDeclarationIfNotSet(ColorRgb::BORDER_COLOR, $color[ColorRgb::BORDER_COLOR]);
                         break;
                     case "outline":
                         $primaryColor = $color[ColorRgb::COLOR];
                         if ($primaryColor === "#fff") {
-                            $primaryColor = $color[Background::BACKGROUND_COLOR];
+                            $primaryColor = $color[BackgroundAttribute::BACKGROUND_COLOR];
                         }
                         $attributes->addStyleDeclarationIfNotSet(ColorRgb::COLOR, $primaryColor);
-                        $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, "transparent");
-                        $borderColor = $color[Background::BACKGROUND_COLOR];
+                        $attributes->addStyleDeclarationIfNotSet(BackgroundAttribute::BACKGROUND_COLOR, "transparent");
+                        $borderColor = $color[BackgroundAttribute::BACKGROUND_COLOR];
                         if ($attributes->hasStyleDeclaration(ColorRgb::BORDER_COLOR)) {
                             // Color in the `border` attribute
                             // takes precedence in the `border-color` if located afterwards
@@ -144,10 +145,10 @@ class Skin
                     case "text":
                         $primaryColor = $color[ColorRgb::COLOR];
                         if ($primaryColor === "#fff") {
-                            $primaryColor = $color[Background::BACKGROUND_COLOR];
+                            $primaryColor = $color[BackgroundAttribute::BACKGROUND_COLOR];
                         }
                         $attributes->addStyleDeclarationIfNotSet(ColorRgb::COLOR, "$primaryColor!important");
-                        $attributes->addStyleDeclarationIfNotSet(Background::BACKGROUND_COLOR, "transparent");
+                        $attributes->addStyleDeclarationIfNotSet(BackgroundAttribute::BACKGROUND_COLOR, "transparent");
                         $attributes->addStyleDeclarationIfNotSet(ColorRgb::BORDER_COLOR, "transparent");
                         break;
                 }

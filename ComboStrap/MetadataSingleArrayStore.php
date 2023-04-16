@@ -4,6 +4,10 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Meta\Api\MetadataStoreAbs;
+
 /**
  * Class MetadataArrayStore
  * @package ComboStrap
@@ -16,9 +20,9 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     /**
      * @var bool
      */
-    protected $hasChanged = false;
+    protected bool $hasChanged = false;
 
-    protected $data;
+    protected array $data = [];
 
     /**
      * MetadataSingleArrayStore constructor.
@@ -27,7 +31,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      */
     public function __construct(ResourceCombo $page, $data = null)
     {
-        if($data!==null) {
+        if ($data !== null) {
             foreach ($data as $key => $value) {
                 $key = $this->toNormalizedKey($key);
                 $this->data[$key] = $value;
@@ -64,7 +68,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     public function persist()
     {
         if (PluginUtility::isDevOrTest()) {
-            throw new ExceptionComboRuntime("Not yet implemented, use sendToStore");
+            throw new ExceptionRuntime("Not yet implemented, use sendToStore");
         }
     }
 
@@ -74,23 +78,18 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     }
 
 
-    public function getData(): ?array
+    public function getData(): array
     {
-        if (!is_array($this->data)){
-            $class = get_class($this->data);
-            LogUtility::msg("Error: The data set for the metadata ($this) was not an array but a $class");
-            return null;
-        }
         return $this->data;
     }
 
 
     public function reset()
     {
-        $this->data = null;
+        $this->data = [];
     }
 
-    public function getFromPersistentName(string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
 
         $value = $this->data[$name];
@@ -100,7 +99,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
         return $default;
     }
 
-    public function setFromPersistentName(string $name, $value)
+    public function setFromPersistentName(string $name, $value, $default = null)
     {
         $actualValue = $this->data[$name];
         if ($actualValue !== $value) {
@@ -158,5 +157,6 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     {
         return $this->hasChanged;
     }
+
 
 }

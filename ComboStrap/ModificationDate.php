@@ -1,28 +1,24 @@
 <?php
 
+namespace ComboStrap;
 
-use ComboStrap\ExceptionCombo;
-use ComboStrap\FileSystems;
-use ComboStrap\MetaManagerForm;
-use ComboStrap\LogUtility;
-use ComboStrap\Metadata;
-use ComboStrap\MetadataDateTime;
-use ComboStrap\MetadataDokuWikiStore;
-use ComboStrap\Page;
-use ComboStrap\PageCreationDate;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataDateTime;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use DateTime;
 
 class ModificationDate extends MetadataDateTime
 {
 
     public const PROPERTY_NAME = 'date_modified';
 
-    public static function createForPage(Page $page)
+    public static function createForPage(MarkupPath $page)
     {
         return (new ModificationDate())
             ->setResource($page);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
@@ -34,41 +30,45 @@ class ModificationDate extends MetadataDateTime
             return parent::buildFromReadStore();
         }
 
-        $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPath());
-        if ($modificationTime !== null) {
+        try {
+            $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPathObject());
             $this->setValue($modificationTime);
             return $this;
-        }
+        } catch (ExceptionNotFound $e) {
 
-        /**
-         * Dokuwiki
-         * Why do they store the date of the file while it's in the file system ?
-         */
-        $createdMeta = $store->getCurrentFromName('date')['modified'];
-        if (empty($createdMeta)) {
-            $createdMeta = $store->getFromPersistentName('date')['modified'];
+            /**
+             * Dokuwiki
+             * Why do they store the date of the file while it's in the file system ?
+             */
+            $createdMeta = $store->getCurrentFromName('date')['modified'];
             if (empty($createdMeta)) {
+                $createdMeta = $store->getFromName('date')['modified'];
+                if (empty($createdMeta)) {
+                    return $this;
+                }
+            }
+            // the data in dokuwiki is saved as timestamp
+            $datetime = new DateTime();
+            if (!is_int($createdMeta)) {
+                LogUtility::msg("The modification time in the dokuwiki meta is not an integer");
                 return $this;
             }
-        }
-        // the data in dokuwiki is saved as timestamp
-        $datetime = new DateTime();
-        if(!is_int($createdMeta)){
-            LogUtility::msg("The modification time in the dokuwiki meta is not an integer");
+            $datetime->setTimestamp($createdMeta);
+            $this->setValue($datetime);
             return $this;
+
         }
-        $datetime->setTimestamp($createdMeta);
-        $this->setValue($datetime);
-        return $this;
+
+
     }
 
 
-    public function getDescription(): string
+    static public function getDescription(): string
     {
         return "The last modification date of the page"; // resource
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Modification Date";
     }
@@ -78,31 +78,38 @@ class ModificationDate extends MetadataDateTime
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
 
-    public function getDefaultValue(): ?DateTime
+    /**
+     * @throws ExceptionNotFound - if the file does not exists
+     */
+    public function getDefaultValue(): DateTime
     {
 
-        $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPath());
-        if ($modificationTime !== null) {
-            return $modificationTime;
+        try {
+            return FileSystems::getModifiedTime($this->getResource()->getPathObject());
+        } catch (ExceptionNotFound $e) {
+            return CreationDate::createForPage($this->getResource())->getValue();
         }
-        return PageCreationDate::createForPage($this->getResource())->getValue();
 
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return Metadata::CANONICAL;
     }
 
 
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
 }

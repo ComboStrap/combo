@@ -73,7 +73,7 @@ class TextColor
                      */
                     try {
                         $colorValue = ColorRgb::createFromString($colorValue)->toCssValue();
-                    } catch (ExceptionCombo $e) {
+                    } catch (ExceptionCompile $e) {
                         LogUtility::msg("The text color value ($colorValue) is not a valid color. Error: {$e->getMessage()}");
                         return;
                     }

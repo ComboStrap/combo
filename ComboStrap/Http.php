@@ -17,17 +17,20 @@ class Http
 
     }
 
-    public static function getHeader(string $name)
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getFirstHeader(string $name, array $headers = null): string
     {
 
-        $result = array();
-        foreach (self::getHeaders() as $header) {
-            if (substr($header, 0, strlen($name) + 1) == $name . ':') {
-                $result[] = $header;
-            }
+        $result = self::getHeadersForName($name, $headers);
+
+        if (count($result) == 0) {
+            throw new ExceptionNotFound("No header was found with the header name $name");
         }
 
-        return count($result) == 1 ? $result[0] : $result;
+        return $result[0];
+
 
     }
 
@@ -61,7 +64,7 @@ class Http
     public static function getStatus()
     {
         /**
-         * See also {@link Http::getHeader()}
+         * See also {@link Http::getFirstHeader()}
          * if this does not work
          */
         return http_response_code();
@@ -69,13 +72,43 @@ class Http
 
     public static function setMime(string $mime)
     {
-        $contentTypeHeader = Mime::HEADER_CONTENT_TYPE;
+        $contentTypeHeader = HttpResponse::HEADER_CONTENT_TYPE;
         header("$contentTypeHeader: $mime");
     }
 
-    public static function setJsonMime()
+
+    public static function getHeadersForName(string $name, ?array $headers): array
     {
-        Http::setMime(Mime::JSON);
+        if ($headers === null) {
+            $headers = self::getHeaders();
+        }
+
+        $result = array();
+        $headerNameNormalized = trim(strtolower($name));
+        foreach ($headers as $header) {
+            $loc = strpos($header, ":");
+            if ($loc === false) {
+                continue;
+            }
+            $actualHeaderName = substr($header, 0, $loc);
+            $actualHeaderNameNormalized = trim(strtolower($actualHeaderName));
+            if ($actualHeaderNameNormalized === $headerNameNormalized) {
+                $result[] = $header;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @throws ExceptionNotExists
+     */
+    public static function extractHeaderValue(string $header): string
+    {
+        $positionDoublePointSeparator = strpos($header, ':');
+        if ($positionDoublePointSeparator === false) {
+            throw new ExceptionNotExists("No value found");
+        }
+        return trim(substr($header, $positionDoublePointSeparator + 1));
     }
 
     /**
@@ -86,12 +119,12 @@ class Http
      */
     function sendAsyncRequest($url)
     {
-        $parts=parse_url($url);
-        $fp = fsockopen($parts['host'],isset($parts['port'])?$parts['port']:80,$errno, $errstr, 30);
-        $out = "GET ".$parts['path'] . "?" . $parts['query'] . " HTTP/1.1\r\n";
-        $out.= "Host: ".$parts['host']."\r\n";
-        $out.= "Content-Length: 0"."\r\n";
-        $out.= "Connection: Close\r\n\r\n";
+        $parts = parse_url($url);
+        $fp = fsockopen($parts['host'], isset($parts['port']) ? $parts['port'] : 80, $errno, $errstr, 30);
+        $out = "GET " . $parts['path'] . "?" . $parts['query'] . " HTTP/1.1\r\n";
+        $out .= "Host: " . $parts['host'] . "\r\n";
+        $out .= "Content-Length: 0" . "\r\n";
+        $out .= "Connection: Close\r\n\r\n";
 
         fwrite($fp, $out);
         fclose($fp);

@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\Meta\Api\MetadataDateTime;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use DateTime;
 
 /**
@@ -27,20 +29,37 @@ class CacheExpirationDate extends MetadataDateTime
             ->setResource($page);
     }
 
-    public function getDefaultValue(): ?DateTime
+    /**
+     *
+     * @throws ExceptionNotFound - if their is no default value, the HTML document does not exists, the cache is disabled
+     *
+     */
+    public function getDefaultValue(): DateTime
     {
         $resourceCombo = $this->getResource();
-        if (!($resourceCombo instanceof Page)) {
-            return null;
-        }
-        $path = $resourceCombo->getHtmlDocument()->getCachePath();
-        if (!FileSystems::exists($path)) {
-            return null;
+        if (!($resourceCombo instanceof MarkupPath)) {
+            throw new ExceptionNotFound("Cache expiration is only available for page fragment");
         }
 
-        $cacheIntervalInSecond = Site::getCacheTime();
-        if($cacheIntervalInSecond===-1){
-            return null;
+        /**
+         * We use {@link FetcherMarkup::getContentCachePath()}
+         * and not {@link FetcherMarkup::processIfNeededAndGetFetchPath()}
+         * to not create the HTML
+         */
+        try {
+            $fetcherMarkup = $resourceCombo->createHtmlFetcherWithItselfAsContextPath();
+        } catch (ExceptionNotExists $e) {
+            throw new ExceptionNotFound("The executing path does not exist.");
+        }
+        $path = $fetcherMarkup->getContentCachePath();
+        if (!FileSystems::exists($path)) {
+            throw new ExceptionNotFound("There is no HTML document created to expire.");
+        }
+
+
+        $cacheIntervalInSecond = Site::getXhtmlCacheTime();
+        if ($cacheIntervalInSecond === -1) {
+            throw new ExceptionNotFound("Cache has been disabled globally on the site");
         }
 
         /**
@@ -57,22 +76,24 @@ class CacheExpirationDate extends MetadataDateTime
     }
 
 
-    public function getValue(): ?DateTime
+    /**
+     * @throws ExceptionNotFound
+     */
+    public function getValue(): DateTime
     {
 
-        $value = parent::getValue();
-        if ($value === null) {
-            $cronExpression = $this->getResource()->getCacheExpirationFrequency();
-            if ($cronExpression !== null) {
-                try {
-                    $value = Cron::getDate($cronExpression);
-                    parent::setValue($value);
-                } catch (ExceptionCombo $e) {
-                    // nothing, the cron expression is tested when set
-                }
+        try {
+            return parent::getValue();
+        } catch (ExceptionNotFound $e) {
+            $cronExpression = CacheExpirationFrequency::createForPage($this->getResource())->getValue();
+            try {
+                $value = Cron::getDate($cronExpression);
+                parent::setValue($value);
+                return $value;
+            } catch (ExceptionBadArgument $badArgument) {
+                throw $e;
             }
         }
-        return $value;
 
     }
 
@@ -83,34 +104,39 @@ class CacheExpirationDate extends MetadataDateTime
     }
 
 
-    public function getPersistenceType(): string
+    public static function getPersistenceType(): string
     {
         return MetadataDokuWikiStore::CURRENT_METADATA;
     }
 
 
-    public function getCanonical(): string
+    public static function getCanonical(): string
     {
         return CacheExpirationFrequency::PROPERTY_NAME;
     }
 
-    public function getTab(): string
+    public static function getTab(): string
     {
         return MetaManagerForm::TAB_CACHE_VALUE;
     }
 
-    public function getDescription(): string
+    public static function getDescription(): string
     {
         return "The next cache expiration date (calculated from the cache frequency expression)";
     }
 
-    public function getLabel(): string
+    public static function getLabel(): string
     {
         return "Cache Expiration Date";
     }
 
-    public function getMutable(): bool
+    public static function isMutable(): bool
     {
         return false;
+    }
+
+    public static function isOnForm(): bool
+    {
+        return true;
     }
 }

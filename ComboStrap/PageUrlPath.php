@@ -4,7 +4,10 @@
 namespace ComboStrap;
 
 
-use Slug;
+use ComboStrap\Meta\Api\Metadata;
+use ComboStrap\Meta\Api\MetadataText;
+use ComboStrap\Meta\Api\MetadataWikiPath;
+use ComboStrap\Web\UrlRewrite;
 
 /**
  * Class PageUrlPath
@@ -12,6 +15,8 @@ use Slug;
  *
  *
  * The path (ie id attribute in the url) in a absolute format (ie with root)
+ *
+ * This is used in the {@link UrlRewrite} module where the path is rewritten
  *
  * url path: name for ns + slug (title) + page id
  * or
@@ -27,9 +32,9 @@ use Slug;
  *   - permanent page path (page id)
  *   - page path
  *
- * This is not the URL of the page but of the generated HTML web page (Ie {@link HtmlDocument}) with all pages (slots)
+ * This is not the URL of the page but of the generated HTML web page (Ie {@link MarkupPath}) with all pages (slots)
  */
-class PageUrlPath extends MetadataWikiPath
+class PageUrlPath extends MetadataText
 {
 
     /**
@@ -52,7 +57,7 @@ class PageUrlPath extends MetadataWikiPath
     public const CANONICAL = "page:url";
     const PROPERTY_NAME = "page-url-path";
 
-    public static function createForPage(Page $page)
+    public static function createForPage(MarkupPath $page): PageUrlPath
     {
         return (new PageUrlPath())
             ->setResource($page);
@@ -67,39 +72,54 @@ class PageUrlPath extends MetadataWikiPath
         return substr($lastPartName, $lastPosition + 1);
     }
 
-    public function getTab(): string
+    static public function getTab(): string
     {
         return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
-    public function getValue(): ?string
+    public function getValue(): string
     {
 
         $page = $this->getResource();
-        if (!($page instanceof Page)) {
-            LogUtility::msg("The Url Path is not implemented for the resource type (" . $page->getType() . ")");
-            return null;
+        if (!($page instanceof MarkupPath)) {
+            throw new ExceptionNotFound("The Url Path is not implemented for the resource type (" . $page->getType() . ")");
         }
 
         /**
          * Type of Url
          */
-        $urlType = PageUrlType::getOrCreateForPage($page)->getValue();
-        $urlTypeDefault = PageUrlType::getOrCreateForPage($page)->getDefaultValue();
+        $pageUrlType = PageUrlType::createFromPage($page);
+        $urlType = $pageUrlType->getValue();
+        $urlTypeDefault = $pageUrlType->getDefaultValue();
         if ($urlType === $urlTypeDefault) {
-            return null;
+            // not sure why ? may be to not store the value if it has the same default
+            throw new ExceptionNotFound("Same value as default");
         }
         return $this->getUrlPathFromType($urlType);
 
     }
 
+    /**
+     * @return string
+     *
+     */
+    public function getValueOrDefault(): string
+    {
+        try {
+            return $this->getValue();
+        } catch (ExceptionNotFound $e) {
+            return $this->getDefaultValue();
+        }
 
-    public function getDescription(): string
+    }
+
+
+    static public function getDescription(): string
     {
         return "The path used in the page url";
     }
 
-    public function getLabel(): string
+    static public function getLabel(): string
     {
         return "Url Path";
     }
@@ -109,25 +129,28 @@ class PageUrlPath extends MetadataWikiPath
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistenceType(): string
+    static public function getPersistenceType(): string
     {
         return Metadata::DERIVED_METADATA;
     }
 
-    public function getMutable(): bool
+    static public function isMutable(): bool
     {
         return false;
     }
 
-    public function getDefaultValue()
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
     {
 
-        $urlTypeDefault = PageUrlType::getOrCreateForPage($this->getResource())->getDefaultValue();
+        $urlTypeDefault = PageUrlType::createFromPage($this->getResource())->getDefaultValue();
         return $this->getUrlPathFromType($urlTypeDefault);
 
     }
 
-    public function getCanonical(): string
+    static public function getCanonical(): string
     {
         return self::CANONICAL;
     }
@@ -201,26 +224,32 @@ class PageUrlPath extends MetadataWikiPath
 
     /**
      * Utility to change the type of the resource
-     * @return Page|null
+     * @return MarkupPath|null
      */
-    private function getPage(): ?Page
+    private function getPage(): ?MarkupPath
     {
         $resource = $this->getResource();
-        if ($resource instanceof Page) {
+        if ($resource instanceof MarkupPath) {
             return $resource;
         }
         return null;
     }
 
-    public function getUrlPathFromType(?string $urlType)
+    /**
+     * In case of internal error, the path is returned
+     */
+    public function getUrlPathFromType(string $urlType): string
     {
+
         $page = $this->getResource();
-        if((!$page instanceof Page)){
-            LogUtility::msg("The url path is only for page resources", LogUtility::LVL_MSG_ERROR, $this->getCanonical());
-            return null;
+        $pagePath = $page->getPathObject()->toAbsoluteId();
+        if ((!$page instanceof MarkupPath)) {
+            $message = "The url path is only for page resources";
+            LogUtility::internalError($message, $this->getCanonical());
+            return $pagePath;
         }
 
-        $pagePath = $page->getPath()->toString();
+
         switch ($urlType) {
             case PageUrlType::CONF_VALUE_PAGE_PATH:
                 // the default
@@ -228,31 +257,57 @@ class PageUrlPath extends MetadataWikiPath
             case PageUrlType::CONF_VALUE_PERMANENT_PAGE_PATH:
                 return $this->toPermanentUrlPath($pagePath);
             case PageUrlType::CONF_VALUE_CANONICAL_PATH:
-                return $page->getCanonicalOrDefault();
+                try {
+                    return Canonical::createForPage($page)->getValueOrDefault()->toAbsoluteId();
+                } catch (ExceptionNotFound $e) {
+                    // no canonical, path as default
+                    return $pagePath;
+                }
             case PageUrlType::CONF_VALUE_PERMANENT_CANONICAL_PATH:
                 return $this->toPermanentUrlPath($page->getCanonicalOrDefault());
             case PageUrlType::CONF_VALUE_SLUG:
                 return $this->toPermanentUrlPath($page->getSlugOrDefault());
             case PageUrlType::CONF_VALUE_HIERARCHICAL_SLUG:
                 $urlPath = $page->getSlugOrDefault();
-                while (($parentPage = $page->getParentPage()) != null) {
-                    if(!$parentPage->isRootHomePage()) {
+                $parentPage = $page;
+                while (true) {
+                    try {
+                        $parentPage = $parentPage->getParent();
+                    } catch (ExceptionNotFound $e) {
+                        break;
+                    }
+                    if (!$parentPage->isRootHomePage()) {
                         $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
                     }
                 }
                 return $this->toPermanentUrlPath($urlPath);
             case PageUrlType::CONF_VALUE_HOMED_SLUG:
                 $urlPath = $page->getSlugOrDefault();
-                if (($parentPage = $page->getParentPage()) != null) {
-                    if(!$parentPage->isRootHomePage()) {
+                try {
+                    $parentPage = $page->getParent();
+                    if (!$parentPage->isRootHomePage()) {
                         $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
                     }
+                } catch (ExceptionNotFound $e) {
+                    // no parent page
                 }
                 return $this->toPermanentUrlPath($urlPath);
             default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
-                return null;
+                $message = "The url type ($urlType) is unknown and was unexpected";
+                LogUtility::internalError($message, self::PROPERTY_NAME);
+                return $pagePath;
+
         }
+    }
+
+    static public function isOnForm(): bool
+    {
+        return true;
+    }
+
+    public function getValueOrDefaultAsWikiId(): string
+    {
+        return WikiPath::removeRootSepIfPresent($this->getValueOrDefault());
     }
 
 }

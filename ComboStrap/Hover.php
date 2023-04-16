@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use ComboStrap\TagAttribute\Shadow;
+
 class Hover
 {
     /**
@@ -23,7 +25,7 @@ class Hover
      * Process hover animation
      * @param TagAttributes $attributes
      */
-    public static function processOnHover(&$attributes)
+    public static function processOnHover(TagAttributes &$attributes)
     {
         if ($attributes->hasComponentAttribute(self::ON_HOVER_ATTRIBUTE)) {
             $hover = strtolower($attributes->getValueAndRemove(self::ON_HOVER_ATTRIBUTE));
@@ -36,7 +38,7 @@ class Hover
                 if (in_array($hover, self::HOVER_ANIMATIONS)) {
 
                     $snippetManager
-                        ->attachCssExternalStyleSheetForSlot(
+                        ->attachRemoteCssStyleSheet(
                             self::ON_HOVER_SNIPPET_ID,
                             "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
                             "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg=="
@@ -85,7 +87,7 @@ class Hover
 
                 // Grow, float and easing are in the css
                 $snippetManager
-                    ->attachCssInternalStyleSheetForSlot(self::ON_HOVER_SNIPPET_ID)
+                    ->attachCssInternalStyleSheet(self::ON_HOVER_SNIPPET_ID)
                     ->setCritical(false);
 
                 // Smooth Transition in and out of hover
@@ -94,7 +96,7 @@ class Hover
                 $attributes->addOutputAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
-                $snippetManager->attachInternalJavascriptForSlot(self::ON_HOVER_SNIPPET_ID);
+                $snippetManager->attachJavascriptFromComponentId(self::ON_HOVER_SNIPPET_ID);
 
             }
 

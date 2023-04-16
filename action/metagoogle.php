@@ -1,7 +1,11 @@
 <?php
 
+use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExecutionContext;
+use ComboStrap\FileSystems;
 use ComboStrap\LdJson;
-use ComboStrap\Page;
+use ComboStrap\LogUtility;
+use ComboStrap\MarkupPath;
 use ComboStrap\PluginUtility;
 
 
@@ -35,11 +39,26 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
     {
 
 
-        if(!PluginUtility::isRenderingRequestedPageProcess()){
+        try {
+            $templateForWebPage = ExecutionContext::getActualOrCreateFromEnv()->getExecutingPageTemplate();
+        } catch (ExceptionNotFound $e) {
             return;
         }
 
-        $page = Page::createPageFromRequestedPage();
+        if (!$templateForWebPage->isSocial()) {
+            return;
+        }
+
+
+        try {
+            $requestedPath = $templateForWebPage->getRequestedContextPath();
+        } catch (ExceptionNotFound $e) {
+            LogUtility::internalError("Because the template is social, it should be at minima a path request");
+            return;
+        }
+
+
+        $page = MarkupPath::createPageFromPathObject($requestedPath);
         $ldJson = LdJson::createForPage($page)
             ->getLdJsonMergedWithDefault();
 

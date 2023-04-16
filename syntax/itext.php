@@ -4,6 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\XmlTagProcessing;
 
 if (!defined('DOKU_INC')) die();
 
@@ -67,8 +68,8 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
     {
 
 
-            $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $pattern = XmlTagProcessing::getContainerTagPattern(self::TAG);
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -76,7 +77,7 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
     function postConnect()
     {
 
-            $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }
@@ -87,7 +88,9 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $knownTypes = [];
+                $defaultAttributes = [];
+                $attributes = TagAttributes::createFromTagMatch($match, $defaultAttributes, $knownTypes);
 
                 $callStackArray = $attributes->toCallStackArray();
 
@@ -119,7 +122,7 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         if ($format == 'xhtml') {
 
@@ -128,7 +131,8 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("span");
+                    $toHtmlEnterTag = $tagAttributes->toHtmlEnterTag("span");
+                    $renderer->doc .= $toHtmlEnterTag;
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

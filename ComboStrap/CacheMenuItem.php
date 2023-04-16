@@ -32,7 +32,7 @@ class CacheMenuItem extends AbstractItem
     {
         $snippetManager = PluginUtility::getSnippetManager();
         $snippetManager->attachJavascriptComboLibrary();
-        $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
+        $snippetManager->attachJavascriptFromComponentId(self::CANONICAL);
         parent::__construct();
     }
 
@@ -68,7 +68,7 @@ class CacheMenuItem extends AbstractItem
     public function getSvg(): string
     {
         /** @var string icon file */
-        return Site::getComboImagesDirectory()->resolve('mdi-cache.svg')->toString();
+        return DirectoryLayout::getComboImagesDirectory()->resolve('mdi-cache.svg')->toAbsoluteId();
     }
 
 

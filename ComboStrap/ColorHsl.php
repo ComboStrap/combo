@@ -58,12 +58,12 @@ class ColorHsl
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setLightness(int $int): ColorHsl
     {
         if ($int < 0 || $int > 100) {
-            throw new ExceptionCombo("Lightness should be between 0 and 100");
+            throw new ExceptionCompile("Lightness should be between 0 and 100");
         }
         $this->lightness = $int;
         return $this;
@@ -75,7 +75,7 @@ class ColorHsl
      * Reference:
      * https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB
      * https://gist.github.com/brandonheyer/5254516
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     function toRgb(): ColorRgb
     {
@@ -127,22 +127,22 @@ class ColorHsl
                 intval(round($green)),
                 intval(round($blue))
             );
-        } catch (ExceptionCombo $e) {
+        } catch (ExceptionCompile $e) {
             // should not happen but yeah, who knows
             // and because there is no safe constructor, no safe default, we throw
             $message = "Error while creating the rgb color from the hsl ($this)";
-            throw new ExceptionCombo($message, self::CANONICAL, 0, $e);
+            throw new ExceptionCompile($message, self::CANONICAL, 0, $e);
         }
 
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function setSaturation(int $saturation): ColorHsl
     {
         if ($saturation < 0 || $saturation > 100) {
-            throw new ExceptionCombo("Saturation should be between 0 and 100");
+            throw new ExceptionCompile("Saturation should be between 0 and 100");
         }
         $this->saturation = $saturation;
         return $this;
@@ -170,7 +170,7 @@ class ColorHsl
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCompile
      */
     public function diff($color): array
     {

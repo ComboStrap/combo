@@ -62,24 +62,29 @@ class SqliteRequest
     {
         $res = null;
         $requestType = "";
+        $queryExecuted="";
         if ($this->data !== null && $this->tableName !== null) {
             $res = $this->sqlitePlugin->storeEntry($this->tableName, $this->data);
             $requestType = "Upsert";
+            $queryExecuted = "upsert of table $this->tableName";
         }
 
         if ($this->query !== null) {
             $res = $this->sqlitePlugin->query($this->query);
             $requestType = "Query Simple";
+            $queryExecuted = $this->query;
         }
 
         if ($this->queryParametrized !== null) {
             $res = $this->sqlitePlugin->getAdapter()->query($this->queryParametrized);
             $requestType = "Query Parametrized"; // delete, insert, update, query
+            $queryExecuted = $this->queryParametrized;
         }
 
         if ($this->statement !== null) {
             $res = $this->sqlitePlugin->getAdapter()->getDb()->exec($this->statement);
             $requestType = "statement";
+            $queryExecuted = $this->statement;
         }
 
         if ($res === null) {
@@ -93,7 +98,7 @@ class SqliteRequest
 
         if((!$res instanceof \PDOStatement)){
             $message = $this->getErrorMessage();
-            throw new ExceptionCompile("Error in the $requestType. res is not a PDOStatement but as the value ($res). Message: {$message}");
+            throw new ExceptionCompile("Error in the request type `$requestType`. res is not a PDOStatement but as the value ($res). Message: {$message}, Query: {$queryExecuted}");
         }
 
         $this->result = new SqliteResult($this, $res);

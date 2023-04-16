@@ -45,7 +45,12 @@ class Event
 
         $version = $sqlite->getVersion();
         $rows = [];
-        if ($version > "3.35.0") {
+        /**
+         * Returning clause
+         */
+        $isCi = PluginUtility::isCi(); // Sqlite plugin seems to not support the returning clause - it returns a number as result set in CI
+        $isDev = PluginUtility::isDevOrTest(); // may not work for normal users
+        if ($version > "3.35.0" && $isDev && !$isCi) {
 
             // returning clause is available since 3.35 on delete
             // https://www.sqlite.org/lang_returning.html
@@ -65,7 +70,7 @@ class Event
                     return;
                 }
             } catch (ExceptionCompile $e) {
-                LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
             } finally {
                 $request->close();
             }

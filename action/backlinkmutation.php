@@ -1,14 +1,13 @@
 <?php
 
-use ComboStrap\ExceptionNotExists;
-use ComboStrap\MarkupCacheDependencies;
+require_once(__DIR__ . '/../vendor/autoload.php');
+
 use ComboStrap\CacheLog;
-use ComboStrap\CacheManager;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCompile;
-use ComboStrap\FileSystems;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\LogUtility;
-use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\MarkupCacheDependencies;
 use ComboStrap\MarkupPath;
 use ComboStrap\MetadataMutation;
 use ComboStrap\PagePath;

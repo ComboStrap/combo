@@ -1,29 +1,19 @@
 <?php
 
+require_once(__DIR__ . '/../vendor/autoload.php');
+
 use ComboStrap\BacklinkMenuItem;
-use ComboStrap\Event;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExecutionContext;
-use ComboStrap\FetcherMarkup;
 use ComboStrap\FetcherPage;
-use ComboStrap\FileSystems;
 use ComboStrap\HttpResponseStatus;
-use ComboStrap\Identity;
-use ComboStrap\LinkMarkup;
-use ComboStrap\LogUtility;
-use ComboStrap\Meta\Store\MetadataDokuWikiStore;
-use ComboStrap\Mime;
 use ComboStrap\MarkupPath;
-use ComboStrap\PagePath;
-use ComboStrap\PluginUtility;
-use ComboStrap\Reference;
-use ComboStrap\References;
+use ComboStrap\Mime;
 use ComboStrap\Tag\RelatedTag;
-use ComboStrap\WikiPath;
 use dokuwiki\Menu\Item\Backlink;
 
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 
 /**
  * Handle the backlink menu item

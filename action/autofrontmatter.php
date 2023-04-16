@@ -4,6 +4,8 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 
+require_once(__DIR__ . '/../vendor/autoload.php');
+
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
  *

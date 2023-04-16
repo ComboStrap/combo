@@ -33,7 +33,7 @@ class Event
         try {
             $sqlite = Sqlite::createOrGetBackendSqlite();
         } catch (ExceptionSqliteNotAvailable $e) {
-            LogUtility::msg("Sqlite is mandatory for asynchronous event");
+            LogUtility::error("Sqlite is mandatory for asynchronous event", self::CANONICAL, $e);
             return;
         }
 

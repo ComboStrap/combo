@@ -1056,7 +1056,8 @@ class PluginUtility
 
     public static function isCi(): bool
     {
-// https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+        // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+        // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
         return getenv("CI") === "true";
     }
 

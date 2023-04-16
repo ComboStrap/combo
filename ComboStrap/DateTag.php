@@ -7,6 +7,7 @@ use syntax_plugin_combo_variable;
 
 /**
  * Format a date
+ * @deprecated use the pipline instead
  */
 class DateTag
 {
@@ -54,8 +55,15 @@ class DateTag
                 $newLocale = setlocale(LC_TIME, $lang, $derivedLocale);
                 if ($newLocale === false) {
                     $newLocale = setlocale(LC_TIME, $lang);
+                    /** @noinspection PhpStatementHasEmptyBodyInspection */
                     if ($newLocale === false) {
-                        throw new ExceptionBadSyntax("The language ($lang) / locale ($derivedLocale) is not available as locale on the server. You can't then format the value ($date) in this language.");
+                        /**
+                         * Not the good algorithm as we come here
+                         * everytime on linux.
+                         * strftime is deprecated, we should change this code then
+                         *
+                         */
+                        // throw new ExceptionBadSyntax("The language ($lang) / locale ($derivedLocale) is not available as locale on the server. You can't then format the value ($date) in this language.");
                     }
                 }
             }

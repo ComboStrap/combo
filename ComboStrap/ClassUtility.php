@@ -74,6 +74,14 @@ class ClassUtility
             throw new ExceptionRuntimeInternal("We could load the ClassUtility class. Error: {$e->getMessage()}");
         }
         foreach (FileSystems::getChildrenLeaf($parent) as $child) {
+            try {
+                $extension = $child->getExtension();
+            } catch (ExceptionNotFound $e) {
+                continue;
+            }
+            if($extension!=='php'){
+                continue;
+            }
             include_once $child->toAbsoluteId();
         }
     }

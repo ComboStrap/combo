@@ -3,6 +3,7 @@
 namespace ComboStrap\Meta\Field;
 
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\FirstImage;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataImage;
@@ -67,13 +68,22 @@ class AncestorImage extends MetadataImage
             } catch (ExceptionNotFound $e) {
                 // ok
             }
+            try {
+                /**
+                 * If this is a index page,
+                 * the first image is generally a prominent image
+                 */
+                return FirstImage::createForPage($actual)->getValue();
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
         }
         throw new ExceptionNotFound();
 
     }
 
 
-    static     public function getDrive(): string
+    static public function getDrive(): string
     {
         return WikiPath::MEDIA_DRIVE;
     }

@@ -97,8 +97,12 @@ jobs:
       - name: Installed Locale
         run: locale -a
 
+      # Enhance the php unit output on the teamcity output format of phpunit
+      - name: Phpunit Matcher for teamcity output
+        uses: mheap/phpunit-matcher-action@v1
+
       # with verbose, you see the configuration file used at the beginning
       - name: Test
         run: |
           phpunit --version
-          phpunit --stderr --configuration _test/phpunit.xml --verbose --debug --bootstrap ${COMBO_HOME}/_test/bootstrap.php ${COMBO_HOME}/_test
+          phpunit --stderr --teamcity --configuration _test/phpunit.xml --verbose --debug --bootstrap ${COMBO_HOME}/_test/bootstrap.php ${COMBO_HOME}/_test

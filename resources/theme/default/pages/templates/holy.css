@@ -10,6 +10,7 @@ main > *, #page-core {
         gap: 1.5rem;
         grid-template-areas: "page-side page-main";
         grid-template-columns: minmax(min-content,1fr) 3fr;
+        align-content: flex-start
     }
 
     #page-side {
@@ -39,6 +40,7 @@ main > *, #page-core {
         grid-template-areas: unset;
         margin-left: 1rem;
         margin-right: 1rem;
+        align-content: flex-start
 
     }
 

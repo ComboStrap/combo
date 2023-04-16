@@ -18,6 +18,7 @@ main > *, #page-core {
         grid-template-areas: unset;
         margin-left: 1rem;
         margin-right: 1rem;
+        align-content: flex-start;
 
     }
 

@@ -34,8 +34,10 @@ class TemplateForWebPage
      * https://developer.chrome.com/docs/lighthouse/best-practices/doctype/
      * https://getbootstrap.com/docs/5.0/getting-started/introduction/#html5-doctype
      * <!doctype html>
+     *
+     * The eol `\n` is needed for lightouse
      */
-    const DOCTYPE = "<!DOCTYPE html>";
+    const DOCTYPE = "<!doctype html>\n";
 
     private array $templateDefinition;
     const CANONICAL = "template";

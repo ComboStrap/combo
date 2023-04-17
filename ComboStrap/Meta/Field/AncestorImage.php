@@ -3,6 +3,7 @@
 namespace ComboStrap\Meta\Field;
 
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\FeaturedIcon;
 use ComboStrap\FirstImage;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Api\Metadata;
@@ -52,6 +53,15 @@ class AncestorImage extends MetadataImage
         return false;
     }
 
+    /**
+     * Determination of the ancestore
+     * is really a question of taste.
+     *
+     * The algorithm goal is to find a relevant image.
+     *
+     * @return WikiPath
+     * @throws ExceptionNotFound
+     */
     public function getValue(): WikiPath
     {
 
@@ -74,6 +84,14 @@ class AncestorImage extends MetadataImage
                  * the first image is generally a prominent image
                  */
                 return FirstImage::createForPage($actual)->getValue();
+            } catch (ExceptionNotFound $e) {
+                // ok
+            }
+            try {
+                /**
+                 * The featured icon or the first icon parsed
+                 */
+                return FeaturedIcon::createForPage($actual)->getValueOrDefault();
             } catch (ExceptionNotFound $e) {
                 // ok
             }

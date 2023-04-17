@@ -17,6 +17,8 @@ main > *, #page-core {
 
     #page-main {
         grid-area: page-main;
+        display: grid;
+        grid-auto-flow: row;
     }
 
 }

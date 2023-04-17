@@ -237,6 +237,17 @@ class FetcherRaster extends IFetcherLocalImage
 
     }
 
+    public function getTargetWidth(): int
+    {
+        $targetWidth = parent::getTargetWidth();
+        $intrinsicWidth = $this->getIntrinsicWidth();
+        if ($targetWidth > $intrinsicWidth) {
+            LogUtility::warning("For the image ($this), the calculated width of ($targetWidth) cannot be bigger than the intrinsic width of ($targetWidth). The requested width was then set to its natural width ($intrinsicWidth).", self::CANONICAL);
+            return $intrinsicWidth;
+        }
+        return $targetWidth;
+    }
+
 
     function getFetchPath(): LocalPath
     {
@@ -290,6 +301,22 @@ class FetcherRaster extends IFetcherLocalImage
     public function __toString()
     {
         return $this->getSourcePath()->__toString();
+    }
+
+    /**
+     * @return int
+     * @throws ExceptionNotFound
+     * We can upscale, we limit then the requested height to the internal size
+     */
+    public function getRequestedHeight(): int
+    {
+        $requestedHeight = parent::getRequestedHeight();
+        $intrinsicHeight = $this->getIntrinsicHeight();
+        if ($requestedHeight > $intrinsicHeight) {
+            LogUtility::warning("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($intrinsicHeight). The height was then set to its natural height ($intrinsicHeight)", self::CANONICAL);
+            return $intrinsicHeight;
+        }
+        return $requestedHeight;
     }
 
 

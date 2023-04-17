@@ -5,6 +5,8 @@ namespace ComboStrap\Web;
 
 use ComboStrap\ArrayCaseInsensitive;
 use ComboStrap\DataType;
+use ComboStrap\DokuWiki;
+use ComboStrap\DokuwikiId;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -12,8 +14,10 @@ use ComboStrap\ExceptionNotEquals;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntimeInternal;
+use ComboStrap\FetcherPage;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\FetcherSystem;
+use ComboStrap\FetcherTraitWikiPath;
 use ComboStrap\LocalFileSystem;
 use ComboStrap\LogUtility;
 use ComboStrap\Path;
@@ -350,6 +354,12 @@ class Url extends PathAbs
      */
     public function toAbsoluteUrl(): Url
     {
+        /**
+         * Do we have a path information
+         */
+        if($this->isLocal()){
+            return $this;
+        }
         try {
             $this->getScheme();
         } catch (ExceptionNotFound $e) {
@@ -943,5 +953,31 @@ class Url extends PathAbs
         $this->withRewrite = false;
         return $this;
     }
+
+    /**
+     * Dokuwiki utility to check if the URL is local
+     * (ie has not path)
+     * @return bool
+     */
+    public function isLocal(): bool
+    {
+        if($this->path!==null){
+            return false;
+        }
+        /**
+         * The path paramater of Dokuwiki
+         */
+        if($this->hasProperty(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE)){
+            return false;
+        }
+        if($this->hasProperty(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER)){
+            return false;
+        }
+        if($this->hasProperty(FetcherRawLocalPath::SRC_QUERY_PARAMETER)){
+            return false;
+        }
+        return true;
+    }
+
 
 }

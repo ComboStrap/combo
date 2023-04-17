@@ -218,7 +218,9 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             if (PluginUtility::isDevOrTest() && $executionContext->getExecutingAction() !== ExecutionContext::PREVIEW_ACTION) {
                 LogUtility::warning("A markup handler is not running, we couldn't create a child.");
             }
-            return self::confRoot();
+            $contextPath = $executionContext->getContextPath();
+            return self::confRoot()
+                ->setRequestedContextPath($contextPath);
         }
         return self::confRoot()
             ->setParentMarkupHandler($executing)

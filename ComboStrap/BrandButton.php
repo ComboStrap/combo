@@ -567,6 +567,7 @@ EOF;
                          */
                         $buttonAttributes->addOutputAttributeValue("target", "_blank");
                         $buttonAttributes->addOutputAttributeValue("href", $this->getBrandEndpointForPage($requestedPage));
+                        $buttonAttributes->addOutputAttributeValue("title", $label);
                         break;
                     default:
                         /**

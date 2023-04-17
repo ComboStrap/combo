@@ -108,7 +108,7 @@ class XmlTagProcessing
                 $renderer->doc .= WebCodeTag::renderExit($tagAttributes, $data);
                 return true;
             case ShareTag::MARKUP:
-                $renderer->doc .= ShareTag::renderExit();
+                $renderer->doc .= ShareTag::renderExit($tagAttributes);
                 return true;
             case FollowTag::MARKUP:
                 $renderer->doc .= FollowTag::renderExit();
@@ -664,6 +664,11 @@ class XmlTagProcessing
                 $logicalTag = WebCodeTag::TAG;
                 $returnedArray = WebCodeTag::handleExit($handler);
                 break;
+            case ShareTag::MARKUP:
+                $returnedArray = ShareTag::handleExit($handler);
+
+                break;
+
         }
         /**
          * Common exit attributes

@@ -5,6 +5,7 @@ namespace ComboStrap\Tag;
 use ComboStrap\Brand;
 use ComboStrap\BrandButton;
 use ComboStrap\BrandTag;
+use ComboStrap\CallStack;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
@@ -83,7 +84,8 @@ class ShareTag
         /**
          * Add the link
          */
-        $rendererHtml = $buttonAttributes->toHtmlEnterTag("button");
+        $element = $brandButton->getHtmlElement($buttonAttributes);
+        $rendererHtml = $buttonAttributes->toHtmlEnterTag($element);
 
         /**
          * Icon
@@ -108,11 +110,10 @@ class ShareTag
          * When empty tag, close the link
          */
         if ($state === DOKU_LEXER_SPECIAL) {
-            $rendererHtml .= "</button>";
+            $rendererHtml .= "</$element>";
         }
 
         return $rendererHtml;
-
 
 
     }
@@ -122,9 +123,31 @@ class ShareTag
         return Brand::getBrandNamesForButtonType(BrandButton::TYPE_BUTTON_SHARE);
     }
 
-    public static function renderExit(): string
+    public static function renderExit(TagAttributes $tagAttributes): string
     {
-        return "</button>";
+        try {
+            $requestedPage = MarkupPath::createFromRequestedPage();
+        } catch (ExceptionNotFound $e) {
+            return LogUtility::wrapInRedForHtml("Share Error: Requested Page Not Found: ({$e->getMessage()}");
+        }
+        try {
+
+            $brandButton = BrandTag::createButtonFromAttributes($tagAttributes, BrandButton::TYPE_BUTTON_SHARE);
+            $element = $brandButton->getHtmlElement($brandButton->getHtmlAttributes($requestedPage));
+        } catch (ExceptionCompile $e) {
+            LogUtility::internalError($e->getMessage(), self::CANONICAL, $e);
+            $element = 'button';
+        }
+        return "</$element>";
+    }
+
+    public static function handleExit(\Doku_Handler $handler): array
+    {
+
+        $callStack = CallStack::createFromHandler($handler);
+        $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+        return [PluginUtility::ATTRIBUTES => $openingTag->getAttributes()];
+
     }
 
 }

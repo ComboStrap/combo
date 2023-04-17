@@ -251,7 +251,7 @@ EOF;
         $railBarOffCanvasOpenId = StyleAttribute::addComboStrapSuffix("{$railBarOffCanvasPrefix}-open");
         return <<<EOF
 <div id="$railBarOffCanvasWrapperId" class="$railBarClass $railBarOffCanvasClassAndId $breakpointHiding">
-    <button id="$railBarOffCanvasOpenId" class="btn" type="button" data-bs-toggle="offcanvas"
+    <button id="$railBarOffCanvasOpenId" class="btn" type="button" aria-label="Open the railbar" data-bs-toggle="offcanvas"
             data-bs-target="#$railBarOffCanvasClassAndId" aria-controls="railbar-offcanvas">
     </button>
 

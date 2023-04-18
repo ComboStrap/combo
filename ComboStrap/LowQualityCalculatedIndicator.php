@@ -58,7 +58,11 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
             }
 
             try {
-                return Json::createFromPath($analyticsCache)->toArray()[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::LOW];
+                $value = Json::createFromPath($analyticsCache)->toArray()[renderer_plugin_combo_analytics::QUALITY][renderer_plugin_combo_analytics::LOW];
+                if ($value === null) {
+                    throw new ExceptionNotFound("The value is null in the analytics document.");
+                }
+                return DataType::toBoolean($value, true);
             } catch (ExceptionCompile $e) {
                 $message = "Error while reading the json analytics. {$e->getMessage()}";
                 LogUtility::internalError($message, self::CANONICAL);

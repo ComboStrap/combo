@@ -10,6 +10,8 @@
  *
  */
 
+use ComboStrap\ExceptionNotExists;
+use ComboStrap\ExecutionContext;
 use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Event;
 use ComboStrap\ExceptionBadSyntax;
@@ -68,6 +70,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
     const FORCE_OPTION = 'force';
     const PORT_OPTION = 'port';
     const HOST_OPTION = 'host';
+    const CANONICAL = "combo-cli";
 
 
     /**
@@ -160,13 +163,13 @@ EOF;
     {
 
 
-        if(isset($_REQUEST['animal'])){
+        if (isset($_REQUEST['animal'])) {
             // on linux
-            echo "Animal detected: ".$_REQUEST['animal']."\n";
+            echo "Animal detected: " . $_REQUEST['animal'] . "\n";
         } else {
             // on windows
             echo "No Animal detected\n";
-            echo "Conf: ".DOKU_CONF."\n";
+            echo "Conf: " . DOKU_CONF . "\n";
         }
 
         $args = $options->getArgs();
@@ -264,6 +267,7 @@ EOF;
              * See {@link action_plugin_combo_indexer}
              */
             $pageCounter++;
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
                 /**
                  * If the page does not need to be indexed, there is no run
@@ -277,6 +281,8 @@ EOF;
                 }
             } catch (ExceptionRuntime $e) {
                 LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
+            } finally {
+                $executionContext->close();
             }
         }
         /**
@@ -337,18 +343,29 @@ EOF;
 
 
             $pageCounter++;
-            echo "Analytics Processing for the page {$id} ($pageCounter / $totalNumberOfPages)\n";
-
             /**
              * Analytics
              */
-            $analyticsPath = $page->fetchAnalyticsPath();
+            echo "Analytics Processing for the page {$id} ($pageCounter / $totalNumberOfPages)\n";
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+            try {
+                $analyticsPath = $page->fetchAnalyticsPath();
+            } catch (ExceptionNotExists $e) {
+                LogUtility::error("The analytics document for the page ($page) was not found");
+                continue;
+            } catch (ExceptionCompile $e) {
+                LogUtility::error("Error when get the analytics.",self::CANONICAL,$e);
+                continue;
+            } finally {
+                $executionContext->close();
+            }
+
             try {
                 $data = \ComboStrap\Json::createFromPath($analyticsPath)->toArray();
             } catch (ExceptionBadSyntax $e) {
                 LogUtility::error("The analytics json of the page ($page) is not conform");
                 continue;
-            } catch (ExceptionNotFound $e) {
+            } catch (ExceptionNotFound|ExceptionNotExists $e) {
                 LogUtility::error("The analytics document ({$analyticsPath}) for the page ($page) was not found");
                 continue;
             }
@@ -432,6 +449,7 @@ EOF;
             $page = MarkupPath::createMarkupFromId($id);
             $pageCounter++;
             LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
                 $message = MetadataFrontmatterStore::createFromPage($page)
                     ->sync();
@@ -452,6 +470,8 @@ EOF;
                 }
             } catch (ExceptionCompile $e) {
                 $pagesWithError[$id] = $e->getMessage();
+            } finally {
+                $executionContext->close();
             }
 
         }

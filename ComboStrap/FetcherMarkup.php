@@ -1372,7 +1372,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             $this->processedInstructions = $instructions;
             return $this;
         } catch (\Exception $e) {
-            throw new ExceptionRuntimeInternal("An error has occurred while getting the output. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
+            throw new ExceptionRuntimeInternal("An error has occurred while processing the instructions. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
         } finally {
             $executionContext->closeExecutingMarkupHandler();
         }

@@ -200,10 +200,15 @@ class FetcherRaster extends IFetcherLocalImage
         if ($requestedWidth > $mediaWidth) {
             global $ID;
             if ($ID !== "wiki:syntax") {
+                /**
+                 * Info and not warning level because they fill the error log
+                 * They don't really break anything and it's difficult
+                 * to see when it's intended (ie there is no better image or not)
+                 */
                 // There is a bug in the wiki syntax page
                 // {{wiki:dokuwiki-128.png?200x50}}
                 // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
-                LogUtility::warning("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", self::CANONICAL);
+                LogUtility::info("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", self::CANONICAL);
             }
             return $mediaWidth;
         }
@@ -226,7 +231,12 @@ class FetcherRaster extends IFetcherLocalImage
             // it should not be bigger than the media Height
             $mediaHeight = $this->getIntrinsicHeight();
             if ($requestedHeight > $mediaHeight) {
-                LogUtility::warning("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
+                /**
+                 * Info and not warning level because they fill the error log
+                 * They don't really break anything and it's difficult
+                 * to see when it's intended (ie there is no better image or not)
+                 */
+                LogUtility::info("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", self::CANONICAL);
                 return $mediaHeight;
             }
         } catch (ExceptionNotFound $e) {

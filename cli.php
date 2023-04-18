@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\DatabasePageRow;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExecutionContext;
 use ComboStrap\Meta\Field\BacklinkCount;
@@ -177,60 +178,66 @@ EOF;
 
         $depth = $options->getOpt('depth', 0);
         $cmd = $options->getCmd();
-        switch ($cmd) {
-            case self::METADATA_TO_DATABASE:
-                $startPath = $this->getStartPath($args);
-                $force = $options->getOpt(self::FORCE_OPTION, false);
-                $hostOptionValue = $options->getOpt(self::HOST_OPTION, null);
-                if ($hostOptionValue === null) {
-                    fwrite(STDERR, "The host name is mandatory");
-                    return;
-                }
-                $_SERVER['HTTP_HOST'] = $hostOptionValue;
-                $portOptionName = $options->getOpt(self::PORT_OPTION, null);
-                if ($portOptionName === null) {
-                    fwrite(STDERR, "The host port is mandatory");
-                    return;
-                }
-                $_SERVER['SERVER_PORT'] = $portOptionName;
-                $this->index($startPath, $force, $depth);
-                break;
-            case self::METADATA_TO_FRONTMATTER:
-                $startPath = $this->getStartPath($args);
-                $this->frontmatter($startPath, $depth);
-                break;
-            case self::ANALYTICS:
-                $startPath = $this->getStartPath($args);
-                $output = $options->getOpt('output', '');
-                //if ($output == '-') $output = 'php://stdout';
-                $this->analytics($startPath, $output, $depth);
-                break;
-            case self::SYNC:
-                $this->deleteNonExistingPageFromDatabase();
-                break;
-            case self::PLUGINS_TO_UPDATE:
-                /**
-                 * Endpoint:
-                 * self::EXTENSION_REPOSITORY_API.'?fmt=php&ext[]='.urlencode($name)
-                 * `http://www.dokuwiki.org/lib/plugins/pluginrepo/api.php?fmt=php&ext[]=`.urlencode($name)
-                 */
-                $pluginList = plugin_list('', true);
-                /* @var helper_plugin_extension_extension $extension */
-                $extension = $this->loadHelper('extension_extension');
-                foreach ($pluginList as $name) {
-                    $extension->setExtension($name);
-                    if ($extension->updateAvailable()) {
-                        echo "The extension $name should be updated";
+
+        try {
+            switch ($cmd) {
+                case self::METADATA_TO_DATABASE:
+                    $startPath = $this->getStartPath($args);
+                    $force = $options->getOpt(self::FORCE_OPTION, false);
+                    $hostOptionValue = $options->getOpt(self::HOST_OPTION, null);
+                    if ($hostOptionValue === null) {
+                        fwrite(STDERR, "The host name is mandatory");
+                        return;
                     }
-                }
-                break;
-            default:
-                if ($cmd !== "") {
-                    fwrite(STDERR, "Combo: Command unknown (" . $cmd . ")");
-                } else {
-                    echo $options->help();
-                }
-                exit(1);
+                    $_SERVER['HTTP_HOST'] = $hostOptionValue;
+                    $portOptionName = $options->getOpt(self::PORT_OPTION, null);
+                    if ($portOptionName === null) {
+                        fwrite(STDERR, "The host port is mandatory");
+                        return;
+                    }
+                    $_SERVER['SERVER_PORT'] = $portOptionName;
+                    $this->index($startPath, $force, $depth);
+                    break;
+                case self::METADATA_TO_FRONTMATTER:
+                    $startPath = $this->getStartPath($args);
+                    $this->frontmatter($startPath, $depth);
+                    break;
+                case self::ANALYTICS:
+                    $startPath = $this->getStartPath($args);
+                    $output = $options->getOpt('output', '');
+                    //if ($output == '-') $output = 'php://stdout';
+                    $this->analytics($startPath, $output, $depth);
+                    break;
+                case self::SYNC:
+                    $this->deleteNonExistingPageFromDatabase();
+                    break;
+                case self::PLUGINS_TO_UPDATE:
+                    /**
+                     * Endpoint:
+                     * self::EXTENSION_REPOSITORY_API.'?fmt=php&ext[]='.urlencode($name)
+                     * `http://www.dokuwiki.org/lib/plugins/pluginrepo/api.php?fmt=php&ext[]=`.urlencode($name)
+                     */
+                    $pluginList = plugin_list('', true);
+                    /* @var helper_plugin_extension_extension $extension */
+                    $extension = $this->loadHelper('extension_extension');
+                    foreach ($pluginList as $name) {
+                        $extension->setExtension($name);
+                        if ($extension->updateAvailable()) {
+                            echo "The extension $name should be updated";
+                        }
+                    }
+                    break;
+                default:
+                    if ($cmd !== "") {
+                        fwrite(STDERR, "Combo: Command unknown (" . $cmd . ")");
+                    } else {
+                        echo $options->help();
+                    }
+                    exit(1);
+            }
+        } catch (\Exception $exception) {
+            fwrite(STDERR, "An internal error has occured. ".$exception->getMessage() . "\n".$exception->getTraceAsString());
+            exit(1);
         }
 
 
@@ -354,7 +361,7 @@ EOF;
                 LogUtility::error("The analytics document for the page ($page) was not found");
                 continue;
             } catch (ExceptionCompile $e) {
-                LogUtility::error("Error when get the analytics.",self::CANONICAL,$e);
+                LogUtility::error("Error when get the analytics.", self::CANONICAL, $e);
                 continue;
             } finally {
                 $executionContext->close();
@@ -401,6 +408,9 @@ EOF;
     }
 
 
+    /**
+     * @throws \ComboStrap\ExceptionSqliteNotAvailable
+     */
     private function deleteNonExistingPageFromDatabase()
     {
         LogUtility::msg("Starting: Deleting non-existing page from database");
@@ -424,8 +434,12 @@ EOF;
             $counter++;
             $id = $row['id'];
             if (!page_exists($id)) {
-                echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
-                MarkupPath::createMarkupFromId($id)->getDatabasePage()->delete();
+                echo 'Page does not exist on the file system. Delete from the database (' . $id . ")\n";
+                try {
+                    DatabasePageRow::getFromDokuWikiId($id)->delete();
+                } catch (ExceptionNotFound $e) {
+                    //
+                }
             }
         }
         LogUtility::msg("Sync finished ($counter pages checked)");

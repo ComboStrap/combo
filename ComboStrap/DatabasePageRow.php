@@ -297,6 +297,7 @@ class DatabasePageRow
     static function getFromDokuWikiId($id): DatabasePageRow
     {
         $databasePage = new DatabasePageRow();
+        $databasePage->markupPath = MarkupPath::createMarkupFromId($id);
         $row = $databasePage->getDatabaseRowFromDokuWikiId($id);
         $databasePage->setRow($row);
         return $databasePage;

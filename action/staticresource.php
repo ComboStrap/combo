@@ -261,12 +261,14 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
+                /**
+                 * Don't add a body
+                 */
                 $excutingContext
                     ->response()
                     ->setStatus(HttpResponseStatus::NOT_MODIFIED)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
-                    ->setBodyAsJsonMessage("File not modified")
                     ->end();
                 return;
             }

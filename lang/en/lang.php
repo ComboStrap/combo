@@ -66,6 +66,7 @@ $lang['message_redirected_from_canonical'] = 'You have been redirected from a pe
 $lang['message_pagename_exist_one'] = 'The following page(s) exists already in other namespace(s) with the same name part: ';
 $lang['message_redirected_to_startpage'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the start page of the namespace.';
 $lang['message_redirected_to_bestpagename'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the best page.';
+$lang['message_redirected_to_bestendpagename'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the best end page name.';
 $lang['message_redirected_to_bestnamespace'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the best namespace.';
 $lang['message_redirected_to_searchengine'] = 'The page (%s) doesn\'t exist. You have been redirected automatically to the search engine.';
 $lang['message_come_from'] = 'This message was fired by the ';

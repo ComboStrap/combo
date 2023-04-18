@@ -114,6 +114,10 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestpagename'], hsc($pageIdOrigin)) . "</p>");
                     break;
+                case  action_plugin_combo_router::TARGET_ORIGIN_BEST_END_PAGE_NAME:
+                    $message = Message::createWarningMessage()
+                        ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestendpagename'], hsc($pageIdOrigin)) . "</p>");
+                    break;
                 case action_plugin_combo_router::TARGET_ORIGIN_BEST_NAMESPACE:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestnamespace'], hsc($pageIdOrigin)) . "</p>");
@@ -196,49 +200,49 @@ class action_plugin_combo_routermessage extends ActionPlugin
             }
         }
 
-            if (count($pagesWithSameName) > 0) {
+        if (count($pagesWithSameName) > 0) {
 
-                $message->setType(Message::TYPE_WARNING);
+            $message->setType(Message::TYPE_WARNING);
 
-                // Assign the value to a variable to be able to use the construct .=
-                if ($message->getPlainTextContent() <> '') {
-                    $message->addHtmlContent('<br/><br/>');
+            // Assign the value to a variable to be able to use the construct .=
+            if ($message->getPlainTextContent() <> '') {
+                $message->addHtmlContent('<br/><br/>');
+            }
+            $message->addHtmlContent($this->lang['message_pagename_exist_one']);
+            $message->addHtmlContent('<ul>');
+
+            $i = 0;
+            $listPagesHtml = "";
+            foreach ($pagesWithSameName as $page) {
+
+                if ($page->getWikiId() === $ID) {
+                    continue;
                 }
-                $message->addHtmlContent($this->lang['message_pagename_exist_one']);
-                $message->addHtmlContent('<ul>');
-
-                $i = 0;
-                $listPagesHtml = "";
-                foreach ($pagesWithSameName as $page) {
-
-                    if ($page->getWikiId() === $ID) {
-                        continue;
-                    }
-                    $i++;
-                    if ($i > 10) {
-                        $listPagesHtml .= '<li>' .
-                            tpl_link(
-                                "?do=search&q=" . rawurldecode($pageName),
-                                "More ...",
-                                'class="" rel="nofollow" title="More..."',
-                                $return = true
-                            ) . '</li>';
-                        break;
-                    }
-
-                    try {
-                        $markupRef = LinkMarkup::createFromPageIdOrPath($page->getWikiId());
-                        $tagAttributes = $markupRef
-                            ->toAttributes()
-                            ->addOutputAttributeValue("rel", "nofollow");
-                        $listPagesHtml .= "<li>{$tagAttributes->toHtmlEnterTag("a")}{$markupRef->getDefaultLabel()}</a></li>";
-                    } catch (ExceptionBadSyntax $e) {
-                        LogUtility::internalError("Internal Error: Unable to get a markup ref for the page ($page). Error: {$e->getMessage()}");
-                    }
-
+                $i++;
+                if ($i > 10) {
+                    $listPagesHtml .= '<li>' .
+                        tpl_link(
+                            "?do=search&q=" . rawurldecode($pageName),
+                            "More ...",
+                            'class="" rel="nofollow" title="More..."',
+                            $return = true
+                        ) . '</li>';
+                    break;
                 }
-                $message->addHtmlContent($listPagesHtml);
-                $message->addHtmlContent('</ul>');
+
+                try {
+                    $markupRef = LinkMarkup::createFromPageIdOrPath($page->getWikiId());
+                    $tagAttributes = $markupRef
+                        ->toAttributes()
+                        ->addOutputAttributeValue("rel", "nofollow");
+                    $listPagesHtml .= "<li>{$tagAttributes->toHtmlEnterTag("a")}{$markupRef->getDefaultLabel()}</a></li>";
+                } catch (ExceptionBadSyntax $e) {
+                    LogUtility::internalError("Internal Error: Unable to get a markup ref for the page ($page). Error: {$e->getMessage()}");
+                }
+
+            }
+            $message->addHtmlContent($listPagesHtml);
+            $message->addHtmlContent('</ul>');
 
         }
     }
@@ -306,7 +310,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
      */
     private function showMessageIfPublicAndPlanned(): bool
     {
-        if (Identity::isWriter()){
+        if (Identity::isWriter()) {
             return true;
         }
         return $this->getConf(self::CONF_SHOW_MESSAGE_CLASSIC, self::CONF_SHOW_MESSAGE_CLASSIC_DEFAULT) == 1;

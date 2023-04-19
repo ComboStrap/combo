@@ -135,7 +135,9 @@ abstract class MetadataTabular extends Metadata
              * @var Metadata $identifierMetadata
              */
             $identifierMetadata = (new $identifierMetadataObject());
-            $identifierMetadata->setValue($value);
+            $identifierMetadata
+                ->setResource($this->getResource())
+                ->setValue($value);
             $rowId = $this->getRowId($identifierMetadata);
             $this->rows[$rowId] = [$identifierPersistentName => $identifierMetadata];
             return $this;

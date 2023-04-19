@@ -75,7 +75,7 @@ class LinkMarkup
     /**
      * For styling on the anchor tag (ie a)
      */
-    public const ANCHOR_HTML_SNIPPET_ID = "anchor-branding";
+    public const ANCHOR_HTML_SNIPPET_ID = "anchor";
 
     /**
      * Url properties
@@ -165,41 +165,7 @@ class LinkMarkup
         if ($url->hasProperty(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY)) {
             $snippetSystem->attachCssInternalStyleSheet("search-hit");
         }
-
-        /**
-         * Default Link Color
-         * Saturation and lightness comes from the
-         * Note:
-         *   * blue color of Bootstrap #0d6efd s: 98, l: 52
-         *   * blue color of twitter #1d9bf0 s: 88, l: 53
-         *   * reddit gray with s: 16, l : 31
-         *   * the text is s: 11, l: 15
-         * We choose the gray/tone rendering to be close to black
-         * the color of the text
-         */
-        try {
-            $primaryColor = ExecutionContext::getActualOrCreateFromEnv()->getConfig()->getPrimaryColor();
-        } catch (ExceptionNotFound $e) {
-            $primaryColor = null;
-        }
-        if (Site::isBrandingColorInheritanceEnabled() && $primaryColor !== null) {
-
-            $primaryColorText = ColorSystem::toTextColor($primaryColor);
-            $primaryColorHoverText = ColorSystem::toTextHoverColor($primaryColor);
-            /**
-             * There is also a link primary
-             * https://getbootstrap.com/docs/5.2/helpers/colored-links/
-             */
-            $aCss = <<<EOF
-.link-primary { color: {$primaryColorText->toRgbHex()}; }
-.link-primary:hover { color: {$primaryColorHoverText->toRgbHex()}; }
-main a { color: {$primaryColorText->toRgbHex()}; }
-main a:hover { color: {$primaryColorHoverText->toRgbHex()}; }
-EOF;
-            SnippetSystem::getFromContext()->attachCssInternalStylesheet(self::ANCHOR_HTML_SNIPPET_ID, $aCss);
-
-        }
-
+        $snippetSystem->attachCssInternalStyleSheet(self::ANCHOR_HTML_SNIPPET_ID);
 
         global $conf;
 

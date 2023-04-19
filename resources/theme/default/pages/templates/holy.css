@@ -50,7 +50,8 @@ main > *, #page-core {
         position: sticky;
         top: 5rem;
         z-index: 2;
-        height: fit-content;
+        height: calc(100vh - 5rem);
+        overflow-y: auto;
     }
 
     #main-header {

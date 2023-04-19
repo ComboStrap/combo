@@ -1,5 +1,5 @@
 .link-primary {
-    color: var(--bs-primary)
+    color: var(--bs-link-color)
 }
 
 .link-primary:hover {
@@ -7,7 +7,7 @@
 }
 
 #page-main a {
-    color: var(--bs-primary)
+    color: var(--bs-link-color)
 }
 
 #page-main a:hover {
@@ -15,7 +15,7 @@
 }
 
 #page-footer a {
-    color: var(--bs-primary)
+    color: var(--bs-link-color)
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -49,6 +49,7 @@ class GridTag
      *
      * Ie we migrate row to grid smoothly without loosing
      * the possibility to use row as component
+     * @deprecated
      */
     public const TYPE_ROW_TAG = "row";
     /**
@@ -75,6 +76,7 @@ class GridTag
     public const TYPE_MAX_CHILDREN = "max";
     public const CANONICAL = GridTag::TAG;
     const LOGICAL_TAG = self::GRID_TAG;
+    const ITERATOR_DEFAULT_MAX_LINE = 3;
 
 
     public static function processEnter(TagAttributes $attributes, $handler, $match)
@@ -86,13 +88,12 @@ class GridTag
         /**
          * We have split row in two:
          *   * grid for a bootstrap grid
-         *   * row for a flex item (contained for now)
          *
          * We check
          */
         $rowMatchPrefix = "<row";
         $isRowTag = substr($match, 0, strlen($rowMatchPrefix)) == $rowMatchPrefix;
-        if ($parent != false
+        if ($parent !== false
             && !in_array($parent->getTagName(), [
                 BarTag::BAR_TAG,
                 ContainerTag::TAG,
@@ -259,15 +260,15 @@ class GridTag
         $firstChildTag = $callStack->moveToFirstChildTag();
         $childrenOpeningTags = [];
 
-        $templateEndTag = null; // the template end tag that has the instructions
+        $fragmentEndTag = null; // the template end tag that has the instructions
         $callStackTemplate = null; // the instructions in callstack form to modify the children
         if ($firstChildTag !== false && $firstChildTag->getTagName() === FragmentTag::FRAGMENT_TAG && $firstChildTag->getState() === DOKU_LEXER_ENTER) {
-            $templateEndTag = $callStack->next();
-            if ($templateEndTag->getTagName() !== FragmentTag::FRAGMENT_TAG || $templateEndTag->getState() !== DOKU_LEXER_EXIT) {
+            $fragmentEndTag = $callStack->next();
+            if ($fragmentEndTag->getTagName() !== FragmentTag::FRAGMENT_TAG || $fragmentEndTag->getState() !== DOKU_LEXER_EXIT) {
                 LogUtility::error("Error internal: We were unable to find the closing template tag.", GridTag::CANONICAL);
                 return $returnArray;
             }
-            $templateInstructions = $templateEndTag->getPluginData(FragmentTag::CALLSTACK);
+            $templateInstructions = $fragmentEndTag->getPluginData(FragmentTag::CALLSTACK);
             $callStackTemplate = CallStack::createFromInstructions($templateInstructions);
             $callStackTemplate->moveToStart();
             $firstChildTag = $callStackTemplate->moveToFirstChildTag();
@@ -360,6 +361,10 @@ class GridTag
                  */
                 $maxLineDefaultsFiltered = [];
                 $maxLineUsedToFilter = sizeof($childrenOpeningTags);
+                if ($fragmentEndTag !== null) {
+                    // there is only one child in a iterator
+                    $maxLineUsedToFilter = self::ITERATOR_DEFAULT_MAX_LINE;
+                }
                 if ($maxLineAttributeValue !== null && $maxLineUsedToFilter > $maxLineAttributeValue) {
                     $maxLineUsedToFilter = $maxLineAttributeValue;
                 }
@@ -440,8 +445,8 @@ class GridTag
         /**
          * Template child callstack ?
          */
-        if ($templateEndTag !== null && $callStackTemplate !== null) {
-            $templateEndTag->setPluginData(FragmentTag::CALLSTACK, $callStackTemplate->getStack());
+        if ($fragmentEndTag !== null && $callStackTemplate !== null) {
+            $fragmentEndTag->setPluginData(FragmentTag::CALLSTACK, $callStackTemplate->getStack());
         }
 
         return array(

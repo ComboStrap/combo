@@ -8,6 +8,8 @@ use action_plugin_combo_metagoogle;
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataJson;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
+use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
 
 /**
  *
@@ -269,9 +271,14 @@ class LdJson extends MetadataJson
 
                 if ($page->isRootHomePage()) {
 
+                    $target = UrlEndpoint::createDokuUrl()
+                            ->addQueryParameter("do", ExecutionContext::SEARCH_ACTION)
+                            ->toAbsoluteUrl()
+                            ->toHtmlString()
+                        . Url::AMPERSAND_URL_ENCODED_FOR_HTML . 'id={search_term_string}';
                     $ldJson['potentialAction'] = array(
                         '@type' => 'SearchAction',
-                        'target' => Site::getBaseUrl() . DOKU_SCRIPT . '?do=search&amp;id={search_term_string}',
+                        'target' => $target,
                         'query-input' => 'required name=search_term_string',
                     );
                 }

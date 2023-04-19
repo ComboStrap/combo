@@ -362,16 +362,23 @@ class Site
     }
 
 
-    public static function getLogoUrlAsPng()
+    public static function getLogoUrlAsPng(): ?string
     {
 
         $url = null;
-        foreach (self::PNG_LOGO_IDS as $svgLogo) {
+        foreach (self::PNG_LOGO_IDS as $pngId) {
 
-            $svgLogoFN = mediaFN($svgLogo);
-
+            $svgLogoFN = mediaFN($pngId);
             if (file_exists($svgLogoFN)) {
-                $url = ml($svgLogo, '', true, '', true);
+                try {
+                    $url = FetcherRaster::createImageRasterFetchFromId($pngId)
+                        ->getFetchUrl()
+                        ->toAbsoluteUrl()
+                        ->toHtmlString();
+                } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotExists $e) {
+                    LogUtility::internalError("Hardcoded id should not give an error for the png logo url", self::CANONICAL, $e);
+                    continue;
+                }
                 break;
             };
         }
@@ -692,7 +699,7 @@ class Site
                 ->getConfig()
                 ->getPrimaryColor();
         } catch (ExceptionNotFound $e) {
-            if($default===null){
+            if ($default === null) {
                 return null;
             }
             try {

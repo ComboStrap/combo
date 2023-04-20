@@ -166,6 +166,10 @@ class LocalFileSystem implements FileSystem
                         $localChildren[] = $childPath;
                 }
             }
+            /**
+             * With the default, the file '10_....' is before the file '01....'
+             */
+            sort($localChildren, SORT_NATURAL);
             return $localChildren;
         } finally {
             closedir($directoryHandle);

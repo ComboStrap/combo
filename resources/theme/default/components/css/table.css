@@ -5,6 +5,7 @@
 .table-container-cs {
     /* to allow mx-auto to work */
     width: 100%;
+    margin-bottom: 1rem;
 }
 /*fighting dokuwiki css*/
 .table>:not(caption)>*>*{

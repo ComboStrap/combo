@@ -909,12 +909,13 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
          * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
          */
         if ($this->isRootHomePage()) {
-            return UrlEndpoint::createBaseUrl();
+            return UrlEndpoint::createBaseUrl()->toAbsoluteUrl();
         }
 
         try {
             return UrlEndpoint::createDokuUrl()
-                ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getWikiId());
+                ->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $this->getWikiId())
+                ->toAbsoluteUrl();
         } catch (ExceptionBadArgument $e) {
             LogUtility::error("This markup path ($this) can not be accessed externaly");
             return UrlEndpoint::createBaseUrl();

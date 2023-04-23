@@ -6,6 +6,7 @@ namespace ComboStrap;
 use ComboStrap\Meta\Field\PageTemplateName;
 use ComboStrap\Web\Url;
 use ComboStrap\Web\UrlEndpoint;
+use ComboStrap\Web\UrlRewrite;
 use ComboStrap\Xml\XmlDocument;
 
 class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
@@ -47,6 +48,17 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
     public static function createPageFragmentFetcherFromUrl(Url $fetchUrl): FetcherPage
     {
         $pageFragment = new FetcherPage();
+        $rewrite = Site::getUrlRewrite();
+        if ($rewrite === UrlRewrite::WEB_SERVER_REWRITE) {
+            try {
+                $path = $fetchUrl->getPath();
+                $id = substr(str_replace("/", ":", $path), 1);
+                $fetchUrl->setPath(UrlEndpoint::DOKU_PHP);
+                $fetchUrl->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
+            } catch (ExceptionNotFound $e) {
+                // Paht should be there
+            }
+        }
         $pageFragment->buildFromUrl($fetchUrl);
         return $pageFragment;
     }

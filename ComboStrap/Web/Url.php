@@ -357,7 +357,7 @@ class Url extends PathAbs
         /**
          * Do we have a path information
          */
-        if($this->isLocal()){
+        if ($this->isLocal()) {
             return $this;
         }
         try {
@@ -408,7 +408,7 @@ class Url extends PathAbs
      */
     public function getPath(): string
     {
-        if ($this->path === null) {
+        if ($this->path === null || $this->path === '/') {
             throw new ExceptionNotFound("The path was not found");
         }
         return $this->path;
@@ -961,19 +961,19 @@ class Url extends PathAbs
      */
     public function isLocal(): bool
     {
-        if($this->path!==null){
+        if ($this->path !== null) {
             return false;
         }
         /**
          * The path paramater of Dokuwiki
          */
-        if($this->hasProperty(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE)){
+        if ($this->hasProperty(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE)) {
             return false;
         }
-        if($this->hasProperty(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER)){
+        if ($this->hasProperty(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER)) {
             return false;
         }
-        if($this->hasProperty(FetcherRawLocalPath::SRC_QUERY_PARAMETER)){
+        if ($this->hasProperty(FetcherRawLocalPath::SRC_QUERY_PARAMETER)) {
             return false;
         }
         return true;

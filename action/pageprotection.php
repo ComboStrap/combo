@@ -2,8 +2,13 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\ExceptionBadArgument;
+use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExecutionContext;
+use ComboStrap\FetcherPage;
 use ComboStrap\FileSystems;
+use ComboStrap\LogUtility;
+use ComboStrap\Web\Url;
 use ComboStrap\WikiPath;
 use ComboStrap\Identity;
 use ComboStrap\LowQualityPage;
@@ -177,9 +182,16 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     {
         $pageItems = $event->data["items"];
         foreach ($pageItems as $key => $pageItem) {
-            $url = $pageItem->url;
-            $dokuPath = WikiPath::createFromUrl($url);
-            $page = MarkupPath::createMarkupFromId($dokuPath->getWikiId());
+
+            try {
+                $url = Url::createFromString($pageItem->url);
+                $fetcherPage = FetcherPage::createPageFragmentFetcherFromUrl($url);
+            } catch (ExceptionBadArgument|ExceptionBadSyntax  $e) {
+                LogUtility::internalError("We were unable to build the page fetcher. Error: " . $e->getMessage(), "sitemap", $e);
+                continue;
+            }
+
+            $page = MarkupPath::createPageFromPathObject($fetcherPage->getSourcePath());
             if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
 
                 unset($event->data["items"][$key]);
@@ -189,6 +201,11 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             if ($page->isLatePublication() && PagePublicationDate::isLatePublicationProtectionEnabled()) {
                 unset($event->data["items"][$key]);
             }
+            /**
+             * Url rewrite
+             */
+            $urlAfterRewrite = $page->getCanonicalUrl()->toString();
+            $event->data["items"][$key]->url = $urlAfterRewrite;
         }
 
     }

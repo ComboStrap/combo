@@ -48,8 +48,21 @@ class FeaturedIcon extends MetadataImage
         return Metadata::PERSISTENT_METADATA;
     }
 
-    public function getDefaultValue()
+    public function getDefaultValue(): WikiPath
     {
+
+        /**
+         * @var MarkupPath $page
+         */
+        $page = $this->getResource();
+        if($page->isRootHomePage()){
+            try {
+                return Site::getLogoAsSvgImage();
+            } catch (ExceptionNotFound $e) {
+                // not found
+            }
+        }
+
         /**
          *
          * Image set by {@link \syntax_plugin_combo_media::registerFirstImage()}

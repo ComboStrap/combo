@@ -86,11 +86,18 @@ class SiteConfig
         global $conf;
         if ($namespace !== null) {
 
-            $value = $conf['plugin'][$namespace][$confName];
+            $namespace = $conf['plugin'][$namespace] ?? null;
+            if ($namespace === null) {
+                return $defaultValue;
+            }
+            $value = $conf['plugin'][$namespace][$confName] ?? null;
+
         } else {
-            $value = $conf[$confName];
+
+            $value = $conf[$confName] ?? null;
+
         }
-        if(DataType::isBoolean($value)){
+        if (DataType::isBoolean($value)) {
             /**
              * Because the next line
              * `trim($value) === ""`
@@ -496,7 +503,7 @@ class SiteConfig
 
     public function setConfDokuWiki(string $key, $value): SiteConfig
     {
-        return $this->setConf($key,$value, self::GLOBAL_SCOPE);
+        return $this->setConf($key, $value, self::GLOBAL_SCOPE);
     }
 
     /**
@@ -532,7 +539,7 @@ class SiteConfig
             try {
                 return ColorRgb::createFromString($defaultColor);
             } catch (ExceptionBadArgument $e) {
-                LogUtility::internalError("The default color $defaultColor is not a color string.",self::CANONICAL, $e);
+                LogUtility::internalError("The default color $defaultColor is not a color string.", self::CANONICAL, $e);
                 return ColorRgb::getDefaultPrimary();
             }
         }
@@ -549,7 +556,7 @@ class SiteConfig
     public function getSecondaryColor(): ColorRgb
     {
         $secondaryColor = Site::getSecondaryColor();
-        if($secondaryColor===null){
+        if ($secondaryColor === null) {
             throw new ExceptionNotFound();
         }
         return $secondaryColor;

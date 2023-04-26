@@ -193,4 +193,13 @@ class UrlRewrite
 
     }
 
+    public static function sendErrorMessage()
+    {
+        $rewriteOption2 = "https://www.dokuwiki.org/rewrite#option_2dokuwiki";
+        $rewriteOption1 = "https://www.dokuwiki.org/rewrite#option_1web_server";
+        $hrefPermanentFunctionality = "https://combostrap.com/page/canonical-url-4kxbb9fd#permanent";
+        $hrefNiceUrl = "https://combostrap.com/admin/nice-url-noln5keo";
+        LogUtility::error("Combostrap does not support the <a href=\"$rewriteOption2\">Url Dokuwiki Rewriting (Option 2)</a> because of the <a href=\"$hrefPermanentFunctionality\"> permanent Url functionality</a>. You should disable it and use the <a href=\"$rewriteOption1\">Web Server Option (Option 1)</a> if you want <a href=\"$hrefNiceUrl\">nice URL</a>.", self::CANONICAL);
+    }
+
 }

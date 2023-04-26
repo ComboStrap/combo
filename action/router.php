@@ -1,8 +1,6 @@
 <?php
 
 
-
-
 use ComboStrap\DatabasePageRow;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
@@ -26,6 +24,7 @@ use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\Sqlite;
 use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlRewrite;
 use ComboStrap\WikiPath;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -297,10 +296,15 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
          * may be redirected
          */
         $executionContext = ExecutionContext::getActualOrCreateFromEnv();
-        if ($executionContext->getExecutingAction()!==ExecutionContext::SHOW_ACTION) {
+        if ($executionContext->getExecutingAction() !== ExecutionContext::SHOW_ACTION) {
             return;
         }
 
+        $urlRewrite = Site::getUrlRewrite();
+        if ($urlRewrite == UrlRewrite::VALUE_DOKU_REWRITE) {
+            UrlRewrite::sendErrorMessage();
+            return;
+        }
 
         global $ID;
 
@@ -355,7 +359,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                      */
                     $targetPageId = $databasePageRow->getFromRow("id");
                     $targetPath = WikiPath::createMarkupPathFromId($targetPageId);
-                    if(FileSystems::exists($targetPath)) {
+                    if (FileSystems::exists($targetPath)) {
                         $this->executePermanentRedirect(
                             $requestedMarkupPath->getCanonicalUrl()->toAbsoluteUrlString(),
                             self::TARGET_ORIGIN_PERMALINK_EXTENDED

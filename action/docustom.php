@@ -13,8 +13,10 @@ use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Mime;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlRewrite;
 
 /**
  * Implementation of custom do (ie ACT) to output {@link \ComboStrap\IFetcherString}
@@ -101,6 +103,12 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                  */
                 LogUtility::info("ExecuteDoAction: The response has already be send (ended).");
             }
+            return;
+        }
+
+        $urlRewrite = Site::getUrlRewrite();
+        if ($urlRewrite == UrlRewrite::VALUE_DOKU_REWRITE) {
+            UrlRewrite::sendErrorMessage();
             return;
         }
 

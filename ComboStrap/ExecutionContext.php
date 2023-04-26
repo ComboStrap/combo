@@ -769,7 +769,6 @@ class ExecutionContext
     {
 
 
-
         /**
          * Act
          */
@@ -808,7 +807,7 @@ class ExecutionContext
          * via the `id`
          */
         global $INFO;
-        $oldContextId = $INFO['id'];
+        $oldContextId = $INFO['id'] ?? null;
         if ($markupHandler->isFragment()) {
             $contextPath = $markupHandler->getRequestedContextPath();
             $INFO['id'] = $contextPath->getWikiId();
@@ -822,7 +821,7 @@ class ExecutionContext
          * * the {@link FetcherMarkup::processMetaEventually()} metadata may call the {@link FetcherMarkup::getInstructions() instructions},
          */
         $id = $markupHandler->getId();
-        if(array_key_exists($id,$this->executingMarkupHandlerStack)){
+        if (array_key_exists($id, $this->executingMarkupHandlerStack)) {
             LogUtility::internalError("The markup ($id) is already executing");
             $id = "$id-already-in-stack";
         }

@@ -118,7 +118,11 @@ class Url extends PathAbs
             if ($urlComponents === false) {
                 throw new ExceptionBadSyntax("The url ($url) is not valid");
             }
-            parse_str($urlComponents['query'], $queryKeys);
+            $queryKeys = [];
+            $queryString = $urlComponents['query'] ?? null;
+            if ($queryString !== null) {
+                parse_str($queryString, $queryKeys);
+            }
             $this->query = new ArrayCaseInsensitive($queryKeys);
             $this->scheme = $urlComponents["scheme"];
             $this->host = $urlComponents["host"];

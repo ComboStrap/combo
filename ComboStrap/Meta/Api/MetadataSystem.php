@@ -89,8 +89,8 @@ class MetadataSystem
         CacheExpirationFrequency::PROPERTY_NAME => CacheExpirationFrequency::class,
         QualityDynamicMonitoringOverwrite::PROPERTY_NAME => QualityDynamicMonitoringOverwrite::class,
         LowQualityPageOverwrite::PROPERTY_NAME => LowQualityPageOverwrite::class,
-        Locale::PROPERTY_NAME=>Locale::class,
-        CacheExpirationDate::PROPERTY_NAME=>CacheExpirationDate::class,
+        Locale::PROPERTY_NAME => Locale::class,
+        CacheExpirationDate::PROPERTY_NAME => CacheExpirationDate::class,
         FeaturedImage::PROPERTY_NAME => FeaturedImage::class,
         FeaturedSvgImage::PROPERTY_NAME => FeaturedSvgImage::class,
         FeaturedRasterImage::PROPERTY_NAME => FeaturedRasterImage::class,
@@ -186,7 +186,7 @@ class MetadataSystem
     {
 
         $name = strtolower(trim($name));
-        $metadataClass = self::METADATAS[$name];
+        $metadataClass = self::METADATAS[$name] ?? null;
         if ($metadataClass !== null) {
             return new $metadataClass();
         }

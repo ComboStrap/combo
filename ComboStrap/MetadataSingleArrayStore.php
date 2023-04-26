@@ -92,7 +92,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     public function getFromName(string $name, $default = null)
     {
 
-        $value = $this->data[$name];
+        $value = $this->data[$name] ?? null;
         if ($value !== null) {
             return $value;
         }
@@ -101,7 +101,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function setFromPersistentName(string $name, $value, $default = null)
     {
-        $actualValue = $this->data[$name];
+        $actualValue = $this->data[$name] ?? null;
         if ($actualValue !== $value) {
             $this->hasChanged = true;
         }
@@ -119,7 +119,8 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function hasProperty(string $name): bool
     {
-        return isset($this->data[$name]);
+        $var = $this->data[$name] ?? null;
+        return isset($var);
     }
 
     public function remove(Metadata $metadata): MetadataSingleArrayStore

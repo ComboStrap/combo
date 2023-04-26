@@ -75,8 +75,9 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
 
     public function offsetUnset($offset)
     {
+
         if (is_string($offset)) $offset = strtolower($offset);
-        $originalOffset = $this->_keyMapping[$offset];
+        $originalOffset = $this->_keyMapping[$offset] ?? null;
         unset($this->sourceArray[$originalOffset]);
         unset($this->_keyMapping[$offset]);
 

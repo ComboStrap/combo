@@ -618,7 +618,7 @@ class DatabasePageRow
             /**
              * If the user copy a frontmatter with the same page id abbr, we got a problem
              */
-            $pageIdAbbr = $values[PageId::PAGE_ID_ABBR_ATTRIBUTE];
+            $pageIdAbbr = $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] ?? null;
             if ($pageIdAbbr == null) {
                 $pageId = $values[PageId::getPersistentName()];
                 if ($pageId === null) {
@@ -653,7 +653,8 @@ class DatabasePageRow
             /**
              * Analytics
              */
-            if (!isset($values[self::ANALYTICS_ATTRIBUTE])) {
+            $analyticsAttributeValue = $values[self::ANALYTICS_ATTRIBUTE] ?? null;
+            if (!isset($analyticsAttributeValue)) {
                 // otherwise we get an empty string
                 // and a json function will not work
                 $values[self::ANALYTICS_ATTRIBUTE] = Json::createEmpty()->toPrettyJsonString();

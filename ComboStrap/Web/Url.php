@@ -124,9 +124,9 @@ class Url extends PathAbs
                 parse_str($queryString, $queryKeys);
             }
             $this->query = new ArrayCaseInsensitive($queryKeys);
-            $this->scheme = $urlComponents["scheme"];
-            $this->host = $urlComponents["host"];
-            $port = $urlComponents["port"];
+            $this->scheme = $urlComponents["scheme"] ?? null;
+            $this->host = $urlComponents["host"] ?? null;
+            $port = $urlComponents["port"] ?? null;
             try {
                 if ($port !== null) {
                     $this->port = DataType::toInteger($port);
@@ -134,11 +134,11 @@ class Url extends PathAbs
             } catch (ExceptionBadArgument $e) {
                 throw new ExceptionBadArgument("The port ($port) in ($url) is not an integer. Error: {$e->getMessage()}");
             }
-            $pathUrlComponent = $urlComponents["path"];
+            $pathUrlComponent = $urlComponents["path"] ?? null;
             if ($pathUrlComponent !== null) {
                 $this->setPath($pathUrlComponent);
             }
-            $this->fragment = $urlComponents["fragment"];
+            $this->fragment = $urlComponents["fragment"] ?? null;
         }
     }
 

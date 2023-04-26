@@ -85,9 +85,12 @@ jobs:
 
       # Node
       # https://github.com/actions/setup-node/issues/160#issuecomment-642739512
+      # We don't specify the version to get the one that is on the image
+      # otherwise you get a time-out as it tries to download it and failed
       - uses: actions/setup-node@v3
 #        with:
 #          node-version: latest
+
       # Yarn (should happen after combo as we install in combo)
       - name: Yarn install
         run: |

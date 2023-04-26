@@ -148,7 +148,11 @@ class Identity
     {
         global $INFO;
         if (!empty($INFO)) {
-            return $INFO['isadmin'];
+            $isAdmin = $INFO['isadmin'] ?? null;
+            if ($isAdmin === null) {
+                return false;
+            }
+            return $isAdmin;
         } else {
             return auth_isadmin(self::getUser(), self::getUserGroups());
         }

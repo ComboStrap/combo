@@ -75,7 +75,7 @@ class IdManager
     private function generateAndGetNewSequenceValueForScope(string $scope)
     {
 
-        $lastId = $this->lastIdByScope[$scope];
+        $lastId = $this->lastIdByScope[$scope] ?? null;
         if ($lastId === null) {
             $lastId = 1;
         } else {

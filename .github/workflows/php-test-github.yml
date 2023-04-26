@@ -84,9 +84,10 @@ jobs:
         shell: bash
 
       # Node
+      # https://github.com/actions/setup-node/issues/160#issuecomment-642739512
       - uses: actions/setup-node@v3
-        with:
-          node-version: latest
+#        with:
+#          node-version: latest
       # Yarn (should happen after combo as we install in combo)
       - name: Yarn install
         run: |

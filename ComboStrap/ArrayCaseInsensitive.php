@@ -85,7 +85,10 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
     public function offsetGet($offset)
     {
         if (is_string($offset)) $offset = strtolower($offset);
-        $sourceOffset = $this->_keyMapping[$offset];
+        $sourceOffset = $this->_keyMapping[$offset] ?? null;
+        if ($sourceOffset === null) {
+            return null;
+        }
         return $this->sourceArray[$sourceOffset] ?? null;
     }
 
@@ -117,7 +120,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
 
     public function rewind()
     {
-        $obj = new ArrayObject( $this->sourceArray );
+        $obj = new ArrayObject($this->sourceArray);
         $this->iterator = $obj->getIterator();
     }
 

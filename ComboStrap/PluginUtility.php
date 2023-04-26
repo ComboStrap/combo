@@ -255,7 +255,7 @@ class PluginUtility
         // Suppress the tag name (ie until the first blank)
         $spacePosition = strpos($match, " ");
         if (!$spacePosition) {
-        // No space, meaning this is only the tag name
+            // No space, meaning this is only the tag name
             return array();
         }
         $match = trim(substr($match, $spacePosition));
@@ -500,7 +500,9 @@ class PluginUtility
         $value = $INPUT->str($name);
         if ($value == null && defined('DOKU_UNITTEST')) {
             global $COMBO;
-            $value = $COMBO[$name];
+            if ($COMBO !== null) {
+                $value = $COMBO[$name];
+            }
         }
         if ($value == null) {
             return $default;

@@ -40,7 +40,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
     public function __construct(array &$source = array())
     {
         $this->sourceArray = &$source;
-        array_walk($source, function ($value, &$key) {
+        array_walk($source, function ($value, $key) {
             $this->_keyMapping[strtolower($key)] = $key;
         });
 
@@ -82,6 +82,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
         unset($this->_keyMapping[$offset]);
 
     }
+
 
     public function offsetGet($offset)
     {

@@ -25,7 +25,7 @@ class EditButtonManager
 
         $page = MarkupPath::createFromRequestedPage();
         $cacheKey = $page->getWikiId();
-        $editButtonManager = self::$editButtonManagers[$cacheKey];
+        $editButtonManager = self::$editButtonManagers[$cacheKey] ?? null;
         if ($editButtonManager === null) {
             // new run, delete all old cache managers
             self::$editButtonManagers = [];

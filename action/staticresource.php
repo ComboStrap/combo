@@ -76,8 +76,8 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
-        $fetcher = $_GET[IFetcher::FETCHER_KEY];
+        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE] ?? null;
+        $fetcher = $_GET[IFetcher::FETCHER_KEY] ?? null;
         if ($drive === null && $fetcher === null) {
             return;
         }
@@ -174,7 +174,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE];
+        $drive = $_GET[WikiPath::DRIVE_ATTRIBUTE] ?? null;
         if ($drive === null) {
 
             $confValue = SiteConfig::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1);

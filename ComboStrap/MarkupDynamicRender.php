@@ -106,9 +106,9 @@ class MarkupDynamicRender
             // Post process
             // $data = array($this->format, & $this->renderer->doc);
             // \dokuwiki\Extension\Event::createAndTrigger('RENDERER_CONTENT_POSTPROCESS', $data);
-
-            return $this->renderer->doc;
-
+            $string = $this->renderer->doc;
+            $this->renderer->doc = '';
+            return $string;
 
         } /** @noinspection PhpRedundantCatchClauseInspection */ catch (Exception $e) {
             /**
@@ -117,8 +117,6 @@ class MarkupDynamicRender
              * inc\parserutils.php:672
              */
             throw new ExceptionCompile("Error while rendering instructions. Error was: {$e->getMessage()}", "dynamic renderer", 1, $e);
-        } finally {
-            $this->renderer->reset();
         }
     }
 

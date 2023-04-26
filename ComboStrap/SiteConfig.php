@@ -49,6 +49,8 @@ class SiteConfig
      */
     private WikiPath $defaultContextPath;
 
+    private array $authorizedUrlSchemes;
+
     /**
      * @var array - the configuration value to restore
      *

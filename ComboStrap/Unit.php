@@ -23,13 +23,14 @@ class Unit
      * @param $value
      * @return int
      */
-    static public function toPixel($value) {
-        if(!preg_match('/^(\d+?(\.\d*)?)(in|em|ex|px|pt|pc|cm|mm)?$/', $value, $m)) return 0;
+    static public function toPixel($value)
+    {
+        if (!preg_match('/^(\d+?(\.\d*)?)(in|em|ex|px|pt|pc|cm|mm)?$/', $value, $m)) return 0;
 
-        $digit = (double) $m[1];
-        $unit  = (string) $m[3];
+        $digit = (double)$m[1];
+        $unit = $m[3] ?? null;
 
-        $dpi         = 72;
+        $dpi = 72;
         $conversions = array(
             'in' => $dpi,
             'em' => 16,
@@ -41,8 +42,8 @@ class Unit
             'mm' => $dpi / (2.54 * 10), # inch to cm,
         );
 
-        if(isset($conversions[$unit])) {
-            $digit = $digit * (float) $conversions[$unit];
+        if (isset($conversions[$unit])) {
+            $digit = $digit * (float)$conversions[$unit];
         }
 
         return $digit;

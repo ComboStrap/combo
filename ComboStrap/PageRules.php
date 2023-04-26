@@ -155,17 +155,21 @@ class PageRules
         $updateDate = date("c");
 
         $entry = array(
-            'matcher' => $matcher,
-            'target' => $target,
-            'priority' => $priority,
-            'timestamp' => $updateDate,
-            'íd' => $id
+            $matcher,
+            $target,
+            $priority,
+            $updateDate,
+            $id
         );
 
         $statement = 'update PAGE_RULES set matcher = ?, target = ?, priority = ?, timestamp = ? where id = ?';
-        $request = Sqlite::createOrGetSqlite()
-            ->createRequest()
-            ->setQueryParametrized($statement, $entry);
+        try {
+            $request = Sqlite::createOrGetSqlite()
+                ->createRequest()
+                ->setQueryParametrized($statement, $entry);
+        } catch (ExceptionSqliteNotAvailable $e) {
+            return;
+        }
         try {
             $request->execute();
         } catch (ExceptionCompile $e) {

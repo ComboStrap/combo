@@ -114,7 +114,7 @@ class Mime
                 return new Mime(self::HANDLEBARS);
             default:
                 $mtypes = getMimeTypes();
-                $mimeString = $mtypes[$extension];
+                $mimeString = $mtypes[$extension] ?? null;
                 if ($mimeString === null) {
                     throw new ExceptionNotFound("No mime was found for the extension ($extension)");
                 } else {

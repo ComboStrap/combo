@@ -31,7 +31,6 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
     private PageRules $pageRuleManager;
 
 
-
     /**
      * admin_plugin_combo constructor.
      *
@@ -43,7 +42,6 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         // enable direct access to language strings
         // of use of $this->getLang
         $this->setupLocale();
-
 
 
     }
@@ -106,12 +104,12 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         /**
          * If one of the form submit has the add key
          */
-        if ($_POST[self::SAVE_ACTION] && checkSecurityToken()) {
+        if (($_POST[self::SAVE_ACTION] ?? null) && checkSecurityToken()) {
 
-            $id = $_POST[PageRules::ID_NAME];
-            $matcher = $_POST[PageRules::MATCHER_NAME];
-            $target = $_POST[PageRules::TARGET_NAME];
-            $priority = $_POST[PageRules::PRIORITY_NAME];
+            $id = $_POST[PageRules::ID_NAME] ?? null;
+            $matcher = $_POST[PageRules::MATCHER_NAME] ?? null;
+            $target = $_POST[PageRules::TARGET_NAME] ?? null;
+            $priority = $_POST[PageRules::PRIORITY_NAME] ?? null;
 
             if ($matcher == null) {
                 msg('Matcher can not be null', LogUtility::LVL_MSG_ERROR);
@@ -142,7 +140,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
         }
 
-        if ($_POST[self::DELETE_ACTION] && checkSecurityToken()) {
+        if (($_POST[self::DELETE_ACTION] ?? null) && checkSecurityToken()) {
 
             $ruleId = $_POST[PageRules::ID_NAME];
             $this->pageRuleManager->deleteRule($ruleId);
@@ -166,7 +164,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
         echo $this->locale_xhtml($relativePath);
 
         // Forms
-        if ($_POST['upsert']) {
+        if ($_POST['upsert'] ?? null) {
 
             $matcher = null;
             $target = null;
@@ -202,7 +200,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
             ptln('<label for="' . PageRules::TARGET_NAME . '">Target: (A DokuWiki Id or an URL where you can use the ($) group character)</label>');
             ptln('<p><input type="text" style="width: 100%;" required="required" id="' . PageRules::TARGET_NAME . '" name="' . PageRules::TARGET_NAME . '" ' . $targetDefault . ' class="edit" placeholder="target" /></p>');
             ptln('<label for="' . PageRules::PRIORITY_NAME . '">Priority: (The order in which rules are applied)</label>');
-            ptln('<p><input type="id" id="' . PageRules::PRIORITY_NAME . '." style="width: 100%;" required="required" placeholder="priority" name="' . PageRules::PRIORITY_NAME . '" value="' . $priority . '" class="edit" /></p>');
+            ptln('<p><input type="text" id="' . PageRules::PRIORITY_NAME . '." style="width: 100%;" required="required" placeholder="priority" name="' . PageRules::PRIORITY_NAME . '" value="' . $priority . '" class="edit" /></p>');
             ptln('<input type="hidden" name="do"    value="admin" />');
             if ($id != null) {
                 ptln('<input type="hidden" name="' . PageRules::ID_NAME . '" value="' . $id . '" />');

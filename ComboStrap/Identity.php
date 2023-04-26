@@ -89,7 +89,7 @@ class Identity
          */
         global $USERINFO;
         $USERINFO['mail'] = "email@example.com";
-        // $USERINFO['grps'] = array('admin', 'user');
+        $USERINFO['grps'] = array('admin', 'user');
 
 
     }
@@ -130,7 +130,8 @@ class Identity
          * $INFO['writable'] === true
          * See true if writable See https://www.dokuwiki.org/devel:environment#info
          */
-        if ($_SERVER['REMOTE_USER']) {
+        $remoteUser = $_SERVER['REMOTE_USER'] ?? null;
+        if ($remoteUser !== null) {
             $perm = auth_quickaclcheck($wikiId);
         } else {
             $perm = auth_aclcheck($wikiId, '', null);
@@ -205,7 +206,7 @@ class Identity
         if ($wikiId == null) {
             $wikiId = MarkupPath::createFromRequestedPage()->getWikiId();
         }
-        if ($_SERVER['REMOTE_USER']) {
+        if ($_SERVER['REMOTE_USER'] ?? null) {
             $perm = auth_quickaclcheck($wikiId);
         } else {
             $perm = auth_aclcheck($wikiId, '', null);

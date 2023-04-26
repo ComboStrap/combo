@@ -370,7 +370,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $linkLabel = LinkMarkup::createFromRef($markupRef)
                                 ->getDefaultLabel();
                         } catch (ExceptionCompile $e) {
-                            LogUtility::error("No default Label can be defined. Error while parsing the markup ref ($markupRef). Error: {$e->getMessage()}",self::CANONICAL, $e);
+                            LogUtility::error("No default Label can be defined. Error while parsing the markup ref ($markupRef). Error: {$e->getMessage()}", self::CANONICAL, $e);
                         }
 
                     }
@@ -503,7 +503,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
                         // if there is no link name defined, we get the name as ref in the payload
                         // otherwise null string
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                        $renderer->doc .= $data[PluginUtility::PAYLOAD] ?? '';
 
                         // Close the link
                         $renderer->doc .= "</a>";
@@ -632,7 +632,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $path = $markupRef->getMarkupRef()->getPath();
                                 $linkedPage = MarkupPath::createPageFromPathObject($path);
                                 if (!FileSystems::exists($path)) {
-                                    $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_BROKEN_COUNT]++;
+                                    $internalLinkBroken = $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_BROKEN_COUNT] ?? 0;
+                                    $stats[renderer_plugin_combo_analytics::INTERNAL_LINK_BROKEN_COUNT] = $internalLinkBroken + 1;
                                     $stats[renderer_plugin_combo_analytics::INFO][] = "The internal linked page `{$linkedPage}` does not exist";
                                 }
                             } catch (ExceptionNotFound $e) {

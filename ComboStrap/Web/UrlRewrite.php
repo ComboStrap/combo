@@ -7,6 +7,7 @@ use ComboStrap\ExceptionNotFound;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
+use ComboStrap\MediaMarkup;
 use ComboStrap\PageUrlPath;
 use ComboStrap\Site;
 use ComboStrap\Web\Url;
@@ -98,7 +99,7 @@ class UrlRewrite
                     return;
                 }
                 try {
-                    $dokuwikiId = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER);
+                    $dokuwikiId = $url->getQueryPropertyValueAndRemoveIfPresent(MediaMarkup::$MEDIA_QUERY_PARAMETER);
                 } catch (ExceptionNotFound $e) {
                     LogUtility::internalError("The media query should be present for a fetch. No Url rewrite could be done.");
                     return;
@@ -111,7 +112,7 @@ class UrlRewrite
                     return;
                 }
                 try {
-                    $dokuwikiId = $url->getQueryPropertyValueAndRemoveIfPresent(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER);
+                    $dokuwikiId = $url->getQueryPropertyValueAndRemoveIfPresent(MediaMarkup::$MEDIA_QUERY_PARAMETER);
                 } catch (ExceptionNotFound $e) {
                     LogUtility::internalError("The media query should be present for a detail page fetch. No Url rewrite could be done.");
                     return;

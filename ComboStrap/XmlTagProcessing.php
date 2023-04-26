@@ -170,8 +170,8 @@ class XmlTagProcessing
     public static function renderStaticEnterXhtml(TagAttributes $tagAttributes, Doku_Renderer_xhtml $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
     {
 
-        $context = $data[PluginUtility::CONTEXT];
-        $pos = $data[PluginUtility::POSITION];
+        $context = $data[PluginUtility::CONTEXT] ?? null;
+        $pos = $data[PluginUtility::POSITION] ?? null;
         $logicalTag = $tagAttributes->getLogicalTag();
         switch ($logicalTag) {
             case BlockquoteTag::TAG:
@@ -278,7 +278,7 @@ class XmlTagProcessing
 
         // Normalize Trim and delete eol to start clean
         $match = trim($match);
-        $match = str_replace("\n"," ",$match);
+        $match = str_replace("\n", " ", $match);
 
         // Markup
         $markupTag = PluginUtility::getMarkupTag($match);
@@ -487,11 +487,11 @@ class XmlTagProcessing
 
     public static function renderStatic(string $format, Doku_Renderer $renderer, array $data, DokuWiki_Syntax_Plugin $plugin): bool
     {
-        $logicalTag = $data[PluginUtility::TAG];
-        $attributes = $data[PluginUtility::ATTRIBUTES];
-        $context = $data[PluginUtility::CONTEXT];
-        $state = $data[PluginUtility::STATE];
-        $pos = $data[PluginUtility::POSITION];
+        $logicalTag = $data[PluginUtility::TAG] ?? null;
+        $attributes = $data[PluginUtility::ATTRIBUTES] ?? null;
+        $context = $data[PluginUtility::CONTEXT] ?? null;
+        $state = $data[PluginUtility::STATE] ?? null;
+        $pos = $data[PluginUtility::POSITION] ?? null;
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes)->setLogicalTag($logicalTag);
         switch ($format) {
             case "xhtml":

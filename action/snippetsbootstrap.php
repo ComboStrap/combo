@@ -79,7 +79,8 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
                     $cssPreloadConf = $executionContextConfig->getValue(self::CONF_PRELOAD_CSS, self::CONF_PRELOAD_CSS_DEFAULT);
                     $newLinkData = array();
                     foreach ($headTagsAsArray as $linkData) {
-                        switch ($linkData['rel']) {
+                        $rel = $linkData['rel'] ?? null;
+                        switch ($rel) {
                             case 'edit':
                                 break;
                             case 'preload':
@@ -301,7 +302,7 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
             $preloadedCss = &$executionContext->getRuntimeObject(TemplateForWebPage::PRELOAD_TAG);
         } catch (ExceptionNotFound $e) {
             $preloadedCss = [];
-            $executionContext->setRuntimeObject(TemplateForWebPage::PRELOAD_TAG,$preloadedCss);
+            $executionContext->setRuntimeObject(TemplateForWebPage::PRELOAD_TAG, $preloadedCss);
         }
         $preloadedCss[] = $linkData;
 
@@ -313,7 +314,6 @@ class action_plugin_combo_snippetsbootstrap extends DokuWiki_Action_Plugin
         $linkData['as'] = 'style';
         return $linkData;
     }
-
 
 
     /**

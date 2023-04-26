@@ -4,9 +4,6 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metaprocessing;
-use ComboStrap\Meta\Api\Metadata;
-use ComboStrap\Meta\Api\MetadataText;
 use ComboStrap\Meta\Api\MetadataWikiPath;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\Web\Url;
@@ -120,7 +117,7 @@ class Canonical extends MetadataWikiPath
          */
         $i = sizeof($namesOriginal) - 1;
         $names = $namesOriginal;
-        while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
+        while ($namesOriginal[$i] == ($namesOriginal[$i - 1] ?? null)) {
             unset($names[$i]);
             $i--;
             if ($i <= 0) {

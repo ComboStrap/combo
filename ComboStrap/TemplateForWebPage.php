@@ -133,6 +133,10 @@ class TemplateForWebPage
 
         $executionContext = (ExecutionContext::getActualOrCreateFromEnv())
             ->setExecutingPageTemplate($this);
+        /**
+         * The deprecated report are just messing up html
+         */
+        $oldLevel = error_reporting(E_ALL ^ E_DEPRECATED);
         try {
 
 
@@ -162,6 +166,7 @@ class TemplateForWebPage
 
 
         } finally {
+            error_reporting($oldLevel);
             $executionContext
                 ->closeExecutingPageTemplate();
         }
@@ -174,7 +179,7 @@ class TemplateForWebPage
     public function getElementIds(): array
     {
         $definition = $this->getDefinition();
-        $elements = $definition['elements'];
+        $elements = $definition['elements'] ?? null;
         if ($elements == null) {
             return [];
         }
@@ -786,10 +791,10 @@ class TemplateForWebPage
         $preloadHtml = "<div class=\"$class\">";
         foreach ($preloadedCss as $link) {
             $htmlLink = '<link rel="stylesheet" href="' . $link['href'] . '" ';
-            if ($link['crossorigin'] != "") {
+            if (($link['crossorigin'] ?? '') != "") {
                 $htmlLink .= ' crossorigin="' . $link['crossorigin'] . '" ';
             }
-            if (!empty($link['class'])) {
+            if (!empty(($link['class'] ?? null))) {
                 $htmlLink .= ' class="' . $link['class'] . '" ';
             }
             // No integrity here
@@ -1148,9 +1153,9 @@ EOF;
                     $deletedMeta = ["og:url", "og:description", "description", "robots"];
                     foreach ($heads as $id => $headAttributes) {
                         if (isset($headAttributes['name']) || isset($headAttributes['property'])) {
-                            $rel = $headAttributes['name'];
+                            $rel = $headAttributes['name'] ?? null;
                             if ($rel === null) {
-                                $rel = $headAttributes['property'];
+                                $rel = $headAttributes['property'] ?? null;
                             }
                             if (in_array($rel, $deletedMeta)) {
                                 unset($heads[$id]);

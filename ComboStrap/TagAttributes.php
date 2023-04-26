@@ -360,7 +360,7 @@ class TagAttributes
         /**
          * Add the styles
          */
-        if(isset($style)){
+        if (isset($style)) {
             $stylingProperties = StyleAttribute::HtmlStyleValueToArray($style);
             foreach ($stylingProperties as $styleKey => $styleValue) {
                 $tagAttributes->addStyleDeclarationIfNotSet($styleKey, $styleValue);
@@ -773,7 +773,7 @@ class TagAttributes
             LogUtility::error("The value of the output attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty / boolean function if the value can be empty");
         }
 
-        $actualValue = $this->outputAttributes[$key];
+        $actualValue = $this->outputAttributes[$key] ?? null;
         if ($actualValue === null) {
             $this->outputAttributes[$key] = $value;
             return $this;
@@ -1295,7 +1295,7 @@ class TagAttributes
      */
     function getOutputAttribute($attribute)
     {
-        $value = $this->outputAttributes[$attribute];
+        $value = $this->outputAttributes[$attribute] ?? null;
         if ($value === null) {
             throw new ExceptionNotFound("No output attribute with the key ($attribute)");
         }

@@ -23,6 +23,8 @@ class OutlineSection extends TreeNode
     private array $contentCalls = [];
 
 
+    private string $headingId;
+
     private int $startFileIndex;
     private ?int $endFileIndex = null;
 

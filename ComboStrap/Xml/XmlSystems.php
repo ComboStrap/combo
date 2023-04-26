@@ -166,7 +166,7 @@ class XmlSystems
 
                 foreach ($leftAttributes as $leftAttName => $leftAtt) {
                     /** @var \DOMAttr $leftAtt */
-                    $rightAtt = $rightAttributes[$leftAttName];
+                    $rightAtt = $rightAttributes[$leftAttName] ?? null;
                     if ($rightAtt == null) {
                         if (!in_array($leftAttName, $excludedAttributes)) {
                             $error .= "The attribute (" . $leftAtt->getNodePath() . ") does not exist on the right side\n";

@@ -12,8 +12,6 @@ use ComboStrap\LinkMarkup;
 use ComboStrap\PluginUtility;
 
 
-
-
 class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 {
 
@@ -189,19 +187,18 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         $markupRef = new LinkMarkup($pageId);
 
 
-
                         /**
                          * Label
                          */
                         $label = $markupRef->getDefaultLabel();
                         // Suppress the parts in the name with the regexp defines in the 'suppress' params
-                        if ($attributes['suppress']) {
+                        if ($attributes['suppress'] ?? null) {
                             $substrPattern = '/' . $attributes['suppress'] . '/i';
                             $replacement = '';
                             $label = preg_replace($substrPattern, $replacement, $label);
                         }
                         // If debug mode
-                        if ($attributes['debug']) {
+                        if ($attributes['debug'] ?? null) {
                             $label .= ' (' . $pageId . '|' . $pageNum . ')';
                         }
 
@@ -307,11 +304,11 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         $miniMapHeader .= '<div class="panel-heading">' . $panelHeaderContent . '  <span class="label label-primary">' . $pageNum . ' pages</span></div>';
                     }
 
-                    if ($attributes['debug']) {
+                    if ($attributes['debug'] ?? null) {
                         $miniMapHeader .= '<div class="panel-body">' .
                             '<B>Debug Information:</B><BR>' .
                             'CallingId: (' . $callingId . ')<BR>' .
-                            'Suppress Option: (' . $attributes['suppress'] . ')<BR>' .
+                            'Suppress Option: (' . ($attributes['suppress'] ?? '') . ')<BR>' .
                             '</div>';
                     }
 

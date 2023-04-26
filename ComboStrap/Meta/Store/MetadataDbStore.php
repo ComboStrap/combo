@@ -211,8 +211,8 @@ delete from $tableName where $resourceIdAttribute = ? and $metadataIdAttribute =
 EOF;
 
         $row = [
-            $resourceIdAttribute => $row[$resourceIdAttribute],
-            $metadataIdAttribute => $row[$metadataIdAttribute]
+            $row[$resourceIdAttribute] ?? null,
+            $row[$metadataIdAttribute] ?? null
         ];
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()

@@ -20,6 +20,7 @@ use ComboStrap\FetcherSystem;
 use ComboStrap\FetcherTraitWikiPath;
 use ComboStrap\LocalFileSystem;
 use ComboStrap\LogUtility;
+use ComboStrap\MediaMarkup;
 use ComboStrap\Path;
 use ComboStrap\PathAbs;
 use ComboStrap\Site;
@@ -360,6 +361,8 @@ class Url extends PathAbs
     {
         /**
          * Do we have a path information
+         * If not, this is a local url (ie #id)
+         * We don't make it absolute
          */
         if ($this->isLocal()) {
             return $this;
@@ -370,7 +373,7 @@ class Url extends PathAbs
             /**
              * See {@link getBaseURL()}
              */
-            $https = $_SERVER['HTTPS'];
+            $https = $_SERVER['HTTPS'] ?? null;
             if (empty($https)) {
                 $this->setScheme("http");
             } else {
@@ -625,7 +628,7 @@ class Url extends PathAbs
      */
     public function getExtension(): string
     {
-        if ($this->hasProperty(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER)) {
+        if ($this->hasProperty(MediaMarkup::$MEDIA_QUERY_PARAMETER)) {
 
             try {
                 return FetcherSystem::createPathFetcherFromUrl($this)->getMime()->getExtension();
@@ -913,7 +916,8 @@ class Url extends PathAbs
     public function isExternal(): bool
     {
         try {
-            $localHost = Url::createEmpty()->toAbsoluteUrl()->getHost();
+            // We set the path, otherwise it's seen as a local url
+            $localHost = Url::createEmpty()->setPath("/")->toAbsoluteUrl()->getHost();
             return $localHost !== $this->getHost();
         } catch (ExceptionNotFound $e) {
             // no host meaning that the url is relative and then local
@@ -960,7 +964,7 @@ class Url extends PathAbs
 
     /**
      * Dokuwiki utility to check if the URL is local
-     * (ie has not path)
+     * (ie has not path, only a fragment such as #id)
      * @return bool
      */
     public function isLocal(): bool
@@ -974,7 +978,7 @@ class Url extends PathAbs
         if ($this->hasProperty(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE)) {
             return false;
         }
-        if ($this->hasProperty(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER)) {
+        if ($this->hasProperty(MediaMarkup::$MEDIA_QUERY_PARAMETER)) {
             return false;
         }
         if ($this->hasProperty(FetcherRawLocalPath::SRC_QUERY_PARAMETER)) {

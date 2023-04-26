@@ -50,12 +50,12 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     public function get(Metadata $metadata, $default = null)
     {
         $this->checkResource($metadata->getResource());
-        $value = $this->data[$metadata::getPersistentName()];
+        $value = $this->data[$metadata::getPersistentName()] ?? null;
         if ($value !== null) {
             return $value;
         }
         foreach ($metadata::getOldPersistentNames() as $name) {
-            $value = $this->data[$name];
+            $value = $this->data[$name] ?? null;
             if ($value !== null) {
                 $this->data[$metadata::getPersistentName()] = $value;
                 unset($this->data[$name]);

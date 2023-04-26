@@ -51,7 +51,7 @@ class FetcherRawLocalPath extends IFetcherAbs implements IFetcherPath, IFetcherS
     {
 
         $url = parent::getFetchUrl($url);
-        $this->addLocalPathParametersToFetchUrl($url, self::$MEDIA_QUERY_PARAMETER);
+        $this->addLocalPathParametersToFetchUrl($url, MediaMarkup::$MEDIA_QUERY_PARAMETER);
         return $url;
 
     }

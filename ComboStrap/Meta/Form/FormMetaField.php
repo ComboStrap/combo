@@ -197,7 +197,7 @@ class FormMetaField
                     }
                     foreach ($rows as $row) {
                         foreach ($childFields as $childName => $childField) {
-                            $colValue = $row[$childName];
+                            $colValue = $row[$childName] ?? null;
                             if ($colValue === null) {
                                 if ($defaultRow === null) {
                                     continue;
@@ -217,7 +217,7 @@ class FormMetaField
                     // Add an extra empty row to allow adding an image
                     if ($defaultRow !== null) {
                         foreach ($defaultRow as $colName => $colMetadata) {
-                            if($colName===null){
+                            if ($colName === null) {
                                 LogUtility::internalError("The persistence name (column name) should be set as key for the default rows");
                                 continue;
                             }

@@ -94,6 +94,7 @@ class MediaMarkup
      * An attribute to set the class of the link if any
      */
     public const LINK_CLASS_ATTRIBUTE = "link-class";
+    public static string $MEDIA_QUERY_PARAMETER = "media";
 
 
     private ?string $align = null;
@@ -182,7 +183,7 @@ class MediaMarkup
     {
 
         $callStackArray = $data[PluginUtility::ATTRIBUTES];
-        $display = $callStackArray[Display::DISPLAY];
+        $display = $callStackArray[Display::DISPLAY] ?? null;
         if ($display === Display::DISPLAY_NONE_VALUE) {
             /**
              * Used primarly to not show the featured images

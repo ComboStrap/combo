@@ -875,7 +875,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $targetUrl = wl($link[0], $urlParams, true, '&');
             // %3A back to :
             $targetUrl = str_replace("%3A", ":", $targetUrl);
-            if ($link[1]) {
+            if (array_key_exists(1, $link)) {
                 $targetUrl .= '#' . rawurlencode($link[1]);
             }
 
@@ -1015,7 +1015,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             "TIMESTAMP" => date("c"),
             "SOURCE" => $sourcePageId,
             "TARGET" => $targetPageId,
-            "REFERRER" => $_SERVER['HTTP_REFERER'],
+            "REFERRER" => $_SERVER['HTTP_REFERER'] ?? null,
             "TYPE" => $algorithmic,
             "METHOD" => $method
         );

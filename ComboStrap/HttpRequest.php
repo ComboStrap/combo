@@ -111,20 +111,29 @@ class HttpRequest
             Identity::becomeSuperUser($testRequest);
         }
 
-        switch ($this->method) {
-            case self::GET:
-                $query = $this->url->getQueryProperties();
-                $response = $testRequest->get($query, $path);
-                break;
-            case self::POST:
-                $query = $this->url->getQueryProperties();
-                foreach ($query as $queryKey => $queryValue) {
-                    $testRequest->setGet($queryKey, $queryValue);
-                }
-                $response = $testRequest->post($this->postData, $path);
-                break;
-            default:
-                throw new ExceptionRuntime("The method ({$this->method}) is not implemented");
+        /**
+         * Deprecation are going into the HTML
+         * and break the parsing
+         */
+        $level = error_reporting(E_ALL ^ (E_DEPRECATED));
+        try {
+            switch ($this->method) {
+                case self::GET:
+                    $query = $this->url->getQueryProperties();
+                    $response = $testRequest->get($query, $path);
+                    break;
+                case self::POST:
+                    $query = $this->url->getQueryProperties();
+                    foreach ($query as $queryKey => $queryValue) {
+                        $testRequest->setGet($queryKey, $queryValue);
+                    }
+                    $response = $testRequest->post($this->postData, $path);
+                    break;
+                default:
+                    throw new ExceptionRuntime("The method ({$this->method}) is not implemented");
+            }
+        } finally {
+            error_reporting($level);
         }
 
 

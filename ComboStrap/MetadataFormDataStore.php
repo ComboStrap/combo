@@ -48,7 +48,7 @@ class MetadataFormDataStore extends MetadataSingleArrayStore
                  * In a form, the name is send, not the {@link Metadata::getPersistentName()}
                  * but with the name
                  */
-                $value = $this->data[$metadata::getName()];
+                $value = $this->data[$metadata::getName()] ?? null;
                 if ($value !== null) {
                     return $value;
                 }

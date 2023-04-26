@@ -386,7 +386,7 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
                      */
                     $jsonString .= "$jsonEncodedKey: ";
                     $childType = Json::TYPE_OBJECT;
-                    if ($value[0] !== null) {
+                    if (($value[0] ?? null) !== null) {
                         $childType = Json::PARENT_TYPE_ARRAY;
                     }
                     $childEndOField = $endOfFieldCharacter;

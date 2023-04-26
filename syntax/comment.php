@@ -34,7 +34,7 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
          * if there is no heading at all
          */
         $normalizedContent = trim($content);
-        if (strpos($normalizedContent, EditButton::EDIT_BUTTON_PREFIX)===0){
+        if (strpos($normalizedContent, EditButton::EDIT_BUTTON_PREFIX) === 0) {
             return true;
         }
         $confValue = SiteConfig::getConfValue(self::CONF_OUTPUT_COMMENT, 0);
@@ -139,7 +139,8 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        $print = self::shouldPrint($data[PluginUtility::PAYLOAD]);
+        $content = $data[PluginUtility::PAYLOAD] ?? null;
+        $print = self::shouldPrint($content);
 
         if ($format === "xhtml" && $print) {
             if ($data[PluginUtility::STATE] === DOKU_LEXER_UNMATCHED) {

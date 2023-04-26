@@ -71,7 +71,7 @@ class PathTreeNode extends TreeNode
         $nodeByIds = [];
         foreach ($ids as $id) {
             $path = WikiPath::createMarkupPathFromId($id);
-            $actualNode = $nodeByIds[$path->getWikiId()];
+            $actualNode = $nodeByIds[$path->getWikiId()] ?? null;
             if ($actualNode === null) {
                 $actualNode = PathTreeNode::createPathTreeNodeFromPath($path);
                 $nodeByIds[$path->getWikiId()] = $actualNode;
@@ -82,7 +82,7 @@ class PathTreeNode extends TreeNode
                      * @var WikiPath $parentPath
                      */
                     $parentPath = $actualNode->getPath()->getParent();
-                    $parentPathNode = $nodeByIds[$parentPath->getWikiId()];
+                    $parentPathNode = $nodeByIds[$parentPath->getWikiId()] ?? null;
                     if ($parentPathNode === null) {
                         $parentPathNode = PathTreeNode::createPathTreeNodeFromPath($parentPath);
                         $nodeByIds[$parentPath->getWikiId()] = $parentPathNode;

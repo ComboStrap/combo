@@ -82,6 +82,9 @@ class XmlDocument
     public function __construct($text, string $type = self::XML_TYPE)
     {
 
+        if (empty($text)) {
+            throw new ExceptionBadSyntax("The xml text markup should not be empty.", self::CANONICAL);
+        }
         if (!$this->isXmlExtensionLoaded()) {
             /**
              * If the XML module is not present

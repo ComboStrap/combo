@@ -153,6 +153,7 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
      * @var array
      */
     private array $processedInstructions;
+    private MarkupDynamicRender $markupDynamicRender;
 
 
     /**
@@ -602,7 +603,10 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
                         }
                         $this->cacheAfterRendering = $markupRenderer->getCacheAfterRendering();
                     } else {
-                        $output = MarkupDynamicRender::create($this->builderName)->processInstructions($instructions);
+                        if (!isset($this->markupDynamicRender)) {
+                            $this->markupDynamicRender = MarkupDynamicRender::create($this->builderName);
+                        }
+                        $output = $this->markupDynamicRender->processInstructions($instructions);
                     }
                 } catch (\Exception $e) {
                     /**
@@ -1450,6 +1454,26 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             throw new ExceptionNotFound();
         }
         return $this->parentMarkupHandler;
+    }
+
+    /**
+     * Hack to not have the {@link MarkupDynamicRender}
+     * stored in {@link FetcherMarkup::$markupDynamicRenderer}
+     * to reset
+     * @param array $requestedInstructions
+     * @param array|null $row
+     * @return FetcherMarkup
+     */
+    public function setNextIteratorInstructionsWithContext(array $requestedInstructions, array $row = null): FetcherMarkup
+    {
+        $this->hasExecuted = false;
+        if ($row === null) {
+            unset($this->contextData);
+        } else {
+            $this->contextData = $row;
+        }
+        $this->requestedInstructions = $requestedInstructions;
+        return $this;
     }
 
 

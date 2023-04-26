@@ -289,7 +289,7 @@ class Bootstrap
             $path = WikiPath::createComboResource(":library:bootstrap:$version:$fileNameWithExtension");
             $snippet = Snippet::createSnippet($path)
                 ->setComponentId(self::TAG);
-            $url = $script["url"];
+            $url = $script["url"] ?? null;
             if (!empty($url)) {
                 try {
                     $url = Url::createFromString($url);

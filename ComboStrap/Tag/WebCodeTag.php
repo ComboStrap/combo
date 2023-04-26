@@ -439,6 +439,10 @@ EOF;
         if (count($externalResources) <= 1) {
             $externalResourcesInput = '<input type="hidden" name="resources" value="' . implode(",", $externalResources) . '"/>';
         } else {
+            $externalResourcesInput = '';
+            if (!array_key_exists('html', $codes)) {
+                $codes['html'] = '';
+            }
             $codes['html'] .= "\n\n\n\n\n<!-- The resources -->\n";
             $codes['html'] .= "<!-- They have been added here because their order is not guarantee through the API. -->\n";
             $codes['html'] .= "<!-- See: https://github.com/jsfiddle/jsfiddle-issues/issues/726 -->\n";
@@ -459,7 +463,7 @@ EOF;
             }
         }
 
-        $jsCode = $codes['javascript'];
+        $jsCode = $codes['javascript'] ?? null;
         $jsPanel = 0; // language for the js specific panel (0 = JavaScript)
         if (array_key_exists('babel', $codes)) {
             $jsCode = $codes['babel'];
@@ -477,8 +481,8 @@ EOF;
         return '<form  method="post" action="' . $postURL . '" target="_blank">' .
             '<input type="hidden" name="title" value="' . htmlentities($snippetTitle) . '"/>' .
             '<input type="hidden" name="description" value="' . htmlentities($description) . '"/>' .
-            '<input type="hidden" name="css" value="' . htmlentities($codes['css']) . '"/>' .
-            '<input type="hidden" name="html" value="' . htmlentities("<!-- The HTML -->" . $codes['html']) . '"/>' .
+            '<input type="hidden" name="css" value="' . htmlentities($codes['css'] ?? '') . '"/>' .
+            '<input type="hidden" name="html" value="' . htmlentities("<!-- The HTML -->" . $codes['html'] ?? '') . '"/>' .
             '<input type="hidden" name="js" value="' . htmlentities($jsCode) . '"/>' .
             '<input type="hidden" name="panel_js" value="' . htmlentities($jsPanel) . '"/>' .
             '<input type="hidden" name="wrap" value="b"/>' .  //javascript no wrap in body

@@ -72,7 +72,7 @@ class References extends MetadataTabular
             if (is_array($relation)) {
 
                 $this->wasBuild = true;
-                $referencesArray = $relation["references"];
+                $referencesArray = $relation["references"] ?? null;
                 if ($referencesArray !== null) {
                     $referencesArray = array_keys($referencesArray);
                 }

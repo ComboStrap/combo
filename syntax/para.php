@@ -302,8 +302,10 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                  */
                 $i = 1;
                 while ($nextCall = $callstack->next()) {
+                    $capturedContent = $nextCall->getCapturedContent();
+                    $captureContentisEmpty = $capturedContent===null || trim($capturedContent) == "";
                     if (!(
-                        trim($nextCall->getCapturedContent()) == "" &&
+                        $captureContentisEmpty &&
                         $nextCall->isTextCall()
                     )) {
                         break;

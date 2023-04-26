@@ -38,13 +38,13 @@ class Tooltip
         /**
          * Old tooltip syntax
          */
-        $title = $tooltip[syntax_plugin_combo_tooltip::TEXT_ATTRIBUTE];
+        $title = $tooltip[syntax_plugin_combo_tooltip::TEXT_ATTRIBUTE] ?? null;
         if ($title === null) {
 
-            $callStack = $tooltip[Tooltip::CALLSTACK];
+            $callStack = $tooltip[Tooltip::CALLSTACK] ?? null;
             if ($callStack !== null) {
                 try {
-                   $title = PluginUtility::renderInstructionsToXhtml($callStack);
+                    $title = PluginUtility::renderInstructionsToXhtml($callStack);
                 } catch (ExceptionCompile $e) {
                     $title = LogUtility::wrapInRedForHtml("Error while rendering the tooltip. Error: {$e->getMessage()}");
                 }
@@ -73,11 +73,11 @@ class Tooltip
         /**
          * Position
          */
-        $position = $tooltip[Tooltip::POSITION_ATTRIBUTE];
+        $position = $tooltip[Tooltip::POSITION_ATTRIBUTE] ?? null;
         if ($position === null) {
             $position = "top";
         }
-        $tagAttributes->addOutputAttributeValue("data{$dataAttributeNamespace}-placement", "${position}");
+        $tagAttributes->addOutputAttributeValue("data{$dataAttributeNamespace}-placement", "{$position}");
 
 
         /**

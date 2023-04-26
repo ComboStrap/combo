@@ -22,11 +22,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 {
 
 
-
     const CANONICAL = "cache";
     const STATIC_SCRIPT_NAMES = ["/lib/exe/jquery.php", "/lib/exe/js.php", "/lib/exe/css.php"];
-
-
 
 
     /**
@@ -75,7 +72,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $slotId = $data->page;
-        if(empty($slotId)){
+        if (empty($slotId)) {
             // on edit mode, the page is emtpy
             return;
         }
@@ -96,7 +93,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
         $isPublic = ExecutionContext::getActualOrCreateFromEnv()
             ->isPublicationAction();
-        if(!$isPublic){
+        if (!$isPublic) {
             return;
         }
         $cacheSlotResults = CacheReportHtmlDataBlockArray::getFromContext();
@@ -115,7 +112,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
 
     }
-
 
 
     /**
@@ -153,8 +149,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     }
 
 
-
-
     function addMenuItem(Doku_Event $event, $param)
     {
 
@@ -166,7 +160,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         if ($event->data['view'] != 'page') return;
 
         global $INFO;
-        if (!$INFO['exists']) {
+        $exists = $INFO['exists'] ?? null;
+        if (!$exists) {
             return;
         }
         /**

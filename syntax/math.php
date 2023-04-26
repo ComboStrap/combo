@@ -162,11 +162,10 @@ EOD;
                         $headHtmlElement
                     )
                     ->addHtmlAttribute("type", "text/x-mathjax-config");
-                $snippetManager
-                    ->attachRemoteJavascriptLibrary(
-                        self::TAG,
-                        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js"
-                    )
+                $snippetManager->attachRemoteJavascriptLibrary(
+                    self::TAG,
+                    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js"
+                )
                     ->setDoesManipulateTheDomOnRun(false);
                 break;
 
@@ -174,10 +173,6 @@ EOD;
                 // Pass math expressions to latexport renderer
                 /** @noinspection PhpUndefinedMethodInspection */
                 $renderer->mathjax_content($content);
-                break;
-
-            default:
-                $renderer->doc .= $renderer->$data;
                 break;
 
         }

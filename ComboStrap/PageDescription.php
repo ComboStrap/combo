@@ -135,7 +135,7 @@ class PageDescription extends MetadataText
         if (is_array($value)) {
             $description = $value[self::ABSTRACT_KEY];
             if ($description !== null) {
-                $descriptionOrigin = $value[self::DESCRIPTION_ORIGIN];
+                $descriptionOrigin = $value[self::DESCRIPTION_ORIGIN] ?? null;
                 if ($descriptionOrigin !== null) {
                     $this->descriptionOrigin = $descriptionOrigin;
                     parent::setFromStoreValueWithoutException($description);
@@ -224,7 +224,6 @@ class PageDescription extends MetadataText
             return null;
         }
     }
-
 
 
     public function getDescriptionOrigin(): string

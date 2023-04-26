@@ -22,7 +22,6 @@ use ComboStrap\Web\Url;
 trait FetcherTraitWikiPath
 {
 
-    public static string $MEDIA_QUERY_PARAMETER = "media";
     private WikiPath $path;
 
 
@@ -48,7 +47,7 @@ trait FetcherTraitWikiPath
     {
 
         if (!isset($this->path)) {
-            $id = $tagAttributes->getValueAndRemove(self::$MEDIA_QUERY_PARAMETER);
+            $id = $tagAttributes->getValueAndRemove(MediaMarkup::$MEDIA_QUERY_PARAMETER);
             $defaultDrive = WikiPath::MEDIA_DRIVE;
             if ($id === null) {
                 $id = $tagAttributes->getValueAndRemove(FetcherRawLocalPath::SRC_QUERY_PARAMETER);
@@ -58,7 +57,7 @@ trait FetcherTraitWikiPath
                 $defaultDrive = WikiPath::MARKUP_DRIVE;
             }
             if ($id === null) {
-                throw new ExceptionBadArgument("The (" . self::$MEDIA_QUERY_PARAMETER . ", " . FetcherRawLocalPath::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");
+                throw new ExceptionBadArgument("The (" . MediaMarkup::$MEDIA_QUERY_PARAMETER . ", " . FetcherRawLocalPath::SRC_QUERY_PARAMETER . " or " . DokuwikiId::DOKUWIKI_ID_ATTRIBUTE . ") query property is mandatory and was not defined");
             }
             $drive = $tagAttributes->getValueAndRemove(WikiPath::DRIVE_ATTRIBUTE, $defaultDrive);
             $rev = $tagAttributes->getValueAndRemove(WikiPath::REV_ATTRIBUTE);
@@ -97,10 +96,10 @@ trait FetcherTraitWikiPath
     /**
      * Add media and rev to url
      * For dokuwiki implementation, see {@link ml()}
-     * We still use the {@link FetcherRawLocalPath::MEDIA_QUERY_PARAMETER}
+     * We still use the {@link MediaMarkup::MEDIA_QUERY_PARAMETER}
      * to be Dokuwiki Compatible even if we can serve from other drive know
      * @param Url $url
-     * @param string $wikiIdKey - the key used to set the wiki id (ie {@link FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER}
+     * @param string $wikiIdKey - the key used to set the wiki id (ie {@link MediaMarkup::$MEDIA_QUERY_PARAMETER}
      * or {@link DokuWikiId::DOKUWIKI_ID_ATTRIBUTE}
      */
     public function addLocalPathParametersToFetchUrl(Url $url, string $wikiIdKey): void

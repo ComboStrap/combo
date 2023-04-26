@@ -128,7 +128,7 @@ BrandTag
         /**
          * Logo
          */
-        $brandImageFound = $data[BrandTag::BRAND_IMAGE_FOUND_INDICATOR];
+        $brandImageFound = $data[BrandTag::BRAND_IMAGE_FOUND_INDICATOR] ?? null;
         if (!$brandImageFound && $brandButton->hasIcon()) {
             try {
                 $iconAttributes = $brandButton->getIconAttributes();
@@ -226,7 +226,7 @@ BrandTag
     public static function mixBrandButtonToTagAttributes(TagAttributes $tagAttributes, BrandButton $brandButton): TagAttributes
     {
 
-                /**
+        /**
          * Url
          */
         $urlAttribute = self::URL_ATTRIBUTE;
@@ -249,12 +249,11 @@ BrandTag
                     ->setProperty("path", $relativePath)
                     ->render();
             }
-            $tagAttributes->addOutputAttributeValue("href",$url);
+            $tagAttributes->addOutputAttributeValue("href", $url);
         }
         $tagAttributes->mergeWithCallStackArray($brandButton->getHtmlAttributes()->toCallStackArray());
         return $tagAttributes;
     }
-
 
 
 }

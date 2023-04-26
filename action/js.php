@@ -46,9 +46,13 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
         if (Identity::isAnonymous()) {
             $scripts = &$event->data['script'];
             foreach ($scripts as &$script) {
-                $pos = strpos($script['src'], 'js.php');
+                $src = $script['src'] ?? null;
+                if ($src === null) {
+                    continue;
+                }
+                $pos = strpos($src, 'js.php');
                 if ($pos !== false) {
-                    $script['src'] = $script['src'] . '&' . self::ACCESS_PROPERTY_KEY . '=' . self::ACCESS_PROPERTY_VALUE_PUBLIC . '';
+                    $script['src'] = $src . '&' . self::ACCESS_PROPERTY_KEY . '=' . self::ACCESS_PROPERTY_VALUE_PUBLIC;
                 }
             }
         }
@@ -73,7 +77,7 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
         $directorySeparatorInDokuwikiList = "/";
 
         // It was added by the TPL_METAHEADER_OUTPUT handler (ie function handle_header)
-        $access = $_GET[self::ACCESS_PROPERTY_KEY];
+        $access = $_GET[self::ACCESS_PROPERTY_KEY] ?? null;
         if ($access == self::ACCESS_PROPERTY_VALUE_PUBLIC) {
 
             // The directory path for the internal dokuwiki script

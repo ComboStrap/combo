@@ -579,7 +579,7 @@ class Snippet implements JsonSerializable
     public static function createFromJson($array): Snippet
     {
 
-        $uri = $array[self::JSON_URI_PROPERTY];
+        $uri = $array[self::JSON_URI_PROPERTY] ?? null;
         if ($uri === null) {
             throw new ExceptionCompile("The snippet uri property was not found in the json array");
         }
@@ -587,44 +587,44 @@ class Snippet implements JsonSerializable
         $wikiPath = FileSystems::createPathFromUri($uri);
         $snippet = Snippet::getOrCreateFromContext($wikiPath);
 
-        $componentName = $array[self::JSON_COMPONENT_PROPERTY];
+        $componentName = $array[self::JSON_COMPONENT_PROPERTY] ?? null;
         if ($componentName !== null) {
             $snippet->setComponentId($componentName);
         }
 
-        $critical = $array[self::JSON_CRITICAL_PROPERTY];
+        $critical = $array[self::JSON_CRITICAL_PROPERTY] ?? null;
         if ($critical !== null) {
             $snippet->setCritical($critical);
         }
 
-        $async = $array[self::JSON_ASYNC_PROPERTY];
+        $async = $array[self::JSON_ASYNC_PROPERTY] ?? null;
         if ($async !== null) {
             $snippet->setDoesManipulateTheDomOnRun($async);
         }
 
-        $format = $array[self::JSON_FORMAT_PROPERTY];
+        $format = $array[self::JSON_FORMAT_PROPERTY] ?? null;
         if ($format !== null) {
             $snippet->setFormat($format);
         }
 
-        $content = $array[self::JSON_CONTENT_PROPERTY];
+        $content = $array[self::JSON_CONTENT_PROPERTY] ?? null;
         if ($content !== null) {
             $snippet->setInlineContent($content);
         }
 
-        $attributes = $array[self::JSON_HTML_ATTRIBUTES_PROPERTY];
+        $attributes = $array[self::JSON_HTML_ATTRIBUTES_PROPERTY] ?? null;
         if ($attributes !== null) {
             foreach ($attributes as $name => $value) {
                 $snippet->addHtmlAttribute($name, $value);
             }
         }
 
-        $integrity = $array[self::JSON_INTEGRITY_PROPERTY];
+        $integrity = $array[self::JSON_INTEGRITY_PROPERTY] ?? null;
         if ($integrity !== null) {
             $snippet->setIntegrity($integrity);
         }
 
-        $remoteUrl = $array[self::JSON_URL_PROPERTY];
+        $remoteUrl = $array[self::JSON_URL_PROPERTY] ?? null;
         if ($remoteUrl !== null) {
             $snippet->setRemoteUrl(Url::createFromString($remoteUrl));
         }
@@ -800,7 +800,7 @@ class Snippet implements JsonSerializable
         if (isset($this->inlineContent)) {
             $dataToSerialize[self::JSON_CONTENT_PROPERTY] = $this->inlineContent;
         }
-        if ($this->format!==self::DEFAULT_FORMAT) {
+        if ($this->format !== self::DEFAULT_FORMAT) {
             $dataToSerialize[self::JSON_FORMAT_PROPERTY] = $this->format;
         }
         if (isset($this->htmlAttributes)) {

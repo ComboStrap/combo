@@ -182,7 +182,7 @@ class PermalinkTag
 
     public static function renderEnterSpecialXhtml(array $data): string
     {
-        $errorMessage = $data[PluginUtility::EXIT_MESSAGE];
+        $errorMessage = $data[PluginUtility::EXIT_MESSAGE] ?? null;
         if (!empty($errorMessage)) {
             LogUtility::warning($errorMessage, PermalinkTag::CANONICAL);
             return "<span class=\"text-warning\">{$errorMessage}</span>";

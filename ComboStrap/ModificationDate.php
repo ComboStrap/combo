@@ -40,9 +40,13 @@ class ModificationDate extends MetadataDateTime
              * Dokuwiki
              * Why do they store the date of the file while it's in the file system ?
              */
-            $createdMeta = $store->getCurrentFromName('date')['modified'];
+            $currentDateMeta = $store->getCurrentFromName('date');
+            $createdMeta = null;
+            if ($currentDateMeta !== null) {
+                $createdMeta = $currentDateMeta['modified'] ?? null;
+            }
             if (empty($createdMeta)) {
-                $createdMeta = $store->getFromName('date')['modified'];
+                $createdMeta = $currentDateMeta['modified'] ?? null;
                 if (empty($createdMeta)) {
                     return $this;
                 }

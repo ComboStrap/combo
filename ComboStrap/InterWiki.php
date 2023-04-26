@@ -185,7 +185,7 @@ class InterWiki
     {
         $interWikis = $this->getInterWikis();
 
-        $urlTemplate = $interWikis[$this->name];
+        $urlTemplate = $interWikis[$this->name] ?? null;
         if ($urlTemplate !== null) {
             return $urlTemplate;
         }

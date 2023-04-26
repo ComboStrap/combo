@@ -145,18 +145,18 @@ class MarkupRef
                             $xPosition = strpos($widthAndHeight, "x");
                             if ($xPosition !== false) {
                                 $width = DataType::toInteger(substr($widthAndHeight, 0, $xPosition));
-                                if($width!==0) {
+                                if ($width !== 0) {
                                     $this->url->addQueryParameter(Dimension::WIDTH_KEY, $width);
                                 }
-                                $height = DataType::toInteger(substr($widthAndHeight, $xPosition+1));
-                                $this->url->addQueryParameter(Dimension::HEIGHT_KEY,$height);
+                                $height = DataType::toInteger(substr($widthAndHeight, $xPosition + 1));
+                                $this->url->addQueryParameter(Dimension::HEIGHT_KEY, $height);
                             } else {
                                 $width = DataType::toInteger($widthAndHeight);
-                                $this->url->addQueryParameter(Dimension::WIDTH_KEY,$width);
+                                $this->url->addQueryParameter(Dimension::WIDTH_KEY, $width);
                             }
                             $this->url->deleteQueryParameter($widthAndHeight);
-                            if($this->url->hasProperty(MediaMarkup::LINKING_NOLINK_VALUE)){
-                                $this->url->addQueryParameter(MediaMarkup::LINKING_KEY,MediaMarkup::LINKING_NOLINK_VALUE);
+                            if ($this->url->hasProperty(MediaMarkup::LINKING_NOLINK_VALUE)) {
+                                $this->url->addQueryParameter(MediaMarkup::LINKING_KEY, MediaMarkup::LINKING_NOLINK_VALUE);
                                 $this->url->deleteQueryParameter(MediaMarkup::LINKING_NOLINK_VALUE);
                             }
                         } catch (ExceptionBadArgument $e) {
@@ -293,7 +293,7 @@ class MarkupRef
         switch ($type) {
             case self::MEDIA_TYPE:
                 $this->path = WikiPath::createMediaPathFromId($wikiPath, $rev);
-                $this->url->addQueryParameter(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER, $this->path->getWikiId());
+                $this->url->addQueryParameter(MediaMarkup::$MEDIA_QUERY_PARAMETER, $this->path->getWikiId());
                 $this->addRevToUrl($rev);
 
                 if ($fragment !== null) {
@@ -583,7 +583,13 @@ class MarkupRef
              *
              * Ex with media.pdf#page=31
              */
-            list($key, $value) = explode("=", $token, 2);
+            $tokens = explode("=", $token, 2);
+            $key = $tokens[0];
+            if (count($tokens) == 2) {
+                $value = $tokens[1];
+            } else {
+                $value = null;
+            }
 
             /**
              * Case of an anchor after a boolean attribute (ie without =)
@@ -598,7 +604,7 @@ class MarkupRef
             /**
              * Test Anchor on the value
              */
-            if ($value != null) {
+            if ($value !== null) {
                 if (($countHashTag = substr_count($value, "#")) >= 3) {
                     LogUtility::msg("The value ($value) of the key ($key) for the link ($this) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
                     continue;

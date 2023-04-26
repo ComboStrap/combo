@@ -76,9 +76,9 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
         /**
          * Http header CSP directives
          */
-        $httpHeaderReferer = $_SERVER['HTTP_REFERER'];
+        $httpHeaderReferer = $_SERVER['HTTP_REFERER'] ?? null;
         $httpDirectives = [];
-        if (strpos($httpHeaderReferer, Site::getBaseUrl()) === false) {
+        if ($httpHeaderReferer !== null && strpos($httpHeaderReferer, Site::getBaseUrl()) === false) {
             // not same origin
             $httpDirectives = [
                 // the page cannot be used in a iframe (clickjacking),
@@ -103,7 +103,7 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
                 header($httpDirective);
             }
         } else {
-            LogUtility::msg("HTTP Headers have already ben sent. We couldn't add the CSP security header", LogUtility::LVL_MSG_WARNING,"security");
+            LogUtility::msg("HTTP Headers have already ben sent. We couldn't add the CSP security header", LogUtility::LVL_MSG_WARNING, "security");
         }
     }
 

@@ -154,7 +154,7 @@ class PageImages extends MetadataTabular
     public function toStoreValue(): ?array
     {
         $this->buildCheck();
-        if(!\action_plugin_combo_linkmove::isMoveOperation()) {
+        if (!\action_plugin_combo_linkmove::isMoveOperation()) {
             $this->checkImageExistence();
         }
         return parent::toStoreValue();
@@ -200,7 +200,7 @@ class PageImages extends MetadataTabular
             /**
              * @var PageImageUsage $pageImageUsage
              */
-            $pageImageUsage = $row[PageImageUsage::getPersistentName()];
+            $pageImageUsage = $row[PageImageUsage::getPersistentName()] ?? null;
             if ($pageImageUsage !== null) {
                 try {
                     $usages = $pageImageUsage->getValue();

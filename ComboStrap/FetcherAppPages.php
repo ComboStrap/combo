@@ -8,6 +8,7 @@ use ComboStrap\Web\Url;
 use ComboStrap\Web\UrlEndpoint;
 use dokuwiki\Action\Exception\FatalException;
 use dokuwiki\ActionRouter;
+use dokuwiki\Ui\PageView;
 
 /**
  * No Cache for the idenity forms
@@ -59,7 +60,7 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
     {
 
         $contextPath = $this->getSourcePath();
-        if($contextPath->hasRevision()) {
+        if ($contextPath->hasRevision()) {
             /**
              * In the diff {@link ExecutionContext::DIFF_ACTION},
              * the `rev` property is passed in the URL and we get a bad context
@@ -156,6 +157,15 @@ class FetcherAppPages extends IFetcherAbs implements IFetcherString
      */
     static public function tpl_content_core(): bool
     {
+
+        /**
+         * $INFO['prependTOC'] = ''; // php8 Undefined array key "prependTOC"
+         * at {@link PageView}
+         */
+        global $INFO;
+        if (!array_key_exists('prependTOC', $INFO)) {
+            $INFO['prependTOC'] = false;
+        }
 
         /**
          * Was false, is true

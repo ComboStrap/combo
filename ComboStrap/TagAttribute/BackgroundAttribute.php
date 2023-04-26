@@ -87,11 +87,26 @@ class BackgroundAttribute
                          * we put the background on the parent node
                          * because there is only one background
                          */
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE, $background[self::BACKGROUND_IMAGE]);
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_COLOR, $background[self::BACKGROUND_COLOR]);
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty(Opacity::OPACITY_ATTRIBUTE, $background[Opacity::OPACITY_ATTRIBUTE]);
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_POSITION, $background[self::BACKGROUND_POSITION]);
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_FILL, $background[self::BACKGROUND_FILL]);
+                        $backgroundImage = $background[self::BACKGROUND_IMAGE] ?? null;
+                        if ($backgroundImage !== null) {
+                            $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE, $backgroundImage);
+                        }
+                        $backgroundColor = $background[self::BACKGROUND_COLOR] ?? null;
+                        if ($backgroundColor !== null) {
+                            $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_COLOR, $backgroundColor);
+                        }
+                        $opacityAttribute = $background[Opacity::OPACITY_ATTRIBUTE] ?? null;
+                        if ($opacityAttribute !== null) {
+                            $tagAttributes->addComponentAttributeValueIfNotEmpty(Opacity::OPACITY_ATTRIBUTE, $opacityAttribute);
+                        }
+                        $backgroundPosition = $background[self::BACKGROUND_POSITION] ?? null;
+                        if ($backgroundPosition !== null) {
+                            $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_POSITION, $backgroundPosition);
+                        }
+                        $backgroundFill = $background[self::BACKGROUND_FILL] ?? null;
+                        if ($backgroundFill !== null) {
+                            $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_FILL, $backgroundFill);
+                        }
                     } else {
                         $backgroundTagAttribute = TagAttributes::createFromCallStackArray($background);
                         $backgroundTagAttribute->addClassName(self::CANONICAL);

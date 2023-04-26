@@ -328,7 +328,7 @@ class WikiPath extends PathAbs
         /**
          * Markup extension (Markdown, ...)
          */
-        if(!isset($parameterPathExtension)) {
+        if (!isset($parameterPathExtension)) {
             foreach (self::ALL_MARKUP_EXTENSIONS as $markupExtension) {
                 if ($markupExtension == self::MARKUP_DEFAULT_TXT_EXTENSION) {
                     continue;
@@ -777,7 +777,7 @@ class WikiPath extends PathAbs
          * See also {@link noNSorNS}
          */
         $names = $this->getNames();
-        $lastName = $names[sizeOf($names) - 1];
+        $lastName = $names[sizeOf($names) - 1] ?? null;
         if ($lastName === null) {
             throw new ExceptionNotFound("This path ($this) does not have any last name");
         }

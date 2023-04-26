@@ -234,7 +234,6 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $changelog = new PageChangeLog($ID);
         $revs = $changelog->getRevisions(0, 10000);
-        array_push($revs, $dokuWikiMetadata['last_change']['date']);
         $statExport[self::EDITS_COUNT] = count($revs);
         foreach ($revs as $rev) {
 
@@ -320,7 +319,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if (empty($this->metadata[PageTitle::TITLE])) {
             $ruleResults[self::RULE_TITLE_PRESENT] = self::FAILED;
             $ruleInfo[self::RULE_TITLE_PRESENT] = "Add a title for {$titleScore} points";
-            $this->metadata[PageTitle::TITLE] = $dokuWikiMetadata[PageTitle::TITLE];
+            $this->metadata[PageTitle::TITLE] = $dokuWikiMetadata[PageTitle::TITLE] ?? null;
             $qualityScores[self::RULE_TITLE_PRESENT] = 0;
         } else {
             $qualityScores[self::RULE_TITLE_PRESENT] = $titleScore;
@@ -423,13 +422,14 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Average Number of words by header section to text ratio
          */
-        $headers = $this->stats[self::HEADING_COUNT];
+        $headers = $this->stats[self::HEADING_COUNT] ?? null;
         if ($headers != null) {
             $headerCount = array_sum($headers);
             $headerCount--; // h1 is supposed to have no words
             if ($headerCount > 0) {
 
-                $avgWordsCountBySection = round($this->stats[self::WORD_COUNT] / $headerCount);
+                $wordCount = $this->stats[self::WORD_COUNT] ?? 0;
+                $avgWordsCountBySection = round($wordCount / $headerCount);
                 $statExport['word_section_count']['avg'] = $avgWordsCountBySection;
 
                 /**
@@ -496,7 +496,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Internal links
          */
-        $internalLinksCount = $this->stats[self::INTERNAL_LINK_COUNT];
+        $internalLinksCount = $this->stats[self::INTERNAL_LINK_COUNT] ?? null;
         $internalLinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_FACTOR, 1);
         if ($internalLinksCount == 0) {
             $qualityScores[self::INTERNAL_LINK_COUNT] = 0;
@@ -708,13 +708,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     public function smiley($smiley)
     {
-        if ($smiley == 'FIXME') $this->stats[self::FIXME]++;
+        if ($smiley == 'FIXME') {
+            $totalFixme = $this->stats[self::FIXME] ?? 0;
+            $this->stats[self::FIXME] = $totalFixme + 1;
+        }
     }
 
     public function linebreak()
     {
         if (!$this->tableopen) {
-            $this->stats['linebreak']++;
+            $linebreak = $this->stats['linebreak'] ?? 0;
+            $this->stats['linebreak'] = $linebreak + 1;
         }
     }
 
@@ -730,14 +734,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     public function hr()
     {
-        $this->stats['hr']++;
+        $hr = $this->stats['hr'] ?? 0;
+        $this->stats['hr'] = $hr + 1;
     }
 
     public function quote_open() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
-        $this->stats['quote_count']++;
+        $quoteCount = $this->stats['quote_count'] ?? 0;
+        $this->stats['quote_count'] = $quoteCount + 1;
         $this->quotelevel++;
-        $this->stats['quote_nest'] = max($this->quotelevel, $this->stats['quote_nest']);
+        $quoteNest = $this->stats['quote_nest'] ?? 0;
+        $this->stats['quote_nest'] = max($this->quotelevel, $quoteNest);
     }
 
     public function quote_close() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
@@ -810,7 +817,9 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Total
          */
-        $this->stats[self::PLAINTEXT][0] += $len;
+        $totalLen = $this->stats[self::PLAINTEXT][0] ?? 0;
+        $this->stats[self::PLAINTEXT][0] = $totalLen + $len;
+
     }
 
     public function internalmedia($src, $title = null, $align = null, $width = null, $height = null, $cache = null, $linking = null)

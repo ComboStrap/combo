@@ -100,7 +100,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 $souceImageWikiPath = WikiPath::createMediaPathFromId($sourceImagePath);
                 $pageImages->remove($souceImageWikiPath);
                 try {
-                    $imageUsage = $row[PageImageUsage::getPersistentName()];
+                    $imageUsage = $row[PageImageUsage::getPersistentName()] ?? null;
                     $imageUsageValue = null;
                     if ($imageUsage !== null) {
                         $imageUsageValue = $imageUsage->getValue();

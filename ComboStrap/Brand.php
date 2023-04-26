@@ -58,7 +58,7 @@ class Brand
         /**
          * Build the data for the brand
          */
-        $this->brandDict = $brandDictionary[$this->name];
+        $this->brandDict = $brandDictionary[$this->name] ?? null;
         switch ($this->name) {
             case self::CURRENT_BRAND:
                 $this->brandUrl = Site::getBaseUrl();
@@ -70,8 +70,13 @@ class Brand
                 break;
             default:
                 if ($this->brandDict !== null) {
-                    $this->secondaryColor = $this->brandDict["colors"]["secondary"];
-                    $this->brandUrl = $this->brandDict["url"];
+                    $colors = $this->brandDict["colors"] ?? null;
+                    if ($colors !== null) {
+                        $this->secondaryColor = $colors["secondary"];
+                    } else {
+                        $this->secondaryColor = null;
+                    }
+                    $this->brandUrl = $this->brandDict["url"] ?? null;
                     return;
                 }
                 $this->unknown = true;
@@ -184,7 +189,7 @@ class Brand
         if (!isset(self::$BRAND_ABBR)) {
             $brandDictionary = self::getBrandDictionary();
             foreach ($brandDictionary as $brandName => $brandProperties) {
-                $abbr = $brandProperties[self::ABBR_PROPERTY];
+                $abbr = $brandProperties[self::ABBR_PROPERTY] ?? null;
                 if (empty($abbr)) {
                     continue;
                 }
@@ -333,7 +338,7 @@ class Brand
      */
     private function getAbbr()
     {
-        $value = $this->brandDict['abbr'];
+        $value = $this->brandDict['abbr'] ?? null;
         if (empty($value)) {
             throw new ExceptionNotFound("No abbreviations");
         }

@@ -284,7 +284,7 @@ abstract class MetadataTabular extends Metadata
     }
 
     public
-    function remove(String $identifierValue): MetadataTabular
+    function remove(string $identifierValue): MetadataTabular
     {
         $this->buildCheck();
         if ($this->rows === null) {
@@ -321,10 +321,10 @@ abstract class MetadataTabular extends Metadata
         $normalizedValue = $this->getUidObject()
             ->setFromStoreValueWithoutException($id)
             ->getValue();
-        if(is_object($normalizedValue)){
+        if (is_object($normalizedValue)) {
             $normalizedValue = $normalizedValue->__toString();
         }
-        return $this->rows[$normalizedValue];
+        return $this->rows[$normalizedValue] ?? null;
     }
 
     static public function getDataType(): string

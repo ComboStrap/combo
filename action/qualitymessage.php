@@ -55,7 +55,8 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         if ($event->data['view'] != 'page') return;
 
         global $INFO;
-        if (!$INFO['exists']) {
+        $exists = $INFO['exists'] ?? null;
+        if (!$exists) {
             return;
         }
         array_splice($event->data['items'], -1, 0, array(new QualityMenuItem()));

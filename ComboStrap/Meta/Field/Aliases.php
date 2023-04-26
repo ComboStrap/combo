@@ -24,7 +24,6 @@ class Aliases extends MetadataTabular
     public const PROPERTY_NAME = "aliases";
 
 
-
     public static function createForPage(MarkupPath $page): Aliases
     {
 
@@ -54,7 +53,7 @@ class Aliases extends MetadataTabular
             /**
              * @var AliasType $aliasType
              */
-            $aliasType = $row[AliasType::getPersistentName()];
+            $aliasType = $row[AliasType::getPersistentName()] ?? null;
             if ($aliasType !== null) {
                 try {
                     $alias->setType($aliasType->getValue());

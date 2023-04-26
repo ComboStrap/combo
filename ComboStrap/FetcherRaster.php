@@ -118,7 +118,7 @@ class FetcherRaster extends IFetcherLocalImage
         /**
          * Trait
          */
-        $this->addLocalPathParametersToFetchUrl($url, self::$MEDIA_QUERY_PARAMETER);
+        $this->addLocalPathParametersToFetchUrl($url, MediaMarkup::$MEDIA_QUERY_PARAMETER);
 
         return $url;
     }
@@ -328,7 +328,11 @@ class FetcherRaster extends IFetcherLocalImage
         $requestedHeight = parent::getRequestedHeight();
         $intrinsicHeight = $this->getIntrinsicHeight();
         if ($requestedHeight > $intrinsicHeight) {
-            LogUtility::warning("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($intrinsicHeight). The height was then set to its natural height ($intrinsicHeight)", self::CANONICAL);
+            /**
+             * Info and not warning to not fill the log
+             * as it's pretty common with a {@link PageImageTag}
+             */
+            LogUtility::info("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($intrinsicHeight). The height was then set to its natural height ($intrinsicHeight)", self::CANONICAL);
             return $intrinsicHeight;
         }
         return $requestedHeight;

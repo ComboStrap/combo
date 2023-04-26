@@ -70,7 +70,7 @@ class Icon
 
             }
 
-            $tagAttributes->addComponentAttributeValue(FetcherRawLocalPath::$MEDIA_QUERY_PARAMETER, $mediaDokuPath->getWikiId());
+            $tagAttributes->addComponentAttributeValue(MediaMarkup::$MEDIA_QUERY_PARAMETER, $mediaDokuPath->getWikiId());
             $tagAttributes->setComponentAttributeValue(FetcherSvg::NAME_ATTRIBUTE, $mediaDokuPath->getLastNameWithoutExtension());
 
 

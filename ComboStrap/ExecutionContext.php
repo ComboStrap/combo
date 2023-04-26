@@ -106,6 +106,8 @@ class ExecutionContext
 
     private CacheManager $cacheManager;
 
+    private IdManager $idManager;
+
     private Site $app;
 
     /**
@@ -459,7 +461,7 @@ class ExecutionContext
                  */
                 global $INFO;
                 if ($INFO !== null) {
-                    $callingId = $INFO['id'];
+                    $callingId = $INFO['id'] ?? null;
                     if (!empty($callingId)) {
                         return WikiPath::createMarkupPathFromId($callingId);
                     }
@@ -548,7 +550,7 @@ class ExecutionContext
      */
     public function getRuntimeBoolean(string $name): bool
     {
-        $var = $this->executionScopedVariables[$name];
+        $var = $this->executionScopedVariables[$name] ?? null;
         if (!isset($var)) {
             throw new ExceptionNotFound("No $name runtime env was found");
         }
@@ -810,7 +812,9 @@ class ExecutionContext
         $oldContextId = $INFO['id'] ?? null;
         if ($markupHandler->isFragment()) {
             $contextPath = $markupHandler->getRequestedContextPath();
-            $INFO['id'] = $contextPath->getWikiId();
+            $wikiId = $contextPath->getWikiId();
+            $INFO['id'] = $wikiId;
+            $INFO['namespace'] = getNS($wikiId); // php8 Undefined array key
         }
 
         /**
@@ -844,6 +848,7 @@ class ExecutionContext
             unset($INFO['id']);
         } else {
             $INFO['id'] = $oldContextId;
+            $INFO['namespace'] = getNS($oldContextId);
         }
         return $this;
     }

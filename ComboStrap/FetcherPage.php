@@ -153,6 +153,7 @@ class FetcherPage extends IFetcherAbs implements IFetcherSource, IFetcherString
          */
         $htmlDocumentString = $this->pageTemplate->render();
 
+
         /**
          * We store only the static public pages
          * without messages (they are dynamically insert)

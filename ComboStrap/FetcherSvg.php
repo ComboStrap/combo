@@ -502,7 +502,7 @@ class FetcherSvg extends IFetcherLocalImage
         /**
          * Trait
          */
-        $this->addLocalPathParametersToFetchUrl($url, self::$MEDIA_QUERY_PARAMETER);
+        $this->addLocalPathParametersToFetchUrl($url, MediaMarkup::$MEDIA_QUERY_PARAMETER);
 
         /**
          * Specific properties
@@ -1460,7 +1460,7 @@ class FetcherSvg extends IFetcherLocalImage
          */
         try {
             $iconDownload =
-                !$tagAttributes->hasAttribute(FetcherTraitWikiPath::$MEDIA_QUERY_PARAMETER) &&
+                !$tagAttributes->hasAttribute(MediaMarkup::$MEDIA_QUERY_PARAMETER) &&
                 $this->getRequestedType() === self::ICON_TYPE
                 && $this->getRequestedName() !== null;
             if ($iconDownload) {

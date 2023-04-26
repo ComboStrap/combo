@@ -133,9 +133,21 @@ class Html
         }
         for ($i = 0; $i < $countExpected; $i++) {
             $expectedSrcSet = trim($expectedSrcSets[$i]);
-            [$expectedSrc, $expectedWidth] = explode(" ", $expectedSrcSet, 2);
+            $expectedSrcSetExploded = explode(" ", $expectedSrcSet, 2);
+            $expectedSrc = $expectedSrcSetExploded[0];
+            if (count($expectedSrcSetExploded) == 2) {
+                $expectedWidth = $expectedSrcSetExploded[1];
+            } else {
+                $expectedWidth = null;
+            }
             $actualSrcSet = trim($actualSrcSets[$i]);
-            [$actualSrc, $actualWidth] = explode(" ", $actualSrcSet, 2);
+            $actualSrcSetExploded = explode(" ", $actualSrcSet, 2);
+            $actualSrc = $actualSrcSetExploded[0];
+            if (count($actualSrcSetExploded) == 2) {
+                $actualWidth = $actualSrcSetExploded[1];
+            } else {
+                $actualWidth = null;
+            }
             if ($expectedWidth !== $actualWidth) {
                 throw new ExceptionNotEquals("The expected width ($expectedWidth) of the srcSet ($i) is not the same than the actual ($actualWidth).");
             }
@@ -148,7 +160,6 @@ class Html
             }
         }
     }
-
 
 
     /**

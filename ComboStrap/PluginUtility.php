@@ -841,8 +841,8 @@ class PluginUtility
             return "";
         }
 
-        $payload = $data[self::PAYLOAD];
-        $previousTagDisplayType = $data[self::CONTEXT];
+        $payload = $data[self::PAYLOAD] ?? null;
+        $previousTagDisplayType = $data[self::CONTEXT] ?? null;
         if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
             // Delete the eol at the beginning and end
             // otherwise we get a big block
@@ -1021,10 +1021,12 @@ class PluginUtility
     public static function isDev(): bool
     {
         global $_SERVER;
-        if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
+        $remoteAddr = $_SERVER["REMOTE_ADDR"] ?? null;
+        if ($remoteAddr == "127.0.0.1") {
             return true;
         }
-        if ($_SERVER["COMPUTERNAME"] === "NICO") {
+        $computerName = $_SERVER["COMPUTERNAME"] ?? null;
+        if ($computerName === "NICO") {
             return true;
         }
         return false;

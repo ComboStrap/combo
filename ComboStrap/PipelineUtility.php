@@ -192,7 +192,7 @@ class PipelineUtility
             }
         }
 
-        $tail = $commandArgs[1];
+        $tail = $commandArgs[1] ?? null;
         if ($tail !== null) {
             $headValue .= $tail;
         }

@@ -546,7 +546,7 @@ class Call
                     return Call::BlOCK_DISPLAY;
                 }
 
-                if(in_array($mode, self::TABLE_MARKUP)){
+                if (in_array($mode, self::TABLE_MARKUP)) {
                     return Call::TABLE_DISPLAY;
                 }
 
@@ -611,7 +611,7 @@ class Call
     {
         $mode = $this->call[0];
         if ($mode === "plugin") {
-            return $this->call[1][1][PluginUtility::CONTEXT];
+            return $this->call[1][1][PluginUtility::CONTEXT] ?? null;
         } else {
             LogUtility::msg("You can't ask for a context from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");
             return null;
@@ -768,7 +768,12 @@ class Call
     public
     function getLastMatchedCharacterPosition()
     {
-        return $this->getFirstMatchedCharacterPosition() + strlen($this->getCapturedContent());
+        $captureContent = $this->getCapturedContent();
+        $length = 0;
+        if ($captureContent != null) {
+            $length = strlen($captureContent);
+        }
+        return $this->getFirstMatchedCharacterPosition() + $length;
     }
 
     /**
@@ -926,7 +931,7 @@ class Call
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
-            $value = $this->call[1][1][PluginUtility::EXIT_CODE];
+            $value = $this->call[1][1][PluginUtility::EXIT_CODE] ?? null;
             if ($value === null) {
                 return 0;
             }
@@ -972,7 +977,7 @@ class Call
     private function getStateName(): string
     {
         $state = $this->getState();
-        switch ($state){
+        switch ($state) {
             case DOKU_LEXER_ENTER:
                 return "enter";
             case DOKU_LEXER_EXIT:
@@ -982,7 +987,7 @@ class Call
             case DOKU_LEXER_UNMATCHED:
                 return "text";
             default:
-                return "unknown ".$state;
+                return "unknown " . $state;
         }
     }
 

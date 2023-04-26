@@ -161,7 +161,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                      */
                     return array(
                         PluginUtility::STATE => $state,
-                        PluginUtility::ATTRIBUTES=>$openingTag->getAttributes()
+                        PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                     );
                 }
                 $parent = $callStack->moveToParent();
@@ -243,13 +243,13 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT:
-                    $message = $data[PluginUtility::EXIT_MESSAGE];
+                    $message = $data[PluginUtility::EXIT_MESSAGE] ?? null;
                     if ($message !== null) {
                         $renderer->doc .= LogUtility::wrapInRedForHtml($message);
                         return false;
                     }
 
-                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                    $callStackArray = $data[PluginUtility::ATTRIBUTES] ?? null;
                     $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                     $text = $tagAttributes->getValue(self::TEXT_ATTRIBUTE);
                     if ($text !== null) {

@@ -107,7 +107,11 @@ class StringUtility
      */
     public static function addEolCharacterIfNotPresent(&$doc)
     {
-        if ($doc[strlen($doc) - 1] != DOKU_LF) {
+        $strlen = strlen($doc);
+        if ($strlen < 1) {
+            return;
+        }
+        if ($doc[$strlen - 1] != DOKU_LF) {
             $doc .= DOKU_LF;
         }
     }
@@ -175,7 +179,7 @@ class StringUtility
         // /u for unicode support (https://www.php.net/manual/en/reference.pcre.pattern.modifiers.php)
         $wordSeparator = '/[\s|\/]/u';
         $preg_split = preg_split($wordSeparator, $text);
-        $wordsWithoutEmpty = array_filter($preg_split, 'self::isWord');
+        $wordsWithoutEmpty = array_filter($preg_split, self::class . '::isWord');
         return count($wordsWithoutEmpty);
     }
 

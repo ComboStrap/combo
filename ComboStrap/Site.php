@@ -56,6 +56,8 @@ class Site
     private static $STRAP_TEMPLATE_INFO;
     private $executingContext;
 
+    private $config;
+
     /**
      * @param ExecutionContext $executingContext
      */
@@ -489,8 +491,7 @@ class Site
     public static function getTag()
     {
         global $conf;
-        $tag = $conf['tag'];
-        return ($tag ? $tag : null);
+        return $conf['tag'] ?? null;
     }
 
     public static function setTemplate($template)

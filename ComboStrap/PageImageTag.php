@@ -145,10 +145,20 @@ class PageImageTag
                         }
                     }
                     if ($width !== null) {
-                        $imageFetcher->setRequestedWidth($width);
+                        try {
+                            $width = ConditionalLength::createFromString($width)->toPixelNumber();
+                            $imageFetcher->setRequestedWidth($width);
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::warning("The width ($width) is not a valid length and was discarded", self::CANONICAL, $e);
+                        }
                     }
                     if ($height !== null) {
-                        $imageFetcher->setRequestedHeight($height);
+                        try {
+                            $height = ConditionalLength::createFromString($height)->toPixelNumber();
+                            $imageFetcher->setRequestedHeight($height);
+                        } catch (ExceptionBadArgument $e) {
+                            LogUtility::warning("The height ($height) is not a valid length and was discarded", self::CANONICAL, $e);
+                        }
                     }
 
                     break;

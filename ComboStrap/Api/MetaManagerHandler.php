@@ -44,7 +44,7 @@ class MetaManagerHandler
         /**
          * Shared check between post and get HTTP method
          */
-        $id = $_GET["id"];
+        $id = $_GET["id"] ?? null;
         if ($id === null) {
             /**
              * With {@link TestRequest}
@@ -351,7 +351,7 @@ class MetaManagerHandler
 
             if ($postMetaValue === null) {
 
-                if ($metadata!==null && $metadata->isMutable()) {
+                if ($metadata !== null && $metadata->isMutable()) {
                     $messages[] = Message::createInfoMessage("The metadata ($key) $managedMetaMessageSuffix");
                     continue;
                 }
@@ -361,10 +361,11 @@ class MetaManagerHandler
                 }
                 unset($actualMeta[MetadataDokuWikiStore::CURRENT_METADATA][$key]);
                 unset($actualMeta[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY][$key]);
-                $messages[] = Message::createInfoMessage("The metadata ($key) with the value ($value) was deleted");
+                $stringValue = DataType::toString($value);
+                $messages[] = Message::createInfoMessage("The metadata ($key) with the value ($stringValue) was deleted");
             } else {
                 if ($value !== $postMetaValue) {
-                    if ($metadata!==null && $metadata->isMutable()) {
+                    if ($metadata !== null && $metadata->isMutable()) {
                         $messages[] = Message::createInfoMessage("The metadata ($key) $managedMetaMessageSuffix");
                         continue;
                     }

@@ -1086,6 +1086,9 @@ class DatabasePageRow
     public
     function getMarkupPath(): ?MarkupPath
     {
+        if ($this->row === null) {
+            return null;
+        }
         if (
             $this->markupPath === null
             && $this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] !== null
@@ -1200,7 +1203,7 @@ class DatabasePageRow
         // don't know why but the sqlite plugin returns them uppercase
         // rowid is returned lowercase from the sqlite plugin
         $upperAttribute = strtoupper($attribute);
-        return $this->row[$upperAttribute];
+        return $this->row[$upperAttribute] ?? null;
 
     }
 

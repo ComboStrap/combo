@@ -136,7 +136,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     public static function updateStatistics($attributes, renderer_plugin_combo_analytics $renderer)
     {
         $markupUrlString = $attributes[MarkupRef::REF_ATTRIBUTE];
-        $renderer->stats[renderer_plugin_combo_analytics::MEDIA_COUNT]++;
+        $actualMediaCount = $renderer->stats[renderer_plugin_combo_analytics::MEDIA_COUNT] ?? 0;
+        $renderer->stats[renderer_plugin_combo_analytics::MEDIA_COUNT] = $actualMediaCount + 1;
         try {
             $markupUrl = MediaMarkup::createFromRef($markupUrlString);
         } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
@@ -145,7 +146,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         }
         switch ($markupUrl->getInternalExternalType()) {
             case MediaMarkup::INTERNAL_MEDIA_CALL_NAME:
-                $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_MEDIA_COUNT]++;
+                $actualInternalMediaCount = $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_MEDIA_COUNT] ?? 0;
+                $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_MEDIA_COUNT] = $actualInternalMediaCount + 1;
                 try {
                     $path = $markupUrl->getPath();
                 } catch (ExceptionNotFound $e) {
@@ -153,11 +155,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     return;
                 }
                 if (!FileSystems::exists($path)) {
-                    $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_BROKEN_MEDIA_COUNT]++;
+                    $brokenMediaCount = $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_BROKEN_MEDIA_COUNT] ?? 0;
+                    $renderer->stats[renderer_plugin_combo_analytics::INTERNAL_BROKEN_MEDIA_COUNT] = $brokenMediaCount + 1;
                 }
                 break;
             case MediaMarkup::EXTERNAL_MEDIA_CALL_NAME:
-                $renderer->stats[renderer_plugin_combo_analytics::EXTERNAL_MEDIA_COUNT]++;
+                $mediaCount = $renderer->stats[renderer_plugin_combo_analytics::EXTERNAL_MEDIA_COUNT] ?? 0;
+                $renderer->stats[renderer_plugin_combo_analytics::EXTERNAL_MEDIA_COUNT] = $mediaCount + 1;
                 break;
         }
     }

@@ -43,39 +43,41 @@ class Event
          */
         $maxBackgroundEventLow = 10;
 
-        $version = $sqlite->getVersion();
+
         $rows = [];
-        /**
-         * Returning clause
-         */
-        $isCi = PluginUtility::isCi(); // Sqlite plugin seems to not support the returning clause - it returns a number as result set in CI
-        $isDev = PluginUtility::isDevOrTest(); // may not work for normal users
-        if ($version > "3.35.0" && $isDev && !$isCi) {
-
-            // returning clause is available since 3.35 on delete
-            // https://www.sqlite.org/lang_returning.html
-
-            $eventTableName = self::EVENT_TABLE_NAME;
-            $statement = "delete from {$eventTableName} returning *";
-            // https://www.sqlite.org/lang_delete.html#optional_limit_and_order_by_clauses
-            if ($sqlite->hasOption("SQLITE_ENABLE_UPDATE_DELETE_LIMIT")) {
-                $statement .= "order by timestamp limit {$maxBackgroundEventLow}";
-            }
-            $request = $sqlite->createRequest()
-                ->setStatement($statement);
-            try {
-                $rows = $request->execute()
-                    ->getRows();
-                if (sizeof($rows) === 0) {
-                    return;
-                }
-            } catch (ExceptionCompile $e) {
-                LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
-            } finally {
-                $request->close();
-            }
-
-        }
+//        /**
+//         * Returning clause
+//         * does not work
+//         */
+//        $version = $sqlite->getVersion();
+//        $isCi = PluginUtility::isCi(); // Sqlite plugin seems to not support the returning clause - it returns a number as result set in CI
+//        $isDev = PluginUtility::isDevOrTest(); // may not work for normal users
+//        if ($version > "3.35.0" && $isDev && !$isCi) {
+//
+//            // returning clause is available since 3.35 on delete
+//            // https://www.sqlite.org/lang_returning.html
+//
+//            $eventTableName = self::EVENT_TABLE_NAME;
+//            $statement = "delete from {$eventTableName} returning *";
+//            // https://www.sqlite.org/lang_delete.html#optional_limit_and_order_by_clauses
+//            if ($sqlite->hasOption("SQLITE_ENABLE_UPDATE_DELETE_LIMIT")) {
+//                $statement .= "order by timestamp limit {$maxBackgroundEventLow}";
+//            }
+//            $request = $sqlite->createRequest()
+//                ->setStatement($statement);
+//            try {
+//                $rows = $request->execute()
+//                    ->getRows();
+//                if (sizeof($rows) === 0) {
+//                    return;
+//                }
+//            } catch (ExceptionCompile $e) {
+//                LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
+//            } finally {
+//                $request->close();
+//            }
+//
+//        }
 
         /**
          * Error in the block before or not the good version

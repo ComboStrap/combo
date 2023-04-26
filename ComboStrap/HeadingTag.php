@@ -189,7 +189,10 @@ class HeadingTag
 
             $callStackArray = $data[PluginUtility::ATTRIBUTES];
             $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-            $text = trim($tagAttributes->getValue(HeadingTag::HEADING_TEXT_ATTRIBUTE));
+            $text = $tagAttributes->getValue(HeadingTag::HEADING_TEXT_ATTRIBUTE);
+            if ($text !== null) {
+                $text = trim($text);
+            }
             $level = $tagAttributes->getValue(HeadingTag::LEVEL);
             $pos = 0; // mandatory for header but not for metadata, we set 0 to make the code analyser happy
             $renderer->header($text, $level, $pos);
@@ -215,7 +218,7 @@ class HeadingTag
          * Only outline heading metadata
          * Not component heading
          */
-        $context = $data[PluginUtility::CONTEXT];
+        $context = $data[PluginUtility::CONTEXT] ?? null;
         if ($context === self::TYPE_OUTLINE) {
             $callStackArray = $data[PluginUtility::ATTRIBUTES];
             $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);

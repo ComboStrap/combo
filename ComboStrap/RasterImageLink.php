@@ -138,7 +138,12 @@ class RasterImageLink extends ImageLink
          */
         // The image margin applied
         $imageMargin = SiteConfig::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN, "20px");
-
+        try {
+            $imageMargin = ConditionalLength::createFromString($imageMargin)->toPixelNumber();
+        } catch (ExceptionBadArgument $e) {
+            LogUtility::warning("The variable (" . self::CONF_RESPONSIVE_IMAGE_MARGIN . ") has a value ($imageMargin) that is not a valid length.", self::CANONICAL, $e);
+            $imageMargin = 20;
+        }
 
         /**
          * Srcset and sizes for responsive image

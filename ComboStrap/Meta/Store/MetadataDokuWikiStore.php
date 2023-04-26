@@ -192,7 +192,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
          * before rendering
          */
         $data = $this->getData();
-        $value = $data[$name];
+        $value = $data[$name] ?? null;
 
         /**
          * Empty string return null

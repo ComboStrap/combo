@@ -76,9 +76,9 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
         /**
          * Http header CSP directives
          */
-        $httpHeaderReferer = $_SERVER['HTTP_REFERER'] ?? null;
+        $httpHeaderReferer = $_SERVER['HTTP_REFERER'] ?? '';
         $httpDirectives = [];
-        if ($httpHeaderReferer !== null && strpos($httpHeaderReferer, Site::getBaseUrl()) === false) {
+        if (strpos($httpHeaderReferer, Site::getBaseUrl()) === false) {
             // not same origin
             $httpDirectives = [
                 // the page cannot be used in a iframe (clickjacking),

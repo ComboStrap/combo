@@ -135,7 +135,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      */
     private static function getOriginalIdFromRequest()
     {
-        $originalId = $_GET["id"];
+        $originalId = $_GET["id"] ?? null;
+        if ($originalId === null) {
+            return null;
+        }
         return str_replace("/", WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $originalId);
     }
 

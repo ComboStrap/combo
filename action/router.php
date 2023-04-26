@@ -265,6 +265,9 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         $id = self::getOriginalIdFromRequest();
+        if ($id === null) {
+            return;
+        }
         $page = MarkupPath::createMarkupFromId($id);
         if (!FileSystems::exists($page)) {
             // Well known

@@ -90,7 +90,7 @@ class SiteConfig
             if ($namespace === null) {
                 return $defaultValue;
             }
-            $value = $conf['plugin'][$namespace][$confName] ?? null;
+            $value = $namespace[$confName] ?? null;
 
         } else {
 

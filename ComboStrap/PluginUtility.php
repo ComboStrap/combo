@@ -96,7 +96,7 @@ class PluginUtility
         self::$INFO_PLUGIN = confToHash($pluginInfoFile->toAbsoluteId());
         self::$PLUGIN_NAME = 'ComboStrap';
         global $lang;
-        self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
+        self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME] ?? null;
         self::$URL_APEX = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
         //self::$VERSION = self::$INFO_PLUGIN['version'];
 

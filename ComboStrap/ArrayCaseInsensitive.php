@@ -67,7 +67,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
         }
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         if (is_string($offset)) $offset = strtolower($offset);
         return isset($this->_keyMapping[$offset]);
@@ -110,7 +110,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
         return $this->iterator->key();
     }
 
-    public function valid()
+    public function valid(): bool
     {
         return $this->iterator->valid();
     }

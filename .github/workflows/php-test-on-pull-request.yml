@@ -1,0 +1,11 @@
+name: Pull Request Run
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  call-test-workflow:
+    uses: ./.github/workflows/reusable-php-test-github.yml
+    with:
+      versions: "['8.2']"

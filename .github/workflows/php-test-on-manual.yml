@@ -1,0 +1,24 @@
+name: Manual PHP Test Workflows
+
+on:
+  workflow_dispatch: # Manually running a workflow from the UI
+    # https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#inputs
+    inputs:
+      versions:
+        description: 'Version of the interpreter'
+        required: true
+        default: "['8.2']"
+        # https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputsinput_idtype
+        type: choice
+        options:
+          - "['7.4','8.2']"
+          - "['8.2']"
+          - "['7.4']"
+
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows#calling-a-reusable-workflow
+
+jobs:
+  call-test-workflow:
+    uses: ./.github/workflows/reusable-php-test-github.yml
+    with:
+      versions: ${{ fromJson(github.event.inputs.versions) }}

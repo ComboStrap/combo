@@ -1,9 +1,16 @@
-name: PHP Test
+name: Reusable PHP Test Workflow
 
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows#creating-a-reusable-workflow
 on:
-  workflow_dispatch: # Manually running a workflow from the UI
-  pull_request:
-    branches: [ "main" ]
+  # Reusable workflow
+  workflow_call:
+    # https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#inputs
+    inputs:
+      versions:
+        description: 'Version of the interpreter'
+        required: true
+        default: "['8.2']"
+        type: string
 
 permissions: # Setting permissions for the token
   contents: read # needed to fetch code
@@ -19,7 +26,7 @@ defaults:
 jobs:
   test: # The identifier of the job
 
-    name: Test on php ${{ matrix.php-versions }} # The name of the job
+    name: Test on php ${{ matrix.php }} # The name of the job
 
     runs-on: ubuntu-latest
 
@@ -30,29 +37,20 @@ jobs:
          # because we don't specify any matrix variables
          # All configurations under include will run
          # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
-         php: ${{ github.event.client_payload.versions }}
-         include:
-           - php: "7.4"
-             phpunit: "8.5.33"
-           - php: "8.2"
-             phpunit: "8.5.33"
+         php: ${{ github.event.inputs.versions }}
       fail-fast: false
 
     env:
       COMBO_HOME: lib/plugins/combo
-      #GITHUB_CONTEXT: ${{ toJSON(github) }}
 
     steps:
 
-#      - name: Context Dump
-#        run: echo "$GITHUB_CONTEXT"
-      - name: Set environment variables
+      - name: Phpunit
         run: |
-          echo "SLACK_USERNAME=Github Actions" >> $GITHUB_ENV
-          echo "SLACK_ICON_EMOJI=:ocotcat:" >> $GITHUB_ENV
-          echo "SLACK_TITLE=This is a GitHub Actions build!" >> $GITHUB_ENV
-          echo "SLACK_WEBHOOK=${{ secrets.SLACK_WEBHOOK }}" >> $GITHUB_ENV
-          echo "SLACK_CHANNEL=#channel" >> $GITHUB_ENV
+          echo "PHPUNIT_VERSION=${{ fromJson(env.PHPUNIT_BY_PHP)[matrix.version] }}" >> $GITHUB_ENV
+        env:
+          PHPUNIT_BY_PHP: '{"7.4":"8.5.33","8.2":"8.5.33"}'
+
       # https://github.com/marketplace/actions/setup-php-action#matrix-setup
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -60,7 +58,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: mbstring, intl, PDO, pdo_sqlite, pdo_mysql, pdo_pgsql, bz2
           ini-values: pcre.jit=0
-          tools: phpunit:${{ matrix.phpunit }}
+          tools: phpunit:${{ env.PHPUNIT_VERSION }}
 
       # Php Problem Matchers
       # https://github.com/marketplace/actions/setup-php-action#problem-matchers

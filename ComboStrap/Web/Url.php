@@ -539,6 +539,11 @@ class Url extends PathAbs
         return $this;
     }
 
+    /**
+     * @param string $fragment
+     * @return $this
+     * Example `#step:11:24728`, this fragment is valid!
+     */
     public function setFragment(string $fragment): Url
     {
         $this->fragment = $fragment;

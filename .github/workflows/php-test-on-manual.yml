@@ -21,4 +21,4 @@ jobs:
   call-test-workflow:
     uses: ./.github/workflows/php-test-reusable.yml
     with:
-      versions: ${{ fromJson(github.event.inputs.versions) }}
+      versions: ${{ github.event.inputs.versions }}

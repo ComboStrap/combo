@@ -1,4 +1,4 @@
-name: Reusable PHP Test Workflow
+name: PHP Tests Reusable Workflow
 
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows#creating-a-reusable-workflow
 on:

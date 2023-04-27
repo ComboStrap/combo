@@ -1,6 +1,9 @@
 # https://docs.github.com/en/actions/learn-github-actions/contexts
 name: Example Env
 
+## Error: .github/workflows/example-env-github.yml (Line: 53, Col: 26): A mapping was not expected
+## Means that the expression syntax ${{ }} is not supported
+
 on:
   # Manually running a workflow from the UI
   # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#defining-inputs-for-manually-triggered-workflows
@@ -48,9 +51,10 @@ jobs:
 
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#env
     # https://docs.github.com/en/actions/learn-github-actions/contexts#env-context
+    # only string
     env:
       LITERAL_STRING_ENV: lib/plugins/combo
-      LITERAL_ARRAY_ENV: ${{ fromJSON('{"7.4":"Dependency Variable for 7.4","8.2":"Dependency Variable for 8.2"}') }}
+#      LITERAL_ARRAY_ENV: ${{ fromJSON('{"7.4":"Dependency Variable for 7.4","8.2":"Dependency Variable for 8.2"}') }}
       DEPENDENCY_VIA_COMMAND: "${{ matrix.version == '7.4' && '7.4 version' || 'not 7.4 version' }}"
 
     steps:

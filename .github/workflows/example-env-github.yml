@@ -31,15 +31,20 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategy
     strategy:
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategyfail-fast
+      fail-fast: false
+
       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
       matrix:
         # 2 jobs will run, one for each include entry
         # because we don't specify any matrix variables
         # All configurations under include will run
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
-        version: ${{ fromJson(inputs.versions) }}
-      fail-fast: false
+        # Using context to create matrix
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-contexts-to-create-matrices
+        version: ${{ fromJson(github.event.inputs.versions) }}
 
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#env
     # https://docs.github.com/en/actions/learn-github-actions/contexts#env-context

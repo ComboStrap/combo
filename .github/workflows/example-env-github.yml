@@ -73,6 +73,12 @@ jobs:
           # only string, boolean, number
           LITERAL_ARRAY_ENV: '{"7.4":"Dependency Variable for 7.4","8.2":"Dependency Variable for 8.2"}'
 
+      - name: Echo env created
+        run: |
+          echo "$LITERAL_STRING_ENV";
+          echo "$DEPENDENCY_VIA_COMMAND";
+          echo "$DEPENDENCY_VIA_ARRAY";
+
       # https://docs.github.com/en/actions/learn-github-actions/contexts#example-printing-context-information-to-the-log
       - name: Dump GitHub context
         run: echo '${{ toJSON(github) }}'
@@ -89,9 +95,3 @@ jobs:
       - name: Dump Input context
         run: echo '${{ toJSON(inputs) }}'
 
-      - name: Echo env created
-        run: |
-          echo ("$LITERAL_STRING_ENV");
-          echo ("$LITERAL_ARRAY_ENV");
-          echo ("$DEPENDENCY_VIA_COMMAND");
-          echo ("$DEPENDENCY_VIA_ARRAY");

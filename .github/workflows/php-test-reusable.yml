@@ -37,7 +37,7 @@ jobs:
          # because we don't specify any matrix variables
          # All configurations under include will run
          # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
-         php: ${{ github.event.inputs.versions }}
+         php: ${{ fromJson(github.event.inputs.versions) }}
       fail-fast: false
 
     env:

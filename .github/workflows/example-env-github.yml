@@ -47,9 +47,15 @@ jobs:
       LITERAL_STRING_ENV: lib/plugins/combo
       LITERAL_ARRAY_ENV: ${{ fromJSON('{"7.4":"Dependency Variable for 7.4","8.2":"Dependency Variable for 8.2"}') }}
       DEPENDENCY_VIA_COMMAND: "${{ matrix.version == '7.4' && '7.4 version' || 'not 7.4 version' }}"
-      DEPENDENCY_VIA_ARRAY: ${{ env.LITERAL_ARRAY_ENV[matrix.version] }}
 
     steps:
+
+      # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
+      # https://docs.github.com/en/actions/learn-github-actions/variables#passing-values-between-steps-and-jobs-in-a-workflow
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsenv
+      - name: Adding a conditional dependant variable
+        run: |
+          echo "DEPENDENCY_VIA_ARRAY=${{ env.LITERAL_ARRAY_ENV[matrix.version] }}" >> $GITHUB_ENV
 
       # https://docs.github.com/en/actions/learn-github-actions/contexts#example-printing-context-information-to-the-log
       - name: Dump GitHub context
@@ -67,7 +73,7 @@ jobs:
       - name: Dump Input context
         run: echo '${{ toJSON(inputs) }}'
 
-      - name: Echo manual env
+      - name: Echo env created
         run: |
           echo ("$LITERAL_STRING_ENV");
           echo ("$LITERAL_ARRAY_ENV");

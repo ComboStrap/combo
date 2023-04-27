@@ -34,7 +34,7 @@ permissions: # Setting permissions for the token
 jobs:
   demo-job: # The identifier of the job
 
-    name: Test on php ${{ matrix.php-versions }} # The name of the job
+    name: Env printing with the matrix version ${{ matrix.version }} # The name of the job
 
     runs-on: ubuntu-latest
 

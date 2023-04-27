@@ -1,0 +1,63 @@
+# https://docs.github.com/en/actions/learn-github-actions/contexts
+name: Env Demo
+
+on:
+  workflow_dispatch: # Manually running a workflow from the UI
+
+permissions: # Setting permissions for the token
+  contents: read # needed to fetch code
+
+# A list of the jobs that run in the workflow file.
+jobs:
+  test: # The identifier of the job
+
+    name: Test on php ${{ matrix.php-versions }} # The name of the job
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
+      matrix:
+        # 2 jobs will run, one for each include entry
+        # because we don't specify any matrix variables
+        # All configurations under include will run
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
+        php: ${{ github.event.client_payload.versions }}
+        include:
+          - php: "7.4"
+            phpunit: "8.5.33"
+          - php: "8.2"
+            phpunit: "8.5.33"
+      fail-fast: false
+
+    env:
+      LITERAL_ENV: lib/plugins/combo
+      GITHUB_CONTEXT: ${{ toJSON(github) }}
+
+    steps:
+
+      # https://docs.github.com/en/actions/learn-github-actions/contexts#example-printing-context-information-to-the-log
+      - name: Dump GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+      - name: Dump job context
+        run: echo '${{ toJSON(job) }}'
+      - name: Dump steps context
+        run: echo '${{ toJSON(steps) }}'
+      - name: Dump runner context
+        run: echo '${{ toJSON(runner) }}'
+      - name: Dump strategy context
+        run: echo '${{ toJSON(strategy) }}'
+      - name: Dump matrix context
+        run: echo '${{ toJSON(matrix) }}'
+
+      # Input
+      - name: Dump Input context
+        run: echo '${{ toJSON(inputs ) }}'
+
+      - name: Echo literal env
+        run: echo "$LITERAL_ENV"
+
+      - name: Set environment variables conditionaly
+        run: |
+          echo "SLACK_USERNAME=Github Actions" >> $GITHUB_ENV

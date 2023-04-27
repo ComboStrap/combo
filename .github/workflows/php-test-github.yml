@@ -8,6 +8,13 @@ on:
 permissions: # Setting permissions for the token
   contents: read # needed to fetch code
 
+
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#defaults
+# Set the default shell for a run
+defaults:
+  run:
+    shell: bash
+
 # A list of the jobs that run in the workflow file.
 jobs:
   test: # The identifier of the job
@@ -23,9 +30,10 @@ jobs:
          # because we don't specify any matrix variables
          # All configurations under include will run
          # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
+         php: ${{ github.event.client_payload.versions }}
          include:
-#           - php: "7.4"
-#             phpunit: "7.5.20"
+           - php: "7.4"
+             phpunit: "8.5.33"
            - php: "8.2"
              phpunit: "8.5.33"
       fail-fast: false
@@ -38,7 +46,13 @@ jobs:
 
 #      - name: Context Dump
 #        run: echo "$GITHUB_CONTEXT"
-
+      - name: Set environment variables
+        run: |
+          echo "SLACK_USERNAME=Github Actions" >> $GITHUB_ENV
+          echo "SLACK_ICON_EMOJI=:ocotcat:" >> $GITHUB_ENV
+          echo "SLACK_TITLE=This is a GitHub Actions build!" >> $GITHUB_ENV
+          echo "SLACK_WEBHOOK=${{ secrets.SLACK_WEBHOOK }}" >> $GITHUB_ENV
+          echo "SLACK_CHANNEL=#channel" >> $GITHUB_ENV
       # https://github.com/marketplace/actions/setup-php-action#matrix-setup
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

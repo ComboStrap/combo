@@ -1,4 +1,4 @@
-name: PHP Tests on Manual
+name: PHP Tests started Manually
 
 on:
   workflow_dispatch: # Manually running a workflow from the UI

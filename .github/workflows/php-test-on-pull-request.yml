@@ -1,4 +1,4 @@
-name: Php Tests on Pull Request
+name: PHP Tests on Pull Request
 
 on:
   pull_request:

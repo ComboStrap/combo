@@ -2,7 +2,23 @@
 name: Example Env
 
 on:
-  workflow_dispatch: # Manually running a workflow from the UI
+  # Manually running a workflow from the UI
+  # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#defining-inputs-for-manually-triggered-workflows
+  # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow#configuring-a-workflow-to-run-manually
+  # https://docs.github.com/en/actions/learn-github-actions/contexts#inputs-context
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: 'Version of the interpreter'
+        required: true
+        default: "['7.4','8.2']"
+        # https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputsinput_idtype
+        type: choice
+        options:
+          - "['7.4','8.2']"
+          - "['8.2']"
+          - "['7.4']"
+
 
 permissions: # Setting permissions for the token
   contents: read # needed to fetch code
@@ -22,23 +38,20 @@ jobs:
         # because we don't specify any matrix variables
         # All configurations under include will run
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
-        php: [ "7.4" ]
-        include:
-          - php: "7.4"
-            phpunit: "8.5.33"
-          - php: "8.2"
-            phpunit: "8.5.33"
+        version: ${{ fromJson(inputs.versions) }}
       fail-fast: false
 
+
     env:
-      LITERAL_ENV: lib/plugins/combo
-      GITHUB_CONTEXT: ${{ toJSON(github) }}
+      LITERAL_STRING_ENV: lib/plugins/combo
+      LITERAL_ARRAY_ENV: ${{ fromJSON('{"7.4":"Dependency Variable for 7.4","8.2":"Dependency Variable for 8.2"}') }}
+      DEPENDENCY_VIA_COMMAND: "${{ matrix.version == '7.4' && '7.4 version' || 'not 7.4 version' }}"
+      DEPENDENCY_VIA_ARRAY: ${{ job.env.LITERAL_ARRAY_ENV[matrix.version] }}
 
     steps:
 
       # https://docs.github.com/en/actions/learn-github-actions/contexts#example-printing-context-information-to-the-log
       - name: Dump GitHub context
-        id: github_context_step
         run: echo '${{ toJSON(github) }}'
       - name: Dump job context
         run: echo '${{ toJSON(job) }}'
@@ -50,14 +63,12 @@ jobs:
         run: echo '${{ toJSON(strategy) }}'
       - name: Dump matrix context
         run: echo '${{ toJSON(matrix) }}'
-
-      # Input
       - name: Dump Input context
-        run: echo '${{ toJSON(inputs ) }}'
+        run: echo '${{ toJSON(inputs) }}'
 
-      - name: Echo literal env
-        run: echo "$LITERAL_ENV"
-
-      - name: Set environment variables conditionaly
+      - name: Echo manual env
         run: |
-          echo "SLACK_USERNAME=Github Actions" >> $GITHUB_ENV
+          echo ("$LITERAL_STRING_ENV");
+          echo ("$LITERAL_ARRAY_ENV");
+          echo ("$DEPENDENCY_VIA_COMMAND");
+          echo ("$DEPENDENCY_VIA_ARRAY");

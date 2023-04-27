@@ -6,6 +6,6 @@ on:
 
 jobs:
   call-test-workflow:
-    uses: ./.github/workflows/reusable-php-test-github.yml
+    uses: ./.github/workflows/php-test-reusable.yml
     with:
       versions: "['8.2']"

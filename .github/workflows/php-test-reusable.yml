@@ -45,9 +45,9 @@ jobs:
 
     steps:
 
-      - name: Phpunit
+      - name: Phpunit ${{ matrix.php }}
         run: |
-          echo "PHPUNIT_VERSION=${{ fromJson(env.PHPUNIT_BY_PHP)[matrix.version] }}" >> $GITHUB_ENV
+          echo "PHPUNIT_VERSION=${{ fromJson(env.PHPUNIT_BY_PHP)[matrix.php] }}" >> $GITHUB_ENV
         env:
           PHPUNIT_BY_PHP: '{"7.4":"8.5.33","8.2":"8.5.33"}'
 

@@ -1,5 +1,5 @@
 # https://docs.github.com/en/actions/learn-github-actions/contexts
-name: Env Demo
+name: Example Env
 
 on:
   workflow_dispatch: # Manually running a workflow from the UI
@@ -22,7 +22,7 @@ jobs:
         # because we don't specify any matrix variables
         # All configurations under include will run
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-adding-configurations
-        php: ${{ github.event.client_payload.versions }}
+        php: [ "7.4" ]
         include:
           - php: "7.4"
             phpunit: "8.5.33"

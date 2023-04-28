@@ -110,10 +110,17 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
                 continue;
             }
 
-            $valueBefore = $beforeMeta->toStoreValue();
-            $valueAfter = $afterMeta->toStoreValue();
+            try {
+                $beforeMeta->getValue();
+                $valueBefore = $beforeMeta->toStoreValue();
+            } catch (Exception $e) {
+                // first value
+                $valueBefore = null;
+            }
 
+            $valueAfter = $afterMeta->toStoreValue();
             MetadataMutation::notifyMetadataMutation($attribute, $valueBefore, $valueAfter, $page);
+
         }
 
         /**

@@ -1,4 +1,11 @@
 #!/bin/bash
+
+if [ -z "$1" ]; then
+  echo 'The token is mandatory as first parameter'
+  exit 1
+fi
+TOKEN=$1
+
 # https://docs.github.com/en/actions/learn-github-actions/contexts#example-usage-of-the-github-context
 # https://docs.github.com/en/actions/learn-github-actions/variables#using-the-vars-context-to-access-configuration-variable-values
 # https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
@@ -31,10 +38,6 @@ fi
 
 echo -e "\nGet boot.sh from from the branch (${BUILD_BRANCH})"
 url="https://raw.githubusercontent.com/ComboStrap/combo_test/${BUILD_BRANCH}/resources/script/ci/boot.sh"
-if [ -z "$TOKEN" ]; then
-  echo 'The token is mandatory and was not found'
-  exit 1
-fi
 response=$(curl -H "Authorization: token ${TOKEN}" -s -w "%{http_code}" -o "boot.sh" "$url")
 # -s silence
 # -w ask to print the http code

@@ -241,8 +241,8 @@ class EditButton
         global $INFO;
         if (isset($INFO)) {
             // the page is a revision page
-            $rev = $INFO['rev'] ?? null;
-            if ($rev !== null) {
+            $rev = $INFO['rev'] ?? 0;
+            if ($rev !== 0) {
                 throw new ExceptionBadState("Internal Error: No edit button can be added to a revision page");
             }
         }

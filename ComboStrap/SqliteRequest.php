@@ -82,7 +82,7 @@ class SqliteRequest
         }
 
         if ($this->statement !== null) {
-            $res = $this->sqlitePlugin->getAdapter()->getDb()->exec($this->statement);
+            $res = $this->sqlitePlugin->getAdapter()->executeQuery($this->statement);
             $requestType = "statement";
             $queryExecuted = $this->statement;
         }

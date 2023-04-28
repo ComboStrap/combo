@@ -19,15 +19,30 @@ class Event
     const EVENT_TABLE_NAME = "EVENTS_QUEUE";
 
     const CANONICAL = "support";
-    const EVENT_NAME_ATTRIBUTE = "name";
-    const EVENT_DATA_ATTRIBUTE = "data";
+
+    /**
+     * Uppercase mandatory (the column is uppercased when returnd from a *)
+     */
+    const EVENT_NAME_ATTRIBUTE = "NAME";
+
+    /**
+     * Uppercase mandatory (the column is uppercased when returnd from a *)
+     */
+    const EVENT_DATA_ATTRIBUTE = "DATA";
+    /**
+     * Uppercase mandatory (the column is uppercased when returnd from a *)
+     */
+    const TIMESTAMP_ATTRIBUTE = "TIMESTAMP";
 
     /**
      * process all replication request, created with {@link Event::createEvent()}
      *
      * by default, there is 5 pages in a default dokuwiki installation in the wiki namespace)
+     *
+     * @param int $maxEvent In case of a start or if there is a recursive bug. We don't want to take all the resources
+     *
      */
-    public static function dispatchEvent($maxEvent = 10)
+    public static function dispatchEvent(int $maxEvent = 10)
     {
 
         try {
@@ -37,47 +52,39 @@ class Event
             return;
         }
 
-        /**
-         * In case of a start or if there is a recursive bug
-         * We don't want to take all the resources
-         */
-        $maxBackgroundEventLow = 10;
-
 
         $rows = [];
-//        /**
-//         * Returning clause
-//         * does not work
-//         */
-//        $version = $sqlite->getVersion();
-//        $isCi = PluginUtility::isCi(); // Sqlite plugin seems to not support the returning clause - it returns a number as result set in CI
-//        $isDev = PluginUtility::isDevOrTest(); // may not work for normal users
-//        if ($version > "3.35.0" && $isDev && !$isCi) {
-//
-//            // returning clause is available since 3.35 on delete
-//            // https://www.sqlite.org/lang_returning.html
-//
-//            $eventTableName = self::EVENT_TABLE_NAME;
-//            $statement = "delete from {$eventTableName} returning *";
-//            // https://www.sqlite.org/lang_delete.html#optional_limit_and_order_by_clauses
-//            if ($sqlite->hasOption("SQLITE_ENABLE_UPDATE_DELETE_LIMIT")) {
-//                $statement .= "order by timestamp limit {$maxBackgroundEventLow}";
-//            }
-//            $request = $sqlite->createRequest()
-//                ->setStatement($statement);
-//            try {
-//                $rows = $request->execute()
-//                    ->getRows();
-//                if (sizeof($rows) === 0) {
-//                    return;
-//                }
-//            } catch (ExceptionCompile $e) {
-//                LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
-//            } finally {
-//                $request->close();
-//            }
-//
-//        }
+        /**
+         * Returning clause
+         * does not work
+         */
+        $version = $sqlite->getVersion();
+        if ($version > "3.35.0") {
+
+            // returning clause is available since 3.35 on delete
+            // https://www.sqlite.org/lang_returning.html
+
+            $eventTableName = self::EVENT_TABLE_NAME;
+            $statement = "delete from {$eventTableName} returning *";
+            // https://www.sqlite.org/lang_delete.html#optional_limit_and_order_by_clauses
+            if ($sqlite->hasOption("SQLITE_ENABLE_UPDATE_DELETE_LIMIT")) {
+                $statement .= "order by timestamp limit {$maxEvent}";
+            }
+            $request = $sqlite->createRequest()
+                ->setStatement($statement);
+            try {
+                $rows = $request->execute()
+                    ->getRows();
+                if (sizeof($rows) === 0) {
+                    return;
+                }
+            } catch (ExceptionCompile $e) {
+                LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
+            } finally {
+                $request->close();
+            }
+
+        }
 
         /**
          * Error in the block before or not the good version
@@ -90,6 +97,7 @@ class Event
             // the indexer, we trust it
             $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, DatabasePageRow::ROWID];
             $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME, $attributes);
+            $select .= " order by " . self::TIMESTAMP_ATTRIBUTE . " limit {$maxEvent}";
             $request = $sqlite->createRequest()
                 ->setQuery($select);
 
@@ -113,8 +121,7 @@ class Event
                 $request = $sqlite->createRequest()
                     ->setQueryParametrized("delete from $eventTableName where rowid = ? ", [$row[DatabasePageRow::ROWID]]);
                 try {
-                    $changeCount = $request->execute()
-                        ->getChangeCount();
+                    $changeCount = $request->execute()->getChangeCount();
                     if ($changeCount !== 1) {
                         LogUtility::msg("The delete of the event was not successful or it was deleted by another process", LogUtility::LVL_MSG_ERROR);
                     } else {

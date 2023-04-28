@@ -7,5 +7,6 @@ on:
 jobs:
   call-test-workflow:
     uses: ./.github/workflows/php-test-reusable.yml
+    secrets: inherit
     with:
       versions: "['8.2']"

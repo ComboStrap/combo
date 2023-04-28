@@ -1,10 +1,6 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
-  echo 'The token is mandatory as first parameter'
-  exit 1
-fi
-TOKEN=$1
+
 
 # https://docs.github.com/en/actions/learn-github-actions/contexts#example-usage-of-the-github-context
 # https://docs.github.com/en/actions/learn-github-actions/variables#using-the-vars-context-to-access-configuration-variable-values
@@ -38,6 +34,11 @@ fi
 
 echo -e "\nGet boot.sh from from the branch (${BUILD_BRANCH})"
 url="https://raw.githubusercontent.com/ComboStrap/combo_test/${BUILD_BRANCH}/resources/script/ci/boot.sh"
+if [ -z "$TOKEN" ]; then
+  echo 'The token variable is mandatory as first parameter'
+  echo 'Did you inherit the secret when calling your workflow: https://docs.github.com/en/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow'
+  exit 1
+fi
 response=$(curl -H "Authorization: token ${TOKEN}" -s -w "%{http_code}" -o "boot.sh" "$url")
 # -s silence
 # -w ask to print the http code

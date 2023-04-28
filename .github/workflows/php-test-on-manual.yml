@@ -20,5 +20,6 @@ on:
 jobs:
   call-test-workflow:
     uses: ./.github/workflows/php-test-reusable.yml
+    secrets: inherit
     with:
       versions: ${{ github.event.inputs.versions }}

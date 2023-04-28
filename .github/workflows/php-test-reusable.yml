@@ -88,7 +88,7 @@ jobs:
       - name: Post installation (Download Requirements)
         run: |
           chmod +x ${COMBO_HOME}/.github/bootstrap.sh
-          source ${COMBO_HOME}/.github/bootstrap.sh "$TOKEN"
+          source ${COMBO_HOME}/.github/bootstrap.sh
         # https://docs.github.com/en/actions/security-guides/encrypted-secrets#using-encrypted-secrets-in-a-workflow
         env:
           TOKEN: ${{ secrets.TOKEN }}

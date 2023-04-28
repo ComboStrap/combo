@@ -30,7 +30,22 @@ fi
 #fi
 
 echo -e "\nGet boot.sh from from the branch (${BUILD_BRANCH})"
-curl -H "Authorization: token ${TOKEN}" -o "boot.sh" "https://raw.githubusercontent.com/ComboStrap/combo_test/${BUILD_BRANCH}/resources/script/ci/boot.sh"
+url="https://raw.githubusercontent.com/ComboStrap/combo_test/${BUILD_BRANCH}/resources/script/ci/boot.sh"
+if [ -z "$TOKEN" ]; then
+  echo 'The token is mandatory and was not found'
+  exit 1
+fi
+response=$(curl -H "Authorization: token ${TOKEN}" -s -w "%{http_code}" -o "boot.sh" "$url")
+# -s silence
+# -w ask to print the http code
+# -o write the body to this file
+if [ "$response" != "200" ]; then
+  echo "Error when getting the boot.sh script at $url."
+  echo "HTTP status was not 200 but $response"
+  exit 1
+else
+  echo "boot.sh successfully downloaded"
+fi
 echo -e "\nRun boot.sh"
 chmod +x boot.sh
 source boot.sh

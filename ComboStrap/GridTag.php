@@ -258,6 +258,10 @@ class GridTag
          * Is there a template callstack
          */
         $firstChildTag = $callStack->moveToFirstChildTag();
+        if ($firstChildTag === false) {
+            LogUtility::warning("The grid seems to not have any closed children");
+            return array(PluginUtility::ATTRIBUTES => $openingCall->getAttributes());
+        }
         $childrenOpeningTags = [];
 
         $fragmentEndTag = null; // the template end tag that has the instructions

@@ -45,120 +45,132 @@ class Event
     public static function dispatchEvent(int $maxEvent = 10)
     {
 
+        $lock = Lock::create("combo-event");
         try {
-            $sqlite = Sqlite::createOrGetBackendSqlite();
-        } catch (ExceptionSqliteNotAvailable $e) {
-            LogUtility::error("Sqlite is mandatory for asynchronous event", self::CANONICAL, $e);
+            $lock->acquire();
+        } catch (ExceptionTimeOut $e) {
+            // process running
             return;
         }
 
-
-        $rows = [];
-        /**
-         * Returning clause
-         * does not work
-         */
-        $version = $sqlite->getVersion();
-        if ($version > "3.35.0") {
-
-            // returning clause is available since 3.35 on delete
-            // https://www.sqlite.org/lang_returning.html
-
-            $eventTableName = self::EVENT_TABLE_NAME;
-            $statement = "delete from {$eventTableName} returning *";
-            // https://www.sqlite.org/lang_delete.html#optional_limit_and_order_by_clauses
-            if ($sqlite->hasOption("SQLITE_ENABLE_UPDATE_DELETE_LIMIT")) {
-                $statement .= "order by timestamp limit {$maxEvent}";
-            }
-            $request = $sqlite->createRequest()
-                ->setStatement($statement);
+        try {
             try {
-                $rows = $request->execute()
-                    ->getRows();
-                if (sizeof($rows) === 0) {
-                    return;
-                }
-            } catch (ExceptionCompile $e) {
-                LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
-            } finally {
-                $request->close();
-            }
-
-        }
-
-        /**
-         * Error in the block before or not the good version
-         * We try to get the records with a select/delete
-         */
-        if (sizeof($rows) === 0) {
-
-
-            // technically the lock system of dokuwiki does not allow two process to run on
-            // the indexer, we trust it
-            $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, DatabasePageRow::ROWID];
-            $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME, $attributes);
-            $select .= " order by " . self::TIMESTAMP_ATTRIBUTE . " limit {$maxEvent}";
-            $request = $sqlite->createRequest()
-                ->setQuery($select);
-
-            $rowsSelected = [];
-            try {
-                $rowsSelected = $request->execute()
-                    ->getRows();
-                if (sizeof($rowsSelected) === 0) {
-                    return;
-                }
-            } catch (ExceptionCompile $e) {
-                LogUtility::msg("Error while retrieving the event {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                $sqlite = Sqlite::createOrGetBackendSqlite();
+            } catch (ExceptionSqliteNotAvailable $e) {
+                LogUtility::error("Sqlite is mandatory for asynchronous event", self::CANONICAL, $e);
                 return;
-            } finally {
-                $request->close();
             }
 
-            $eventTableName = self::EVENT_TABLE_NAME;
+
             $rows = [];
-            foreach ($rowsSelected as $row) {
+            /**
+             * Returning clause
+             * does not work
+             */
+            $version = $sqlite->getVersion();
+            if ($version > "3.35.0") {
+
+                // returning clause is available since 3.35 on delete
+                // https://www.sqlite.org/lang_returning.html
+
+                $eventTableName = self::EVENT_TABLE_NAME;
+                $statement = "delete from {$eventTableName} returning *";
+                // https://www.sqlite.org/lang_delete.html#optional_limit_and_order_by_clauses
+                if ($sqlite->hasOption("SQLITE_ENABLE_UPDATE_DELETE_LIMIT")) {
+                    $statement .= "order by timestamp limit {$maxEvent}";
+                }
                 $request = $sqlite->createRequest()
-                    ->setQueryParametrized("delete from $eventTableName where rowid = ? ", [$row[DatabasePageRow::ROWID]]);
+                    ->setStatement($statement);
                 try {
-                    $changeCount = $request->execute()->getChangeCount();
-                    if ($changeCount !== 1) {
-                        LogUtility::msg("The delete of the event was not successful or it was deleted by another process", LogUtility::LVL_MSG_ERROR);
-                    } else {
-                        $rows[] = $row;
+                    $rows = $request->execute()
+                        ->getRows();
+                    if (sizeof($rows) === 0) {
+                        return;
                     }
                 } catch (ExceptionCompile $e) {
-                    LogUtility::msg("Error while deleting the event. Message {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                    LogUtility::error($e->getMessage(), $e->getCanonical(), $e);
+                } finally {
+                    $request->close();
+                }
+
+            }
+
+            /**
+             * Error in the block before or not the good version
+             * We try to get the records with a select/delete
+             */
+            if (sizeof($rows) === 0) {
+
+
+                // technically the lock system of dokuwiki does not allow two process to run on
+                // the indexer, we trust it
+                $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, DatabasePageRow::ROWID];
+                $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME, $attributes);
+                $select .= " order by " . self::TIMESTAMP_ATTRIBUTE . " limit {$maxEvent}";
+                $request = $sqlite->createRequest()
+                    ->setQuery($select);
+
+                $rowsSelected = [];
+                try {
+                    $rowsSelected = $request->execute()
+                        ->getRows();
+                    if (sizeof($rowsSelected) === 0) {
+                        return;
+                    }
+                } catch (ExceptionCompile $e) {
+                    LogUtility::msg("Error while retrieving the event {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                     return;
                 } finally {
                     $request->close();
                 }
-            }
 
-
-        }
-
-
-        $eventCounter = 0;
-        foreach ($rows as $row) {
-            $eventCounter++;
-            $eventName = $row[self::EVENT_NAME_ATTRIBUTE];
-            $eventData = [];
-            $eventDataJson = $row[self::EVENT_DATA_ATTRIBUTE];
-            if ($eventDataJson !== null) {
-                try {
-                    $eventData = Json::createFromString($eventDataJson)->toArray();
-                } catch (ExceptionCompile $e) {
-                    LogUtility::msg("The stored data for the event $eventName was not in the json format");
-                    continue;
+                $eventTableName = self::EVENT_TABLE_NAME;
+                $rows = [];
+                foreach ($rowsSelected as $row) {
+                    $request = $sqlite->createRequest()
+                        ->setQueryParametrized("delete from $eventTableName where rowid = ? ", [$row[DatabasePageRow::ROWID]]);
+                    try {
+                        $changeCount = $request->execute()->getChangeCount();
+                        if ($changeCount !== 1) {
+                            LogUtility::msg("The delete of the event was not successful or it was deleted by another process", LogUtility::LVL_MSG_ERROR);
+                        } else {
+                            $rows[] = $row;
+                        }
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::msg("Error while deleting the event. Message {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                        return;
+                    } finally {
+                        $request->close();
+                    }
                 }
-            }
-            \dokuwiki\Extension\Event::createAndTrigger($eventName, $eventData);
 
-            if ($eventCounter >= $maxEvent) {
-                break;
+
             }
 
+
+            $eventCounter = 0;
+            foreach ($rows as $row) {
+                $eventCounter++;
+                $eventName = $row[self::EVENT_NAME_ATTRIBUTE];
+                $eventData = [];
+                $eventDataJson = $row[self::EVENT_DATA_ATTRIBUTE];
+                if ($eventDataJson !== null) {
+                    try {
+                        $eventData = Json::createFromString($eventDataJson)->toArray();
+                    } catch (ExceptionCompile $e) {
+                        LogUtility::msg("The stored data for the event $eventName was not in the json format");
+                        continue;
+                    }
+                }
+                \dokuwiki\Extension\Event::createAndTrigger($eventName, $eventData);
+
+                if ($eventCounter >= $maxEvent) {
+                    break;
+                }
+
+            }
+        } finally {
+            $lock->release();
         }
 
     }

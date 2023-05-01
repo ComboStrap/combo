@@ -45,7 +45,7 @@ class Event
     public static function dispatchEvent(int $maxEvent = 10)
     {
 
-        $lock = Lock::create("combo-event");
+        $lock = self::getLock();
         try {
             $lock->acquire();
         } catch (ExceptionTimeOut $e) {
@@ -304,6 +304,11 @@ class Event
     public static function getEvents(string $eventName): array
     {
         return Event::getQueue($eventName);
+    }
+
+    public static function getLock(): Lock
+    {
+        return Lock::create("combo-event");
     }
 
 

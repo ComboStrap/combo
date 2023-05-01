@@ -73,4 +73,9 @@ class Lock
         @rmdir($this->lockFile);
     }
 
+    public function isReleased(): bool
+    {
+        return !is_dir($this->lockFile);
+    }
+
 }

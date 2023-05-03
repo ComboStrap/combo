@@ -6,8 +6,10 @@ use ComboStrap\ExceptionReporter;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherAppPages;
 use ComboStrap\FetcherPage;
+use ComboStrap\FetcherRailBar;
 use ComboStrap\FileSystems;
 use ComboStrap\HttpResponseStatus;
+use ComboStrap\Identity;
 use ComboStrap\IFetcher;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
@@ -114,9 +116,26 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
 
         $action = $event->data;
 
+        $privateRailbar = $executionContext->getConfig()->getBooleanValue(FetcherRailBar::CONF_PRIVATE_RAIL_BAR, FetcherRailBar::CONF_PRIVATE_RAIL_BAR_DEFAULT);
+        $isAnonymous = Identity::isAnonymous();
+        if ($privateRailbar && $isAnonymous) {
+            /**
+             * To avoid the google console error: `Excluded by ‘noindex’ tag`
+             * Example of URL
+             * https://example.com/dat/bobj/central_management_server?tab_files=upload&do=media&tab_details=history&image=db:hana:hdb_thread_stat_systemdb.png&ns=web/resource
+             */
+            $privateAction = [ExecutionContext::MEDIA_ACTION, ExecutionContext::DIFF_ACTION, ExecutionContext::RECENT_ACTION];
+            if (in_array($action, $privateAction)) {
+                $executionContext->response()
+                    ->setStatus(HttpResponseStatus::NOT_AUTHORIZED)
+                    ->end();
+                return;
+            }
+        }
+
         if (self::isThemeSystemEnabled()) {
             switch ($action) {
-                case "show":
+                case ExecutionContext::SHOW_ACTION:
                     try {
                         $id = Url::createFromGetOrPostGlobalVariable()->getPropertyValue(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE);
                     } catch (ExceptionNotFound $e) {
@@ -143,6 +162,7 @@ class action_plugin_combo_docustom extends DokuWiki_Action_Plugin
                     break;
             }
         }
+
 
         if (!$this->isComboDoAction($action)) return;
 

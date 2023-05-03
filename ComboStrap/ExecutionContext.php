@@ -98,6 +98,15 @@ class ExecutionContext
     const DIFF_ACTION = "diff";
     const INDEX_ACTION = "index";
 
+    /**
+     * The media manager
+     */
+    const MEDIA_ACTION = "media";
+    /**
+     * The recent changes
+     */
+    const RECENT_ACTION = "recent";
+
 
     /**
      * @var array of objects that are scoped to this request

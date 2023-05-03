@@ -33,6 +33,7 @@ class FetcherRailBar extends IFetcherAbs implements IFetcherString
      * Do we show the rail bar for anonymous user
      */
     public const CONF_PRIVATE_RAIL_BAR = "privateRailbar";
+    public const CONF_PRIVATE_RAIL_BAR_DEFAULT = 0;
     /**
      * When do we toggle from offcanvas to fixed railbar
      */

@@ -876,7 +876,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * http://host/page?whatever
              *
              * We can't pass query string otherwise, we get
-             * the error
+             * the SEO warning / error
              * `Alternative page with proper canonical tag`
              */
             if ($method !== self::REDIRECT_PERMANENT_METHOD) {

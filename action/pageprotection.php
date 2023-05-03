@@ -1,20 +1,22 @@
 <?php
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
+use ComboStrap\ExceptionNotEnabled;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FetcherPage;
 use ComboStrap\FileSystems;
-use ComboStrap\LogUtility;
-use ComboStrap\Web\Url;
-use ComboStrap\WikiPath;
 use ComboStrap\Identity;
+use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MarkupPath;
 use ComboStrap\PageProtection;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\Robots;
+use ComboStrap\Web\Url;
+use ComboStrap\WikiPath;
 
 
 /**
@@ -323,51 +325,32 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     function handleRobotsMeta(&$event, $param)
     {
 
-        $requestedPath = ExecutionContext::getActualOrCreateFromEnv()->getRequestedPath();
+        $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+        $requestedPath = $executionContext->getRequestedPath();
 
         if (!FileSystems::exists($requestedPath)) {
             return;
         }
 
         $page = MarkupPath::createPageFromPathObject($requestedPath);
-
-        /**
-         * No management for slot page
-         */
-        if ($page->isSlot()) {
+        try {
+            $follow = Robots::canBeIndexedAndGetFollowValue($page, $executionContext);
+        } catch (ExceptionNotEnabled $e) {
+            // Robots Protection is not Enabled
             return;
         }
 
-        $protected = false;
-        $follow = "nofollow";
-        if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
-            $protected = true;
-            if (LowQualityPage::getLowQualityProtectionMode() == PageProtection::CONF_VALUE_ACL) {
-                $follow = "nofollow";
-            } else {
-                $follow = "follow";
-            }
-        }
-        if ($page->isLatePublication() && PagePublicationDate::isLatePublicationProtectionEnabled()) {
-            $protected = true;
-            if (PagePublicationDate::getLatePublicationProtectionMode() == PageProtection::CONF_VALUE_ACL) {
-                $follow = "nofollow";
-            } else {
-                $follow = "follow";
-            }
-        }
-        if ($protected) {
-            foreach ($event->data['meta'] as $key => $meta) {
-                if (array_key_exists("name", $meta)) {
-                    /**
-                     * We may have several properties
-                     */
-                    if ($meta["name"] == "robots") {
-                        $event->data['meta'][$key]["content"] = "noindex,$follow";
-                    }
+        foreach ($event->data['meta'] as $key => $meta) {
+            if (array_key_exists("name", $meta)) {
+                /**
+                 * We may have several properties
+                 */
+                if ($meta["name"] == "robots") {
+                    $event->data['meta'][$key]["content"] = "noindex,$follow";
                 }
             }
         }
+
     }
 
 }

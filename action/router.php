@@ -829,9 +829,9 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         // An http external url ?
         try {
-            $isValid = Url::createFromString($targetIdOrUrl)->isHttpUrl();
+            $isHttpUrl = Url::createFromString($targetIdOrUrl)->isHttpUrl();
         } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
-            $isValid = false;
+            $isHttpUrl = false;
         }
 
         // If there is a bug in the isValid function for an internal url
@@ -840,10 +840,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         //
         // We check then if the target starts with the base url
         // if this is the case, it's valid
-        if (!$isValid && strpos($targetIdOrUrl, DOKU_URL) === 0) {
-            $isValid = true;
+        if (!$isHttpUrl && strpos($targetIdOrUrl, DOKU_URL) === 0) {
+            $isHttpUrl = true;
         }
-        if ($isValid) {
+        if ($isHttpUrl) {
 
             // defend against HTTP Response Splitting
             // https://owasp.org/www-community/attacks/HTTP_Response_Splitting
@@ -855,21 +855,33 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             // Explode the page ID and the anchor (#)
             $link = explode('#', $targetIdOrUrl, 2);
 
-            // Query String to pass the message
-            $urlParams = [];
-            if ($targetOrigin != self::TARGET_ORIGIN_PERMALINK) {
-                $urlParams = array(
-                    action_plugin_combo_routermessage::ORIGIN_PAGE => $ID,
-                    action_plugin_combo_routermessage::ORIGIN_TYPE => $targetOrigin
-                );
-            }
 
+            $urlParams = [];
             // if this is search engine redirect
             if ($targetOrigin == self::TARGET_ORIGIN_SEARCH_ENGINE) {
                 $replacementPart = array(':', '_', '-');
                 $query = str_replace($replacementPart, ' ', $ID);
                 $urlParams["do"] = "search";
                 $urlParams["q"] = $query;
+            }
+
+            /**
+             * Doing a permanent redirect with a added query string
+             * create a new page url on the search engine
+             *
+             * ie
+             * http://host/page
+             * is not the same
+             * than
+             * http://host/page?whatever
+             *
+             * We can't pass query string otherwise, we get
+             * the error
+             * `Alternative page with proper canonical tag`
+             */
+            if ($method !== self::REDIRECT_PERMANENT_METHOD) {
+                $urlParams[action_plugin_combo_routermessage::ORIGIN_PAGE] = $ID;
+                $urlParams[action_plugin_combo_routermessage::ORIGIN_TYPE] = $targetOrigin;
             }
 
             $targetUrl = wl($link[0], $urlParams, true, '&');
@@ -896,6 +908,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         session_write_close(); // always close the session
 
         switch ($method) {
+
             case self::REDIRECT_PERMANENT_METHOD:
                 ExecutionContext::getActualOrCreateFromEnv()
                     ->response()
@@ -903,7 +916,9 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     ->addHeader(self::LOCATION_HEADER_PREFIX . $targetUrl)
                     ->end();
                 return true;
+
             case self::REDIRECT_NOTFOUND_METHOD:
+
 
                 // Empty 404 body to not get the standard 404 page of the browser
                 // but a blank page to avoid a sort of FOUC.

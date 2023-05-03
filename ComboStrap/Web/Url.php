@@ -5,27 +5,23 @@ namespace ComboStrap\Web;
 
 use ComboStrap\ArrayCaseInsensitive;
 use ComboStrap\DataType;
-use ComboStrap\DokuWiki;
 use ComboStrap\DokuwikiId;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotEquals;
-use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntimeInternal;
-use ComboStrap\FetcherPage;
 use ComboStrap\FetcherRawLocalPath;
 use ComboStrap\FetcherSystem;
-use ComboStrap\FetcherTraitWikiPath;
 use ComboStrap\LocalFileSystem;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Path;
 use ComboStrap\PathAbs;
 use ComboStrap\Site;
-use ComboStrap\Web\UrlRewrite;
 use ComboStrap\WikiPath;
+use dokuwiki\Input\Input;
 
 /**
  * Class Url
@@ -173,6 +169,8 @@ class Url extends PathAbs
         /**
          * $_REQUEST is a merge between get and post property
          * Shared check between post and get HTTP method
+         * managed and encapsultaed by {@link Input}.
+         * They add users and other
          * {@link \TestRequest} is using it
          */
         $url = Url::createEmpty();
@@ -186,6 +184,7 @@ class Url extends PathAbs
                         }
                         continue;
                     }
+
                     if ($key == "do") {
                         // for whatever reason, dokuwiki puts the value in the key
                         $url->addQueryParameter($key, $subkey);
@@ -209,6 +208,13 @@ class Url extends PathAbs
                      */
                     $message = "The url in src has a bad encoding (the attribute have a amp; prefix. Infinite cache will not work.";
                     throw new ExceptionRuntimeInternal($message);
+                }
+                /**
+                 * Added in {@link auth_setup}
+                 * Used by dokuwiki
+                 */
+                if (in_array($key, ['u', 'p', 'http_credentials', 'r'])) {
+                    continue;
                 }
                 $url->addQueryParameter($key, $value);
             }

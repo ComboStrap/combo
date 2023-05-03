@@ -561,7 +561,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                      * @var MarkupPath $bestEndPage
                      */
                     list($bestEndPage, $method) = RouterBestEndPage::process($requestedMarkupPath);
-                    if ($bestEndPage != null) {
+                    if ($bestEndPage != null && $bestEndPage->getWikiId() !== $requestedMarkupPath->getWikiId()) {
                         $res = false;
                         switch ($method) {
                             case self::REDIRECT_PERMANENT_METHOD:

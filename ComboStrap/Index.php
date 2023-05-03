@@ -55,9 +55,15 @@ class Index
          * where {@link ft_pageLookup()}
          */
 
+        try {
+            $lastNameToFind = $pageToMatch->getPathObject()->getLastNameWithoutExtension();
+            $wikiIdToFind = $pageToMatch->getWikiId();
+        } catch (ExceptionNotFound|ExceptionBadArgument $e) {
+            return [];
+        }
+
         // There is two much pages with the start name
-        $lastName = $pageToMatch->getPathObject()->getLastName();
-        if ($lastName === Site::getIndexPageName()) {
+        if ($lastNameToFind === Site::getIndexPageName()) {
             return [];
         }
 
@@ -65,12 +71,17 @@ class Index
 
         $matchedPages = [];
         foreach ($pageIdList as $pageId) {
-            if ($pageToMatch->getWikiId() === $pageId) {
+            if ($wikiIdToFind === $pageId) {
+                // don't return the page to find in the result
                 continue;
             }
-            $actualPage = MarkupPath::createMarkupFromId($pageId);
-            if ($actualPage->getPathObject()->getLastName() === $lastName) {
-                $matchedPages[] = $actualPage;
+            $actualPage = WikiPath::createMarkupPathFromId($pageId);
+            try {
+                if ($actualPage->getLastNameWithoutExtension() === $lastNameToFind) {
+                    $matchedPages[] = MarkupPath::createPageFromPathObject($actualPage);
+                }
+            } catch (ExceptionNotFound $e) {
+                // root, should not happen
             }
         }
         return $matchedPages;

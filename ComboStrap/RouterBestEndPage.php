@@ -93,6 +93,15 @@ class RouterBestEndPage
         // Loop
         foreach ($candidatePagesWithSameLastName as $candidatePage) {
 
+            try {
+                if ($candidatePage->getWikiId() === $requestedPage->getWikiId()) {
+                    // when the index is not up to date
+                    continue;
+                }
+            } catch (ExceptionBadArgument $e) {
+                // should not happen but yeah
+            }
+
             $candidatePageNames = $candidatePage->getPathObject()->getNames();
             $score = 0;
             foreach ($candidatePageNames as $candidatePageName) {

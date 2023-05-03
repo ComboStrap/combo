@@ -11,17 +11,17 @@
  */
 
 use ComboStrap\DatabasePageRow;
-use ComboStrap\ExceptionNotExists;
-use ComboStrap\ExecutionContext;
-use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Event;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\ExecutionContext;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
+use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Sqlite;
@@ -236,7 +236,7 @@ EOF;
                     exit(1);
             }
         } catch (\Exception $exception) {
-            fwrite(STDERR, "An internal error has occured. ".$exception->getMessage() . "\n".$exception->getTraceAsString());
+            fwrite(STDERR, "An internal error has occured. " . $exception->getMessage() . "\n" . $exception->getTraceAsString());
             exit(1);
         }
 
@@ -430,20 +430,32 @@ EOF;
             $request->close();
         }
         $counter = 0;
+
         foreach ($rows as $row) {
-            $counter++;
-            $id = $row['id'];
-            if (!page_exists($id)) {
-                echo 'Page does not exist on the file system. Delete from the database (' . $id . ")\n";
-                try {
-                    DatabasePageRow::getFromDokuWikiId($id)->delete();
-                } catch (ExceptionNotFound $e) {
-                    //
+            /**
+             * Context
+             * PHP Fatal error:  Allowed memory size of 268435456 bytes exhausted (tried to allocate 20480 bytes)
+             * in /opt/www/datacadamia.com/inc/ErrorHandler.php on line 102
+             */
+            $executionContext = ExecutionContext::getActualOrCreateFromEnv();
+            try {
+                $counter++;
+                $id = $row['id'];
+                if (!page_exists($id)) {
+                    echo 'Page does not exist on the file system. Delete from the database (' . $id . ")\n";
+                    try {
+                        $dbRow = DatabasePageRow::getFromDokuWikiId($id);
+                        $dbRow->delete();
+                    } catch (ExceptionNotFound $e) {
+                        // ok
+                    }
                 }
+            } finally {
+                $executionContext->close();
             }
+
         }
         LogUtility::msg("Sync finished ($counter pages checked)");
-
 
     }
 

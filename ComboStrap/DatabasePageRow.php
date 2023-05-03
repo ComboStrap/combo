@@ -202,6 +202,20 @@ class DatabasePageRow
         return $databasePage;
     }
 
+    public static function createFromRowId(string $rowId): DatabasePageRow
+    {
+
+        $databasePage = new DatabasePageRow();
+        try {
+            $row = $databasePage->getDatabaseRowFromRowId($rowId);
+            $databasePage->setRow($row);
+        } catch (ExceptionNotFound|ExceptionSqliteNotAvailable $e) {
+            // not found
+        }
+        return $databasePage;
+
+    }
+
     /**
      * @param MarkupPath $page
      * @return DatabasePageRow
@@ -390,17 +404,18 @@ class DatabasePageRow
     public
     function delete()
     {
-
+        $rowId = $this->getRowId();
         $request = $this->sqlite
             ->createRequest()
-            ->setQueryParametrized('delete from pages where id = ?', [$this->markupPath->getWikiId()]);
+            ->setQueryParametrized('delete from pages where rowid = ?', [$rowId]);
         try {
             $request->execute();
         } catch (ExceptionCompile $e) {
-            LogUtility::msg("Something went wrong when deleting the page ({$this->markupPath}) from the database");
+            LogUtility::error("Something went wrong when deleting the page ({$this->markupPath}) from the database with the rowid $rowId", self::CANONICAL, $e);
         } finally {
             $request->close();
         }
+
         $this->buildInitObjectFields();
 
     }
@@ -883,6 +898,7 @@ class DatabasePageRow
 
     /**
      * @throws ExceptionNotFound
+     * @throws ExceptionSqliteNotAvailable
      */
     private
     function getDatabaseRowFromPageId(string $pageIdValue)
@@ -1023,12 +1039,12 @@ class DatabasePageRow
      * @throws ExceptionNotFound
      */
     public
-    function getDatabaseRowFromAttribute(string $attribute, string $value)
+    function getDatabaseRowFromAttribute(string $attribute, string $attributeValue)
     {
         $query = $this->getParametrizedLookupQuery($attribute);
         $request = $this->sqlite
             ->createRequest()
-            ->setQueryParametrized($query, [$value]);
+            ->setQueryParametrized($query, [$attributeValue]);
         $rows = [];
         try {
             $rows = $request
@@ -1042,32 +1058,51 @@ class DatabasePageRow
             $request->close();
         }
 
-        switch (sizeof($rows)) {
+        $rowCount = sizeof($rows);
+        switch ($rowCount) {
             case 0:
                 throw new ExceptionNotFound("No database row found for the page");
             case 1:
-                $value = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                if ($this->markupPath != null && $value !== $this->markupPath->getWikiId()) {
-                    $duplicatePage = MarkupPath::createMarkupFromId($value);
+                $attributeValue = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
+                try {
+                    $wikiId = $this->markupPath->getWikiId();
+                } catch (ExceptionBadArgument $e) {
+                    throw new ExceptionRuntimeInternal("The wiki id should be available");
+                }
+                if ($this->markupPath != null && $attributeValue !== $wikiId) {
+                    $duplicatePage = MarkupPath::createMarkupFromId($attributeValue);
                     if (!$duplicatePage->exists()) {
                         $this->addRedirectAliasWhileBuildingRow($duplicatePage);
                     } else {
-                        LogUtility::msg("The page ($this->markupPath) and the page ($value) have the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
+                        LogUtility::error("The page ($this->markupPath) and the page ($attributeValue) have the same $attribute ($attributeValue)");
                     }
                 }
                 return $rows[0];
             default:
+                LogUtility::warning("Error: More than 1 rows ($rowCount) found for attribute ($attribute) with the value ($attributeValue)");
+
+                /**
+                 * Trying to delete the bad one
+                 */
                 $existingPages = [];
                 foreach ($rows as $row) {
-                    $value = $row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                    $duplicatePage = MarkupPath::createMarkupFromId($value);
-                    if (!$duplicatePage->exists()) {
 
-                        $this->deleteIfExistsAndAddRedirectAlias($duplicatePage);
-
-                    } else {
+                    $rowId = $row[self::ROWID] ?? null;
+                    if ($rowId === null) {
+                        LogUtility::error("A row id should be present");
                         $existingPages[] = $row;
+                        continue;
                     }
+                    // page id throw for several id
+                    $duplicateRow = DatabasePageRow::createFromRowId($rowId);
+                    $duplicateMarkupPath = $duplicateRow->getMarkupPath();
+                    if (!FileSystems::exists($duplicateMarkupPath)) {
+                        LogUtility::warning("The duplicate page ($duplicateMarkupPath) does not exists. Delete Row ({$rowId})");
+                        $duplicateRow->delete();
+                        $this->addRedirectAliasWhileBuildingRow($duplicateMarkupPath);
+                        continue;
+                    }
+                    $existingPages[] = $row;
                 }
                 if (sizeof($existingPages) === 1) {
                     return $existingPages[0];
@@ -1078,7 +1113,7 @@ class DatabasePageRow
                         },
                         $existingPages);
                     $existingPages = implode(", ", $existingPageIds);
-                    throw new ExceptionNotFound("The existing pages ($existingPages) have all the same attribute $attribute with the value ($value)", LogUtility::LVL_MSG_ERROR);
+                    throw new ExceptionNotFound("The existing pages ($existingPages) have all the same attribute $attribute with the value ($attributeValue)", LogUtility::LVL_MSG_ERROR);
                 }
         }
     }
@@ -1157,6 +1192,7 @@ class DatabasePageRow
     {
 
         $aliasPath = $pageAlias->getPathObject()->toAbsoluteId();
+        LogUtility::warning("Add alias ($aliasPath) for page ({$this->markupPath})");
         try {
             Aliases::createForPage($this->markupPath)
                 ->addAlias($aliasPath)
@@ -1277,6 +1313,40 @@ class DatabasePageRow
                 // If it happens, ugh, ugh, ..., a replication process between website may be.
             }
         }
+    }
+
+    /**
+     * @throws ExceptionSqliteNotAvailable
+     * @throws ExceptionNotFound
+     */
+    private function getDatabaseRowFromRowId(string $rowId)
+    {
+
+        $query = $this->getParametrizedLookupQuery(self::ROWID);
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setQueryParametrized($query, [$rowId]);
+        $rows = [];
+        try {
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCompile $e) {
+            throw new ExceptionRuntimeInternal("Error while retrieving the object by rowid ($rowId)", self::CANONICAL, 1, $e);
+        } finally {
+            $request->close();
+        }
+
+        $rowCount = sizeof($rows);
+        switch ($rowCount) {
+            case 0:
+                throw new ExceptionNotFound("No object by row id ($rowId)");
+            case 1:
+                return $rows[0];
+            default:
+                throw new ExceptionRuntimeInternal("Too much record ($rowCount) for the rowid ($rowId)", self::CANONICAL);
+        }
+
     }
 
 

@@ -161,7 +161,10 @@ class Sqlite
             }
             $columnStatement = implode(", ", $columnsStatement);
         }
-        return "select $columnStatement from $tableName";
+        /**
+         * RowId added to have a primary key to identify and delete the row uniquely
+         */
+        return "select rowid, $columnStatement from $tableName";
 
     }
 

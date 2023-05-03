@@ -4,6 +4,6 @@
     "description": "Jsdom is used to execute pages in test",
     "private": true,
     "devDependencies": {
-        "jsdom": "^21.1.1"
+        "jsdom": "^22.0.0"
     }
 }

@@ -375,6 +375,31 @@ class HeadingTag
         $tagAttributes->removeComponentAttributeIfPresent(self::HEADING_TEXT_ATTRIBUTE);
 
         /**
+         * Two headings 1 are shown
+         *
+         * We delete the heading 1 in the instructions
+         * if the template has a content header
+         *
+         * The instructions may not be reprocessed after upgrade for instance
+         * when the installation is done manually
+         *
+         * To avoid to have two headings, we set a display none if this is the case
+         *
+         * Note that this should only apply on the document and not on a partial but yeah
+         * We go that h1 is not used in partials.
+         */
+        if ($level === 1) {
+
+            $hasMainHeaderElement = TemplateForWebPage::create()
+                ->setRequestedContextPath(ExecutionContext::getActualOrCreateFromEnv()->getContextPath())
+                ->hasElement(TemplateSlot::MAIN_HEADER_ID);
+            if ($hasMainHeaderElement) {
+                $tagAttributes->addClassName("d-none");
+            }
+
+        }
+
+        /**
          * Printing
          */
         $tag = self::getTagFromContext($context, $level);

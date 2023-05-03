@@ -1065,17 +1065,16 @@ class DatabasePageRow
             case 1:
                 $attributeValue = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 try {
-                    $wikiId = $this->markupPath->getWikiId();
+                    if ($this->markupPath != null && $attributeValue !== $this->markupPath->getWikiId()) {
+                        $duplicatePage = MarkupPath::createMarkupFromId($attributeValue);
+                        if (!$duplicatePage->exists()) {
+                            $this->addRedirectAliasWhileBuildingRow($duplicatePage);
+                        } else {
+                            LogUtility::error("The page ($this->markupPath) and the page ($attributeValue) have the same $attribute ($attributeValue)");
+                        }
+                    }
                 } catch (ExceptionBadArgument $e) {
                     throw new ExceptionRuntimeInternal("The wiki id should be available");
-                }
-                if ($this->markupPath != null && $attributeValue !== $wikiId) {
-                    $duplicatePage = MarkupPath::createMarkupFromId($attributeValue);
-                    if (!$duplicatePage->exists()) {
-                        $this->addRedirectAliasWhileBuildingRow($duplicatePage);
-                    } else {
-                        LogUtility::error("The page ($this->markupPath) and the page ($attributeValue) have the same $attribute ($attributeValue)");
-                    }
                 }
                 return $rows[0];
             default:

@@ -2,6 +2,7 @@
 
 
 use ComboStrap\DatabasePageRow;
+use ComboStrap\DokuwikiId;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
@@ -24,6 +25,7 @@ use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\Sqlite;
 use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlEndpoint;
 use ComboStrap\Web\UrlRewrite;
 use ComboStrap\WikiPath;
 
@@ -855,14 +857,15 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             // Explode the page ID and the anchor (#)
             $link = explode('#', $targetIdOrUrl, 2);
 
+            $url = UrlEndpoint::createDokuUrl();
 
             $urlParams = [];
             // if this is search engine redirect
             if ($targetOrigin == self::TARGET_ORIGIN_SEARCH_ENGINE) {
                 $replacementPart = array(':', '_', '-');
                 $query = str_replace($replacementPart, ' ', $ID);
-                $urlParams["do"] = "search";
-                $urlParams["q"] = $query;
+                $url->setQueryParameter(ExecutionContext::DO_ATTRIBUTE, ExecutionContext::SEARCH_ACTION);
+                $url->setQueryParameter("q", $query);
             }
 
             /**
@@ -878,18 +881,20 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * We can't pass query string otherwise, we get
              * the SEO warning / error
              * `Alternative page with proper canonical tag`
+             *
+             * Use HTTP X header for debug
              */
             if ($method !== self::REDIRECT_PERMANENT_METHOD) {
-                $urlParams[action_plugin_combo_routermessage::ORIGIN_PAGE] = $ID;
-                $urlParams[action_plugin_combo_routermessage::ORIGIN_TYPE] = $targetOrigin;
+                $url->setQueryParameter(action_plugin_combo_routermessage::ORIGIN_PAGE, $ID);
+                $url->setQueryParameter(action_plugin_combo_routermessage::ORIGIN_TYPE, $targetOrigin);
             }
 
-            $targetUrl = wl($link[0], $urlParams, true, '&');
-            // %3A back to :
-            $targetUrl = str_replace("%3A", ":", $targetUrl);
+            $id = $link[0];
+            $url->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
             if (array_key_exists(1, $link)) {
-                $targetUrl .= '#' . rawurlencode($link[1]);
+                $url->setFragment($link[1]);
             }
+            $targetUrl = $url->toAbsoluteUrlString();
 
         }
 

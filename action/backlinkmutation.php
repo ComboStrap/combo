@@ -52,7 +52,12 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
 
         $data = $event->data;
-        $pagePath = $data[PagePath::getPersistentName()];
+        $pagePath = $data[PagePath::getPersistentName()] ?? null;
+        if ($pagePath === null) {
+            // https://github.com/ComboStrap/combo/issues/58
+            LogUtility::internalError("The page path should be present");
+            return;
+        }
         $reference = MarkupPath::createPageFromAbsoluteId($pagePath);
 
         if ($reference->isSlot()) {

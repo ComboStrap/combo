@@ -87,7 +87,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
 
         /**
          * The instruction `calls` are not created via syntax
-         * but dynamically via {@link action_plugin_combo_pluginanalytics::_extract_plugin_info()}
+         * but dynamically via {@link action_plugin_combo_syntaxanalyticsTest}
          */
 
     }

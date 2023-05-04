@@ -157,14 +157,11 @@ class Outline
             if ($analtyicsEnabled) {
 
                 if (in_array($state, CallStack::TAG_STATE)) {
-                    $tagName = $actualCall->getComponentName();
+                    $tagName = $actualCall->getTagName();
                     // The dokuwiki component name have open in their name
                     $tagName = str_replace("_open", "", $tagName);
-                    if (isset($analyticsTagUsed[$tagName])) {
-                        $analyticsTagUsed[$tagName] = $analyticsTagUsed[$tagName] + 1;
-                    } else {
-                        $analyticsTagUsed[$tagName] = 1;
-                    }
+                    $actual = $analyticsTagUsed[$tagName] ?? 0;
+                    $analyticsTagUsed[$tagName] = $actual + 1;
                 }
 
             }

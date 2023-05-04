@@ -52,9 +52,7 @@ class action_plugin_combo_pageprimarymetamutation extends DokuWiki_Action_Plugin
 
         Event::createEvent(
             self::PRIMARY_META_MUTATION_EVENT_NAME,
-            [
-                PagePath::getPersistentName() => $data[PagePath::getPersistentName()]
-            ]
+            $data
         );
 
 

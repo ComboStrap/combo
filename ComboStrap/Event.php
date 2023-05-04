@@ -18,7 +18,7 @@ class Event
 
     const EVENT_TABLE_NAME = "EVENTS_QUEUE";
 
-    const CANONICAL = "support";
+    const CANONICAL = "event";
 
     /**
      * Uppercase mandatory (the column is uppercased when returnd from a *)
@@ -169,6 +169,9 @@ class Event
                 }
 
             }
+        } catch (\Exception $e) {
+            LogUtility::internalError("An internal error has runned on event. " . $e->getMessage(), self::CANONICAL, $e);
+            $lock->release();
         } finally {
             $lock->release();
         }

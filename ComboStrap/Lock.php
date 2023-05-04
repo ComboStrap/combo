@@ -19,6 +19,7 @@ class Lock
      * @var mixed|null
      */
     private $perm;
+    private int $timeOut = 5;
 
 
     /**
@@ -40,7 +41,7 @@ class Lock
     /**
      * @throws ExceptionTimeOut - with the timeout
      */
-    function acquire()
+    function acquire(): Lock
     {
         $run = 0;
         while (!@mkdir($this->lockFile)) {
@@ -53,14 +54,15 @@ class Lock
                     throw new ExceptionRuntimeInternal("Removing the lock failed ($this->lockFile)");
                 }
             }
-            if ($run++ == 5) {
-                // we waited 5 seconds for that lock
-                throw new ExceptionTimeOut("Unable to get the lock ($this->lockFile)");
+            $run++;
+            if ($run >= $this->timeOut) {
+                throw new ExceptionTimeOut("Unable to get the lock ($this->lockFile) for ($this->timeOut) seconds");
             }
         }
         if ($this->perm) {
             chmod($this->lockFile, $this->perm);
         }
+        return $this;
 
     }
 
@@ -76,6 +78,12 @@ class Lock
     public function isReleased(): bool
     {
         return !is_dir($this->lockFile);
+    }
+
+    public function setTimeout(int $int)
+    {
+        $this->timeOut = $int;
+        return $this;
     }
 
 }

@@ -659,7 +659,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $mode = "combo_" . $this->getPluginComponent();
         p_set_metadata(
-            $requestedPage->getPageId(),
+            $requestedPage->getWikiId(),
             array("format" => array($mode => array("Content-Type" => 'application/json'))),
             false,
             false // Persistence is needed because there is a cache

@@ -340,6 +340,8 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             return;
         }
 
+        // header ['X-Robots-Tag'] = 'noindex'; ???
+
         foreach ($event->data['meta'] as $key => $meta) {
             if (array_key_exists("name", $meta)) {
                 /**

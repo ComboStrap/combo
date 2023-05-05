@@ -224,12 +224,8 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
     public function setFromPersistentName(string $name, $value, $default = null): MetadataDokuWikiStore
     {
         $oldValue = $this->getFromName($name);
-        if (is_bool($value)) {
-            if ($oldValue === null) {
-                $oldValue = $default;
-            } else {
-                $oldValue = DataType::toBoolean($oldValue);
-            }
+        if (is_bool($value) && $oldValue !== null) {
+            $oldValue = DataType::toBoolean($oldValue);
         }
         if ($oldValue !== $value) {
 
@@ -290,6 +286,7 @@ class MetadataDokuWikiStore extends MetadataStoreAbs
          *
          */
         return $this->getDataCurrentAndPersistent()[self::CURRENT_METADATA];
+
     }
 
     private function getWikiId(): string

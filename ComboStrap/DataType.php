@@ -81,10 +81,10 @@ class DataType
 
     /**
      *
-     * @var string $roundDirection - ceil or floor (by default floor)
      * @throws ExceptionBadArgument
+     * @var string $roundDirection - ceil or floor (by default floor)
      */
-    public static function toInteger($targetValue,string $roundDirection = self::FLOOR): int
+    public static function toInteger($targetValue, string $roundDirection = self::FLOOR): int
     {
 
 
@@ -99,7 +99,7 @@ class DataType
          * Float 12.845 will return 12
          */
         $float = self::toFloat($targetValue);
-        if($roundDirection===self::FLOOR) {
+        if ($roundDirection === self::FLOOR) {
             $int = floor($float);
         } else {
             $int = ceil($float);
@@ -166,8 +166,17 @@ class DataType
         return is_bool($value);
     }
 
+    /**
+     * Normalize the string output
+     * ie (the true boolean value is not printed as `1` but `true`)
+     * @param $value
+     * @return mixed|string|null
+     */
     public static function toString($value)
     {
+        if ($value === null) {
+            return 'null';
+        }
         if (is_string($value)) {
             return $value;
         }

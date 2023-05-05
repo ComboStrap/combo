@@ -1,21 +1,17 @@
 <?php
 
 use ComboStrap\CacheLog;
-use ComboStrap\CacheManager;
+use ComboStrap\DataType;
 use ComboStrap\Event;
 use ComboStrap\ExceptionBadArgument;
-use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotExists;
-use ComboStrap\FileSystems;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityCalculatedIndicator;
 use ComboStrap\LowQualityPageOverwrite;
-use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MarkupPath;
 use ComboStrap\MetadataMutation;
 use ComboStrap\PagePath;
 use ComboStrap\Site;
-
 
 
 /**
@@ -113,13 +109,14 @@ class action_plugin_combo_qualitymutation extends DokuWiki_Action_Plugin
             return;
         }
 
-        $newValue = $data[MetadataMutation::NEW_VALUE_ATTRIBUTE];
+        $newValue = DataType::toString($data[MetadataMutation::NEW_VALUE_ATTRIBUTE]);
+        $oldValue = DataType::toString($data[MetadataMutation::OLD_VALUE_ATTRIBUTE]);
         $path = $data[PagePath::getPersistentName()];
         Event::createEvent(
             self::QUALITY_MUTATION_EVENT_NAME,
             [
                 PagePath::getPersistentName() => $path,
-                self::DESC => "The variable ($variableName) has the new value ($newValue)"
+                self::DESC => "The variable ($variableName) has the new value ($newValue) overriding ($oldValue)"
             ]
         );
 

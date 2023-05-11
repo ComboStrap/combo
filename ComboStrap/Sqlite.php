@@ -150,6 +150,7 @@ class Sqlite
         return self::createOrGetSqlite(self::SECONDARY_DB);
     }
 
+
     public static function createSelectFromTableAndColumns(string $tableName, array $columns = null): string
     {
         if ($columns === null) {
@@ -162,9 +163,11 @@ class Sqlite
             $columnStatement = implode(", ", $columnsStatement);
         }
         /**
-         * RowId added to have a primary key to identify and delete the row uniquely
+         * TODO: We had added the `rowid` on all query
+         *  but the underlining code was not supporting it,
+         *  adding it in the next release to be able to locate the row
          */
-        return "select rowid, $columnStatement from $tableName";
+        return "select $columnStatement from $tableName";
 
     }
 

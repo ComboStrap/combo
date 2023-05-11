@@ -16,8 +16,10 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 use ComboStrap\Console;
 use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotFound;
+use ComboStrap\ExceptionTimeOut;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
+use ComboStrap\Lock;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Meta\Store\MetadataDbStore;
@@ -83,40 +85,52 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
     public function indexViaIndexerAdd(Doku_Event $event, $param)
     {
 
-        /**
-         * Check that the actual page has analytics data
-         * (if there is a cache, it's pretty quick)
-         */
-        $id = $event->data['page'];
-        $page = MarkupPath::createMarkupFromId($id);
-
-        /**
-         * From {@link idx_addPage}
-         * They receive even the deleted page
-         */
-        $databasePage = $page->getDatabasePage();
-        if (!FileSystems::exists($page)) {
-            $databasePage->delete();
+        $lock = Lock::create("combo-indexer");
+        try {
+            $lock->acquire();
+        } catch (ExceptionTimeOut $e) {
+            // process running
             return;
         }
 
-        if ($databasePage->shouldReplicate()) {
-            try {
-                $databasePage->replicate();
-            } catch (ExceptionCompile $e) {
-                if (PluginUtility::isDevOrTest()) {
-                    // to get the stack trace
-                    throw $e;
-                }
-                $message = "Error with the database replication for the page ($page). " . $e->getMessage();
-                if (Console::isConsoleRun()) {
-                    throw new ExceptionCompile($message);
-                } else {
-                    LogUtility::error($message);
+        try {
+            /**
+             * Check that the actual page has analytics data
+             * (if there is a cache, it's pretty quick)
+             */
+            $id = $event->data['page'];
+            $page = MarkupPath::createMarkupFromId($id);
+
+            /**
+             * From {@link idx_addPage}
+             * They receive even the deleted page
+             */
+            $databasePage = $page->getDatabasePage();
+            if (!FileSystems::exists($page)) {
+                $databasePage->delete();
+                return;
+            }
+
+            if ($databasePage->shouldReplicate()) {
+                try {
+                    $databasePage->replicate();
+                } catch (ExceptionCompile $e) {
+                    if (PluginUtility::isDevOrTest()) {
+                        // to get the stack trace
+                        throw $e;
+                    }
+                    $message = "Error with the database replication for the page ($page). " . $e->getMessage();
+                    if (Console::isConsoleRun()) {
+                        throw new ExceptionCompile($message);
+                    } else {
+                        LogUtility::error($message);
+                    }
                 }
             }
-        }
 
+        } finally {
+            $lock->release();
+        }
 
     }
 

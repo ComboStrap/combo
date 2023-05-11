@@ -11,7 +11,6 @@ use ComboStrap\ExceptionRuntime;
 use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\LogUtility;
 use ComboStrap\Meta\Field\Aliases;
-use ComboStrap\Path;
 use ComboStrap\References;
 
 /**
@@ -255,9 +254,9 @@ abstract class MetadataTabular extends Metadata
             $row = [];
             $idValue = null;
             foreach ($item as $colName => $colValue) {
-                $childClass = $childClassesByPersistentName[$colName];
+                $childClass = $childClassesByPersistentName[$colName] ?? null;
                 if ($childClass === null) {
-                    LogUtility::msg("The column ($colName) does not have a metadata definition");
+                    LogUtility::internalError("The column ($colName) does not have a metadata definition");
                     continue;
                 }
                 $childObject = MetadataSystem::toMetadataObject($childClass, $this);

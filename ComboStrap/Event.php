@@ -171,7 +171,6 @@ class Event
             }
         } catch (\Exception $e) {
             LogUtility::internalError("An internal error has runned on event. " . $e->getMessage(), self::CANONICAL, $e);
-            $lock->release();
         } finally {
             $lock->release();
         }

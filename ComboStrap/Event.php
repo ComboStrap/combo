@@ -44,7 +44,8 @@ class Event
      */
     public static function dispatchEvent(int $maxEvent = 10)
     {
-
+        $comboFuntionName = 'ComboDispatchEvent';
+        print "$comboFuntionName(): Trying to get a lock" . NL;
         $lock = self::getLock();
         try {
             $lock->acquire();
@@ -52,6 +53,7 @@ class Event
             // process running
             return;
         }
+        print "$comboFuntionName(): Locked" . NL;
 
         try {
             try {
@@ -173,6 +175,7 @@ class Event
             LogUtility::internalError("An internal error has runned on event. " . $e->getMessage(), self::CANONICAL, $e);
         } finally {
             $lock->release();
+            print "$comboFuntionName(): Lock Released" . NL;
         }
 
     }

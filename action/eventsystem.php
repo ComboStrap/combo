@@ -11,20 +11,9 @@
  *
  */
 
-use ComboStrap\Console;
 use ComboStrap\Event;
-use ComboStrap\ExceptionCompile;
-use ComboStrap\ExceptionNotFound;
-use ComboStrap\ExceptionRuntimeInternal;
-use ComboStrap\ExecutionContext;
-use ComboStrap\FileSystems;
-use ComboStrap\LogUtility;
-use ComboStrap\MarkupPath;
-use ComboStrap\Meta\Store\MetadataDbStore;
-use ComboStrap\Meta\Store\MetadataDokuWikiStore;
-use ComboStrap\PluginUtility;
-use ComboStrap\Reference;
-use ComboStrap\References;
+use ComboStrap\ExceptionTimeOut;
+use ComboStrap\Lock;
 
 
 /**
@@ -35,6 +24,7 @@ class action_plugin_combo_eventsystem extends DokuWiki_Action_Plugin
 
 
     const CANONICAL = "event";
+    private static Lock $taskRunnerlock;
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -47,7 +37,33 @@ class action_plugin_combo_eventsystem extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'processEventTable', array());
 
+        /**
+         * https://forum.dokuwiki.org/d/21044-taskrunner-running-multiple-times-eating-the-memory-lock/5
+         */
+        $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE', $this, 'lockSystemBefore', array());
+        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'lockSystemAfter', array());
 
+
+    }
+
+    public function lockSystemBefore(Doku_Event $event, $param)
+    {
+        print 'ComboLockTaskRunner(): Trying to get a lock' . NL;
+        self::$taskRunnerlock = Lock::create("combo-taskrunner");
+        try {
+            self::$taskRunnerlock->acquire();
+        } catch (ExceptionTimeOut $e) {
+            // process running
+            print 'ComboLockTaskRunner(): Already running, not acquired' . NL;
+            return;
+        }
+        print 'ComboLockTaskRunner(): Locked' . NL;
+    }
+
+    public function lockSystemAfter(Doku_Event $event, $param)
+    {
+        self::$taskRunnerlock->release();
+        print 'ComboLockTaskRunner(): Lock Released' . NL;
     }
 
     /**
@@ -65,9 +81,4 @@ class action_plugin_combo_eventsystem extends DokuWiki_Action_Plugin
     }
 
 
-
-
 }
-
-
-

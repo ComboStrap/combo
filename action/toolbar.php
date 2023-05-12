@@ -7,10 +7,8 @@
  * @author     Nicolas GERARD
  */
 
-use ComboStrap\Resources;
 
-if (!defined('DOKU_INC')) die();
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 
 class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
@@ -26,7 +24,7 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
         $controller->register_hook('TOOLBAR_DEFINE', 'AFTER', $this, 'handle_toolbar', array());
     }
 
-    function handle_toolbar(&$event, $param)
+    function handle_toolbar(&$event, $param): bool
     {
 
         /**
@@ -82,7 +80,7 @@ EOF;
             'type' => 'format',
             'title' => 'webcode',
             'icon' => $imageBase . '/code-square.svg',
-            'open' => '<webcode name="Default" frameborder="0">\n',
+            'open' => '<webcode>\n',
             'close' => '\n</webcode>\n'
             //'key' => $webCodeShortcutKey
         );

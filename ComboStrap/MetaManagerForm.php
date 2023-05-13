@@ -4,22 +4,20 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataSystem;
 use ComboStrap\Meta\Field\Aliases;
 use ComboStrap\Meta\Field\AncestorImage;
 use ComboStrap\Meta\Field\FacebookImage;
 use ComboStrap\Meta\Field\FeaturedImage;
-use ComboStrap\Meta\Field\SocialCardImage;
 use ComboStrap\Meta\Field\FeaturedRasterImage;
 use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
-use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\Meta\Field\PageTemplateName;
 use ComboStrap\Meta\Field\Region;
 use ComboStrap\Meta\Field\TwitterImage;
 use ComboStrap\Meta\Form\FormMeta;
 use ComboStrap\Meta\Form\FormMetaTab;
+use ComboStrap\Meta\Store\MetadataDbStore;
 use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 
 class MetaManagerForm
@@ -122,6 +120,12 @@ class MetaManagerForm
          * The manager
          */
         $dokuwikiFsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
+        try {
+            $dbStore = MetadataDbStore::getOrCreateFromResource($this->page);
+        } catch (ExceptionNotExists|ExceptionSqliteNotAvailable $e) {
+            LogUtility::error("Error with the db store" . $e->getMessage(), "metamanageform", $e);
+            $dbStore = $dokuwikiFsStore;
+        }
         $metadataNameInOrder = self::META_ORDERS;
 
 
@@ -132,13 +136,22 @@ class MetaManagerForm
                 LogUtility::internalError("The metadata ($metadataName) was not found");
                 continue;
             }
-            if(!$metadataObject::isOnForm()){
+            if (!$metadataObject::isOnForm()) {
                 LogUtility::internalError("This metadata should not be on the order list as it's not for the form");
                 continue;
             }
+            $store = $dokuwikiFsStore;
+            if ($metadataName == ReplicationDate::PROPERTY_NAME) {
+                /**
+                 * Date is only written in the database
+                 * to not trigger a new rendering
+                 * (every metadata updates trigger a new rendering)
+                 */
+                $store = $dbStore;
+            }
             $metadataObject
                 ->setResource($this->page)
-                ->setReadStore($dokuwikiFsStore)
+                ->setReadStore($store)
                 ->buildFromReadStore()
                 ->setWriteStore($this->targetFormDataStore);
             $formMeta->addFormFieldFromMetadata($metadataObject);

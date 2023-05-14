@@ -1,9 +1,6 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
 
-// must be run within Dokuwiki
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\Html;
@@ -12,17 +9,19 @@ use ComboStrap\Prism;
 use ComboStrap\TagAttributes;
 use ComboStrap\XmlTagProcessing;
 
-require_once(__DIR__ . '/../ComboStrap/StringUtility.php');
-require_once(__DIR__ . '/../ComboStrap/Prism.php');
-
-if (!defined('DOKU_INC')) die();
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
  * Class syntax_plugin_combo_code
  *
+ * Implementation of https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
+ * with Prism
+ *
  * Support <a href="https://github.github.com/gfm/#fenced-code-blocks">Github code block</a>
  *
  * The original code markdown code block is the {@link syntax_plugin_combo_preformatted}
+ *
+ * Rehype Plugin used by Floating-ui: https://rehype-pretty-code.netlify.app/
  */
 class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 {

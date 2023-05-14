@@ -32,6 +32,8 @@ class Html
      * Transform a text into a valid HTML id
      * @param $string
      * @return string
+     *
+     * See also: https://github.com/Flet/github-slugger
      */
     public static function toHtmlId($string): string
     {

@@ -331,7 +331,7 @@ EOF;
             $externalResources = explode(",", $resources);
         }
 
-        // Babel Preprocessor, if babel is used, add it to the external resources
+        // Jsx / Babel Preprocessor, if babel is used, add it to the external resources
         if (array_key_exists('babel', $codes)) {
             $babelMin = "https://unpkg.com/babel-standalone@6/babel.min.js";
             // a load of babel invoke it (be sure to not have it twice

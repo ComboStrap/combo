@@ -20,6 +20,8 @@ use syntax_plugin_combo_tab;
  *
  * Vertical Pills
  * https://getbootstrap.com/docs/4.0/components/navs/#vertical
+ *
+ * React: https://react.dev/reference/react/Children#calling-a-render-prop-to-customize-rendering
  */
 class TabsTag
 {

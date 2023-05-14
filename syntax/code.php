@@ -21,6 +21,7 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  *
  * The original code markdown code block is the {@link syntax_plugin_combo_preformatted}
  *
+ * Mdx Syntax: https://mdxjs.com/guides/syntax-highlighting/
  * Rehype Plugin used by Floating-ui: https://rehype-pretty-code.netlify.app/
  */
 class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin

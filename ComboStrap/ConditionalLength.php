@@ -14,6 +14,12 @@ class ConditionalLength
     const PERCENTAGE = "%";
 
     /**
+     * 'fit-content' value, ignore the max-width property
+     * (max-content does not)
+     */
+    const FIT_CONTENT = "fit-content";
+
+    /**
      * @var string - the length value (may be breakpoint conditional)
      */
     private $conditionalLength;
@@ -222,7 +228,7 @@ class ConditionalLength
             return $this->toPixelNumber() . "px";
         } else {
             if ($this->length === "fit") {
-                return "fit-content";
+                return self::FIT_CONTENT;
             }
             return $this->length;
         }

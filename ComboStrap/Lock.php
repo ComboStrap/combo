@@ -10,6 +10,26 @@ use dokuwiki\Search\Indexer;
  * because the TaskRunner does not run serially
  * Only the indexer does
  * https://forum.dokuwiki.org/d/21044-taskrunner-running-multiple-times-eating-the-memory-lock
+ *
+ * Example with debug
+ * ```
+ * ComboLockTaskRunner(): Trying to get a lock
+ * ComboLockTaskRunner(): Locked
+ * runIndexer(): started
+ * Indexer: index for web:browser:selection up to date
+ * runSitemapper(): started
+ * runSitemapper(): finished
+ * sendDigest(): started
+ * sendDigest(): disabled
+ * runTrimRecentChanges(): started
+ * runTrimRecentChanges(): finished
+ * runTrimRecentChanges(1): started
+ * runTrimRecentChanges(1): finished
+ * ComboDispatchEvent(): Trying to get a lock
+ * ComboDispatchEvent(): Locked
+ * ComboDispatchEvent(): Lock Released
+ * ComboLockTaskRunner(): Lock Released
+ *
  */
 class Lock
 {
@@ -64,7 +84,7 @@ class Lock
          */
         // LOCK_NB to not block the process
         while (!$this->getLock()) {
-            usleep(1000);
+            sleep(1);
             /**
              * Old lock ? More than 10 minutes run
              */
@@ -81,8 +101,31 @@ class Lock
         if ($this->perm) {
             chmod($this->lockFile, $this->perm);
         }
+        register_shutdown_function([Lock::class, 'shutdownHandling'], $this->lockName);
         return $this;
 
+    }
+
+    /**
+     *
+     * A function that is called when the process shutdown
+     * due to time exceed for instance that cleans the lock created.
+     *
+     * https://www.php.net/manual/en/function.register-shutdown-function.php
+     *
+     * Why ?
+     * The lock are created in the `before` of the the task runner event
+     * and deleted in the `after` of the task runner event
+     * If their is an error somewhere such as as a timeout, the lock
+     * is not deleted and there is no task runner anymore for 5 minutes.
+     *
+     * @param $name - the lock name
+     * @return void
+     */
+    public static function shutdownHandling($name)
+    {
+        print "Lock::shutdownHandling(): Deleting the lock $name" . NL;
+        Lock::create($name)->release();
     }
 
     /**

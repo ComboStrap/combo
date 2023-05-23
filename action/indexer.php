@@ -93,6 +93,8 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
             return;
         }
 
+        print 'ComboIndexer(): Indexer started'. NL;
+
         try {
             /**
              * Check that the actual page has analytics data
@@ -129,6 +131,7 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
             }
 
         } finally {
+            print 'ComboIndexer(): Indexer finished'. NL;
             $lock->release();
         }
 

@@ -19,6 +19,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MediaMarkup;
 use ComboStrap\Path;
 use ComboStrap\PathAbs;
+use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\WikiPath;
 use dokuwiki\Input\Input;
@@ -206,8 +207,12 @@ class Url extends PathAbs
                      * We don't advertise this error, it should not happen
                      * and there is nothing to do to get back on its feet
                      */
-                    $message = "The url in src has a bad encoding (the attribute have a amp; prefix. Infinite cache will not work.";
-                    throw new ExceptionRuntimeInternal($message);
+                    $message = "The url in src has a bad encoding (the attribute ($key) has a amp; prefix. Infinite cache will not work. Request: " . DataType::toString($_REQUEST);
+                    if (PluginUtility::isDevOrTest()) {
+                        throw new ExceptionRuntimeInternal($message);
+                    } else {
+                        LogUtility::warning($message, "url");
+                    }
                 }
                 /**
                  * Added in {@link auth_setup}

@@ -168,7 +168,7 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= '<div class="webcomponent_' . self::getTag() . '"';
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     // Normally none
-                    if ($attributes['display']) {
+                    if ($attributes['display'] ?? null) {
                         $renderer->doc .= ' style="display:' . $attributes['display'] . '" ';
                     }
                     $renderer->doc .= '>';

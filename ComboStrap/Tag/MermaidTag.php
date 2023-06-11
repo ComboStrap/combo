@@ -39,8 +39,8 @@ class MermaidTag
         try {
             $snippetManager->attachRemoteJavascriptLibrary(
                 $snippetId,
-                "https://cdn.jsdelivr.net/npm/mermaid@8.12.1/dist/mermaid.min.js",
-                "sha256-51Oz+q3qIYwzBL0k7JLyk158Ye4XqprPU0/9DUcZMQQ="
+                "https://cdn.jsdelivr.net/npm/mermaid@10.2.3/dist/mermaid.min.js",
+                "sha256-JFptYy4KzJ5OQP+Q9fubNf3cxpPPmZKqUOovyEONKrQ="
             );
         } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
             LogUtility::internalError("The url should be good", self::CANONICAL,$e);

@@ -49,7 +49,7 @@ class SubscribeTag
         $data['list-name'] = "listGuid";
         $data['email-name'] = "subscriberEmail";
         $data['email-id'] = $executionContext->getIdManager()->generateNewHtmlIdForComponent("$subscribeTag-email");
-        $data['action'] = "https://tower.combostrap.com/combo/api/v1.0/list/registration";
+        $data['action'] = "https://api.combostrap.com/combo/public/v1.0/list/registration";
         $data['success-content'] = $success;
         try {
             $data['primary-color'] = $executionContext->getConfig()->getPrimaryColor()->toCssValue();

@@ -62,7 +62,8 @@ SELECT ID,
        LEVEL,
        IS_INDEX,
        ANALYTICS
-FROM pages;
+FROM pages
+where ROWID in (select max(ROWID) from pages group by id);
 
 -- drop view
 drop view PAGE_REFERENCES_VW;

@@ -134,7 +134,7 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
         if ($oldReferenceDatas !== null) {
             foreach ($oldReferenceDatas as $oldReferenceData) {
 
-                $oldReferenceWikiPathString = $oldReferenceData[Reference::getPersistentName()];
+                $oldReferenceWikiPathString = $oldReferenceData[Reference::getPersistentName()] ?? null;
 
                 if (isset($actualReferences[$oldReferenceWikiPathString])) {
                     unset($actualReferences[$oldReferenceWikiPathString]);
@@ -168,6 +168,3 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
 
 
 }
-
-
-

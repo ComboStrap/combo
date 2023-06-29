@@ -276,7 +276,7 @@ class EditButton
                 LogUtility::internalError("No data found in the edit comment", self::CANONICAL);
                 return "";
             }
-            $wikiId = $data[self::WIKI_ID];
+            $wikiId = $data[self::WIKI_ID] ?? null;
             unset($data[self::WIKI_ID]);
             if ($wikiId === null) {
                 try {

@@ -14,8 +14,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\plugin\sqlite\SQLiteDB;
 use helper_plugin_sqlite;
-use RuntimeException;
 
 class Sqlite
 {
@@ -126,15 +126,20 @@ class Sqlite
         // regexp implementation
         // https://stackoverflow.com/questions/5071601/how-do-i-use-regex-in-a-sqlite-query/18484596#18484596
         $adapter = $sqlitePlugin->getAdapter();
-        $adapter->create_function('regexp',
-            function ($pattern, $data, $delimiter = '~', $modifiers = 'isuS') {
-                if (isset($pattern, $data) === true) {
-                    return (preg_match(sprintf('%1$s%2$s%1$s%3$s', $delimiter, $pattern, $modifiers), $data) > 0);
-                }
-                return null;
-            },
-            4
-        );
+        $regexFunctioName = 'regexp';
+        $regexpClosure = function ($pattern, $data, $delimiter = '~', $modifiers = 'isuS') {
+            if (isset($pattern, $data) === true) {
+                return (preg_match(sprintf('%1$s%2$s%1$s%3$s', $delimiter, $pattern, $modifiers), $data) > 0);
+            }
+            return null;
+        };
+        $regexArgCount = 4;
+        if (!self::isJuneVersion($adapter)) {
+            /** @noinspection PhpUndefinedMethodInspection */
+            $adapter->create_function($regexFunctioName, $regexpClosure, $regexArgCount);
+        } else {
+            $adapter->getPdo()->sqliteCreateFunction($regexFunctioName, $regexpClosure, $regexArgCount);
+        }
 
         $sqlite = new Sqlite($sqlitePlugin);
         $executionContext->setRuntimeObject($sqliteExecutionObjectIdentifier, $sqlite);
@@ -308,7 +313,13 @@ class Sqlite
         /**
          * When the database is {@link \helper_plugin_sqlite_adapter::closedb()}
          */
-        if ($adapter->getDb() === null) {
+        if (!self::isJuneVersion($adapter)) {
+            /** @noinspection PhpUndefinedMethodInspection */
+            $db = $adapter->getDb();
+        } else {
+            $db = $adapter->getPdo();
+        }
+        if ($db === null) {
             /**
              * We may also open it again
              * {@link \helper_plugin_sqlite_adapter::opendb()}
@@ -316,6 +327,7 @@ class Sqlite
              */
             return true;
         }
+
         /**
          * In test, we are running in different context (ie different root
          * directory for DokuWiki and therefore different $conf
@@ -371,7 +383,12 @@ class Sqlite
         $adapter = $this->sqlitePlugin->getAdapter();
         if ($adapter !== null) {
 
-            $adapter->closedb();
+            if (!$this->isJuneVersion($adapter)) {
+                /** @noinspection PhpUndefinedMethodInspection */
+                $adapter->closedb();
+            } else {
+                $adapter->__sleep();
+            }
 
             unset($adapter);
 
@@ -448,9 +465,22 @@ class Sqlite
      */
     private function closeActualRequestIfNotClosed()
     {
-        if(isset($this->actualRequest)){
+        if (isset($this->actualRequest)) {
             $this->actualRequest->close();
             unset($this->actualRequest);
         }
     }
+
+    /**
+     * Version 2023-06-21 brings error
+     * https://github.com/cosmocode/sqlite/releases/tag/2023-06-21
+     * https://www.dokuwiki.org/plugin:sqlite#changes_from_earlier_releases
+     * @param $adapter
+     * @return bool
+     */
+    public static function isJuneVersion($adapter): bool
+    {
+        return get_class($adapter) === SQLiteDB::class;
+    }
+
 }

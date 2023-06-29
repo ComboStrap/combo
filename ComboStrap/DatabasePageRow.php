@@ -1191,7 +1191,7 @@ class DatabasePageRow
     {
 
         $aliasPath = $pageAlias->getPathObject()->toAbsoluteId();
-        LogUtility::warning("Add alias ($aliasPath) for page ({$this->markupPath})");
+        LogUtility::info("Add alias ($aliasPath) for page ({$this->markupPath})");
         try {
             Aliases::createForPage($this->markupPath)
                 ->addAlias($aliasPath)

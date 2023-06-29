@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use PDO;
+
 class SqliteResult
 {
     private $res;
@@ -29,13 +31,27 @@ class SqliteResult
 
     public function getRows(): array
     {
-        return $this->sqlitePlugin->res2arr($this->res);
+
+        $adapter = $this->sqlitePlugin->getAdapter();
+        if (!Sqlite::isJuneVersion($adapter)) {
+            return $this->sqlitePlugin->res2arr($this->res);
+        }
+
+        /**
+         * note:
+         * * fetch mode may be also {@link PDO::FETCH_NUM}
+         * * {@link helper_plugin_sqlite::res2arr()} but without the fucking cache !
+         */
+        return $this->res->fetchAll(PDO::FETCH_ASSOC);
+
+
     }
 
     public function close(): SqliteResult
     {
         /**
-         * $this->res is a number in CI
+         * $this->res may be a boolean {@link }
+         * is a number in CI
          *
          * We get:
          * Error: Call to a member function closeCursor() on int
@@ -50,7 +66,14 @@ class SqliteResult
 
     public function getInsertId(): string
     {
-        return $this->sqlitePlugin->getAdapter()->getDb()->lastInsertId();
+        $adapter = $this->sqlitePlugin->getAdapter();
+        if (!Sqlite::isJuneVersion($adapter)) {
+            /** @noinspection PhpUndefinedMethodInspection */
+            return $adapter->getDb()->lastInsertId();
+        } else {
+            return $adapter->getPdo()->lastInsertId();
+        }
+
     }
 
     public function getChangeCount()

@@ -256,7 +256,7 @@ class LocalPath extends PathAbs
         /**
          * One of the problem of relativization is
          * that it may be:
-         * * logical (when using a symling)
+         * * logical (when using a symlink)
          * * physical
          */
         if (!$this->isAbsolute() || $this->isShortName()) {

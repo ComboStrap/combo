@@ -12,9 +12,7 @@
 
 namespace ComboStrap;
 
-use action_plugin_combo_snippetsbootstrap;
 use ComboStrap\Web\Url;
-use Exception;
 
 class Bootstrap
 {

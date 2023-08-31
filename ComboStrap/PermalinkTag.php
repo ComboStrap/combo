@@ -55,8 +55,10 @@ class PermalinkTag
         $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
         switch ($type) {
             case self::GENERATED_TYPE:
+
+
                 try {
-                    $pageId = $requestedPage->getPageId();
+                    $permanentValue = self::getPermalinkId($requestedPage);
                 } catch (ExceptionNotFound $e) {
                     return self::handleError(
                         "The page id has not yet been set",
@@ -64,8 +66,6 @@ class PermalinkTag
                         $callStack
                     );
                 }
-
-                $permanentValue = PageUrlPath::encodePageId($pageId);
 
                 $url = UrlEndpoint::createBaseUrl()
                     ->setPath("/$permanentValue")
@@ -189,5 +189,14 @@ class PermalinkTag
         }
         return "";
     }
-}
 
+    /**
+     * @throws ExceptionNotFound
+     */
+    public static function getPermalinkId(MarkupPath $requestedPage): string
+    {
+
+        $pageId = $requestedPage->getPageIdAbbr();
+        return PageUrlPath::encodePageId($pageId);
+    }
+}

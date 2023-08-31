@@ -383,18 +383,27 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
 
         /**
-         * Page Id Website / root Permalink ?
+         * Page Id in the url
          */
         $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedMarkupPath->getPathObject()->getLastNameWithoutExtension());
-        if ($shortPageId !== null) {
+        if ($shortPageId != null) {
             $pageId = PageUrlPath::decodePageId($shortPageId);
-            if ($requestedMarkupPath->getParent() === null && $pageId !== null) {
+        } else {
+            /**
+             * Permalink with id
+             */
+            $pageId = PageUrlPath::decodePageId($identifier);
+        }
+        if ($pageId !== null) {
+
+            if ($requestedMarkupPath->getParent() === null) {
                 $page = DatabasePageRow::createFromPageId($pageId)->getMarkupPath();
                 if ($page !== null && $page->exists()) {
                     $this->executePermanentRedirect(
                         $page->getCanonicalUrl()->toAbsoluteUrlString(),
                         self::TARGET_ORIGIN_PERMALINK
                     );
+                    return;
                 }
             }
 
@@ -402,48 +411,43 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * Page Id Abbr ?
              * {@link PageUrlType::CONF_CANONICAL_URL_TYPE}
              */
-            if (
-                $pageId !== null
-            ) {
-                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getMarkupPath();
-                if ($page === null) {
-                    // or the length of the abbr has changed
-                    $canonicalDatabasePage = new DatabasePageRow();
-                    $row = $canonicalDatabasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
-                    if ($row !== null) {
-                        $canonicalDatabasePage->setRow($row);
-                        $page = $canonicalDatabasePage->getMarkupPath();
-                    }
+            $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getMarkupPath();
+            if ($page === null) {
+                // or the length of the abbr has changed
+                $canonicalDatabasePage = new DatabasePageRow();
+                $row = $canonicalDatabasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
+                if ($row !== null) {
+                    $canonicalDatabasePage->setRow($row);
+                    $page = $canonicalDatabasePage->getMarkupPath();
                 }
-                if ($page !== null && $page->exists()) {
-                    /**
-                     * If the url canonical id has changed, we show it
-                     * to the writer by performing a permanent redirect
-                     */
-                    if ($identifier != $page->getUrlId()) {
-                        // Google asks for a redirect
-                        // https://developers.google.com/search/docs/advanced/crawling/301-redirects
-                        // People access your site through several different URLs.
-                        // If, for example, your home page can be reached in multiple ways
-                        // (for instance, http://example.com/home, http://home.example.com, or http://www.example.com),
-                        // it's a good idea to pick one of those URLs as your preferred (canonical) destination,
-                        // and use redirects to send traffic from the other URLs to your preferred URL.
-                        $this->executePermanentRedirect(
-                            $page->getCanonicalUrl()->toAbsoluteUrlString(),
-                            self::TARGET_ORIGIN_PERMALINK_EXTENDED
-                        );
-                        return;
-                    }
-
-                    $this->executeTransparentRedirect($page->getWikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+            }
+            if ($page !== null && $page->exists()) {
+                /**
+                 * If the url canonical id has changed, we show it
+                 * to the writer by performing a permanent redirect
+                 */
+                if ($identifier != $page->getUrlId()) {
+                    // Google asks for a redirect
+                    // https://developers.google.com/search/docs/advanced/crawling/301-redirects
+                    // People access your site through several different URLs.
+                    // If, for example, your home page can be reached in multiple ways
+                    // (for instance, http://example.com/home, http://home.example.com, or http://www.example.com),
+                    // it's a good idea to pick one of those URLs as your preferred (canonical) destination,
+                    // and use redirects to send traffic from the other URLs to your preferred URL.
+                    $this->executePermanentRedirect(
+                        $page->getCanonicalUrl()->toAbsoluteUrlString(),
+                        self::TARGET_ORIGIN_PERMALINK_EXTENDED
+                    );
                     return;
-
                 }
-                // permanent url not yet in the database
-                // Other permanent such as permanent canonical ?
-                // We let the process go with the new identifier
+
+                $this->executeTransparentRedirect($page->getWikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                return;
 
             }
+            // permanent url not yet in the database
+            // Other permanent such as permanent canonical ?
+            // We let the process go with the new identifier
 
         }
 

@@ -1658,10 +1658,12 @@ class MarkupPath extends PathAbs implements ResourceCombo, Path
     }
 
 
+    /**
+     * @throws ExceptionNotFound
+     */
     function getPageIdAbbr()
     {
 
-        if ($this->getPageId() === null) return null;
         return PageId::getAbbreviated($this->getPageId());
 
     }

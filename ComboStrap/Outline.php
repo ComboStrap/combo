@@ -552,12 +552,16 @@ class Outline
                  */
                 $outlineClass = Outline::getOutlineHeadingClass();
                 return <<<EOF
-$mainContainerSelector { counter-set: h2 0 h3 0 h4 0 h5 0 h6 0; }
-$mainContainerSelector h2.$outlineClass::before { counter-increment: h2; counter-set: h3 0 h4 0 h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
-$mainContainerSelector h3.$outlineClass::before { counter-increment: h3; counter-set: h4 0 h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
-$mainContainerSelector h4.$outlineClass::before { counter-increment: h4; counter-set: h5 0 h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
-$mainContainerSelector h5.$outlineClass::before { counter-increment: h5; counter-set: h6 0; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
-$mainContainerSelector h6.$outlineClass::before { counter-increment: h6; content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
+$mainContainerSelector h2.$outlineClass { counter-increment: h2 0; counter-reset: h3 h4 h5 h6;} 
+$mainContainerSelector h2.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
+$mainContainerSelector h3.$outlineClass { counter-increment: h3 0; counter-reset: h4 h5 h6;};
+$mainContainerSelector h3.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
+$mainContainerSelector h4.$outlineClass { counter-increment: h4 0; counter-reset: h5 h6;}
+$mainContainerSelector h4.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
+$mainContainerSelector h5.$outlineClass { counter-increment: h5 0; counter-reset: h6;}
+$mainContainerSelector h5.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
+$mainContainerSelector h6.$outlineClass { counter-increment: h6 0; }
+$mainContainerSelector h6.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
 EOF;
             case self::TOC_NUMBERING:
                 /**

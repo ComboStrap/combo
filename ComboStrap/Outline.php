@@ -544,7 +544,6 @@ class Outline
                  * We do it then with the class value
                  */
                 $outlineClass = Outline::getOutlineHeadingClass();
-                $reset = "";
                 if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";
                     $reset = <<<EOF

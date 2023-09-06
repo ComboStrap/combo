@@ -3,8 +3,6 @@
 namespace ComboStrap;
 
 
-use ComboStrap\Meta\Field\FeaturedRasterImage;
-use ComboStrap\Meta\Field\FeaturedSvgImage;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\Tag\TableTag;
 use ComboStrap\TagAttribute\StyleAttribute;
@@ -537,11 +535,6 @@ class Outline
 
             case self::OUTLINE_HEADING_NUMBERING:
                 global $ACT;
-                if ($ACT === "preview") {
-                    $mainContainerSelector = ".pad";
-                } else {
-                    $mainContainerSelector = "#" . TemplateSlot::MAIN_CONTENT_ID;
-                }
                 /**
                  * Because the HTML file structure is not really fixed
                  * (we may have section HTML element with a bar, the sectioning heading
@@ -551,18 +544,38 @@ class Outline
                  * We do it then with the class value
                  */
                 $outlineClass = Outline::getOutlineHeadingClass();
+                $reset = "";
+                if ($ACT === "preview") {
+                    $mainContainerSelector = ".pad";
+                    $reset = <<<EOF
+$mainContainerSelector { counter-reset: h2; }
+$mainContainerSelector h2.$outlineClass { counter-increment: h2 1; counter-reset: h3 h4 h5 h6;} 
+$mainContainerSelector h3.$outlineClass { counter-increment: h3 1; counter-reset: h4 h5 h6;}
+$mainContainerSelector h4.$outlineClass { counter-increment: h4 1; counter-reset: h5 h6;}
+$mainContainerSelector h5.$outlineClass { counter-increment: h5 1; counter-reset: h6;}
+$mainContainerSelector h6.$outlineClass { counter-increment: h6 1; }
+EOF;
+                } else {
+                    $mainContainerSelector = "#" . TemplateSlot::MAIN_CONTENT_ID;
+                    $reset = <<<EOF
+$mainContainerSelector { counter-reset: h2; }
+$mainContainerSelector section.outline-section-cs section.outline-section-cs { counter-increment: h2; counter-reset: h3 h4 h5 h6;}
+$mainContainerSelector section.outline-section-cs section.outline-section-cs section.outline-section-cs { counter-increment: h3; counter-reset: h4 h5 h6;}
+$mainContainerSelector section.outline-section-cs section.outline-section-cs section.outline-section-cs section.outline-section-cs { counter-increment: h4; counter-reset: h5 h6;}
+$mainContainerSelector section.outline-section-cs section.outline-section-cs section.outline-section-cs section.outline-section-cs section.outline-section-cs { counter-increment: h5; counter-reset: h6;}
+EOF;
+
+                }
                 return <<<EOF
-$mainContainerSelector h2.$outlineClass { counter-increment: h2 0; counter-reset: h3 h4 h5 h6;} 
+$reset
 $mainContainerSelector h2.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
-$mainContainerSelector h3.$outlineClass { counter-increment: h3 0; counter-reset: h4 h5 h6;};
 $mainContainerSelector h3.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
-$mainContainerSelector h4.$outlineClass { counter-increment: h4 0; counter-reset: h5 h6;}
 $mainContainerSelector h4.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
-$mainContainerSelector h5.$outlineClass { counter-increment: h5 0; counter-reset: h6;}
 $mainContainerSelector h5.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
-$mainContainerSelector h6.$outlineClass { counter-increment: h6 0; }
 $mainContainerSelector h6.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
 EOF;
+
+
             case self::TOC_NUMBERING:
                 /**
                  * The level counter on the toc are based

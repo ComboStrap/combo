@@ -4,14 +4,12 @@ namespace ComboStrap\Web;
 
 use ComboStrap\DokuWikiId;
 use ComboStrap\ExceptionNotFound;
-use ComboStrap\FetcherRawLocalPath;
+use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\MediaMarkup;
 use ComboStrap\PageUrlPath;
 use ComboStrap\Site;
-use ComboStrap\Web\Url;
-use ComboStrap\Web\UrlEndpoint;
 use ComboStrap\WikiPath;
 
 /**
@@ -141,12 +139,15 @@ class UrlRewrite
                 switch ($rewrite) {
                     case self::WEB_SERVER_REWRITE:
                         try {
-                            $do = $url->getQueryPropertyValueAndRemoveIfPresent("do");
+                            $do = $url->getQueryPropertyValue(ExecutionContext::DO_ATTRIBUTE);
                             if (strpos($do, self::EXPORT_DO_PREFIX) === 0) {
                                 $exportFormat = substr($do, strlen(self::EXPORT_DO_PREFIX));
                                 $webUrlPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $urlId);
                                 $url->setPath(self::EXPORT_PATH_PREFIX . "/$exportFormat/$webUrlPath");
                                 return;
+                            }
+                            if ($do == ExecutionContext::SHOW_ACTION) {
+                                $url->deleteQueryParameter(ExecutionContext::DO_ATTRIBUTE);
                             }
                         } catch (ExceptionNotFound $e) {
                             // no do

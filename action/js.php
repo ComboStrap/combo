@@ -95,7 +95,10 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
                     4 => $dokuScriptPath . "helpers.js", // substr_replace use in qsearch.php
                     5 => 'conf' . $directorySeparatorInDokuwikiList . 'userscript.js',
                     6 => $dokuScriptPath . "cookie.js", // plugin may depend on this library such as styling (lib/plugins/styling/script.js)
-                    7 => $dokuScriptPath . "jquery/jquery.cookie.js" // cookie.js depends on it
+                    7 => $dokuScriptPath . "jquery/jquery.cookie.js", // cookie.js depends on it
+                    8 => $dokuScriptPath . "behaviour.js", // contains dw_show that is used by the tree.js tree
+                    9 => $dokuScriptPath . "tree.js", // used by the index.js tree
+                    10 => $dokuScriptPath . "index.js" // index page
                 ];
 
             $scriptsToKeep = array();
@@ -124,4 +127,3 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
     }
 
 }
-

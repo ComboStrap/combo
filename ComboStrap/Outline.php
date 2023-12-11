@@ -548,7 +548,7 @@ class Outline
                     $mainContainerSelector = ".pad";
                     $reset = <<<EOF
 $mainContainerSelector { counter-reset: h2; }
-$mainContainerSelector h2.$outlineClass { counter-increment: h2 1; counter-reset: h3 h4 h5 h6;} 
+$mainContainerSelector h2.$outlineClass { counter-increment: h2 1; counter-reset: h3 h4 h5 h6;}
 $mainContainerSelector h3.$outlineClass { counter-increment: h3 1; counter-reset: h4 h5 h6;}
 $mainContainerSelector h4.$outlineClass { counter-increment: h4 1; counter-reset: h5 h6;}
 $mainContainerSelector h5.$outlineClass { counter-increment: h5 1; counter-reset: h6;}
@@ -558,10 +558,10 @@ EOF;
                     $mainContainerSelector = "#" . TemplateSlot::MAIN_CONTENT_ID;
                     $reset = <<<EOF
 $mainContainerSelector { counter-reset: h2; }
-$mainContainerSelector section.outline-section-cs section.outline-section-cs { counter-increment: h2; counter-reset: h3 h4 h5 h6;}
-$mainContainerSelector section.outline-section-cs section.outline-section-cs section.outline-section-cs { counter-increment: h3; counter-reset: h4 h5 h6;}
-$mainContainerSelector section.outline-section-cs section.outline-section-cs section.outline-section-cs section.outline-section-cs { counter-increment: h4; counter-reset: h5 h6;}
-$mainContainerSelector section.outline-section-cs section.outline-section-cs section.outline-section-cs section.outline-section-cs section.outline-section-cs { counter-increment: h5; counter-reset: h6;}
+$mainContainerSelector section.outline-level-2-cs { counter-increment: h2; counter-reset: h3 h4 h5 h6;}
+$mainContainerSelector section.outline-level-3-cs { counter-increment: h3; counter-reset: h4 h5 h6;}
+$mainContainerSelector section.outline-level-4-cs { counter-increment: h4; counter-reset: h5 h6;}
+$mainContainerSelector section.outline-level-5-cs { counter-increment: h5; counter-reset: h6;}
 EOF;
 
                 }

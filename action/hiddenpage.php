@@ -39,7 +39,6 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
         $namesToHide[] = SlotSystem::getSidebarName();
         $namesToHide[] = SlotSystem::getPageHeaderSlotName();
         $namesToHide[] = PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
-        $namesToHide[] = PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
         $namesToHide[] = SlotSystem::getPageFooterSlotName();
         $namesToHide[] = SlotSystem::getMainSideSlotName();
         $namesToHide[] = SlotSystem::getMainFooterSlotName();

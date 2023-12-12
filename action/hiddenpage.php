@@ -30,18 +30,25 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
 
     function handleIsHidden(&$event, $param)
     {
-        global $conf;
+
 
         /**
          * Caching the slot and private namespace
          */
-        $pattern = "(" . SlotSystem::getSidebarName() . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
-        $pattern .= "|" . SlotSystem::getPageHeaderSlotName();
-        $pattern .= "|" . SlotSystem::getPageFooterSlotName();
-        $pattern .= "|" . SlotSystem::getMainSideSlotName();
-        $pattern .= "|" . SlotSystem::getMainFooterSlotName();
-        $pattern .= "|" . SlotSystem::getMainHeaderSlotName();
-        $pattern .= ")";
+        $namesToHide = [];
+        $namesToHide[] = SlotSystem::getSidebarName();
+        $namesToHide[] = SlotSystem::getPageHeaderSlotName();
+        $namesToHide[] = PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
+        $namesToHide[] = PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
+        $namesToHide[] = SlotSystem::getPageFooterSlotName();
+        $namesToHide[] = SlotSystem::getMainSideSlotName();
+        $namesToHide[] = SlotSystem::getMainFooterSlotName();
+        $namesToHide[] = SlotSystem::getMainHeaderSlotName();
+        // Remove empty string elements
+        $namesToHidenotEmpty = array_filter($namesToHide, function ($value) {
+            return trim($value) !== '';
+        });
+        $pattern = "(" . implode('|', $namesToHidenotEmpty) . ")";
         if (preg_match('/' . $pattern . '/ui', ':' . $event->data['id'])) {
             $event->data['hidden'] = true;
         }

@@ -113,6 +113,12 @@ jobs:
       - name: Installed Locale
         run: locale -a
 
+      # Composer is used since Kaos version (06/02/2024)
+      - name: Setup PHPUnit
+        run: |
+          cd _test
+          composer install --no-interaction --no-progress --no-suggest --prefer-dist
+
       # No better formatter
       # This one does not work: https://github.com/mheap/phpunit-matcher-action
       # with verbose, you see the configuration file used at the beginning

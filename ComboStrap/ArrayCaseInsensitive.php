@@ -50,7 +50,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
         $this->rewind();
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
 
         if (is_null($offset)) {
@@ -73,7 +73,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
         return isset($this->_keyMapping[$offset]);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
 
         if (is_string($offset)) $offset = strtolower($offset);
@@ -105,7 +105,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
         return $this->iterator->current();
     }
 
-    public function next()
+    public function next(): void
     {
         $this->iterator->next();
     }
@@ -120,7 +120,7 @@ class ArrayCaseInsensitive implements ArrayAccess, \Iterator, Countable
         return $this->iterator->valid();
     }
 
-    public function rewind()
+    public function rewind(): void
     {
         $obj = new ArrayObject($this->sourceArray);
         $this->iterator = $obj->getIterator();

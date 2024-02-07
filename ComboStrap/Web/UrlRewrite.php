@@ -144,6 +144,7 @@ class UrlRewrite
                                 $exportFormat = substr($do, strlen(self::EXPORT_DO_PREFIX));
                                 $webUrlPath = str_replace(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, "/", $urlId);
                                 $url->setPath(self::EXPORT_PATH_PREFIX . "/$exportFormat/$webUrlPath");
+                                $url->deleteQueryParameter(ExecutionContext::DO_ATTRIBUTE);
                                 return;
                             }
                             if ($do == ExecutionContext::SHOW_ACTION) {

@@ -250,7 +250,7 @@ class LogUtility
                     } else {
                         $allow = MSG_USERS_ONLY;
                     }
-                    msg($htmlMsg, $dokuWikiLevel, '', '',$allow);
+                    msg($htmlMsg, $dokuWikiLevel, '', '', $allow);
                 }
         }
     }
@@ -273,13 +273,16 @@ class LogUtility
      */
     private static function throwErrorIfTest($level, $message, \Exception $e = null)
     {
-        $actualLevel = ExecutionContext::getActualOrCreateFromEnv()->getConfig()
-            ->getLogExceptionLevel();
-        if (PluginUtility::isTest()
-            && ($level >= $actualLevel)
-            && self::$throwExceptionOnDevTest
-        ) {
-            throw new LogException($message, $level, $e);
+        if (PluginUtility::isTest() && self::$throwExceptionOnDevTest) {
+            try {
+                $actualLevel = ExecutionContext::getExecutionContext()->getConfig()->getLogExceptionLevel();
+            } catch (ExceptionNotFound $e) {
+                // In context creation
+                return;
+            }
+            if ($level >= $actualLevel) {
+                throw new LogException($message, $level, $e);
+            }
         }
     }
 

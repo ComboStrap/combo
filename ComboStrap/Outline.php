@@ -546,25 +546,27 @@ class Outline
                 $outlineClass = Outline::getOutlineHeadingClass();
                 if ($ACT === "preview") {
                     $mainContainerSelector = ".pad";
-                    $reset = <<<EOF
-$mainContainerSelector { counter-reset: h2; }
-$mainContainerSelector h2.$outlineClass { counter-increment: h2 1; counter-reset: h3 h4 h5 h6;}
-$mainContainerSelector h3.$outlineClass { counter-increment: h3 1; counter-reset: h4 h5 h6;}
-$mainContainerSelector h4.$outlineClass { counter-increment: h4 1; counter-reset: h5 h6;}
-$mainContainerSelector h5.$outlineClass { counter-increment: h5 1; counter-reset: h6;}
-$mainContainerSelector h6.$outlineClass { counter-increment: h6 1; }
-EOF;
                 } else {
                     $mainContainerSelector = "#" . TemplateSlot::MAIN_CONTENT_ID;
-                    $reset = <<<EOF
+                }
+                /**
+                 * Counter inheritance works by sibling and if not found on parents
+                 * we therefore needs to take into account the 2 HTML structure
+                 * * one counter on h1 if this is the flat structure
+                 * one counter on the section if this is the section structure
+                 */
+                $reset = <<<EOF
 $mainContainerSelector { counter-reset: h2; }
+$mainContainerSelector > h2.$outlineClass { counter-increment: h2 1; counter-reset: h3 h4 h5 h6;}
+$mainContainerSelector > h3.$outlineClass { counter-increment: h3 1; counter-reset: h4 h5 h6;}
+$mainContainerSelector > h4.$outlineClass { counter-increment: h4 1; counter-reset: h5 h6;}
+$mainContainerSelector > h5.$outlineClass { counter-increment: h5 1; counter-reset: h6;}
+$mainContainerSelector > h6.$outlineClass { counter-increment: h6 1; }
 $mainContainerSelector section.outline-level-2-cs { counter-increment: h2; counter-reset: h3 h4 h5 h6;}
 $mainContainerSelector section.outline-level-3-cs { counter-increment: h3; counter-reset: h4 h5 h6;}
 $mainContainerSelector section.outline-level-4-cs { counter-increment: h4; counter-reset: h5 h6;}
 $mainContainerSelector section.outline-level-5-cs { counter-increment: h5; counter-reset: h6;}
 EOF;
-
-                }
                 return <<<EOF
 $reset
 $mainContainerSelector h2.$outlineClass::before { content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }

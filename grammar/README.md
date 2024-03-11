@@ -35,3 +35,7 @@ composer require antlr/antlr4-php-runtime:0.5.1
 https://plugins.jetbrains.com/plugin/7358-antlr-v4/versions
   * [Download the version 4.9.3](https://github.com/antlr/website-antlr4/blob/gh-pages/download/antlr-4.9.3-complete.jar)
   * And run it at the command line
+
+## How to use in IntelliJ
+
+Select the `pageSql` rule, right and select `Test Rule Page Sql`

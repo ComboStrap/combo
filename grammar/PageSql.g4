@@ -73,6 +73,9 @@ DATE:            D A T E;
 DATETIME:        D A T E T I M E;
 functionNames: DATE | DATETIME;
 
+// constant
+constantNames: NOW;
+
 // Tables
 PAGES:            P A G E S;
 BACKLINKS:        B A C K L I N K S;
@@ -194,7 +197,7 @@ pattern: (StringLiteral|NumberLiteral);
 
 
 expression:
-    (SqlName|StringLiteral|NumberLiteral|Number)
+    (SqlName|StringLiteral|NumberLiteral|Number|constantNames)
     | functionNames LPAREN expression? ( COMMA expression)* RPAREN
 ;
 

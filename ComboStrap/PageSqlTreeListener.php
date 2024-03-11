@@ -143,12 +143,26 @@ final class PageSqlTreeListener implements ParseTreeListener
 
                         // variable name
                         $variableName = strtolower($text);
-                        if ($variableName === DatabasePageRow::IS_HOME_COLUMN) {
-                            /**
-                             * Deprecation of is_home for is_index
-                             */
-                            $variableName = DatabasePageRow::IS_INDEX_COLUMN;
+                        switch ($variableName) {
+                            case DatabasePageRow::IS_HOME_COLUMN:
+                            {
+                                /**
+                                 * Deprecation of is_home for is_index
+                                 */
+                                $variableName = DatabasePageRow::IS_INDEX_COLUMN;
+                                break;
+                            }
+                            case CreationDate::PROPERTY_NAME:
+                            case ModificationDate::PROPERTY_NAME:
+                            case PagePublicationDate::PROPERTY_NAME:
+                            case StartDate::PROPERTY_NAME:
+                            case ReplicationDate::PROPERTY_NAME:
+                            case EndDate::PROPERTY_NAME:
+                            {
+                                $variableName = "date({$variableName})";
+                            }
                         }
+
                         $this->actualPredicateColumn = $variableName;
                         if ($this->tableName === self::BACKLINKS) {
                             $variableName = "p." . $variableName;
@@ -185,6 +199,9 @@ final class PageSqlTreeListener implements ParseTreeListener
                 break;
             case PageSqlParser::RANDOM:
                 $this->physicalSql .= "\trandom()";
+                break;
+            case PageSqlParser::NOW:
+                $this->physicalSql .= "date('now')";
                 break;
             case PageSqlParser::StringLiteral:
                 switch ($this->ruleState) {

@@ -35,6 +35,19 @@ class PageSqlBaseListener implements PageSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
+	public function enterConstantNames(Context\ConstantNamesContext $context) : void {}
+
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function exitConstantNames(Context\ConstantNamesContext $context) : void {}
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
 	public function enterTableNames(Context\TableNamesContext $context) : void {}
 
 	/**

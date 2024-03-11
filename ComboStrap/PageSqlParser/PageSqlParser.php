@@ -38,19 +38,19 @@ namespace ComboStrap\PageSqlParser {
                CharSetLiteral = 63, IntegralLiteral = 64, Number = 65, NumberLiteral = 66, 
                ByteLengthLiteral = 67, SqlName = 68, SPACES = 69;
 
-		public const RULE_functionNames = 0, RULE_tableNames = 1, RULE_sqlNames = 2, 
-               RULE_column = 3, RULE_pattern = 4, RULE_expression = 5, RULE_predicate = 6, 
-               RULE_columns = 7, RULE_predicateGroup = 8, RULE_predicates = 9, 
-               RULE_tables = 10, RULE_limit = 11, RULE_orderBys = 12, RULE_orderByDef = 13, 
-               RULE_pageSql = 14;
+		public const RULE_functionNames = 0, RULE_constantNames = 1, RULE_tableNames = 2, 
+               RULE_sqlNames = 3, RULE_column = 4, RULE_pattern = 5, RULE_expression = 6, 
+               RULE_predicate = 7, RULE_columns = 8, RULE_predicateGroup = 9, 
+               RULE_predicates = 10, RULE_tables = 11, RULE_limit = 12, 
+               RULE_orderBys = 13, RULE_orderByDef = 14, RULE_pageSql = 15;
 
 		/**
 		 * @var array<string>
 		 */
 		public const RULE_NAMES = [
-			'functionNames', 'tableNames', 'sqlNames', 'column', 'pattern', 'expression', 
-			'predicate', 'columns', 'predicateGroup', 'predicates', 'tables', 'limit', 
-			'orderBys', 'orderByDef', 'pageSql'
+			'functionNames', 'constantNames', 'tableNames', 'sqlNames', 'column', 
+			'pattern', 'expression', 'predicate', 'columns', 'predicateGroup', 'predicates', 
+			'tables', 'limit', 'orderBys', 'orderByDef', 'pageSql'
 		];
 
 		/**
@@ -84,142 +84,150 @@ namespace ComboStrap\PageSqlParser {
 		 */
 		private const SERIALIZED_ATN =
 			"\u{3}\u{608B}\u{A72A}\u{8133}\u{B9ED}\u{417C}\u{3BE7}\u{7786}\u{5964}" .
-		    "\u{3}\u{47}\u{BD}\u{4}\u{2}\u{9}\u{2}\u{4}\u{3}\u{9}\u{3}\u{4}\u{4}" .
+		    "\u{3}\u{47}\u{C7}\u{4}\u{2}\u{9}\u{2}\u{4}\u{3}\u{9}\u{3}\u{4}\u{4}" .
 		    "\u{9}\u{4}\u{4}\u{5}\u{9}\u{5}\u{4}\u{6}\u{9}\u{6}\u{4}\u{7}\u{9}" .
 		    "\u{7}\u{4}\u{8}\u{9}\u{8}\u{4}\u{9}\u{9}\u{9}\u{4}\u{A}\u{9}\u{A}" .
 		    "\u{4}\u{B}\u{9}\u{B}\u{4}\u{C}\u{9}\u{C}\u{4}\u{D}\u{9}\u{D}\u{4}" .
-		    "\u{E}\u{9}\u{E}\u{4}\u{F}\u{9}\u{F}\u{4}\u{10}\u{9}\u{10}\u{3}\u{2}" .
-		    "\u{3}\u{2}\u{3}\u{3}\u{3}\u{3}\u{3}\u{4}\u{3}\u{4}\u{3}\u{5}\u{3}" .
-		    "\u{5}\u{3}\u{5}\u{5}\u{5}\u{2A}\u{A}\u{5}\u{3}\u{5}\u{3}\u{5}\u{3}" .
-		    "\u{5}\u{5}\u{5}\u{2F}\u{A}\u{5}\u{5}\u{5}\u{31}\u{A}\u{5}\u{3}\u{6}" .
-		    "\u{3}\u{6}\u{3}\u{7}\u{3}\u{7}\u{3}\u{7}\u{3}\u{7}\u{5}\u{7}\u{39}" .
-		    "\u{A}\u{7}\u{3}\u{7}\u{3}\u{7}\u{7}\u{7}\u{3D}\u{A}\u{7}\u{C}\u{7}" .
-		    "\u{E}\u{7}\u{40}\u{B}\u{7}\u{3}\u{7}\u{3}\u{7}\u{5}\u{7}\u{44}\u{A}" .
-		    "\u{7}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}\u{5}\u{8}\u{4A}\u{A}" .
-		    "\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}\u{5}\u{8}\u{50}\u{A}" .
-		    "\u{8}\u{3}\u{8}\u{3}\u{8}\u{5}\u{8}\u{54}\u{A}\u{8}\u{3}\u{8}\u{5}" .
-		    "\u{8}\u{57}\u{A}\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}" .
-		    "\u{8}\u{3}\u{8}\u{5}\u{8}\u{5F}\u{A}\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}" .
-		    "\u{8}\u{3}\u{8}\u{3}\u{8}\u{7}\u{8}\u{66}\u{A}\u{8}\u{C}\u{8}\u{E}" .
-		    "\u{8}\u{69}\u{B}\u{8}\u{5}\u{8}\u{6B}\u{A}\u{8}\u{3}\u{8}\u{5}\u{8}" .
-		    "\u{6E}\u{A}\u{8}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{7}\u{9}\u{73}\u{A}" .
-		    "\u{9}\u{C}\u{9}\u{E}\u{9}\u{76}\u{B}\u{9}\u{3}\u{A}\u{3}\u{A}\u{3}" .
-		    "\u{A}\u{3}\u{A}\u{7}\u{A}\u{7C}\u{A}\u{A}\u{C}\u{A}\u{E}\u{A}\u{7F}" .
-		    "\u{B}\u{A}\u{3}\u{A}\u{3}\u{A}\u{3}\u{B}\u{3}\u{B}\u{3}\u{B}\u{5}" .
-		    "\u{B}\u{86}\u{A}\u{B}\u{3}\u{B}\u{3}\u{B}\u{3}\u{B}\u{5}\u{B}\u{8B}" .
-		    "\u{A}\u{B}\u{7}\u{B}\u{8D}\u{A}\u{B}\u{C}\u{B}\u{E}\u{B}\u{90}\u{B}" .
-		    "\u{B}\u{3}\u{C}\u{3}\u{C}\u{3}\u{C}\u{3}\u{D}\u{3}\u{D}\u{3}\u{D}" .
-		    "\u{3}\u{E}\u{3}\u{E}\u{3}\u{E}\u{3}\u{E}\u{3}\u{E}\u{3}\u{E}\u{7}" .
-		    "\u{E}\u{9E}\u{A}\u{E}\u{C}\u{E}\u{E}\u{E}\u{A1}\u{B}\u{E}\u{5}\u{E}" .
-		    "\u{A3}\u{A}\u{E}\u{3}\u{F}\u{3}\u{F}\u{5}\u{F}\u{A7}\u{A}\u{F}\u{3}" .
-		    "\u{10}\u{3}\u{10}\u{5}\u{10}\u{AB}\u{A}\u{10}\u{3}\u{10}\u{3}\u{10}" .
-		    "\u{5}\u{10}\u{AF}\u{A}\u{10}\u{3}\u{10}\u{5}\u{10}\u{B2}\u{A}\u{10}" .
-		    "\u{3}\u{10}\u{5}\u{10}\u{B5}\u{A}\u{10}\u{3}\u{10}\u{5}\u{10}\u{B8}" .
-		    "\u{A}\u{10}\u{3}\u{10}\u{5}\u{10}\u{BB}\u{A}\u{10}\u{3}\u{10}\u{2}" .
-		    "\u{2}\u{11}\u{2}\u{4}\u{6}\u{8}\u{A}\u{C}\u{E}\u{10}\u{12}\u{14}\u{16}" .
-		    "\u{18}\u{1A}\u{1C}\u{1E}\u{2}\u{A}\u{3}\u{2}\u{3B}\u{3C}\u{3}\u{2}" .
-		    "\u{3D}\u{3F}\u{4}\u{2}\u{43}\u{43}\u{46}\u{46}\u{4}\u{2}\u{40}\u{40}" .
-		    "\u{44}\u{44}\u{5}\u{2}\u{40}\u{40}\u{43}\u{44}\u{46}\u{46}\u{5}\u{2}" .
-		    "\u{E}\u{E}\u{1B}\u{1E}\u{20}\u{20}\u{4}\u{2}\u{22}\u{22}\u{35}\u{35}" .
-		    "\u{4}\u{2}\u{24}\u{24}\u{27}\u{27}\u{2}\u{CC}\u{2}\u{20}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{4}\u{22}\u{3}\u{2}\u{2}\u{2}\u{6}\u{24}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{8}\u{26}\u{3}\u{2}\u{2}\u{2}\u{A}\u{32}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{C}\u{43}\u{3}\u{2}\u{2}\u{2}\u{E}\u{45}\u{3}\u{2}\u{2}\u{2}\u{10}" .
-		    "\u{6F}\u{3}\u{2}\u{2}\u{2}\u{12}\u{77}\u{3}\u{2}\u{2}\u{2}\u{14}\u{82}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{16}\u{91}\u{3}\u{2}\u{2}\u{2}\u{18}\u{94}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{1A}\u{97}\u{3}\u{2}\u{2}\u{2}\u{1C}\u{A4}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{1E}\u{A8}\u{3}\u{2}\u{2}\u{2}\u{20}\u{21}\u{9}\u{2}\u{2}" .
-		    "\u{2}\u{21}\u{3}\u{3}\u{2}\u{2}\u{2}\u{22}\u{23}\u{9}\u{3}\u{2}\u{2}" .
-		    "\u{23}\u{5}\u{3}\u{2}\u{2}\u{2}\u{24}\u{25}\u{9}\u{4}\u{2}\u{2}\u{25}" .
-		    "\u{7}\u{3}\u{2}\u{2}\u{2}\u{26}\u{29}\u{5}\u{6}\u{4}\u{2}\u{27}\u{28}" .
-		    "\u{7}\u{4}\u{2}\u{2}\u{28}\u{2A}\u{5}\u{6}\u{4}\u{2}\u{29}\u{27}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{29}\u{2A}\u{3}\u{2}\u{2}\u{2}\u{2A}\u{30}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{2B}\u{2E}\u{7}\u{23}\u{2}\u{2}\u{2C}\u{2F}\u{5}\u{6}" .
-		    "\u{4}\u{2}\u{2D}\u{2F}\u{7}\u{40}\u{2}\u{2}\u{2E}\u{2C}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{2E}\u{2D}\u{3}\u{2}\u{2}\u{2}\u{2F}\u{31}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{30}\u{2B}\u{3}\u{2}\u{2}\u{2}\u{30}\u{31}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{31}\u{9}\u{3}\u{2}\u{2}\u{2}\u{32}\u{33}\u{9}\u{5}\u{2}\u{2}\u{33}" .
-		    "\u{B}\u{3}\u{2}\u{2}\u{2}\u{34}\u{44}\u{9}\u{6}\u{2}\u{2}\u{35}\u{36}" .
-		    "\u{5}\u{2}\u{2}\u{2}\u{36}\u{38}\u{7}\u{5}\u{2}\u{2}\u{37}\u{39}\u{5}" .
-		    "\u{C}\u{7}\u{2}\u{38}\u{37}\u{3}\u{2}\u{2}\u{2}\u{38}\u{39}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{39}\u{3E}\u{3}\u{2}\u{2}\u{2}\u{3A}\u{3B}\u{7}\u{B}\u{2}" .
-		    "\u{2}\u{3B}\u{3D}\u{5}\u{C}\u{7}\u{2}\u{3C}\u{3A}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{3D}\u{40}\u{3}\u{2}\u{2}\u{2}\u{3E}\u{3C}\u{3}\u{2}\u{2}\u{2}\u{3E}" .
-		    "\u{3F}\u{3}\u{2}\u{2}\u{2}\u{3F}\u{41}\u{3}\u{2}\u{2}\u{2}\u{40}\u{3E}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{41}\u{42}\u{7}\u{6}\u{2}\u{2}\u{42}\u{44}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{43}\u{34}\u{3}\u{2}\u{2}\u{2}\u{43}\u{35}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{44}\u{D}\u{3}\u{2}\u{2}\u{2}\u{45}\u{6D}\u{5}\u{6}\u{4}" .
-		    "\u{2}\u{46}\u{47}\u{9}\u{7}\u{2}\u{2}\u{47}\u{6E}\u{5}\u{C}\u{7}\u{2}" .
-		    "\u{48}\u{4A}\u{7}\u{31}\u{2}\u{2}\u{49}\u{48}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{49}\u{4A}\u{3}\u{2}\u{2}\u{2}\u{4A}\u{4B}\u{3}\u{2}\u{2}\u{2}\u{4B}" .
-		    "\u{4C}\u{7}\u{2F}\u{2}\u{2}\u{4C}\u{4F}\u{5}\u{A}\u{6}\u{2}\u{4D}" .
-		    "\u{4E}\u{7}\u{28}\u{2}\u{2}\u{4E}\u{50}\u{7}\u{40}\u{2}\u{2}\u{4F}" .
-		    "\u{4D}\u{3}\u{2}\u{2}\u{2}\u{4F}\u{50}\u{3}\u{2}\u{2}\u{2}\u{50}\u{54}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{51}\u{52}\u{7}\u{2B}\u{2}\u{2}\u{52}\u{54}" .
-		    "\u{5}\u{A}\u{6}\u{2}\u{53}\u{49}\u{3}\u{2}\u{2}\u{2}\u{53}\u{51}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{54}\u{6E}\u{3}\u{2}\u{2}\u{2}\u{55}\u{57}\u{7}\u{31}" .
-		    "\u{2}\u{2}\u{56}\u{55}\u{3}\u{2}\u{2}\u{2}\u{56}\u{57}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{57}\u{58}\u{3}\u{2}\u{2}\u{2}\u{58}\u{59}\u{7}\u{25}\u{2}" .
-		    "\u{2}\u{59}\u{5A}\u{5}\u{C}\u{7}\u{2}\u{5A}\u{5B}\u{7}\u{22}\u{2}" .
-		    "\u{2}\u{5B}\u{5C}\u{5}\u{C}\u{7}\u{2}\u{5C}\u{6E}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{5D}\u{5F}\u{7}\u{31}\u{2}\u{2}\u{5E}\u{5D}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{5E}\u{5F}\u{3}\u{2}\u{2}\u{2}\u{5F}\u{60}\u{3}\u{2}\u{2}\u{2}\u{60}" .
-		    "\u{61}\u{7}\u{2C}\u{2}\u{2}\u{61}\u{6A}\u{7}\u{5}\u{2}\u{2}\u{62}" .
-		    "\u{67}\u{5}\u{C}\u{7}\u{2}\u{63}\u{64}\u{7}\u{B}\u{2}\u{2}\u{64}\u{66}" .
-		    "\u{5}\u{C}\u{7}\u{2}\u{65}\u{63}\u{3}\u{2}\u{2}\u{2}\u{66}\u{69}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{67}\u{65}\u{3}\u{2}\u{2}\u{2}\u{67}\u{68}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{68}\u{6B}\u{3}\u{2}\u{2}\u{2}\u{69}\u{67}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{6A}\u{62}\u{3}\u{2}\u{2}\u{2}\u{6A}\u{6B}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{6B}\u{6C}\u{3}\u{2}\u{2}\u{2}\u{6C}\u{6E}\u{7}\u{6}\u{2}\u{2}\u{6D}" .
-		    "\u{46}\u{3}\u{2}\u{2}\u{2}\u{6D}\u{53}\u{3}\u{2}\u{2}\u{2}\u{6D}\u{56}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{6D}\u{5E}\u{3}\u{2}\u{2}\u{2}\u{6E}\u{F}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{6F}\u{74}\u{5}\u{8}\u{5}\u{2}\u{70}\u{71}\u{7}\u{B}" .
-		    "\u{2}\u{2}\u{71}\u{73}\u{5}\u{8}\u{5}\u{2}\u{72}\u{70}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{73}\u{76}\u{3}\u{2}\u{2}\u{2}\u{74}\u{72}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{74}\u{75}\u{3}\u{2}\u{2}\u{2}\u{75}\u{11}\u{3}\u{2}\u{2}\u{2}\u{76}" .
-		    "\u{74}\u{3}\u{2}\u{2}\u{2}\u{77}\u{78}\u{7}\u{5}\u{2}\u{2}\u{78}\u{7D}" .
-		    "\u{5}\u{E}\u{8}\u{2}\u{79}\u{7A}\u{9}\u{8}\u{2}\u{2}\u{7A}\u{7C}\u{5}" .
-		    "\u{E}\u{8}\u{2}\u{7B}\u{79}\u{3}\u{2}\u{2}\u{2}\u{7C}\u{7F}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{7D}\u{7B}\u{3}\u{2}\u{2}\u{2}\u{7D}\u{7E}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{7E}\u{80}\u{3}\u{2}\u{2}\u{2}\u{7F}\u{7D}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{80}\u{81}\u{7}\u{6}\u{2}\u{2}\u{81}\u{13}\u{3}\u{2}\u{2}\u{2}\u{82}" .
-		    "\u{85}\u{7}\u{39}\u{2}\u{2}\u{83}\u{86}\u{5}\u{E}\u{8}\u{2}\u{84}" .
-		    "\u{86}\u{5}\u{12}\u{A}\u{2}\u{85}\u{83}\u{3}\u{2}\u{2}\u{2}\u{85}" .
-		    "\u{84}\u{3}\u{2}\u{2}\u{2}\u{86}\u{8E}\u{3}\u{2}\u{2}\u{2}\u{87}\u{8A}" .
-		    "\u{9}\u{8}\u{2}\u{2}\u{88}\u{8B}\u{5}\u{E}\u{8}\u{2}\u{89}\u{8B}\u{5}" .
-		    "\u{12}\u{A}\u{2}\u{8A}\u{88}\u{3}\u{2}\u{2}\u{2}\u{8A}\u{89}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{8B}\u{8D}\u{3}\u{2}\u{2}\u{2}\u{8C}\u{87}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{8D}\u{90}\u{3}\u{2}\u{2}\u{2}\u{8E}\u{8C}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{8E}\u{8F}\u{3}\u{2}\u{2}\u{2}\u{8F}\u{15}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{90}\u{8E}\u{3}\u{2}\u{2}\u{2}\u{91}\u{92}\u{7}\u{2A}\u{2}\u{2}" .
-		    "\u{92}\u{93}\u{5}\u{4}\u{3}\u{2}\u{93}\u{17}\u{3}\u{2}\u{2}\u{2}\u{94}" .
-		    "\u{95}\u{7}\u{30}\u{2}\u{2}\u{95}\u{96}\u{7}\u{43}\u{2}\u{2}\u{96}" .
-		    "\u{19}\u{3}\u{2}\u{2}\u{2}\u{97}\u{A2}\u{7}\u{36}\u{2}\u{2}\u{98}" .
-		    "\u{A3}\u{7}\u{3A}\u{2}\u{2}\u{99}\u{9A}\u{7}\u{26}\u{2}\u{2}\u{9A}" .
-		    "\u{9F}\u{5}\u{1C}\u{F}\u{2}\u{9B}\u{9C}\u{7}\u{B}\u{2}\u{2}\u{9C}" .
-		    "\u{9E}\u{5}\u{1C}\u{F}\u{2}\u{9D}\u{9B}\u{3}\u{2}\u{2}\u{2}\u{9E}" .
-		    "\u{A1}\u{3}\u{2}\u{2}\u{2}\u{9F}\u{9D}\u{3}\u{2}\u{2}\u{2}\u{9F}\u{A0}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{A0}\u{A3}\u{3}\u{2}\u{2}\u{2}\u{A1}\u{9F}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{A2}\u{98}\u{3}\u{2}\u{2}\u{2}\u{A2}\u{99}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{A3}\u{1B}\u{3}\u{2}\u{2}\u{2}\u{A4}\u{A6}\u{7}\u{46}" .
-		    "\u{2}\u{2}\u{A5}\u{A7}\u{9}\u{9}\u{2}\u{2}\u{A6}\u{A5}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{A6}\u{A7}\u{3}\u{2}\u{2}\u{2}\u{A7}\u{1D}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{A8}\u{AA}\u{7}\u{37}\u{2}\u{2}\u{A9}\u{AB}\u{7}\u{3A}\u{2}\u{2}" .
-		    "\u{AA}\u{A9}\u{3}\u{2}\u{2}\u{2}\u{AA}\u{AB}\u{3}\u{2}\u{2}\u{2}\u{AB}" .
-		    "\u{AE}\u{3}\u{2}\u{2}\u{2}\u{AC}\u{AF}\u{7}\u{F}\u{2}\u{2}\u{AD}\u{AF}" .
-		    "\u{5}\u{10}\u{9}\u{2}\u{AE}\u{AC}\u{3}\u{2}\u{2}\u{2}\u{AE}\u{AD}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{AE}\u{AF}\u{3}\u{2}\u{2}\u{2}\u{AF}\u{B1}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{B0}\u{B2}\u{5}\u{16}\u{C}\u{2}\u{B1}\u{B0}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{B1}\u{B2}\u{3}\u{2}\u{2}\u{2}\u{B2}\u{B4}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{B3}\u{B5}\u{5}\u{14}\u{B}\u{2}\u{B4}\u{B3}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{B4}\u{B5}\u{3}\u{2}\u{2}\u{2}\u{B5}\u{B7}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{B6}\u{B8}\u{5}\u{1A}\u{E}\u{2}\u{B7}\u{B6}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{B7}\u{B8}\u{3}\u{2}\u{2}\u{2}\u{B8}\u{BA}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{B9}\u{BB}\u{5}\u{18}\u{D}\u{2}\u{BA}\u{B9}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{BA}\u{BB}\u{3}\u{2}\u{2}\u{2}\u{BB}\u{1F}\u{3}\u{2}\u{2}\u{2}\u{1E}" .
-		    "\u{29}\u{2E}\u{30}\u{38}\u{3E}\u{43}\u{49}\u{4F}\u{53}\u{56}\u{5E}" .
-		    "\u{67}\u{6A}\u{6D}\u{74}\u{7D}\u{85}\u{8A}\u{8E}\u{9F}\u{A2}\u{A6}" .
-		    "\u{AA}\u{AE}\u{B1}\u{B4}\u{B7}\u{BA}";
+		    "\u{E}\u{9}\u{E}\u{4}\u{F}\u{9}\u{F}\u{4}\u{10}\u{9}\u{10}\u{4}\u{11}" .
+		    "\u{9}\u{11}\u{3}\u{2}\u{3}\u{2}\u{3}\u{3}\u{3}\u{3}\u{3}\u{4}\u{3}" .
+		    "\u{4}\u{3}\u{5}\u{3}\u{5}\u{3}\u{6}\u{3}\u{6}\u{3}\u{6}\u{5}\u{6}" .
+		    "\u{2E}\u{A}\u{6}\u{3}\u{6}\u{3}\u{6}\u{3}\u{6}\u{5}\u{6}\u{33}\u{A}" .
+		    "\u{6}\u{5}\u{6}\u{35}\u{A}\u{6}\u{3}\u{7}\u{3}\u{7}\u{3}\u{8}\u{3}" .
+		    "\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}\u{5}\u{8}\u{3E}\u{A}\u{8}\u{3}" .
+		    "\u{8}\u{3}\u{8}\u{3}\u{8}\u{5}\u{8}\u{43}\u{A}\u{8}\u{3}\u{8}\u{3}" .
+		    "\u{8}\u{7}\u{8}\u{47}\u{A}\u{8}\u{C}\u{8}\u{E}\u{8}\u{4A}\u{B}\u{8}" .
+		    "\u{3}\u{8}\u{3}\u{8}\u{5}\u{8}\u{4E}\u{A}\u{8}\u{3}\u{9}\u{3}\u{9}" .
+		    "\u{3}\u{9}\u{3}\u{9}\u{5}\u{9}\u{54}\u{A}\u{9}\u{3}\u{9}\u{3}\u{9}" .
+		    "\u{3}\u{9}\u{3}\u{9}\u{5}\u{9}\u{5A}\u{A}\u{9}\u{3}\u{9}\u{3}\u{9}" .
+		    "\u{5}\u{9}\u{5E}\u{A}\u{9}\u{3}\u{9}\u{5}\u{9}\u{61}\u{A}\u{9}\u{3}" .
+		    "\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{5}\u{9}" .
+		    "\u{69}\u{A}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}" .
+		    "\u{7}\u{9}\u{70}\u{A}\u{9}\u{C}\u{9}\u{E}\u{9}\u{73}\u{B}\u{9}\u{5}" .
+		    "\u{9}\u{75}\u{A}\u{9}\u{3}\u{9}\u{5}\u{9}\u{78}\u{A}\u{9}\u{3}\u{A}" .
+		    "\u{3}\u{A}\u{3}\u{A}\u{7}\u{A}\u{7D}\u{A}\u{A}\u{C}\u{A}\u{E}\u{A}" .
+		    "\u{80}\u{B}\u{A}\u{3}\u{B}\u{3}\u{B}\u{3}\u{B}\u{3}\u{B}\u{7}\u{B}" .
+		    "\u{86}\u{A}\u{B}\u{C}\u{B}\u{E}\u{B}\u{89}\u{B}\u{B}\u{3}\u{B}\u{3}" .
+		    "\u{B}\u{3}\u{C}\u{3}\u{C}\u{3}\u{C}\u{5}\u{C}\u{90}\u{A}\u{C}\u{3}" .
+		    "\u{C}\u{3}\u{C}\u{3}\u{C}\u{5}\u{C}\u{95}\u{A}\u{C}\u{7}\u{C}\u{97}" .
+		    "\u{A}\u{C}\u{C}\u{C}\u{E}\u{C}\u{9A}\u{B}\u{C}\u{3}\u{D}\u{3}\u{D}" .
+		    "\u{3}\u{D}\u{3}\u{E}\u{3}\u{E}\u{3}\u{E}\u{3}\u{F}\u{3}\u{F}\u{3}" .
+		    "\u{F}\u{3}\u{F}\u{3}\u{F}\u{3}\u{F}\u{7}\u{F}\u{A8}\u{A}\u{F}\u{C}" .
+		    "\u{F}\u{E}\u{F}\u{AB}\u{B}\u{F}\u{5}\u{F}\u{AD}\u{A}\u{F}\u{3}\u{10}" .
+		    "\u{3}\u{10}\u{5}\u{10}\u{B1}\u{A}\u{10}\u{3}\u{11}\u{3}\u{11}\u{5}" .
+		    "\u{11}\u{B5}\u{A}\u{11}\u{3}\u{11}\u{3}\u{11}\u{5}\u{11}\u{B9}\u{A}" .
+		    "\u{11}\u{3}\u{11}\u{5}\u{11}\u{BC}\u{A}\u{11}\u{3}\u{11}\u{5}\u{11}" .
+		    "\u{BF}\u{A}\u{11}\u{3}\u{11}\u{5}\u{11}\u{C2}\u{A}\u{11}\u{3}\u{11}" .
+		    "\u{5}\u{11}\u{C5}\u{A}\u{11}\u{3}\u{11}\u{2}\u{2}\u{12}\u{2}\u{4}" .
+		    "\u{6}\u{8}\u{A}\u{C}\u{E}\u{10}\u{12}\u{14}\u{16}\u{18}\u{1A}\u{1C}" .
+		    "\u{1E}\u{20}\u{2}\u{9}\u{3}\u{2}\u{3B}\u{3C}\u{3}\u{2}\u{3D}\u{3F}" .
+		    "\u{4}\u{2}\u{43}\u{43}\u{46}\u{46}\u{4}\u{2}\u{40}\u{40}\u{44}\u{44}" .
+		    "\u{5}\u{2}\u{E}\u{E}\u{1B}\u{1E}\u{20}\u{20}\u{4}\u{2}\u{22}\u{22}" .
+		    "\u{35}\u{35}\u{4}\u{2}\u{24}\u{24}\u{27}\u{27}\u{2}\u{D9}\u{2}\u{22}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{4}\u{24}\u{3}\u{2}\u{2}\u{2}\u{6}\u{26}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{8}\u{28}\u{3}\u{2}\u{2}\u{2}\u{A}\u{2A}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{C}\u{36}\u{3}\u{2}\u{2}\u{2}\u{E}\u{4D}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{10}\u{4F}\u{3}\u{2}\u{2}\u{2}\u{12}\u{79}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{14}\u{81}\u{3}\u{2}\u{2}\u{2}\u{16}\u{8C}\u{3}\u{2}\u{2}\u{2}\u{18}" .
+		    "\u{9B}\u{3}\u{2}\u{2}\u{2}\u{1A}\u{9E}\u{3}\u{2}\u{2}\u{2}\u{1C}\u{A1}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{1E}\u{AE}\u{3}\u{2}\u{2}\u{2}\u{20}\u{B2}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{22}\u{23}\u{9}\u{2}\u{2}\u{2}\u{23}\u{3}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{24}\u{25}\u{7}\u{33}\u{2}\u{2}\u{25}\u{5}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{26}\u{27}\u{9}\u{3}\u{2}\u{2}\u{27}\u{7}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{28}\u{29}\u{9}\u{4}\u{2}\u{2}\u{29}\u{9}\u{3}\u{2}\u{2}\u{2}\u{2A}" .
+		    "\u{2D}\u{5}\u{8}\u{5}\u{2}\u{2B}\u{2C}\u{7}\u{4}\u{2}\u{2}\u{2C}\u{2E}" .
+		    "\u{5}\u{8}\u{5}\u{2}\u{2D}\u{2B}\u{3}\u{2}\u{2}\u{2}\u{2D}\u{2E}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{2E}\u{34}\u{3}\u{2}\u{2}\u{2}\u{2F}\u{32}\u{7}\u{23}" .
+		    "\u{2}\u{2}\u{30}\u{33}\u{5}\u{8}\u{5}\u{2}\u{31}\u{33}\u{7}\u{40}" .
+		    "\u{2}\u{2}\u{32}\u{30}\u{3}\u{2}\u{2}\u{2}\u{32}\u{31}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{33}\u{35}\u{3}\u{2}\u{2}\u{2}\u{34}\u{2F}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{34}\u{35}\u{3}\u{2}\u{2}\u{2}\u{35}\u{B}\u{3}\u{2}\u{2}\u{2}\u{36}" .
+		    "\u{37}\u{9}\u{5}\u{2}\u{2}\u{37}\u{D}\u{3}\u{2}\u{2}\u{2}\u{38}\u{3E}" .
+		    "\u{7}\u{46}\u{2}\u{2}\u{39}\u{3E}\u{7}\u{40}\u{2}\u{2}\u{3A}\u{3E}" .
+		    "\u{7}\u{44}\u{2}\u{2}\u{3B}\u{3E}\u{7}\u{43}\u{2}\u{2}\u{3C}\u{3E}" .
+		    "\u{5}\u{4}\u{3}\u{2}\u{3D}\u{38}\u{3}\u{2}\u{2}\u{2}\u{3D}\u{39}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{3D}\u{3A}\u{3}\u{2}\u{2}\u{2}\u{3D}\u{3B}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{3D}\u{3C}\u{3}\u{2}\u{2}\u{2}\u{3E}\u{4E}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{3F}\u{40}\u{5}\u{2}\u{2}\u{2}\u{40}\u{42}\u{7}\u{5}\u{2}\u{2}" .
+		    "\u{41}\u{43}\u{5}\u{E}\u{8}\u{2}\u{42}\u{41}\u{3}\u{2}\u{2}\u{2}\u{42}" .
+		    "\u{43}\u{3}\u{2}\u{2}\u{2}\u{43}\u{48}\u{3}\u{2}\u{2}\u{2}\u{44}\u{45}" .
+		    "\u{7}\u{B}\u{2}\u{2}\u{45}\u{47}\u{5}\u{E}\u{8}\u{2}\u{46}\u{44}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{47}\u{4A}\u{3}\u{2}\u{2}\u{2}\u{48}\u{46}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{48}\u{49}\u{3}\u{2}\u{2}\u{2}\u{49}\u{4B}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{4A}\u{48}\u{3}\u{2}\u{2}\u{2}\u{4B}\u{4C}\u{7}\u{6}\u{2}\u{2}" .
+		    "\u{4C}\u{4E}\u{3}\u{2}\u{2}\u{2}\u{4D}\u{3D}\u{3}\u{2}\u{2}\u{2}\u{4D}" .
+		    "\u{3F}\u{3}\u{2}\u{2}\u{2}\u{4E}\u{F}\u{3}\u{2}\u{2}\u{2}\u{4F}\u{77}" .
+		    "\u{5}\u{8}\u{5}\u{2}\u{50}\u{51}\u{9}\u{6}\u{2}\u{2}\u{51}\u{78}\u{5}" .
+		    "\u{E}\u{8}\u{2}\u{52}\u{54}\u{7}\u{31}\u{2}\u{2}\u{53}\u{52}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{53}\u{54}\u{3}\u{2}\u{2}\u{2}\u{54}\u{55}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{55}\u{56}\u{7}\u{2F}\u{2}\u{2}\u{56}\u{59}\u{5}\u{C}" .
+		    "\u{7}\u{2}\u{57}\u{58}\u{7}\u{28}\u{2}\u{2}\u{58}\u{5A}\u{7}\u{40}" .
+		    "\u{2}\u{2}\u{59}\u{57}\u{3}\u{2}\u{2}\u{2}\u{59}\u{5A}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{5A}\u{5E}\u{3}\u{2}\u{2}\u{2}\u{5B}\u{5C}\u{7}\u{2B}\u{2}" .
+		    "\u{2}\u{5C}\u{5E}\u{5}\u{C}\u{7}\u{2}\u{5D}\u{53}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{5D}\u{5B}\u{3}\u{2}\u{2}\u{2}\u{5E}\u{78}\u{3}\u{2}\u{2}\u{2}\u{5F}" .
+		    "\u{61}\u{7}\u{31}\u{2}\u{2}\u{60}\u{5F}\u{3}\u{2}\u{2}\u{2}\u{60}" .
+		    "\u{61}\u{3}\u{2}\u{2}\u{2}\u{61}\u{62}\u{3}\u{2}\u{2}\u{2}\u{62}\u{63}" .
+		    "\u{7}\u{25}\u{2}\u{2}\u{63}\u{64}\u{5}\u{E}\u{8}\u{2}\u{64}\u{65}" .
+		    "\u{7}\u{22}\u{2}\u{2}\u{65}\u{66}\u{5}\u{E}\u{8}\u{2}\u{66}\u{78}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{67}\u{69}\u{7}\u{31}\u{2}\u{2}\u{68}\u{67}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{68}\u{69}\u{3}\u{2}\u{2}\u{2}\u{69}\u{6A}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{6A}\u{6B}\u{7}\u{2C}\u{2}\u{2}\u{6B}\u{74}\u{7}" .
+		    "\u{5}\u{2}\u{2}\u{6C}\u{71}\u{5}\u{E}\u{8}\u{2}\u{6D}\u{6E}\u{7}\u{B}" .
+		    "\u{2}\u{2}\u{6E}\u{70}\u{5}\u{E}\u{8}\u{2}\u{6F}\u{6D}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{70}\u{73}\u{3}\u{2}\u{2}\u{2}\u{71}\u{6F}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{71}\u{72}\u{3}\u{2}\u{2}\u{2}\u{72}\u{75}\u{3}\u{2}\u{2}\u{2}\u{73}" .
+		    "\u{71}\u{3}\u{2}\u{2}\u{2}\u{74}\u{6C}\u{3}\u{2}\u{2}\u{2}\u{74}\u{75}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{75}\u{76}\u{3}\u{2}\u{2}\u{2}\u{76}\u{78}\u{7}" .
+		    "\u{6}\u{2}\u{2}\u{77}\u{50}\u{3}\u{2}\u{2}\u{2}\u{77}\u{5D}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{77}\u{60}\u{3}\u{2}\u{2}\u{2}\u{77}\u{68}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{78}\u{11}\u{3}\u{2}\u{2}\u{2}\u{79}\u{7E}\u{5}\u{A}\u{6}\u{2}" .
+		    "\u{7A}\u{7B}\u{7}\u{B}\u{2}\u{2}\u{7B}\u{7D}\u{5}\u{A}\u{6}\u{2}\u{7C}" .
+		    "\u{7A}\u{3}\u{2}\u{2}\u{2}\u{7D}\u{80}\u{3}\u{2}\u{2}\u{2}\u{7E}\u{7C}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{7E}\u{7F}\u{3}\u{2}\u{2}\u{2}\u{7F}\u{13}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{80}\u{7E}\u{3}\u{2}\u{2}\u{2}\u{81}\u{82}\u{7}\u{5}" .
+		    "\u{2}\u{2}\u{82}\u{87}\u{5}\u{10}\u{9}\u{2}\u{83}\u{84}\u{9}\u{7}" .
+		    "\u{2}\u{2}\u{84}\u{86}\u{5}\u{10}\u{9}\u{2}\u{85}\u{83}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{86}\u{89}\u{3}\u{2}\u{2}\u{2}\u{87}\u{85}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{87}\u{88}\u{3}\u{2}\u{2}\u{2}\u{88}\u{8A}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{89}\u{87}\u{3}\u{2}\u{2}\u{2}\u{8A}\u{8B}\u{7}\u{6}\u{2}\u{2}\u{8B}" .
+		    "\u{15}\u{3}\u{2}\u{2}\u{2}\u{8C}\u{8F}\u{7}\u{39}\u{2}\u{2}\u{8D}" .
+		    "\u{90}\u{5}\u{10}\u{9}\u{2}\u{8E}\u{90}\u{5}\u{14}\u{B}\u{2}\u{8F}" .
+		    "\u{8D}\u{3}\u{2}\u{2}\u{2}\u{8F}\u{8E}\u{3}\u{2}\u{2}\u{2}\u{90}\u{98}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{91}\u{94}\u{9}\u{7}\u{2}\u{2}\u{92}\u{95}\u{5}" .
+		    "\u{10}\u{9}\u{2}\u{93}\u{95}\u{5}\u{14}\u{B}\u{2}\u{94}\u{92}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{94}\u{93}\u{3}\u{2}\u{2}\u{2}\u{95}\u{97}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{96}\u{91}\u{3}\u{2}\u{2}\u{2}\u{97}\u{9A}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{98}\u{96}\u{3}\u{2}\u{2}\u{2}\u{98}\u{99}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{99}\u{17}\u{3}\u{2}\u{2}\u{2}\u{9A}\u{98}\u{3}\u{2}\u{2}\u{2}\u{9B}" .
+		    "\u{9C}\u{7}\u{2A}\u{2}\u{2}\u{9C}\u{9D}\u{5}\u{6}\u{4}\u{2}\u{9D}" .
+		    "\u{19}\u{3}\u{2}\u{2}\u{2}\u{9E}\u{9F}\u{7}\u{30}\u{2}\u{2}\u{9F}" .
+		    "\u{A0}\u{7}\u{43}\u{2}\u{2}\u{A0}\u{1B}\u{3}\u{2}\u{2}\u{2}\u{A1}" .
+		    "\u{AC}\u{7}\u{36}\u{2}\u{2}\u{A2}\u{AD}\u{7}\u{3A}\u{2}\u{2}\u{A3}" .
+		    "\u{A4}\u{7}\u{26}\u{2}\u{2}\u{A4}\u{A9}\u{5}\u{1E}\u{10}\u{2}\u{A5}" .
+		    "\u{A6}\u{7}\u{B}\u{2}\u{2}\u{A6}\u{A8}\u{5}\u{1E}\u{10}\u{2}\u{A7}" .
+		    "\u{A5}\u{3}\u{2}\u{2}\u{2}\u{A8}\u{AB}\u{3}\u{2}\u{2}\u{2}\u{A9}\u{A7}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{A9}\u{AA}\u{3}\u{2}\u{2}\u{2}\u{AA}\u{AD}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{AB}\u{A9}\u{3}\u{2}\u{2}\u{2}\u{AC}\u{A2}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{AC}\u{A3}\u{3}\u{2}\u{2}\u{2}\u{AD}\u{1D}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{AE}\u{B0}\u{7}\u{46}\u{2}\u{2}\u{AF}\u{B1}\u{9}\u{8}\u{2}" .
+		    "\u{2}\u{B0}\u{AF}\u{3}\u{2}\u{2}\u{2}\u{B0}\u{B1}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{B1}\u{1F}\u{3}\u{2}\u{2}\u{2}\u{B2}\u{B4}\u{7}\u{37}\u{2}\u{2}" .
+		    "\u{B3}\u{B5}\u{7}\u{3A}\u{2}\u{2}\u{B4}\u{B3}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{B4}\u{B5}\u{3}\u{2}\u{2}\u{2}\u{B5}\u{B8}\u{3}\u{2}\u{2}\u{2}\u{B6}" .
+		    "\u{B9}\u{7}\u{F}\u{2}\u{2}\u{B7}\u{B9}\u{5}\u{12}\u{A}\u{2}\u{B8}" .
+		    "\u{B6}\u{3}\u{2}\u{2}\u{2}\u{B8}\u{B7}\u{3}\u{2}\u{2}\u{2}\u{B8}\u{B9}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{B9}\u{BB}\u{3}\u{2}\u{2}\u{2}\u{BA}\u{BC}\u{5}" .
+		    "\u{18}\u{D}\u{2}\u{BB}\u{BA}\u{3}\u{2}\u{2}\u{2}\u{BB}\u{BC}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{BC}\u{BE}\u{3}\u{2}\u{2}\u{2}\u{BD}\u{BF}\u{5}\u{16}" .
+		    "\u{C}\u{2}\u{BE}\u{BD}\u{3}\u{2}\u{2}\u{2}\u{BE}\u{BF}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{BF}\u{C1}\u{3}\u{2}\u{2}\u{2}\u{C0}\u{C2}\u{5}\u{1C}\u{F}" .
+		    "\u{2}\u{C1}\u{C0}\u{3}\u{2}\u{2}\u{2}\u{C1}\u{C2}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{C2}\u{C4}\u{3}\u{2}\u{2}\u{2}\u{C3}\u{C5}\u{5}\u{1A}\u{E}\u{2}" .
+		    "\u{C4}\u{C3}\u{3}\u{2}\u{2}\u{2}\u{C4}\u{C5}\u{3}\u{2}\u{2}\u{2}\u{C5}" .
+		    "\u{21}\u{3}\u{2}\u{2}\u{2}\u{1F}\u{2D}\u{32}\u{34}\u{3D}\u{42}\u{48}" .
+		    "\u{4D}\u{53}\u{59}\u{5D}\u{60}\u{68}\u{71}\u{74}\u{77}\u{7E}\u{87}" .
+		    "\u{8F}\u{94}\u{98}\u{A9}\u{AC}\u{B0}\u{B4}\u{B8}\u{BB}\u{BE}\u{C1}" .
+		    "\u{C4}";
 
 		protected static $atn;
 		protected static $decisionToDFA;
@@ -292,7 +300,7 @@ namespace ComboStrap\PageSqlParser {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(30);
+		        $this->setState(32);
 
 		        $_la = $this->input->LA(1);
 
@@ -320,15 +328,39 @@ namespace ComboStrap\PageSqlParser {
 		/**
 		 * @throws RecognitionException
 		 */
+		public function constantNames() : Context\ConstantNamesContext
+		{
+		    $localContext = new Context\ConstantNamesContext($this->ctx, $this->getState());
+
+		    $this->enterRule($localContext, 2, self::RULE_constantNames);
+
+		    try {
+		        $this->enterOuterAlt($localContext, 1);
+		        $this->setState(34);
+		        $this->match(self::NOW);
+		    } catch (RecognitionException $exception) {
+		        $localContext->exception = $exception;
+		        $this->errorHandler->reportError($this, $exception);
+		        $this->errorHandler->recover($this, $exception);
+		    } finally {
+		        $this->exitRule();
+		    }
+
+		    return $localContext;
+		}
+
+		/**
+		 * @throws RecognitionException
+		 */
 		public function tableNames() : Context\TableNamesContext
 		{
 		    $localContext = new Context\TableNamesContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 2, self::RULE_tableNames);
+		    $this->enterRule($localContext, 4, self::RULE_tableNames);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(32);
+		        $this->setState(36);
 
 		        $_la = $this->input->LA(1);
 
@@ -360,11 +392,11 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\SqlNamesContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 4, self::RULE_sqlNames);
+		    $this->enterRule($localContext, 6, self::RULE_sqlNames);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(34);
+		        $this->setState(38);
 
 		        $_la = $this->input->LA(1);
 
@@ -396,41 +428,41 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\ColumnContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 6, self::RULE_column);
+		    $this->enterRule($localContext, 8, self::RULE_column);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(36);
+		        $this->setState(40);
 		        $this->sqlNames();
-		        $this->setState(39);
+		        $this->setState(43);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::DOT) {
-		        	$this->setState(37);
+		        	$this->setState(41);
 		        	$this->match(self::DOT);
-		        	$this->setState(38);
+		        	$this->setState(42);
 		        	$this->sqlNames();
 		        }
-		        $this->setState(46);
+		        $this->setState(50);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::AS) {
-		        	$this->setState(41);
+		        	$this->setState(45);
 		        	$this->match(self::AS);
-		        	$this->setState(44);
+		        	$this->setState(48);
 		        	$this->errorHandler->sync($this);
 
 		        	switch ($this->input->LA(1)) {
 		        	    case self::Number:
 		        	    case self::SqlName:
-		        	    	$this->setState(42);
+		        	    	$this->setState(46);
 		        	    	$this->sqlNames();
 		        	    	break;
 
 		        	    case self::StringLiteral:
-		        	    	$this->setState(43);
+		        	    	$this->setState(47);
 		        	    	$this->match(self::StringLiteral);
 		        	    	break;
 
@@ -456,11 +488,11 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\PatternContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 8, self::RULE_pattern);
+		    $this->enterRule($localContext, 10, self::RULE_pattern);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(48);
+		        $this->setState(52);
 
 		        $_la = $this->input->LA(1);
 
@@ -492,63 +524,82 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\ExpressionContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 10, self::RULE_expression);
+		    $this->enterRule($localContext, 12, self::RULE_expression);
 
 		    try {
-		        $this->setState(65);
+		        $this->setState(75);
 		        $this->errorHandler->sync($this);
 
 		        switch ($this->input->LA(1)) {
+		            case self::NOW:
 		            case self::StringLiteral:
 		            case self::Number:
 		            case self::NumberLiteral:
 		            case self::SqlName:
 		            	$this->enterOuterAlt($localContext, 1);
-		            	$this->setState(50);
+		            	$this->setState(59);
+		            	$this->errorHandler->sync($this);
 
-		            	$_la = $this->input->LA(1);
+		            	switch ($this->input->LA(1)) {
+		            	    case self::SqlName:
+		            	    	$this->setState(54);
+		            	    	$this->match(self::SqlName);
+		            	    	break;
 
-		            	if (!((((($_la - 62)) & ~0x3f) === 0 && ((1 << ($_la - 62)) & ((1 << (self::StringLiteral - 62)) | (1 << (self::Number - 62)) | (1 << (self::NumberLiteral - 62)) | (1 << (self::SqlName - 62)))) !== 0))) {
-		            	$this->errorHandler->recoverInline($this);
-		            	} else {
-		            		if ($this->input->LA(1) === Token::EOF) {
-		            		    $this->matchedEOF = true;
-		            	    }
+		            	    case self::StringLiteral:
+		            	    	$this->setState(55);
+		            	    	$this->match(self::StringLiteral);
+		            	    	break;
 
-		            		$this->errorHandler->reportMatch($this);
-		            		$this->consume();
+		            	    case self::NumberLiteral:
+		            	    	$this->setState(56);
+		            	    	$this->match(self::NumberLiteral);
+		            	    	break;
+
+		            	    case self::Number:
+		            	    	$this->setState(57);
+		            	    	$this->match(self::Number);
+		            	    	break;
+
+		            	    case self::NOW:
+		            	    	$this->setState(58);
+		            	    	$this->constantNames();
+		            	    	break;
+
+		            	default:
+		            		throw new NoViableAltException($this);
 		            	}
 		            	break;
 
 		            case self::DATE:
 		            case self::DATETIME:
 		            	$this->enterOuterAlt($localContext, 2);
-		            	$this->setState(51);
+		            	$this->setState(61);
 		            	$this->functionNames();
-		            	$this->setState(52);
+		            	$this->setState(62);
 		            	$this->match(self::LPAREN);
-		            	$this->setState(54);
+		            	$this->setState(64);
 		            	$this->errorHandler->sync($this);
 		            	$_la = $this->input->LA(1);
 
-		            	if ((((($_la - 57)) & ~0x3f) === 0 && ((1 << ($_la - 57)) & ((1 << (self::DATE - 57)) | (1 << (self::DATETIME - 57)) | (1 << (self::StringLiteral - 57)) | (1 << (self::Number - 57)) | (1 << (self::NumberLiteral - 57)) | (1 << (self::SqlName - 57)))) !== 0)) {
-		            		$this->setState(53);
+		            	if ((((($_la - 49)) & ~0x3f) === 0 && ((1 << ($_la - 49)) & ((1 << (self::NOW - 49)) | (1 << (self::DATE - 49)) | (1 << (self::DATETIME - 49)) | (1 << (self::StringLiteral - 49)) | (1 << (self::Number - 49)) | (1 << (self::NumberLiteral - 49)) | (1 << (self::SqlName - 49)))) !== 0)) {
+		            		$this->setState(63);
 		            		$this->expression();
 		            	}
-		            	$this->setState(60);
+		            	$this->setState(70);
 		            	$this->errorHandler->sync($this);
 
 		            	$_la = $this->input->LA(1);
 		            	while ($_la === self::COMMA) {
-		            		$this->setState(56);
+		            		$this->setState(66);
 		            		$this->match(self::COMMA);
-		            		$this->setState(57);
+		            		$this->setState(67);
 		            		$this->expression();
-		            		$this->setState(62);
+		            		$this->setState(72);
 		            		$this->errorHandler->sync($this);
 		            		$_la = $this->input->LA(1);
 		            	}
-		            	$this->setState(63);
+		            	$this->setState(73);
 		            	$this->match(self::RPAREN);
 		            	break;
 
@@ -573,18 +624,18 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\PredicateContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 12, self::RULE_predicate);
+		    $this->enterRule($localContext, 14, self::RULE_predicate);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(67);
+		        $this->setState(77);
 		        $this->sqlNames();
-		        $this->setState(107);
+		        $this->setState(117);
 		        $this->errorHandler->sync($this);
 
-		        switch ($this->getInterpreter()->adaptivePredict($this->input, 13, $this->ctx)) {
+		        switch ($this->getInterpreter()->adaptivePredict($this->input, 14, $this->ctx)) {
 		        	case 1:
-		        	    $this->setState(68);
+		        	    $this->setState(78);
 
 		        	    $_la = $this->input->LA(1);
 
@@ -598,46 +649,46 @@ namespace ComboStrap\PageSqlParser {
 		        	    	$this->errorHandler->reportMatch($this);
 		        	    	$this->consume();
 		        	    }
-		        	    $this->setState(69);
+		        	    $this->setState(79);
 		        	    $this->expression();
 		        	break;
 
 		        	case 2:
-		        	    $this->setState(81);
+		        	    $this->setState(91);
 		        	    $this->errorHandler->sync($this);
 
 		        	    switch ($this->input->LA(1)) {
 		        	        case self::LIKE:
 		        	        case self::NOT:
-		        	        	$this->setState(71);
+		        	        	$this->setState(81);
 		        	        	$this->errorHandler->sync($this);
 		        	        	$_la = $this->input->LA(1);
 
 		        	        	if ($_la === self::NOT) {
-		        	        		$this->setState(70);
+		        	        		$this->setState(80);
 		        	        		$this->match(self::NOT);
 		        	        	}
 
-		        	        	$this->setState(73);
+		        	        	$this->setState(83);
 		        	        	$this->match(self::LIKE);
-		        	        	$this->setState(74);
+		        	        	$this->setState(84);
 		        	        	$this->pattern();
-		        	        	$this->setState(77);
+		        	        	$this->setState(87);
 		        	        	$this->errorHandler->sync($this);
 		        	        	$_la = $this->input->LA(1);
 
 		        	        	if ($_la === self::ESCAPE) {
-		        	        		$this->setState(75);
+		        	        		$this->setState(85);
 		        	        		$this->match(self::ESCAPE);
-		        	        		$this->setState(76);
+		        	        		$this->setState(86);
 		        	        		$this->match(self::StringLiteral);
 		        	        	}
 		        	        	break;
 
 		        	        case self::GLOB:
-		        	        	$this->setState(79);
+		        	        	$this->setState(89);
 		        	        	$this->match(self::GLOB);
-		        	        	$this->setState(80);
+		        	        	$this->setState(90);
 		        	        	$this->pattern();
 		        	        	break;
 
@@ -647,59 +698,59 @@ namespace ComboStrap\PageSqlParser {
 		        	break;
 
 		        	case 3:
-		        	    $this->setState(84);
+		        	    $this->setState(94);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
 		        	    if ($_la === self::NOT) {
-		        	    	$this->setState(83);
+		        	    	$this->setState(93);
 		        	    	$this->match(self::NOT);
 		        	    }
-		        	    $this->setState(86);
+		        	    $this->setState(96);
 		        	    $this->match(self::BETWEEN);
-		        	    $this->setState(87);
+		        	    $this->setState(97);
 		        	    $this->expression();
-		        	    $this->setState(88);
+		        	    $this->setState(98);
 		        	    $this->match(self::AND);
-		        	    $this->setState(89);
+		        	    $this->setState(99);
 		        	    $this->expression();
 		        	break;
 
 		        	case 4:
-		        	    $this->setState(92);
+		        	    $this->setState(102);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
 		        	    if ($_la === self::NOT) {
-		        	    	$this->setState(91);
+		        	    	$this->setState(101);
 		        	    	$this->match(self::NOT);
 		        	    }
-		        	    $this->setState(94);
-		        	    $this->match(self::IN);
-		        	    $this->setState(95);
-		        	    $this->match(self::LPAREN);
 		        	    $this->setState(104);
+		        	    $this->match(self::IN);
+		        	    $this->setState(105);
+		        	    $this->match(self::LPAREN);
+		        	    $this->setState(114);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
-		        	    if ((((($_la - 57)) & ~0x3f) === 0 && ((1 << ($_la - 57)) & ((1 << (self::DATE - 57)) | (1 << (self::DATETIME - 57)) | (1 << (self::StringLiteral - 57)) | (1 << (self::Number - 57)) | (1 << (self::NumberLiteral - 57)) | (1 << (self::SqlName - 57)))) !== 0)) {
-		        	    	$this->setState(96);
+		        	    if ((((($_la - 49)) & ~0x3f) === 0 && ((1 << ($_la - 49)) & ((1 << (self::NOW - 49)) | (1 << (self::DATE - 49)) | (1 << (self::DATETIME - 49)) | (1 << (self::StringLiteral - 49)) | (1 << (self::Number - 49)) | (1 << (self::NumberLiteral - 49)) | (1 << (self::SqlName - 49)))) !== 0)) {
+		        	    	$this->setState(106);
 		        	    	$this->expression();
-		        	    	$this->setState(101);
+		        	    	$this->setState(111);
 		        	    	$this->errorHandler->sync($this);
 
 		        	    	$_la = $this->input->LA(1);
 		        	    	while ($_la === self::COMMA) {
-		        	    		$this->setState(97);
+		        	    		$this->setState(107);
 		        	    		$this->match(self::COMMA);
-		        	    		$this->setState(98);
+		        	    		$this->setState(108);
 		        	    		$this->expression();
-		        	    		$this->setState(103);
+		        	    		$this->setState(113);
 		        	    		$this->errorHandler->sync($this);
 		        	    		$_la = $this->input->LA(1);
 		        	    	}
 		        	    }
-		        	    $this->setState(106);
+		        	    $this->setState(116);
 		        	    $this->match(self::RPAREN);
 		        	break;
 		        }
@@ -721,22 +772,22 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\ColumnsContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 14, self::RULE_columns);
+		    $this->enterRule($localContext, 16, self::RULE_columns);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(109);
+		        $this->setState(119);
 		        $this->column();
-		        $this->setState(114);
+		        $this->setState(124);
 		        $this->errorHandler->sync($this);
 
 		        $_la = $this->input->LA(1);
 		        while ($_la === self::COMMA) {
-		        	$this->setState(110);
+		        	$this->setState(120);
 		        	$this->match(self::COMMA);
-		        	$this->setState(111);
+		        	$this->setState(121);
 		        	$this->column();
-		        	$this->setState(116);
+		        	$this->setState(126);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 		        }
@@ -758,20 +809,20 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\PredicateGroupContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 16, self::RULE_predicateGroup);
+		    $this->enterRule($localContext, 18, self::RULE_predicateGroup);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(117);
+		        $this->setState(127);
 		        $this->match(self::LPAREN);
-		        $this->setState(118);
+		        $this->setState(128);
 		        $this->predicate();
-		        $this->setState(123);
+		        $this->setState(133);
 		        $this->errorHandler->sync($this);
 
 		        $_la = $this->input->LA(1);
 		        while ($_la === self::AND || $_la === self::OR) {
-		        	$this->setState(119);
+		        	$this->setState(129);
 
 		        	$_la = $this->input->LA(1);
 
@@ -785,13 +836,13 @@ namespace ComboStrap\PageSqlParser {
 		        		$this->errorHandler->reportMatch($this);
 		        		$this->consume();
 		        	}
-		        	$this->setState(120);
+		        	$this->setState(130);
 		        	$this->predicate();
-		        	$this->setState(125);
+		        	$this->setState(135);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 		        }
-		        $this->setState(126);
+		        $this->setState(136);
 		        $this->match(self::RPAREN);
 		    } catch (RecognitionException $exception) {
 		        $localContext->exception = $exception;
@@ -811,36 +862,36 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\PredicatesContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 18, self::RULE_predicates);
+		    $this->enterRule($localContext, 20, self::RULE_predicates);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(128);
+		        $this->setState(138);
 		        $this->match(self::WHERE);
-		        $this->setState(131);
+		        $this->setState(141);
 		        $this->errorHandler->sync($this);
 
 		        switch ($this->input->LA(1)) {
 		            case self::Number:
 		            case self::SqlName:
-		            	$this->setState(129);
+		            	$this->setState(139);
 		            	$this->predicate();
 		            	break;
 
 		            case self::LPAREN:
-		            	$this->setState(130);
+		            	$this->setState(140);
 		            	$this->predicateGroup();
 		            	break;
 
 		        default:
 		        	throw new NoViableAltException($this);
 		        }
-		        $this->setState(140);
+		        $this->setState(150);
 		        $this->errorHandler->sync($this);
 
 		        $_la = $this->input->LA(1);
 		        while ($_la === self::AND || $_la === self::OR) {
-		        	$this->setState(133);
+		        	$this->setState(143);
 
 		        	$_la = $this->input->LA(1);
 
@@ -854,25 +905,25 @@ namespace ComboStrap\PageSqlParser {
 		        		$this->errorHandler->reportMatch($this);
 		        		$this->consume();
 		        	}
-		        	$this->setState(136);
+		        	$this->setState(146);
 		        	$this->errorHandler->sync($this);
 
 		        	switch ($this->input->LA(1)) {
 		        	    case self::Number:
 		        	    case self::SqlName:
-		        	    	$this->setState(134);
+		        	    	$this->setState(144);
 		        	    	$this->predicate();
 		        	    	break;
 
 		        	    case self::LPAREN:
-		        	    	$this->setState(135);
+		        	    	$this->setState(145);
 		        	    	$this->predicateGroup();
 		        	    	break;
 
 		        	default:
 		        		throw new NoViableAltException($this);
 		        	}
-		        	$this->setState(142);
+		        	$this->setState(152);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 		        }
@@ -894,13 +945,13 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\TablesContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 20, self::RULE_tables);
+		    $this->enterRule($localContext, 22, self::RULE_tables);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(143);
+		        $this->setState(153);
 		        $this->match(self::FROM);
-		        $this->setState(144);
+		        $this->setState(154);
 		        $this->tableNames();
 		    } catch (RecognitionException $exception) {
 		        $localContext->exception = $exception;
@@ -920,13 +971,13 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\LimitContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 22, self::RULE_limit);
+		    $this->enterRule($localContext, 24, self::RULE_limit);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(146);
+		        $this->setState(156);
 		        $this->match(self::LIMIT);
-		        $this->setState(147);
+		        $this->setState(157);
 		        $this->match(self::Number);
 		    } catch (RecognitionException $exception) {
 		        $localContext->exception = $exception;
@@ -946,36 +997,36 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\OrderBysContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 24, self::RULE_orderBys);
+		    $this->enterRule($localContext, 26, self::RULE_orderBys);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(149);
+		        $this->setState(159);
 		        $this->match(self::ORDER);
-		        $this->setState(160);
+		        $this->setState(170);
 		        $this->errorHandler->sync($this);
 
 		        switch ($this->input->LA(1)) {
 		            case self::RANDOM:
-		            	$this->setState(150);
+		            	$this->setState(160);
 		            	$this->match(self::RANDOM);
 		            	break;
 
 		            case self::BY:
-		            	$this->setState(151);
+		            	$this->setState(161);
 		            	$this->match(self::BY);
-		            	$this->setState(152);
+		            	$this->setState(162);
 		            	$this->orderByDef();
-		            	$this->setState(157);
+		            	$this->setState(167);
 		            	$this->errorHandler->sync($this);
 
 		            	$_la = $this->input->LA(1);
 		            	while ($_la === self::COMMA) {
-		            		$this->setState(153);
+		            		$this->setState(163);
 		            		$this->match(self::COMMA);
-		            		$this->setState(154);
+		            		$this->setState(164);
 		            		$this->orderByDef();
-		            		$this->setState(159);
+		            		$this->setState(169);
 		            		$this->errorHandler->sync($this);
 		            		$_la = $this->input->LA(1);
 		            	}
@@ -1002,18 +1053,18 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\OrderByDefContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 26, self::RULE_orderByDef);
+		    $this->enterRule($localContext, 28, self::RULE_orderByDef);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(162);
+		        $this->setState(172);
 		        $this->match(self::SqlName);
-		        $this->setState(164);
+		        $this->setState(174);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::ASC || $_la === self::DESC) {
-		        	$this->setState(163);
+		        	$this->setState(173);
 
 		        	$_la = $this->input->LA(1);
 
@@ -1046,32 +1097,32 @@ namespace ComboStrap\PageSqlParser {
 		{
 		    $localContext = new Context\PageSqlContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 28, self::RULE_pageSql);
+		    $this->enterRule($localContext, 30, self::RULE_pageSql);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(166);
+		        $this->setState(176);
 		        $this->match(self::SELECT);
-		        $this->setState(168);
+		        $this->setState(178);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::RANDOM) {
-		        	$this->setState(167);
+		        	$this->setState(177);
 		        	$this->match(self::RANDOM);
 		        }
-		        $this->setState(172);
+		        $this->setState(182);
 		        $this->errorHandler->sync($this);
 
 		        switch ($this->input->LA(1)) {
 		            case self::STAR:
-		            	$this->setState(170);
+		            	$this->setState(180);
 		            	$this->match(self::STAR);
 		            	break;
 
 		            case self::Number:
 		            case self::SqlName:
-		            	$this->setState(171);
+		            	$this->setState(181);
 		            	$this->columns();
 		            	break;
 
@@ -1085,36 +1136,36 @@ namespace ComboStrap\PageSqlParser {
 		        default:
 		        	break;
 		        }
-		        $this->setState(175);
+		        $this->setState(185);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::FROM) {
-		        	$this->setState(174);
+		        	$this->setState(184);
 		        	$this->tables();
 		        }
-		        $this->setState(178);
+		        $this->setState(188);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::WHERE) {
-		        	$this->setState(177);
+		        	$this->setState(187);
 		        	$this->predicates();
 		        }
-		        $this->setState(181);
+		        $this->setState(191);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::ORDER) {
-		        	$this->setState(180);
+		        	$this->setState(190);
 		        	$this->orderBys();
 		        }
-		        $this->setState(184);
+		        $this->setState(194);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::LIMIT) {
-		        	$this->setState(183);
+		        	$this->setState(193);
 		        	$this->limit();
 		        }
 		    } catch (RecognitionException $exception) {
@@ -1172,6 +1223,38 @@ namespace ComboStrap\PageSqlParser\Context {
 		{
 			if ($listener instanceof PageSqlListener) {
 			    $listener->exitFunctionNames($this);
+		    }
+		}
+	} 
+
+	class ConstantNamesContext extends ParserRuleContext
+	{
+		public function __construct(?ParserRuleContext $parent, ?int $invokingState = null)
+		{
+			parent::__construct($parent, $invokingState);
+		}
+
+		public function getRuleIndex() : int
+		{
+		    return PageSqlParser::RULE_constantNames;
+	    }
+
+	    public function NOW() : ?TerminalNode
+	    {
+	        return $this->getToken(PageSqlParser::NOW, 0);
+	    }
+
+		public function enterRule(ParseTreeListener $listener) : void
+		{
+			if ($listener instanceof PageSqlListener) {
+			    $listener->enterConstantNames($this);
+		    }
+		}
+
+		public function exitRule(ParseTreeListener $listener) : void
+		{
+			if ($listener instanceof PageSqlListener) {
+			    $listener->exitConstantNames($this);
 		    }
 		}
 	} 
@@ -1376,6 +1459,11 @@ namespace ComboStrap\PageSqlParser\Context {
 	    public function Number() : ?TerminalNode
 	    {
 	        return $this->getToken(PageSqlParser::Number, 0);
+	    }
+
+	    public function constantNames() : ?ConstantNamesContext
+	    {
+	    	return $this->getTypedRuleContext(ConstantNamesContext::class, 0);
 	    }
 
 	    public function functionNames() : ?FunctionNamesContext

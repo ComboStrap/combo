@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 
 use ComboStrap\Web\Url;
+use RuntimeException;
 
 /**
  * @package ComboStrap
@@ -278,8 +279,8 @@ class SnippetSystem
     }
 
     /**
-     * @throws ExceptionBadSyntax
-     * @throws ExceptionBadArgument
+     * @throws ExceptionBadSyntax - bad url
+     * @throws ExceptionBadArgument - the url needs to have a file name
      */
     public
     function attachRemoteJavascriptLibrary(string $componentId, string $url, string $integrity = null): Snippet
@@ -288,6 +289,28 @@ class SnippetSystem
         return Snippet::getOrCreateFromRemoteUrl($url)
             ->setIntegrity($integrity)
             ->setComponentId($componentId);
+    }
+
+    /**
+     * Same component as attachRemoteJavascriptLibrary but without error
+     * as the url is a code literal (ie written in the code)
+     * @param string $componentId
+     * @param string $url
+     * @param string|null $integrity
+     * @return Snippet
+     */
+    public
+    function attachRemoteJavascriptLibraryFromLiteral(string $componentId, string $url, string $integrity = null): Snippet
+    {
+        try {
+            $url = Url::createFromString($url);
+            return Snippet::getOrCreateFromRemoteUrl($url)
+                ->setIntegrity($integrity)
+                ->setComponentId($componentId);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+            throw new RuntimeException("Bad URL (" . $e->getMessage() .")", $e);
+        }
+
     }
 
     /**
@@ -308,6 +331,28 @@ class SnippetSystem
             ->setIntegrity($integrity)
             ->setRemoteUrl($url)
             ->setComponentId($componentId);
+    }
+
+    /**
+     * The same as attachRemoteCssStyleSheet but without any exception
+     * as the URL is written in the code, it's to the dev to not messed up
+     * @param string $componentId
+     * @param string $url
+     * @param string|null $integrity
+     * @return Snippet
+     */
+    public
+    function attachRemoteCssStyleSheetFromLiteral(string $componentId, string $url, string $integrity = null): Snippet
+    {
+        try {
+            $url = Url::createFromString($url);
+            return Snippet::getOrCreateFromRemoteUrl($url)
+                ->setIntegrity($integrity)
+                ->setRemoteUrl($url)
+                ->setComponentId($componentId);
+        } catch (ExceptionBadArgument|ExceptionBadSyntax $e) {
+            throw new RuntimeException("Bad URL (" . $e->getMessage() .")", $e);
+        }
     }
 
 

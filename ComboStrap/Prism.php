@@ -96,64 +96,64 @@ class Prism
         /**
          * Javascript
          */
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/components/prism-core.min.js",
             "sha256-vlRYHThwdq55dA+n1BKQRzzLwFtH9VINdSI68+5JhpU=");
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js",
             "sha256-FyIVdIHL0+ppj4Q4Ft05K3wyCsYikpHIDGI7dcaBalU="
         );
-        $snippetManager->attachRemoteCssStyleSheet(
+        $snippetManager->attachRemoteCssStyleSheetFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.css",
             "sha256-kK4/JIYJUKI4Zdg9ZQ7FYyRIqeWPfYKi5QZHO2n/lJI="
         );
         // https://prismjs.com/plugins/normalize-whitespace/
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js",
             "sha256-gBzABGbXfQYYnyr8xmDFjx6KGO9dBYuypG1QBjO76pY=");
         // https://prismjs.com/plugins/copy-to-clipboard/
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js",
             "sha512-pUNGXbOrc+Y3dm5z2ZN7JYQ/2Tq0jppMDOUsN4sQHVJ9AUQpaeERCUfYYBAnaRB9r8d4gtPKMWICNhm3tRr4Fg==");
         // https://prismjs.com/plugins/show-language/
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js",
             "sha256-Z3GTw2RIadLG7KyP/OYB+aAxVYzvg2PByKzYrJlA1EM=");
         // https://prismjs.com/plugins/command-line/
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js",
             "sha256-9WlakH0Upf3N8DDteHlbeKCHxSsljby+G9ucUCQNiU0=");
-        $snippetManager->attachRemoteCssStyleSheet(
+        $snippetManager->attachRemoteCssStyleSheetFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.css",
             "sha256-UvoA9bIYCYQkCMTYG5p2LM8ZpJmnC4G8k0oIc89nuQA="
         );
         //https://prismjs.com/plugins/line-numbers/
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
             "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=");
-        $snippetManager->attachRemoteCssStyleSheet(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.css",
             "sha256-ye8BkHf2lHXUtqZ18U0KI3xjJ1Yv7P8lvdKBt9xmVJM="
         );
 
         // https://prismjs.com/plugins/download-button/-->
-        $snippetManager->attachRemoteJavascriptLibrary(
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
             "sha256-CQyVQ5ejeTshlzOS/eCiry40br9f4fQ9jb5e4qPl7ZA=");
 
         // Loading the theme
-        $snippetManager->attachRemoteCssStyleSheet(
+        $snippetManager->attachRemoteCssStyleSheetFromLiteral(
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/themes/$themeStyleSheet",
             $themeIntegrity
@@ -202,7 +202,7 @@ EOD;
         /**
          * Add prism theme
          */
-        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME,Prism::PRISM_THEME_DEFAULT);
+        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME, Prism::PRISM_THEME_DEFAULT);
         Prism::addSnippet($theme);
 
         /**
@@ -291,36 +291,48 @@ EOD;
         }
 
 
-        // Command line
-        if ($attributes->hasComponentAttribute("prompt")) {
-            $attributes->addClassName("command-line");
-            $attributes->addOutputAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
-        } else {
-            switch ($language) {
-                case "bash":
+        /**
+         * Command line prompt
+         * (Line element and prompt cannot be chosen together
+         * otherwise they endup on top of each other)
+         */
+        if (!$attributes->hasComponentAttribute("line-numbers")) {
+            if ($attributes->hasComponentAttribute("prompt")) {
+                $promptValue = $attributes->getValueAndRemove("prompt");
+                // prompt may be the empty string
+                if (!empty($promptValue)) {
                     $attributes->addClassName("command-line");
-                    $attributes->addOutputAttributeValue("data-prompt", $plugin->getConf(self::CONF_BASH_PROMPT));
-                    break;
-                case "batch":
-                    $attributes->addClassName("command-line");
-                    $batch = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
-                    if (!empty($batch)) {
-                        if (!strpos($batch, -1) == ">") {
-                            $batch .= ">";
+                    $attributes->addOutputAttributeValue("data-prompt", $promptValue);
+                }
+            } else {
+                /**
+                 * Default prompt
+                 */
+                switch ($language) {
+                    case "bash":
+                        $prompt = $plugin->getConf(self::CONF_BASH_PROMPT);
+                        break;
+                    case "batch":
+                        $prompt = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
+                        if (!empty($prompt)) {
+                            if (!strpos($prompt, -1) == ">") {
+                                $prompt .= ">";
+                            }
                         }
-                    }
-                    $attributes->addOutputAttributeValue("data-prompt", $batch);
-                    break;
-                case "powershell":
-                    $attributes->addClassName("command-line");
-                    $powerShell = trim($plugin->getConf(self::CONF_POWERSHELL_PROMPT));
-                    if (!empty($powerShell)) {
-                        if (!strpos($powerShell, -1) == ">") {
-                            $powerShell .= ">";
+                        break;
+                    case "powershell":
+                        $prompt = trim($plugin->getConf(self::CONF_POWERSHELL_PROMPT));
+                        if (!empty($prompt)) {
+                            if (!strpos($prompt, -1) == ">") {
+                                $prompt .= ">";
+                            }
                         }
-                    }
-                    $attributes->addOutputAttributeValue("data-prompt", $powerShell);
-                    break;
+                        break;
+                }
+                if(!empty($prompt)) {
+                    $attributes->addClassName("command-line");
+                    $attributes->addOutputAttributeValue("data-prompt", $prompt);
+                }
             }
         }
 

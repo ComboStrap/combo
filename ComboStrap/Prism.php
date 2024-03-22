@@ -67,6 +67,7 @@ class Prism
     const CONF_PRISM_THEME = "prismTheme";
     const PRISM_THEME_DEFAULT = "tomorrow";
     const SNIPPET_ID_AUTOLOADER = self::SNIPPET_NAME . "-autoloader";
+    const LINE_NUMBERS_ATTR = "line-numbers";
 
 
     /**
@@ -134,6 +135,16 @@ class Prism
             self::SNIPPET_NAME,
             "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.css",
             "sha256-UvoA9bIYCYQkCMTYG5p2LM8ZpJmnC4G8k0oIc89nuQA="
+        );
+        // https://prismjs.com/plugins/line-highlight/
+        $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/line-highlight/prism-line-highlight.min.js",
+            "sha512-O5GVPBZIURR9MuNiCjSa1wNTL3w91tojKlgCXmOjWDT5a3+9Ms+wGsTkBO93PI3anfdajkJD0sJiS6qdQq7jRA==");
+        $snippetManager->attachRemoteCssStyleSheetFromLiteral(
+            self::SNIPPET_NAME,
+            "$BASE_PRISM_CDN/plugins/line-highlight/prism-line-highlight.min.css",
+            "sha512-nXlJLUeqPMp1Q3+Bd8Qds8tXeRVQscMscwysJm821C++9w6WtsFbJjPenZ8cQVMXyqSAismveQJc0C1splFDCA=="
         );
         //https://prismjs.com/plugins/line-numbers/
         $snippetManager->attachRemoteJavascriptLibraryFromLiteral(
@@ -286,9 +297,9 @@ EOD;
          * Line numbers
          */
         $lineNumberEnabled = false;
-        if ($attributes->hasComponentAttribute("line-numbers")) {
-            $attributes->removeComponentAttribute("line-numbers");
-            $attributes->addClassName('line-numbers');
+        if ($attributes->hasComponentAttribute(self::LINE_NUMBERS_ATTR)) {
+            $attributes->removeComponentAttribute(self::LINE_NUMBERS_ATTR);
+            $attributes->addClassName("line-numbers");
             $lineNumberEnabled = true;
         }
 
@@ -335,6 +346,16 @@ EOD;
                     $attributes->addClassName("command-line");
                     $attributes->addOutputAttributeValue("data-prompt", $prompt);
                 }
+            }
+        }
+
+        /**
+         * Line highlight
+         */
+        if ($attributes->hasComponentAttribute("line-highlight")) {
+            $lineHiglight = $attributes->getValueAndRemove("line-highlight");
+            if(!empty($lineHiglight)) {
+                $attributes->addOutputAttributeValue('data-line', $lineHiglight);
             }
         }
 

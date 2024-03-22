@@ -285,9 +285,11 @@ EOD;
          * Pre Element
          * Line numbers
          */
+        $lineNumberEnabled = false;
         if ($attributes->hasComponentAttribute("line-numbers")) {
             $attributes->removeComponentAttribute("line-numbers");
             $attributes->addClassName('line-numbers');
+            $lineNumberEnabled = true;
         }
 
 
@@ -296,7 +298,7 @@ EOD;
          * (Line element and prompt cannot be chosen together
          * otherwise they endup on top of each other)
          */
-        if (!$attributes->hasComponentAttribute("line-numbers")) {
+        if (!$lineNumberEnabled) {
             if ($attributes->hasComponentAttribute("prompt")) {
                 $promptValue = $attributes->getValueAndRemove("prompt");
                 // prompt may be the empty string

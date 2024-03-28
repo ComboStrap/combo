@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataText;
-use ComboStrap\Meta\Api\MetadataWikiPath;
 
 class Slug extends MetadataText
 {
@@ -28,11 +27,12 @@ class Slug extends MetadataText
      * The goal is to get only words that can be interpreted
      * We could also encode it
      * @param $string
-     * @return string|null
+     * @return string
+     * @throws ExceptionNull
      */
-    public static function toSlugPath($string): ?string
+    public static function toSlugPath($string): string
     {
-        if (empty($string)) return null;
+        if (empty($string)) throw new ExceptionNull("The slug value should not be empty");
         $excludedCharacters = array_merge(WikiPath::getReservedWords(), StringUtility::SEPARATORS_CHARACTERS);
         $excludedCharacters[] = WikiPath::SLUG_SEPARATOR;
         $parts = explode(WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $string);
@@ -81,7 +81,12 @@ class Slug extends MetadataText
 
     public function setFromStoreValueWithoutException($value): Metadata
     {
-        return parent::setFromStoreValueWithoutException(self::toSlugPath($value));
+        try {
+            $slug = self::toSlugPath($value);
+        } catch (ExceptionNull $e) {
+            $slug = null;
+        }
+        return parent::setFromStoreValueWithoutException($slug);
     }
 
 
@@ -105,9 +110,13 @@ class Slug extends MetadataText
      */
     public function getDefaultValue(): string
     {
-        $title = PageTitle::createForMarkup($this->getResource())
-            ->getValueOrDefault();
-        return self::toSlugPath($title);
+        $title = PageTitle::createForMarkup($this->getResource())->getValueOrDefault();
+        try {
+            return self::toSlugPath($title);
+        } catch (ExceptionNull $e) {
+            throw new \RuntimeException("The default title of the page (" . $this->getResource() . ") should not be empty.");
+        }
+
     }
 
     static public function isOnForm(): bool

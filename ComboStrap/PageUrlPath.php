@@ -6,7 +6,6 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataText;
-use ComboStrap\Meta\Api\MetadataWikiPath;
 use ComboStrap\Web\UrlRewrite;
 
 /**
@@ -277,7 +276,11 @@ class PageUrlPath extends MetadataText
                         break;
                     }
                     if (!$parentPage->isRootHomePage()) {
-                        $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
+                        try {
+                            $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
+                        } catch (ExceptionNull $e) {
+                            throw new \RuntimeException("The default name of the page (" . $parentPage . ") should not be empty.");
+                        }
                     }
                 }
                 return $this->toPermanentUrlPath($urlPath);
@@ -286,7 +289,11 @@ class PageUrlPath extends MetadataText
                 try {
                     $parentPage = $page->getParent();
                     if (!$parentPage->isRootHomePage()) {
-                        $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
+                        try {
+                            $urlPath = Slug::toSlugPath($parentPage->getNameOrDefault()) . $urlPath;
+                        } catch (ExceptionNull $e) {
+                            throw new \RuntimeException("The default name of the page (" . $parentPage . ") should not be empty.");
+                        }
                     }
                 } catch (ExceptionNotFound $e) {
                     // no parent page

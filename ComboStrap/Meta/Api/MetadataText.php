@@ -86,7 +86,7 @@ abstract class MetadataText extends Metadata
 
     public function setFromStoreValueWithoutException($value): Metadata
     {
-        if ($value === null || $value === "") {
+        if (empty($value)) {
             $this->value = null;
             return $this;
         }

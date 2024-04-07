@@ -6,7 +6,6 @@ namespace ComboStrap;
 class OutlineSection extends TreeNode
 {
     const CANONICAL = "outline";
-    const HEADER_DOKUWIKI_CALL = "header";
 
 
     /**
@@ -28,6 +27,9 @@ class OutlineSection extends TreeNode
     private int $startFileIndex;
     private ?int $endFileIndex = null;
 
+    /**
+     * @var Call|null - the first heading call for the section
+     */
     private ?Call $headingEnterCall;
     /**
      * @var array an array to make sure that the id are unique
@@ -114,6 +116,11 @@ class OutlineSection extends TreeNode
     {
         $label = "";
         foreach ($this->headingCalls as $call) {
+            if ($call->getTagName() === Outline::DOKUWIKI_HEADING_CALL_NAME) {
+                $label = $call->getInstructionCall()[1][0];
+                // no more label call
+                break;
+            }
             if ($call->isTextCall()) {
                 // Building the text for the toc
                 // only cdata for now
@@ -184,7 +191,7 @@ class OutlineSection extends TreeNode
             return 0;
         }
         switch ($this->headingEnterCall->getTagName()) {
-            case self::HEADER_DOKUWIKI_CALL:
+            case Outline::DOKUWIKI_HEADING_CALL_NAME:
                 $level = $this->headingEnterCall->getInstructionCall()[1][1];
                 break;
             default:
@@ -261,7 +268,7 @@ class OutlineSection extends TreeNode
     public function setLevel(int $level): OutlineSection
     {
         switch ($this->headingEnterCall->getTagName()) {
-            case self::HEADER_DOKUWIKI_CALL:
+            case Outline::DOKUWIKI_HEADING_CALL_NAME:
                 $this->headingEnterCall->getInstructionCall()[1][1] = $level;
                 break;
             default:

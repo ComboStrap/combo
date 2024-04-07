@@ -81,6 +81,11 @@ class Outline
      */
     public const OUTLINE_ANCHOR = "outline-anchor";
     const CONF_OUTLINE_NUMBERING_ENABLE_DEFAULT = 1;
+
+    /**
+     * The dokuwiki heading call is called the header...
+     */
+    const DOKUWIKI_HEADING_CALL_NAME = "header";
     private OutlineSection $rootSection;
 
     private OutlineSection $actualSection; // the actual section that is created
@@ -220,7 +225,7 @@ class Outline
                         $this->enterHeading($actualCall);
                     }
                     break;
-                case "header":
+                case self::DOKUWIKI_HEADING_CALL_NAME:
                     // Should happen only on outline section
                     // we take over inside a component
                     if (!$actualCall->isPluginCall()) {
@@ -230,6 +235,9 @@ class Outline
                          */
                         $shouldWeCreateASection = true;
                         $this->enterHeading($actualCall);
+                        // The dokuiki heading call (header) is a one call for the whole heading,
+                        // It enters and exits at the same time
+                        $this->exitHeading();
                     }
                     break;
             }
@@ -249,7 +257,7 @@ class Outline
                     }
                 } else {
                     $headerTagName = $tagName;
-                    if ($headerTagName !== "header") {
+                    if ($headerTagName !== self::DOKUWIKI_HEADING_CALL_NAME) {
                         throw new ExceptionRuntimeInternal("This is not a dokuwiki header call", self::CANONICAL);
                     }
                     $newSectionLevel = $actualCall->getInstructionCall()[1][1];
@@ -385,7 +393,7 @@ class Outline
                         $actualCall->addAttribute(MediaMarkup::LINKING_KEY, MediaMarkup::LINKING_NOLINK_VALUE);
                         break;
 
-                    case "header":
+                    case self::DOKUWIKI_HEADING_CALL_NAME:
                         if (SiteConfig::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
                             LogUtility::msg("The combo heading wiki is enabled, we should not see `header` calls in the call stack");
                         }

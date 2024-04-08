@@ -571,9 +571,9 @@ class SiteConfig
         return $conf['cachetime'] !== -1;
     }
 
-    public function isHeadingWikiComponentDisabled()
+    public function isHeadingWikiComponentDisabled(): bool
     {
-        return  $this->getValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE,syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE);
+        return  !$this->getValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE,syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE);
     }
 
 

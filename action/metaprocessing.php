@@ -6,12 +6,13 @@ use ComboStrap\ExceptionRuntimeInternal;
 use ComboStrap\ExecutionContext;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
-use ComboStrap\Meta\Api\Metadata;
 use ComboStrap\Meta\Api\MetadataSystem;
+use ComboStrap\Meta\Field\PageH1;
+use ComboStrap\Meta\Field\PageImages;
+use ComboStrap\Meta\Store\MetadataDokuWikiStore;
 use ComboStrap\MetadataDokuWikiArrayStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataMutation;
-use ComboStrap\Meta\Field\PageImages;
 use ComboStrap\PluginUtility;
 use ComboStrap\References;
 
@@ -76,7 +77,7 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
          * is older than dependent C:\Users\GERARD~1\AppData\Local\Temp\dwtests-1681473476.2836\data\meta\cache_manager_slot_test.meta (1681473480), cache is not usable
          * See {@link \ComboStrap\Test\TestUtility::WaitToCreateCacheFile1SecLater()}
          */
-        if(PluginUtility::isDevOrTest()){
+        if (PluginUtility::isDevOrTest()) {
             sleep(1);
         }
 
@@ -121,6 +122,20 @@ class action_plugin_combo_metaprocessing extends DokuWiki_Action_Plugin
             $valueAfter = $afterMeta->toStoreValue();
             MetadataMutation::notifyMetadataMutation($attribute, $valueBefore, $valueAfter, $page);
 
+        }
+
+
+        /**
+         * We got a conflict Dokuwiki stores a `title` meta in the current
+         * Because we may delete the first heading, the stored title is the second
+         * heading, we update it
+         * See first line of {@link \Doku_Renderer_metadata::header()}
+         */
+        $isWikiDisabled = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->isHeadingWikiComponentDisabled();
+        if ($isWikiDisabled) {
+            $event->data[MetadataDokuWikiStore::CURRENT_METADATA]['title'] = $event->data[MetadataDokuWikiStore::CURRENT_METADATA][PageH1::H1_PARSED];
         }
 
         /**

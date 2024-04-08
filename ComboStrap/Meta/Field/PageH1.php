@@ -67,7 +67,7 @@ class PageH1 extends MetadataText
             if (!empty($h1Parsed)) {
                 return $h1Parsed;
             }
-            // dokuwiki
+            // dokuwiki store title in the current
             $h1 = $store->getCurrentFromName("title");
             if (!empty($h1)) {
                 return $h1;

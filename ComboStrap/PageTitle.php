@@ -84,7 +84,7 @@ class PageTitle extends MetadataText
         if ($isWikiDisabled && $metadataStore instanceof MetadataDokuWikiStore) {
             $this->wasBuild = true;
             $dataCurrentAndPersistent = $metadataStore->getDataCurrentAndPersistent();
-            $value = $dataCurrentAndPersistent[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY][$this->getName()];
+            $value = $dataCurrentAndPersistent[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY][$this->getName()] ?? null;
             $this->setFromStoreValueWithoutException($value);
             return $this;
         }

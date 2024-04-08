@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 use ComboStrap\Meta\Field\PageTemplateName;
 use dokuwiki\Extension\PluginTrait;
+use syntax_plugin_combo_headingwiki;
 
 class SiteConfig
 {
@@ -568,6 +569,11 @@ class SiteConfig
     {
         global $conf;
         return $conf['cachetime'] !== -1;
+    }
+
+    public function isHeadingWikiComponentDisabled()
+    {
+        return  $this->getValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE,syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE);
     }
 
 

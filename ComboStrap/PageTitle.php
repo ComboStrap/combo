@@ -71,6 +71,28 @@ class PageTitle extends MetadataText
 
     }
 
+    public function buildFromReadStore()
+    {
+        $metadataStore = $this->getReadStore();
+        /**
+         * We got a conflict Dokuwiki stores a `title` meta in the current
+         * See first line of {@link \Doku_Renderer_metadata::header()}
+         */
+        $isWikiDisabled = ExecutionContext::getActualOrCreateFromEnv()
+            ->getConfig()
+            ->isHeadingWikiComponentDisabled();
+        if ($isWikiDisabled && $metadataStore instanceof MetadataDokuWikiStore) {
+            $this->wasBuild = true;
+            $dataCurrentAndPersistent = $metadataStore->getDataCurrentAndPersistent();
+            $value = $dataCurrentAndPersistent[MetadataDokuWikiStore::PERSISTENT_DOKUWIKI_KEY][$this->getName()];
+            $this->setFromStoreValueWithoutException($value);
+            return $this;
+        }
+        return parent::buildFromReadStore();
+    }
+
+
+
     /**
      * @return string
      */

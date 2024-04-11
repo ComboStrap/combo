@@ -369,6 +369,7 @@ class Call
 
     /**
      * @return mixed the data returned from the {@link DokuWiki_Syntax_Plugin::handle} (ie attributes, payload, ...)
+     * It may be any type. Array, scalar
      */
     public
     function &getPluginData($attribute = null)
@@ -409,34 +410,35 @@ class Call
 
 
     /**
-     *
+     * Return the attributes of a call
      */
     public
-    function &getAttributes(): ?array
+    function &getAttributes(): array
     {
-
 
         $isPluginCall = $this->isPluginCall();
         if (!$isPluginCall) {
             return $this->call[1];
-        } else {
-            $data = &$this->getPluginData();
-            if (!is_array($data)) {
-                LogUtility::error("The handle data is not an array for the call ($this), correct the returned data from the handle syntax plugin function", self::CANONICAL);
-                $data = [];
-                return $data;
-            }
-            if (!isset($data[PluginUtility::ATTRIBUTES])) {
-                $data[PluginUtility::ATTRIBUTES] = [];
-            }
-            $attributes = &$data[PluginUtility::ATTRIBUTES];
-            if (!is_array($attributes)) {
-                $message = "The attributes value are not an array for the call ($this), the value was wrapped in an array";
-                LogUtility::error($message, self::CANONICAL);
-                $attributes = [$attributes];
-            }
-            return $attributes;
         }
+
+        $data = &$this->getPluginData();
+        if (!is_array($data)) {
+            LogUtility::error("The handle data is not an array for the call ($this), correct the returned data from the handle syntax plugin function", self::CANONICAL);
+            // We discard, it may be a third party plugin
+            // The log will throw an error if it's on our hand
+            $data = [];
+            return $data;
+        }
+        if (!isset($data[PluginUtility::ATTRIBUTES])) {
+            $data[PluginUtility::ATTRIBUTES] = [];
+        }
+        $attributes = &$data[PluginUtility::ATTRIBUTES];
+        if (!is_array($attributes)) {
+            $message = "The attributes value are not an array for the call ($this), the value was wrapped in an array";
+            LogUtility::error($message, self::CANONICAL);
+            $attributes = [$attributes];
+        }
+        return $attributes;
     }
 
     public
@@ -945,7 +947,7 @@ class Call
     public
     function setAttribute(string $name, $value): Call
     {
-        $this->getPluginData()[PluginUtility::ATTRIBUTES][$name] = $value;
+        $this->getAttributes()[$name] = $value;
         return $this;
     }
 

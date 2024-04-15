@@ -224,6 +224,12 @@ class LinkMarkup
                 $page = MarkupPath::createPageFromPathObject($dokuPath);
                 $outputAttributes->addOutputAttributeValue(self::DATA_WIKI_ID, $dokuPath->getWikiId());
 
+                /**
+                 * Preview, we add it here because even if the file does not exist
+                 * we need to delete this attribute so that it's not in the HTML
+                 */
+                $previewConfig = SiteConfig::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
+                $preview = $outputAttributes->getBooleanValueAndRemoveIfPresent(self::PREVIEW_ATTRIBUTE, $previewConfig);
 
                 if (!FileSystems::exists($dokuPath)) {
 
@@ -253,9 +259,7 @@ class LinkMarkup
                     /**
                      * Preview tooltip
                      */
-                    $previewConfig = SiteConfig::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
-                    $preview = $outputAttributes->hasComponentAttributeAndRemove(self::PREVIEW_ATTRIBUTE);
-                    if ($preview || $previewConfig === 1) {
+                    if ($preview) {
                         Tooltip::addToolTipSnippetIfNeeded();
                         // We use as heading, the name and not the title of the resource because otherwise it would be to lengthy
                         $tooltipHtml = <<<EOF

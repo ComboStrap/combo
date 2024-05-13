@@ -1,8 +1,8 @@
 base    combo
 author  ComboStrap
 email   support@combostrap.com
-version 1.25.2
-date    2024-02-07
+version 1.25.3
+date    2024-05-13
 name    Combo Plugin
-desc    Bootstrap and Material Design UI Component, SEO and Url management
-url     https://combostrap.com
+desc    Professional looking templates (Bootstrap based) and SEO optimized pages.
+url     https://combostrap.com/

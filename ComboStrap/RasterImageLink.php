@@ -192,7 +192,7 @@ class RasterImageLink extends ImageLink
          */
         $srcValue = $fetchRaster->getFetchUrl();
         /**
-         * Add samller breakpoints sizes
+         * Add smaller breakpoints sizes
          */
         $intrinsicWidth = $fetchRaster->getIntrinsicWidth();
         foreach (Breakpoint::getBreakpoints() as $breakpoint) {

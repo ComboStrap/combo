@@ -149,7 +149,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         /**
          * If there is no buster key, the infinite cache is off
          */
-        $busterKey = $_GET[IFetcher::CACHE_BUSTER_KEY];
+        $busterKey = $_GET[IFetcher::CACHE_BUSTER_KEY] ?? null;
         if ($busterKey === null) {
             return;
         }

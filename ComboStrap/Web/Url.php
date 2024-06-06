@@ -85,7 +85,7 @@ class Url extends PathAbs
     /**
      * @var bool - does the URL rewrite occurs
      */
-    private bool $withRewrite = true;
+    private bool $withRewrite = false;
 
 
     /**
@@ -137,6 +137,16 @@ class Url extends PathAbs
                 $this->setPath($pathUrlComponent);
             }
             $this->fragment = $urlComponents["fragment"] ?? null;
+
+            /**
+             * Rewrite occurs only on
+             * Dokuwiki Request
+             */
+            $requestHost = $_SERVER['HTTP_HOST'] ?? 'undefined';
+            if($requestHost && $this->host === $requestHost){
+                $this->withRewrite = true;
+            }
+
         }
     }
 

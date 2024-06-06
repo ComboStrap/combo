@@ -1,9 +1,13 @@
 {
     "name": "combo-test",
     "version": "1.0.0",
-    "description": "Jsdom is used to execute pages in test",
+    "description": "Packages used in the test and type development",
     "private": true,
     "devDependencies": {
-        "jsdom": "^22.0.0"
-    }
+        "@types/bootstrap": "^5.2.10",
+        "bootstrap": "5.1",
+        "jsdom": "^22.0.0",
+        "vitest": "^1.6.0"
+    },
+    "packageManager": "yarn@3.3.1"
 }

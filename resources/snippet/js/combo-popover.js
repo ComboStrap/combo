@@ -1,12 +1,11 @@
-/* global bootstrap */
-// noinspection ES6ConvertVarToLetConst
+
 window.combos = (function (module) {
     module.popover = {
         getDataNamespace: function () {
             let defaultNamespace = "-bs";
             let bootstrapVersion = 5;
-            if (typeof bootstrap.Popover.VERSION !== 'undefined') {
-                bootstrapVersion = parseInt(bootstrap.Popover.VERSION.substr(0, 1), 10);
+            if (typeof window.bootstrap.Popover.VERSION !== 'undefined') {
+                bootstrapVersion = parseInt(window.bootstrap.Popover.VERSION.substr(0, 1), 10);
                 if (bootstrapVersion < 5) {
                     return "";
                 }
@@ -33,15 +32,47 @@ window.combos = (function (module) {
                 cssSelector = `[data${namespace}-toggle="popover"]`;
             }
             options.sanitize = false;
-            if (typeof bootstrap.Popover.VERSION !== 'undefined') {
+            if (typeof window.bootstrap.Popover.VERSION !== 'undefined') {
                 document.querySelectorAll(cssSelector)
                     .forEach(el => {
-                        let popover = bootstrap.Popover.getInstance(el);
+                        let popover = window.bootstrap.Popover.getInstance(el);
                         if (popover === null) {
-                            new bootstrap.Popover(el, options);
-                            // to not navigate on `a` anchor
-                            el.onclick = (event => event.preventDefault());
+                            popover = new window.bootstrap.Popover(el, options);
                         }
+                        el.onclick = (event) => {
+                            const popoverOnClick = window.bootstrap.Popover.getInstance(el)
+                            // to not navigate on `a` anchor
+                            event.preventDefault();
+                            // https://stackoverflow.com/a/70498530/297420
+                            const areaListener = new AbortController();
+                            // to dismiss the popover
+                            document.addEventListener(
+                                'mousedown',
+                                event => {
+                                    if (el.contains(event.target)) {
+                                        return;
+                                    }
+                                    const rootPopoverDomId = el.getAttribute("aria-describedby");
+                                    if (!rootPopoverDomId) {
+                                        areaListener.abort();
+                                        return;
+                                    }
+                                    const rootPopOverElement = document.getElementById(rootPopoverDomId);
+                                    if (!rootPopOverElement) {
+                                        areaListener.abort();
+                                        return;
+                                    }
+                                    if (rootPopOverElement.contains(event.target)) {
+                                        return;
+                                    }
+                                    popoverOnClick.hide();
+                                    areaListener.abort();
+                                },
+                                { signal: areaListener.signal }
+                            );
+                        };
+
+
                     });
                 return;
             }

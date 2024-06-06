@@ -109,9 +109,10 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
 
         $linkAttributes["data{$dataAttributeNamespace}-content"] = $html;
 
-        // Dismiss on next click
-        // To debug, just comment this line
-        $linkAttributes["data{$dataAttributeNamespace}-trigger"] = "focus";
+        // https://github.com/ComboStrap/combo/issues/109
+        // Don't use the dismiss, happens before a link navigation
+        // preventing links to work
+        // $linkAttributes["data{$dataAttributeNamespace}-trigger"] = "focus";
 
         // See for the tabindex
         // https://getbootstrap.com/docs/5.1/components/popovers/#dismiss-on-next-click

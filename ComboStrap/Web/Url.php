@@ -85,7 +85,7 @@ class Url extends PathAbs
     /**
      * @var bool - does the URL rewrite occurs
      */
-    private bool $withRewrite = false;
+    private bool $withRewrite = true;
 
 
     /**
@@ -139,12 +139,23 @@ class Url extends PathAbs
             $this->fragment = $urlComponents["fragment"] ?? null;
 
             /**
-             * Rewrite occurs only on
-             * Dokuwiki Request
+             * Rewrite occurs only on Dokuwiki Request
+             * Not on CDN
+             * We use a negation because otherwise the router redirect for now if the value is false by default
+             *
+             * Rewrite is only allowed on
+             *   * relative url
+             *   * first party url
              */
-            $requestHost = $_SERVER['HTTP_HOST'] ?? 'undefined';
-            if($requestHost && $this->host === $requestHost){
-                $this->withRewrite = true;
+            $requestHost = $_SERVER['HTTP_HOST'] ?? null;
+            if(!(
+                // relative url
+                $this->host == null
+                ||
+                // first party url
+                ($requestHost != null && $this->host == $requestHost))
+            ){
+                $this->withRewrite = false;
             }
 
         }

@@ -266,7 +266,7 @@ class EditButton
 
             $target = $data[self::TARGET_ATTRIBUTE_NAME];
 
-            $message = $data[self::EDIT_MESSAGE];
+            $message = $data[self::EDIT_MESSAGE] ?? null;
             unset($data[self::EDIT_MESSAGE]);
             if ($message === null || trim($message) === "") {
                 $message = "Edit {$target}";

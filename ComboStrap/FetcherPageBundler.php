@@ -21,6 +21,15 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
     const CANONICAL = self::NAME;
     const NAME = "pagebundler";
     private ?Outline $bundledOutline = null;
+    /**
+     * @var int - the maximum number of pages to bundle
+     * Security to not get DDOS by a Search engine
+     */
+    private int $maxPages = 5;
+    /**
+     * @var int the number of pages processed (ie actually added to the outline)
+     */
+    private int $countPageProcessed = 0;
 
     public static function createPageBundler(): FetcherPageBundler
     {
@@ -126,9 +135,13 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             return $this->bundledOutline;
         }
 
+        if (!Identity::isAnonymous()) {
+            $this->maxPages = 99999;
+            set_time_limit(5 * 60);
+        }
         $startPath = $this->getStartPath();
         $actualLevel = 0;
-        $this->buildOutlineRecursive($startPath,$actualLevel);
+        $this->buildOutlineRecursive($startPath, $actualLevel);
 
         return $this->bundledOutline;
 
@@ -276,10 +289,17 @@ EOF;
             $indexOutline = Outline::createFromMarkup($content, $this->getStartPath(), $this->getRequestedContextPath());
         }
 
-        if(!$this->bundledOutline){
+        /**
+         * Start of bundled outline or not
+         */
+        if ($this->bundledOutline === null) {
             $this->bundledOutline = $indexOutline;
         } else {
             Outline::merge($this->bundledOutline, $indexOutline, $actualLevel);
+        }
+        $this->countPageProcessed = +1;
+        if ($this->countPageProcessed > $this->maxPages) {
+            return;
         }
 
         /**
@@ -292,11 +312,15 @@ EOF;
             }
             $outer = $this->addFirstSectionIfMissing($child->getOutline());
             Outline::merge($this->bundledOutline, $outer, $actualLevel);
+            $this->countPageProcessed = +1;
+            if ($this->countPageProcessed > $this->maxPages) {
+                return;
+            }
         }
         $containerPages = MarkupFileSystem::getOrCreate()->getChildren($indexPath, FileSystems::CONTAINER);
-        $nextLevel = $actualLevel+1;
+        $nextLevel = $actualLevel + 1;
         foreach ($containerPages as $child) {
-            $this->buildOutlineRecursive($child,$nextLevel);
+            $this->buildOutlineRecursive($child, $nextLevel);
         }
 
     }

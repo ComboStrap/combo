@@ -458,7 +458,7 @@ class Outline
 
     /**
      */
-    public static function merge(Outline $inner, Outline $outer)
+    public static function merge(Outline $inner, Outline $outer, int $actualLevel)
     {
         /**
          * Get the inner section where the outer section will be added
@@ -480,7 +480,7 @@ class Outline
             /**
              * One level less than where the section is included
              */
-            $childOuterSection->setLevel($firstInnerSectionLevel + 1);
+            $childOuterSection->setLevel($firstInnerSectionLevel + $actualLevel + 1);
             $childOuterSection->detachBeforeAppend();
             try {
                 $firstInnerSection->appendChild($childOuterSection);

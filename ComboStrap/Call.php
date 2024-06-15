@@ -517,6 +517,10 @@ class Call
                  * @var SyntaxPlugin $syntaxPlugin
                  */
                 $syntaxPlugin = $DOKU_PLUGINS['syntax'][$component];
+                if ($syntaxPlugin === null) {
+                    // not a syntax plugin (ie frontmatter)
+                    return null;
+                }
                 $pType = $syntaxPlugin->getPType();
                 switch ($pType) {
                     case "normal":

@@ -20,7 +20,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
 
     const CANONICAL = self::NAME;
     const NAME = "pagebundler";
-    private Outline $bundledOutline;
+    private ?Outline $bundledOutline = null;
 
     public static function createPageBundler(): FetcherPageBundler
     {
@@ -127,22 +127,8 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
         }
 
         $startPath = $this->getStartPath();
-        if (FileSystems::exists($startPath)) {
-            $indexOutline = $this->addFirstSectionIfMissing($startPath->getOutline());
-        } else {
-            $title = PageTitle::createForMarkup($startPath)->getValueOrDefault();
-            $content = <<<EOF
-====== $title ======
-EOF;
-            $indexOutline = Outline::createFromMarkup($content, $this->getStartPath(), $this->getRequestedContextPath());
-        }
-
-        $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($startPath, FileSystems::LEAF);
-        foreach ($childrenPages as $child) {
-            $outer = $this->addFirstSectionIfMissing($child->getOutline());
-            Outline::merge($indexOutline, $outer);
-        }
-        $this->bundledOutline = $indexOutline;
+        $actualLevel = 0;
+        $this->buildOutlineRecursive($startPath,$actualLevel);
 
         return $this->bundledOutline;
 
@@ -273,5 +259,45 @@ EOF;
     public function getLabel(): string
     {
         return self::CANONICAL;
+    }
+
+    private function buildOutlineRecursive(MarkupPath $indexPath, int $actualLevel)
+    {
+        /**
+         * Index Page
+         */
+        if (FileSystems::exists($indexPath)) {
+            $indexOutline = $this->addFirstSectionIfMissing($indexPath->getOutline());
+        } else {
+            $title = PageTitle::createForMarkup($indexPath)->getValueOrDefault();
+            $content = <<<EOF
+====== $title ======
+EOF;
+            $indexOutline = Outline::createFromMarkup($content, $this->getStartPath(), $this->getRequestedContextPath());
+        }
+
+        if(!$this->bundledOutline){
+            $this->bundledOutline = $indexOutline;
+        } else {
+            Outline::merge($this->bundledOutline, $indexOutline, $actualLevel);
+        }
+
+        /**
+         * Children Pages (Same level)
+         */
+        $childrenPages = MarkupFileSystem::getOrCreate()->getChildren($indexPath, FileSystems::LEAF);
+        foreach ($childrenPages as $child) {
+            if ($child->isSlot()) {
+                continue;
+            }
+            $outer = $this->addFirstSectionIfMissing($child->getOutline());
+            Outline::merge($this->bundledOutline, $outer, $actualLevel);
+        }
+        $containerPages = MarkupFileSystem::getOrCreate()->getChildren($indexPath, FileSystems::CONTAINER);
+        $nextLevel = $actualLevel+1;
+        foreach ($containerPages as $child) {
+            $this->buildOutlineRecursive($child,$nextLevel);
+        }
+
     }
 }

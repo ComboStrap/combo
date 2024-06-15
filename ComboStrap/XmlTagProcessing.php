@@ -20,7 +20,6 @@ use Doku_Renderer;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use DokuWiki_Syntax_Plugin;
-use Mpdf\Tag\Sub;
 use renderer_plugin_combo_analytics;
 use renderer_plugin_combo_xml;
 use syntax_plugin_combo_code;
@@ -83,6 +82,14 @@ class XmlTagProcessing
                 return true;
             case HeadingTag::LOGICAL_TAG:
                 $context = $data[PluginUtility::CONTEXT];
+                if ($context === null) {
+                    // no idea why but with the page bundler
+                    // this is what is expected
+                    $context = "outline";
+                    if (PluginUtility::isDev()) {
+                        throw new ExceptionRuntimeInternal("The Heading context was null");
+                    }
+                }
                 $renderer->doc .= HeadingTag::renderClosingTag($tagAttributes, $context);
                 return true;
             case NoteTag::TAG_INOTE:

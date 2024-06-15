@@ -176,7 +176,7 @@ class WikiPath extends PathAbs
                     try {
                         $rootRelativePath = $currentPagePath->getParent();
                     } catch (ExceptionNotFound $e) {
-                        LogUtility::error("The parent relative path ({$this->absolutePath}) returns an error: {$e->getMessage()}", self::CANONICAL);
+                        // No parent
                         $rootRelativePath = $executionContext->getContextNamespacePath();
                     }
 

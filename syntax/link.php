@@ -276,6 +276,20 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                  */
                 $markupRef = $parsedArray[self::MARKUP_REF_ATTRIBUTE];
                 if ($markupRef !== null) {
+                    /**
+                     * If the Rel is a wiki link, we make the path absolute and not relative
+                     * (this is for the {@link \ComboStrap\FetcherPageBundler)}}
+                     * otherwise the links are not good and are seen as non-existent
+                     */
+                    try {
+                        $markupRefObject = MarkupRef::createLinkFromRef($markupRef);
+                        $scheme = $markupRefObject->getSchemeType();
+                        if ($scheme === MarkupRef::WIKI_URI) {
+                            $markupRef = $markupRefObject->getPath()->toAbsoluteId();
+                        }
+                    } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                        // no a valid ref
+                    }
                     $htmlAttributes->addComponentAttributeValue(self::MARKUP_REF_ATTRIBUTE, $markupRef);
                 }
 

@@ -280,7 +280,13 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
          * Index Page
          */
         if (FileSystems::exists($indexPath)) {
-            $indexOutline = $this->addFirstSectionIfMissing($indexPath->getOutline());
+            $outline = FetcherMarkup::confRoot()
+                ->setRequestedExecutingPath($indexPath)
+                ->setRequestedContextPath($indexPath->toWikiPath())
+                ->setRequestedMimeToInstructions()
+                ->build()
+                ->getOutline();
+            $indexOutline = $this->addFirstSectionIfMissing($outline);
         } else {
             $title = PageTitle::createForMarkup($indexPath)->getValueOrDefault();
             $content = <<<EOF
@@ -310,7 +316,18 @@ EOF;
             if ($child->isSlot()) {
                 continue;
             }
-            $outer = $this->addFirstSectionIfMissing($child->getOutline());
+            try {
+                $outline = FetcherMarkup::confRoot()
+                    ->setRequestedExecutingPath($child)
+                    ->setRequestedContextPath($child->toWikiPath())
+                    ->setRequestedMimeToInstructions()
+                    ->build()
+                    ->getOutline();
+            } catch (ExceptionNotExists $e) {
+                // as it's in a file system loop, the page should exist
+                continue;
+            }
+            $outer = $this->addFirstSectionIfMissing($outline);
             Outline::merge($this->bundledOutline, $outer, $actualLevel);
             $this->countPageProcessed = +1;
             if ($this->countPageProcessed > $this->maxPages) {

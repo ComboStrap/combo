@@ -1,10 +1,10 @@
 <?php
 
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\TagAttributes;
 
@@ -129,9 +129,19 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                  */
                 $level = $this->getLevelFromMatch($match);
 
-                $attributes = TagAttributes::createEmpty(self::TAG)
-                    ->addComponentAttributeValue(HeadingTag::LEVEL,$level)
-                    ->toCallStackArray();
+
+                $tagAttributes = TagAttributes::createEmpty(self::TAG)
+                    ->addComponentAttributeValue(HeadingTag::LEVEL, $level);
+
+                if ($level === 1) {
+                    try {
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty("id", HeadingTag::getIdForLevel1());
+                    } catch (ExceptionNotFound $e) {
+                        // dynamic execution
+                    }
+                }
+
+                $attributes = $tagAttributes->toCallStackArray();
 
                 $callStack = CallStack::createFromHandler($handler);
                 $context = HeadingTag::getContext($callStack);

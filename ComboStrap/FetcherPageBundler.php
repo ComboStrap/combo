@@ -287,6 +287,9 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
                 ->build()
                 ->getOutline();
             $indexOutline = $this->addFirstSectionIfMissing($outline);
+            foreach ($indexOutline->getRootOutlineSection()->getChildren() as $childOuterSection) {
+                $childOuterSection->updatePageLinkToInternal($indexPath);
+            }
         } else {
             $title = PageTitle::createForMarkup($indexPath)->getValueOrDefault();
             $content = <<<EOF

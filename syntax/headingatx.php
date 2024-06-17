@@ -2,6 +2,7 @@
 
 
 use ComboStrap\CallStack;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\HeadingTag;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -82,8 +83,17 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     {
 
         if ($state == DOKU_LEXER_SPECIAL) {
-            $attributes = [HeadingTag::LEVEL => strlen(trim($match))];
+            $level = strlen(trim($match));
+            $attributes = [HeadingTag::LEVEL => $level];
             $callStack = CallStack::createFromHandler($handler);
+
+            if ($level == 1) {
+                try {
+                    $attributes["id"] = HeadingTag::getIdForLevel1();
+                } catch (ExceptionNotFound $e) {
+                    // dynamic execution
+                }
+            }
 
             // Determine the type
             $context = HeadingTag::getContext($callStack);

@@ -130,18 +130,9 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 $level = $this->getLevelFromMatch($match);
 
 
-                $tagAttributes = TagAttributes::createEmpty(self::TAG)
-                    ->addComponentAttributeValue(HeadingTag::LEVEL, $level);
-
-                if ($level === 1) {
-                    try {
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty("id", HeadingTag::getIdForLevel1());
-                    } catch (ExceptionNotFound $e) {
-                        // dynamic execution
-                    }
-                }
-
-                $attributes = $tagAttributes->toCallStackArray();
+                $attributes = TagAttributes::createEmpty(self::TAG)
+                    ->addComponentAttributeValue(HeadingTag::LEVEL, $level)
+                    ->toCallStackArray();
 
                 $callStack = CallStack::createFromHandler($handler);
                 $context = HeadingTag::getContext($callStack);

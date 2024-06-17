@@ -240,7 +240,7 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
                 null,
                 \syntax_plugin_combo_xmlblocktag::TAG
             );
-            $h1Section = OutlineSection::createFromEnterHeadingCall($enterHeading)
+            $h1Section = OutlineSection::createFromEnterHeadingCall($outline, $enterHeading)
                 ->addHeaderCall($unmatchedHeading)
                 ->addHeaderCall($exitHeading);
             $children = $rootOutlineSection->getChildren();

@@ -578,20 +578,5 @@ class HeadingTag
         }
     }
 
-    /**
-     * Level 1 has the page id as id to be able to
-     * concatenate them in a {@link \ComboStrap\FetcherPageBundler}
-     * and to not loose the link
-     * (Too complicated for now, to do it in the {@link \ComboStrap\Outline}
-     * @throws ExceptionNotFound - when the executing id was not found
-     */
-    public static function getIdForLevel1(): string
-    {
-        $executingWikiId = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiPath()->toAbsoluteId();
-        $check = false;
-        return sectionID($executingWikiId, $check);
-
-    }
-
 
 }

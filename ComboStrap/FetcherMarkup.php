@@ -941,7 +941,14 @@ class FetcherMarkup extends IFetcherAbs implements IFetcherSource, IFetcherStrin
             // In preview, there is no parent handler because we didn't take over
             && ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction() !== ExecutionContext::PREVIEW_ACTION
         ) {
-            LogUtility::warning("The execution ($this) is not a path execution. The snippet $snippet will not be preserved after initial rendering. Set the execution as standalone or set a parent markup handler.");
+            /**
+             * The template is not part of the execution.
+             * Therefore when doing a page bundle, there is no way to set that this a standalone execution
+             * Hack to not get this message with a {@link self::MARKUP_DYNAMIC_EXECUTION_NAME} inside a page bundle
+             */
+            if ($_GET["do"] !== "combo_" . FetcherPageBundler::NAME) {
+                LogUtility::warning("The execution ($this) is not a path execution. The snippet $snippet will not be preserved after initial rendering. Set the execution as standalone or set a parent markup handler.");
+            }
         }
         if (!in_array($this->getMime()->toString(), [Mime::XHTML, Mime::HTML])) {
             LogUtility::warning("The execution ($this) is not a HTML execution. The snippet $snippet will not be preserved because they are reserved for XHMTL execution");

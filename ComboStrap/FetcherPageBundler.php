@@ -292,7 +292,8 @@ class FetcherPageBundler extends IFetcherAbs implements IFetcherString
             $content = <<<EOF
 ====== $title ======
 EOF;
-            $indexOutline = Outline::createFromMarkup($content, $this->getStartPath(), $this->getRequestedContextPath());
+            $indexOutline = Outline::createFromMarkup($content, $indexPath, $this->getRequestedContextPath());
+            $indexOutline = $this->addFirstSectionIfMissing($indexOutline);
         }
 
         /**

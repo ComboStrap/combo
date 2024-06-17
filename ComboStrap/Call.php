@@ -523,6 +523,8 @@ class Call
                 }
                 $pType = $syntaxPlugin->getPType();
                 switch ($pType) {
+                    // https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
+                    case "substition":
                     case "normal":
                         return Call::INLINE_DISPLAY;
                     case "block":

@@ -257,7 +257,7 @@ class FetcherRaster extends IFetcherLocalImage
              * They don't really break anything and it's difficult
              * to see when it's intended (ie there is no better image or not)
              */
-            LogUtility::info("For the image ($this), the calculated width of ($targetWidth) cannot be bigger than the intrinsic width of ($targetWidth). The requested width was then set to its natural width ($intrinsicWidth).", self::CANONICAL);
+            LogUtility::debug("For the image ($this), the calculated width of ($targetWidth) cannot be bigger than the intrinsic width of ($targetWidth). The requested width was then set to its natural width ($intrinsicWidth).", self::CANONICAL);
             return $intrinsicWidth;
         }
         return $targetWidth;

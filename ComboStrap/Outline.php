@@ -139,7 +139,8 @@ class Outline
          * Processing variable about the context
          */
         $this->rootSection = OutlineSection::createOutlineRoot()
-            ->setStartPosition(0);
+            ->setStartPosition(0)
+            ->setOutlineContext($this);
         $this->actualSection = $this->rootSection;
         $actualLastPosition = 0;
         $callStack->moveToStart();
@@ -457,6 +458,7 @@ class Outline
     }
 
     /**
+     * Merge into a flat outline
      */
     public static function merge(Outline $inner, Outline $outer, int $actualLevel)
     {
@@ -480,14 +482,18 @@ class Outline
             /**
              * One level less than where the section is included
              */
-            $childOuterSection->setLevel($firstInnerSectionLevel + $actualLevel + 1);
+            $level = $firstInnerSectionLevel + $actualLevel + 1;
+            $childOuterSection->setLevel($level);
+            $childOuterSection->updatePageLinkToInternal($inner->markupPath);
             $childOuterSection->detachBeforeAppend();
+
             try {
                 $firstInnerSection->appendChild($childOuterSection);
             } catch (ExceptionBadState $e) {
                 // We add the node only once. This error should not happen
                 throw new ExceptionRuntimeInternal("Error while adding a section during the outline merge. Error: {$e->getMessage()}", self::CANONICAL, 1, $e);
             }
+
         }
 
     }
@@ -502,15 +508,17 @@ class Outline
     /**
      * Utility class to create a outline from a markup string
      * @param string $content
+     * @param MarkupPath $contentPath
+     * @param WikiPath $contextPath
      * @return Outline
      */
-    public static function createFromMarkup(string $content, Path $contentPath, WikiPath $contextPath): Outline
+    public static function createFromMarkup(string $content, MarkupPath $contentPath, WikiPath $contextPath): Outline
     {
         $instructions = MarkupRenderer::createFromMarkup($content, $contentPath, $contextPath)
             ->setRequestedMimeToInstruction()
             ->getOutput();
         $callStack = CallStack::createFromInstructions($instructions);
-        return Outline::createFromCallStack($callStack);
+        return Outline::createFromCallStack($callStack, $contentPath);
     }
 
     /**

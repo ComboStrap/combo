@@ -95,7 +95,7 @@ class BreadcrumbTag
                 try {
                     $requiredDepth = DataType::toInteger($tagAttributes->getValueAndRemoveIfPresent(self::DEPTH_ATTRIBUTE));
                 } catch (ExceptionBadArgument $e) {
-                    LogUtility::error("We were unable to determine the depth attribute. The depth was set to 1. Error: {$e->getMessage()}");
+                    LogUtility::error("We were unable to determine the depth attribute. The depth was set to 1. Error: {$e->getMessage()}",self::LOGICAL_TAG);
                     $requiredDepth = 1;
                 }
                 if ($requiredDepth > 1) {

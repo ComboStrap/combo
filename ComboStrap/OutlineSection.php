@@ -40,6 +40,10 @@ class OutlineSection extends TreeNode
      * @var int - a best guess on the number of
      */
     private int $lineNumber;
+    /**
+     * @var Outline - the outline that created this section (only on root, this is to get the path for the heading)
+     */
+    private Outline $outlineContext;
 
 
     /**
@@ -237,7 +241,24 @@ class OutlineSection extends TreeNode
             if ($id !== null) {
                 return $id;
             }
+
             $label = $this->getLabel();
+
+            /**
+             * For Level 1 (ie Heading 1), we use the path as id and not the label
+             * Why? because when we bundle all pages in a single page
+             * (With {@link FetcherPageBundler}
+             * we can transform a wiki link to an internal link
+             */
+            $level = $this->getLevel();
+            if ($level === 1) {
+                // id is the path id
+                $markupPath = $this->getRoot()->outlineContext->getMarkupPath();
+                if ($markupPath !== null) {
+                    $label = $markupPath->toAbsoluteId();
+                }
+            }
+
             $this->headingId = sectionID($label, $this->tocUniqueId);
         }
         return $this->headingId;
@@ -279,7 +300,7 @@ class OutlineSection extends TreeNode
         }
 
         /**
-         * Update the descdenants sections
+         * Update the descendants sections
          * @param OutlineSection $parentSection
          * @return void
          */
@@ -309,6 +330,81 @@ class OutlineSection extends TreeNode
     public function getLineCount(): int
     {
         return $this->lineNumber;
+    }
+
+    public function setOutlineContext(Outline $outline): OutlineSection
+    {
+        $this->outlineContext = $outline;
+        return $this;
+    }
+
+    private function getRoot()
+    {
+        $actual = $this;
+        while ($actual->hasParent()) {
+            try {
+                $actual = $actual->getParent();
+            } catch (ExceptionNotFound $e) {
+                // should not as we check before
+            }
+        }
+        return $actual;
+    }
+
+    /**
+     * @param MarkupPath|null $startPath - the path from where the page bundle is started to see if the link is of a page that was bundled
+     * @return $this - when merging 2 page, we need to make sure that the link becomes internal
+     * if the page was bundled
+     * (ie a link to :page:yolo become #pageyolo)
+     */
+    public function updatePageLinkToInternal(?MarkupPath $startPath): OutlineSection
+    {
+        foreach ($this->contentCalls as $contentCall) {
+
+            if (!$contentCall->isPluginCall()) {
+                continue;
+            }
+            $componentName = $contentCall->getComponentName();
+            if ($componentName === "combo_link" && $contentCall->getState() === DOKU_LEXER_ENTER) {
+                $refString = $contentCall->getAttribute("ref");
+                if ($refString === null) {
+                    continue;
+                }
+                try {
+                    $markupRef = MarkupRef::createLinkFromRef($refString);
+                } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
+                    // pffff
+                    continue;
+                }
+                if ($markupRef->getSchemeType() !== MarkupRef::WIKI_URI) {
+                    continue;
+                }
+                try {
+                    $parentPath = $startPath->toWikiPath()->getParent()->toAbsoluteId();
+                } catch (ExceptionNotFound $e) {
+                    // root then
+                    $parentPath = ":";
+                }
+                if (!StringUtility::startWiths($refString, $parentPath)) {
+                    continue;
+                }
+                $noCheck = false;
+                $expectedH1ID = sectionID($refString, $noCheck);
+                $contentCall->setAttribute("ref", "#" . $expectedH1ID);
+
+            }
+        }
+
+        /**
+         * Update the links to internal
+         */
+        $updateLink = function (OutlineSection $parentSection) use ($startPath) {
+            foreach ($parentSection->getChildren() as $child) {
+                $child->updatePageLinkToInternal($startPath);
+            }
+        };
+        TreeVisit::visit($this, $updateLink);
+        return $this;
     }
 
 

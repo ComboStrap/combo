@@ -17,6 +17,9 @@ use Symfony\Component\Yaml\Yaml;
  *
  * It's used by Fetcher that creates pages such
  * as {@link FetcherPage}, {@link FetcherMarkupWebcode} or {@link FetcherPageBundler}
+ *
+ * Unfortunately, the template is not a runtime parameters
+ * Showing the heading 1 for instance depends on it.
  */
 class TemplateForWebPage
 {

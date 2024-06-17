@@ -393,6 +393,13 @@ class HeadingTag
             $hasMainHeaderElement = TemplateForWebPage::create()
                 ->setRequestedContextPath(ExecutionContext::getActualOrCreateFromEnv()->getContextPath())
                 ->hasElement(TemplateSlot::MAIN_HEADER_ID);
+
+            // fuck: template should be a runtime parameters and is not
+            $executingAction = ExecutionContext::getActualOrCreateFromEnv()->getExecutingAction();
+            if ($executingAction === "combo_" . FetcherPageBundler::NAME) {
+                $hasMainHeaderElement = false;
+            }
+
             if ($hasMainHeaderElement) {
                 $tagAttributes->addClassName("d-none");
             }

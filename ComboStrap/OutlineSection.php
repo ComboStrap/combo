@@ -49,8 +49,9 @@ class OutlineSection extends TreeNode
     /**
      * @param Call|null $headingEnterCall - null if the section is the root
      */
-    private function __construct(Call $headingEnterCall = null)
+    private function __construct(Outline $outlineContext,Call $headingEnterCall = null)
     {
+        $this->outlineContext = $outlineContext;
         $this->headingEnterCall = $headingEnterCall;
         if ($headingEnterCall !== null) {
             $position = $headingEnterCall->getFirstMatchedCharacterPosition();
@@ -60,6 +61,10 @@ class OutlineSection extends TreeNode
                 $this->startFileIndex = $position;
             }
             $this->addHeaderCall($headingEnterCall);
+            // We persist the id for level 1 because the heading tag may be deleted
+            if ($this->getLevel() === 1) {
+                $this->headingEnterCall->setAttribute("id", $this->getHeadingId());
+            }
         } else {
             $this->startFileIndex = 0;
         }
@@ -68,9 +73,9 @@ class OutlineSection extends TreeNode
     }
 
 
-    public static function createOutlineRoot(): OutlineSection
+    public static function createOutlineRoot(Outline $outlineContext): OutlineSection
     {
-        return new OutlineSection(null);
+        return new OutlineSection($outlineContext,null);
     }
 
 
@@ -86,9 +91,9 @@ class OutlineSection extends TreeNode
         return sectionID($fragment, $check);
     }
 
-    public static function createFromEnterHeadingCall(Call $enterHeadingCall): OutlineSection
+    public static function createFromEnterHeadingCall(Outline $outline,Call $enterHeadingCall): OutlineSection
     {
-        return new OutlineSection($enterHeadingCall);
+        return new OutlineSection($outline, $enterHeadingCall);
     }
 
     public function getFirstChild(): OutlineSection
@@ -288,6 +293,7 @@ class OutlineSection extends TreeNode
 
     public function setLevel(int $level): OutlineSection
     {
+
         switch ($this->headingEnterCall->getTagName()) {
             case Outline::DOKUWIKI_HEADING_CALL_NAME:
                 $this->headingEnterCall->getInstructionCall()[1][1] = $level;
@@ -330,12 +336,6 @@ class OutlineSection extends TreeNode
     public function getLineCount(): int
     {
         return $this->lineNumber;
-    }
-
-    public function setOutlineContext(Outline $outline): OutlineSection
-    {
-        $this->outlineContext = $outline;
-        return $this;
     }
 
     private function getRoot()

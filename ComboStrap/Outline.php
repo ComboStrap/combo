@@ -138,9 +138,8 @@ class Outline
         /**
          * Processing variable about the context
          */
-        $this->rootSection = OutlineSection::createOutlineRoot()
-            ->setStartPosition(0)
-            ->setOutlineContext($this);
+        $this->rootSection = OutlineSection::createOutlineRoot($this)
+            ->setStartPosition(0);
         $this->actualSection = $this->rootSection;
         $actualLastPosition = 0;
         $callStack->moveToStart();
@@ -265,7 +264,7 @@ class Outline
                 }
 
 
-                $newOutlineSection = OutlineSection::createFromEnterHeadingCall($actualCall);
+                $newOutlineSection = OutlineSection::createFromEnterHeadingCall($this, $actualCall);
                 $sectionDiff = $newSectionLevel - $actualSectionLevel;
                 if ($sectionDiff > 0) {
 

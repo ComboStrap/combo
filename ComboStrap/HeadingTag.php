@@ -585,9 +585,9 @@ class HeadingTag
      * (Too complicated for now, to do it in the {@link \ComboStrap\Outline}
      * @throws ExceptionNotFound - when the executing id was not found
      */
-    public static function getIdForLevel1()
+    public static function getIdForLevel1(): string
     {
-        $executingWikiId = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiId();
+        $executingWikiId = ExecutionContext::getActualOrCreateFromEnv()->getExecutingWikiPath()->toAbsoluteId();
         $check = false;
         return sectionID($executingWikiId, $check);
 

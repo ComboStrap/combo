@@ -613,8 +613,9 @@ class MarkupRef
                 /**
                  * Boolean attribute
                  * (null does not make it)
+                 * The boolean true is one by default
                  */
-                $value = null;
+                $value = "true";
             }
 
             $anchorPosition = false;

@@ -285,10 +285,38 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $markupRefObject = MarkupRef::createLinkFromRef($markupRef);
                         $scheme = $markupRefObject->getSchemeType();
                         if ($scheme === MarkupRef::WIKI_URI) {
+
+                            /**
+                             * Properties?
+                             */
+                            $newProperties = [];
+                            $url = $markupRefObject->getUrl();
+                            foreach (array_keys($url->getQueryProperties()) as $propertyName) {
+                                if ($propertyName === "id") {
+                                    continue;
+                                }
+                                $queryPropertyValue = $url->getQueryPropertyValue($propertyName);
+                                if (is_array($queryPropertyValue)) {
+                                    foreach ($queryPropertyValue as $arrayValue) {
+                                        $newProperties[] = $propertyName . "=" . $arrayValue;
+                                    }
+                                } else {
+                                    $newProperties[] = $propertyName . "=" . $queryPropertyValue;
+                                }
+                            }
                             $markupRef = $markupRefObject->getPath()->toAbsoluteId();
+                            if (count($newProperties) > 0) {
+                                $queryString = implode("&", $newProperties);
+                                $markupRef .= "?" . $queryString;
+                            }
+                            try {
+                                $markupRef .= "#" . $url->getFragment();
+                            } catch (ExceptionNotFound $e) {
+                                // no fragment
+                            }
                         }
                     } catch (ExceptionBadArgument|ExceptionBadSyntax|ExceptionNotFound $e) {
-                        // no a valid ref
+                        // not a valid ref
                     }
                     $htmlAttributes->addComponentAttributeValue(self::MARKUP_REF_ATTRIBUTE, $markupRef);
                 }

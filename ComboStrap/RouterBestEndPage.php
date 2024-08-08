@@ -36,7 +36,7 @@ class RouterBestEndPage
         $pagesWithSameName = Index::getOrCreate()
             ->getPagesWithSameLastName($requestedPage);
         if (sizeof($pagesWithSameName) == 0) {
-            return [];
+            return [null, null];
         }
         return self::getBestEndPageIdFromPages($pagesWithSameName, $requestedPage);
 
@@ -52,7 +52,7 @@ class RouterBestEndPage
     public static function process(MarkupPath $missingPage): array
     {
 
-        $return = array();
+        $return = [null, null];
 
         $minimalScoreForARedirect = SiteConfig::getConfValue(self::CONF_MINIMAL_SCORE_FOR_REDIRECT, self::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT);
 

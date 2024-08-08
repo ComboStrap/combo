@@ -15,8 +15,10 @@ use ComboStrap\LogUtility;
 use ComboStrap\Mime;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\Web\Url;
+use ComboStrap\Web\UrlRewrite;
 use ComboStrap\WikiPath;
 use dokuwiki\Utf8\PhpString;
 
@@ -107,7 +109,34 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
 
             $fetcher = $executionContext->createPathMainFetcherFromUrl($fetchUrl);
             $fetchPath = $fetcher->getFetchPath();
-            $event->data['file'] = $fetchPath->toAbsoluteId();
+            $filePath = $fetchPath->toAbsoluteId();
+            /**
+             * Bug
+             *
+             * We have a bug with {@link WikiPath::toValidAbsolutePath} that uses {@link cleanID()}.
+             * `/` becomes `_` if the useSlash conf is not enabled with web server useRewrite
+             * and the file then does not exists.
+             *
+             * Furthermore, passing a file that does not exist, will break dokuwiki and returns a 500
+             */
+            if (!file_exists($fetchPath)) {
+                $useRewrite = Site::getUrlRewrite();
+                $useSlash = Site::getUseSlash();
+                if($useRewrite == UrlRewrite::WEB_SERVER_REWRITE && !$useSlash){
+                    $executionContext
+                        ->response()
+                        ->setStatus(400)
+                        ->setBodyAsJsonMessage("The `useSlash` configuration should be enabled when the `useRewrite` is `htaccess` (ie web server), otherwise the file is not found.")
+                        ->end();
+                } else {
+                    $executionContext
+                        ->response()
+                        ->setStatus(404)
+                        ->end();
+                }
+                return;
+            }
+            $event->data['file'] = $filePath;
             $event->data['status'] = HttpResponseStatus::ALL_GOOD;
             $mime = $fetcher->getMime();
             $event->data["mime"] = $mime->toString();

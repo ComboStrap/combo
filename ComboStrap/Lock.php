@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use dokuwiki\Search\Indexer;
+use dokuwiki\TaskRunner;
 
 /**
  * Adapted from the {@link Indexer::lock()}
@@ -124,7 +125,17 @@ class Lock
      */
     public static function shutdownHandling($name)
     {
-        print "Lock::shutdownHandling(): Deleting the lock $name" . NL;
+        /**
+         * For an unknown reason, if we print in this function
+         * that is a called via the register_shutdown_function of {@link Lock::acquire()}
+         * no content is send with the {@link TaskRunner} (ie the gif is not sent)
+         */
+        global $INPUT, $conf;
+        $output = $INPUT->has('debug') && $conf['allowdebug'];
+        if ($output) {
+            print "Lock::shutdownHandling(): Deleting the lock $name";
+        }
+
         Lock::create($name)->release();
     }
 

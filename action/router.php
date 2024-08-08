@@ -127,17 +127,18 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     }
 
     /**
-     * @return array|mixed|string|string[]
+     * @return string|null
      *
      * Unfortunately, DOKUWIKI_STARTED is not the first event
      * The id may have been changed by
-     * {@link action_plugin_combo_metalang::load_lang()}
+     * {@link action_plugin_combo_lang::load_lang()}
      * function, that's why we have this function
      * to get the original requested id
      */
-    private static function getOriginalIdFromRequest()
+    private static function getOriginalIdFromRequest(): ?string
     {
-        $originalId = $_GET["id"] ?? null;
+        // and not $_GET["id"] otherwise we may get a `/`
+        $originalId = getID();
         if ($originalId === null) {
             return null;
         }

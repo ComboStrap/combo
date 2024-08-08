@@ -70,7 +70,7 @@ class action_plugin_combo_lang extends DokuWiki_Action_Plugin
          * becomes
          * locale:id1tgpx9
          */
-        $clean = false;
+        $clean = true; // delete the first /
         /** @noinspection PhpConditionAlreadyCheckedInspection */
         $id = getID("id", $clean);
         $id = WikiPath::normalizeWikiPath($id);

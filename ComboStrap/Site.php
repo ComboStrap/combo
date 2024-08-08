@@ -913,6 +913,14 @@ class Site
 
     }
 
+    public static function getUseSlash(): int
+    {
+        global $conf;
+        $useSlash = $conf['useslash'];
+        return DataType::toBoolean($useSlash);
+
+    }
+
     public static function getUrlRewrite(): string
     {
         global $conf;

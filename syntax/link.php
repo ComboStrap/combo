@@ -689,7 +689,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $id = $linkedPage->getWikiId();
                             $a = explode(':', getNS($ID));
                             $b = explode(':', getNS($id));
-                            while (isset($a[0]) && $a[0] == $b[0]) {
+                            while (isset($a[0]) && isset($b[0]) && $a[0] == $b[0]) {
                                 array_shift($a);
                                 array_shift($b);
                             }

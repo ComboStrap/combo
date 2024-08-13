@@ -635,7 +635,7 @@ class DatabasePageRow
              */
             $pageIdAbbr = $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] ?? null;
             if ($pageIdAbbr == null) {
-                $pageId = $values[PageId::getPersistentName()];
+                $pageId = $values[PageId::getPersistentName()] ?? null;
                 if ($pageId === null) {
                     throw new ExceptionBadState("You can't insert a page in the database without a page id");
                 }

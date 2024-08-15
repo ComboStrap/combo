@@ -241,11 +241,11 @@ class Site
          * Based on {@link getBaseURL()}
          * to be dokuwiki compliant
          */
-        $remoteHost = $_SERVER['HTTP_HOST'];
+        $remoteHost = $_SERVER['HTTP_HOST'] ?? null;
         if ($remoteHost !== null) {
             return $remoteHost;
         }
-        $remoteHost = $_SERVER['SERVER_NAME'];
+        $remoteHost = $_SERVER['SERVER_NAME'] ?? null;
         if ($remoteHost !== null) {
             return $remoteHost;
         }

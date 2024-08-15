@@ -129,6 +129,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     /**
      * @return string|null
      *
+     * Return the original id from the request
+     * ie `howto:how-to-get-started-with-combostrap-m3i8vga8`
+     * if `/howto/how-to-get-started-with-combostrap-m3i8vga8`
+     *
      * Unfortunately, DOKUWIKI_STARTED is not the first event
      * The id may have been changed by
      * {@link action_plugin_combo_lang::load_lang()}
@@ -137,11 +141,14 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      */
     private static function getOriginalIdFromRequest(): ?string
     {
-        // and not $_GET["id"] otherwise we may get a `/`
-        $originalId = getID();
+        $originalId = $_GET["id"] ?? null;
         if ($originalId === null) {
             return null;
         }
+        // We get a `/` as first character
+        // because we return an id, we need to delete it
+        $originalId = substr($originalId,1);
+        // transform / to :
         return str_replace("/", WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $originalId);
     }
 
@@ -346,7 +353,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
             /**
              * If this is not the root home page
-             * and if the canonical id is the not the same,
+             * and if the canonical id is the not the same (the id has changed)
              * and if this is not a historical page (revision)
              * redirect
              */

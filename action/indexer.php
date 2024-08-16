@@ -85,6 +85,7 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
     public function indexViaIndexerAdd(Doku_Event $event, $param)
     {
 
+
         $lock = Lock::create("combo-indexer");
         try {
             $lock->acquire();
@@ -93,7 +94,23 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
             return;
         }
 
-        print 'ComboIndexer(): Indexer started'. NL;
+        /**
+         * Get the q flag of the indexer
+         * php bin/indexer.php -q
+         */
+        $verbose = true;
+        if (PHP_SAPI === 'cli') {
+            global $argv;
+            foreach ($argv as $arg) {
+                if ($arg === '-q') {
+                    // Script was started with the -q flag.
+                    $verbose = false;
+                    break;
+                }
+            }
+        }
+
+        if ($verbose) echo 'ComboIndexer(): Indexer started'. DOKU_LF;
 
         try {
             /**
@@ -131,7 +148,7 @@ class action_plugin_combo_indexer extends DokuWiki_Action_Plugin
             }
 
         } finally {
-            print 'ComboIndexer(): Indexer finished'. NL;
+            if ($verbose) echo 'ComboIndexer(): Indexer finished'. DOKU_LF;
             $lock->release();
         }
 

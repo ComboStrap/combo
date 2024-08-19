@@ -896,20 +896,36 @@ class Site
         if (!empty($conf['basedir'])) {
             return $conf['basedir'];
         }
+
+        /**
+         * Trying to get the dir from the environment
+         */
         $scriptName = LocalPath::createFromPathString($_SERVER['SCRIPT_NAME']);
-        if ($scriptName->getExtension() === 'php') {
-            return Url::toUrlSeparator($scriptName->getParent()->toAbsoluteId());
-        }
         $phpSelf = LocalPath::createFromPathString($_SERVER['PHP_SELF']);
-        if ($phpSelf->getExtension() === "php") {
-            return Url::toUrlSeparator($scriptName->getParent()->toAbsoluteId());
-        }
-        if ($_SERVER['DOCUMENT_ROOT'] && $_SERVER['SCRIPT_FILENAME']) {
+        $dir=null;
+        if ($scriptName->getExtension() === 'php') {
+            $dir = $scriptName->getParent()->toAbsoluteId();
+        } elseif ($phpSelf->getExtension() === "php") {
+            $dir = $scriptName->getParent()->toAbsoluteId();
+        } elseif ($_SERVER['DOCUMENT_ROOT'] && $_SERVER['SCRIPT_FILENAME']) {
             $dir = preg_replace('/^' . preg_quote($_SERVER['DOCUMENT_ROOT'], '/') . '/', '',
                 $_SERVER['SCRIPT_FILENAME']);
-            return Url::toUrlSeparator(dirname('/' . $dir));
+            $dir = dirname('/' . $dir);
         }
-        throw new ExceptionNotFound("No Base dir");
+        if(!$dir){
+            throw new ExceptionNotFound("No Base dir found or derived (basedir conf");
+        }
+
+        /**
+         * Handle case where the script is in
+         * * lib/exe dir (ie ajax)
+         * * or lib/plugins dir
+         */
+        $dir = preg_replace('!/lib/exe$!', '', $dir);
+        $dir = preg_replace('!/lib/plugins.*$!', '', $dir);
+
+        return Url::toUrlSeparator($dir);
+
 
     }
 

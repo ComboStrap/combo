@@ -206,7 +206,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             /**
              * Url rewrite
              */
-            $urlAfterRewrite = $page->getCanonicalUrl()->toString();
+            $urlAfterRewrite = $page->getCanonicalUrl()->toAbsoluteUrlString();
             $event->data["items"][$key]->url = $urlAfterRewrite;
         }
 

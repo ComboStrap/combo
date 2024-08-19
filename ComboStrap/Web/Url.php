@@ -405,8 +405,7 @@ class Url extends PathAbs
             /**
              * See {@link getBaseURL()}
              */
-            $https = $_SERVER['HTTPS'] ?? null;
-            if (empty($https)) {
+            if (!is_ssl()) {
                 $this->setScheme("http");
             } else {
                 $this->setScheme("https");

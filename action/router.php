@@ -147,7 +147,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
         // We get a `/` as first character
         // because we return an id, we need to delete it
-        $originalId = substr($originalId,1);
+        $originalId = substr($originalId, 1);
         // transform / to :
         return str_replace("/", WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $originalId);
     }
@@ -248,13 +248,19 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                 array());
 
             /**
-             * This is the real first call of Dokuwiki
-             * Unfortunately, it does not create the environment
-             * We just ban to spare server resources
+             * Bot Ban functionality
              *
+             * Because we make a redirection to the home page, we need to check
+             * if the home is readable, for that, the AUTH plugin needs to be initialized
+             * That's why we wait
+             * https://www.dokuwiki.org/devel:event:dokuwiki_init_done
+             *
+             * and we can't use
              * https://www.dokuwiki.org/devel:event:init_lang_load
+             * because there is no auth setup in {@link auth_aclcheck_cb()}
+             * and the the line `if (!$auth instanceof AuthPlugin) return AUTH_NONE;` return none;
              */
-            $controller->register_hook('INIT_LANG_LOAD', 'BEFORE', $this, 'ban', array());
+            $controller->register_hook('DOKUWIKI_INIT_DONE', 'BEFORE', $this, 'ban', array());
 
         }
 
@@ -279,23 +285,26 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             return;
         }
         $page = MarkupPath::createMarkupFromId($id);
-        if (!FileSystems::exists($page)) {
-            // Well known
-            if (self::isWellKnownFile($id)) {
-                $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
-                ExecutionContext::getActualOrCreateFromEnv()
-                    ->response()
-                    ->setStatus(HttpResponseStatus::NOT_FOUND)
-                    ->end();
-                return;
-            }
-
-            // Shadow banned
-            if (self::isShadowBanned($id)) {
-                $webSiteHomePage = Site::getIndexPageName();
-                $this->executeTransparentRedirect($webSiteHomePage, self::TARGET_ORIGIN_SHADOW_BANNED);
-            }
+        if (FileSystems::exists($page)) {
+            return;
         }
+
+        // Well known
+        if (self::isWellKnownFile($id)) {
+            $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
+            ExecutionContext::getActualOrCreateFromEnv()
+                ->response()
+                ->setStatus(HttpResponseStatus::NOT_FOUND)
+                ->end();
+            return;
+        }
+
+        // Shadow banned
+        if (self::isShadowBanned($id)) {
+            $webSiteHomePage = Site::getIndexPageName();
+            $this->executeTransparentRedirect($webSiteHomePage, self::TARGET_ORIGIN_SHADOW_BANNED);
+        }
+
     }
 
     /**

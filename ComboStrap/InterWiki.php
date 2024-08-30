@@ -39,6 +39,8 @@ class InterWiki
         $this->markupType = $markupType;
         [$this->name, $this->urlWithoutFragment] = explode(">", $interWikiRef, 2);
 
+        # The name is a key that should be lowercase
+        $this->name = strtolower($this->name);
 
         $hash = strrchr($this->urlWithoutFragment, '#');
         if ($hash) {

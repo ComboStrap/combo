@@ -92,7 +92,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
                     $loginValue = $field["value"];
                     $loginHTMLField = <<<EOF
 <div class="form-floating">
-    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
+    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" autocomplete="username" aria-label="Username" required="required" autofocus="" name="u" value="$loginValue">
     <label for="inputUserName">$loginText</label>
 </div>
 EOF;
@@ -102,7 +102,7 @@ EOF;
                     $passwordText = $field["_text"];
                     $passwordFieldHTML = <<<EOF
 <div class="form-floating">
-    <input type="password" id="inputPassword" class="form-control" placeholder="$passwordText" required="required" name="p">
+    <input type="password" id="inputPassword" class="form-control" aria-label="Password" placeholder="$passwordText" required="required" name="p">
     <label for="inputPassword">$passwordText</label>
 </div>
 EOF;
@@ -274,6 +274,8 @@ EOF;
         $newUserField->attr("placeholder", $loginText);
         $newUserField->attr("required", "required");
         $newUserField->attr("autofocus", "");
+        $newUserField->attr("autocomplete", "username");
+        $newUserField->attr("aria-label", "username");
         $userFieldId = $userField->attr("id");
 
         $form->replaceElement($newUserField, $userPosition);
@@ -297,6 +299,7 @@ EOF;
         $passwordText = $pwdField->getLabel()->val();
         $newPwdField->attr("placeholder", $passwordText);
         $newPwdField->attr("required", "required");
+        $newPwdField->attr("aria-label", "password");
         $pwdFieldId = $newPwdField->attr("id");
         if (empty($pwdFieldId)) {
             $pwdFieldId = "input__password";

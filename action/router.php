@@ -6,6 +6,7 @@ use ComboStrap\DokuwikiId;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\ExceptionCompile;
+use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionSqliteNotAvailable;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FileSystems;
@@ -432,10 +433,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             if ($page === null) {
                 // or the length of the abbr has changed
                 $canonicalDatabasePage = new DatabasePageRow();
-                $row = $canonicalDatabasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
-                if ($row !== null) {
+                try {
+                    $row = $canonicalDatabasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
                     $canonicalDatabasePage->setRow($row);
                     $page = $canonicalDatabasePage->getMarkupPath();
+                } catch (ExceptionNotFound $e) {
+                    // nothing to do
                 }
             }
             if ($page !== null && $page->exists()) {

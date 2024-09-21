@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Logger;
 use Throwable;
 
 require_once(__DIR__ . '/PluginUtility.php');
@@ -75,8 +76,9 @@ class LogUtility
      * @param string $message
      * @param int $level - the level see LVL constant
      * @param string $canonical - the canonical
+     * @param \Exception|null $e
      */
-    public static function msg(string $message, int $level = self::LVL_MSG_ERROR, string $canonical = "support", \Exception $e = null)
+    public static function msg(string $message, int $level = self::LVL_MSG_ERROR, string $canonical = self::SUPPORT_CANONICAL, \Exception $e = null)
     {
 
         try {
@@ -120,10 +122,10 @@ class LogUtility
      *
      * @param null|string $msg - may be null always this is the default if a variable is not initialized.
      * @param int $logLevel
-     * @param null $canonical
-     * @param \Exception $e
+     * @param string|null $canonical
+     * @param \Exception|null $e
      */
-    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_ERROR, $canonical = null, \Exception $e = null)
+    static function log2file(?string $msg, int $logLevel = self::LVL_MSG_ERROR, ?string $canonical = self::SUPPORT_CANONICAL, \Exception $e = null)
     {
 
         try {
@@ -142,7 +144,6 @@ class LogUtility
             $msg = $prefix . ' - ' . $msg;
 
             global $INPUT;
-            global $conf;
 
             /**
              * Adding page - context information
@@ -151,16 +152,10 @@ class LogUtility
              * is not good, creating a recursive call.
              */
             $id = $INPUT->str("id");
-
-            $file = $conf['cachedir'] . '/debug.log';
-            $fh = fopen($file, 'a');
-            if ($fh) {
-                $sep = " - ";
-                fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $id . "\n");
-                fclose($fh);
-            }
-
-
+            $sep = " - ";
+            $messageWritten = date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $id . "\n";
+            // dokuwiki does not have the warning level
+            Logger::error($messageWritten);
             self::throwErrorIfTest($logLevel, $msg, $e);
 
 
@@ -172,9 +167,9 @@ class LogUtility
      * @param $message
      * @param $level
      * @param string $canonical
-     * @param bool $withIconURL
+     * @param bool $publicMessage
      */
-    public static function log2FrontEnd($message, $level, $canonical = "support", bool $publicMessage = false)
+    public static function log2FrontEnd($message, $level, string $canonical = self::SUPPORT_CANONICAL, bool $publicMessage = false)
     {
 
         try {
@@ -343,12 +338,12 @@ class LogUtility
         self::msg($message, LogUtility::LVL_MSG_ERROR, $canonical, $e);
     }
 
-    public static function warning(string $message, string $canonical = "support", \Exception $e = null)
+    public static function warning(string $message, string $canonical = self::SUPPORT_CANONICAL, \Exception $e = null)
     {
         self::msg($message, LogUtility::LVL_MSG_WARNING, $canonical, $e);
     }
 
-    public static function info(string $message, string $canonical = "support", \Exception $e = null)
+    public static function info(string $message, string $canonical = self::SUPPORT_CANONICAL, \Exception $e = null)
     {
         self::msg($message, LogUtility::LVL_MSG_INFO, $canonical, $e);
     }

@@ -51,7 +51,8 @@ class FetcherSystem
         try {
             $mime = FileSystems::getMime($dokuPath);
         } catch (ExceptionNotFound $e) {
-            throw new ExceptionNotFound("No fetcher could be created. The mime is unknown for the path ($dokuPath). Error: {$e->getMessage()}");
+            LogUtility::warning("Warning: The mime is unknown for the path ($dokuPath).", LogUtility::SUPPORT_CANONICAL, $e);
+            $mime = Mime::BINARY_MIME;
         }
         switch ($mime->toString()) {
             case Mime::SVG:

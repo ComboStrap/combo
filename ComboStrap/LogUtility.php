@@ -152,12 +152,10 @@ class LogUtility
              * is not good, creating a recursive call.
              */
             $id = $INPUT->str("id");
-            $sep = " - ";
-            $messageWritten = date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $id . "\n";
+            $messageWritten = self::LVL_NAME[$logLevel] . " - $msg - (Page: $id, IP: {$INPUT->server->str('REMOTE_ADDR')})\n";
             // dokuwiki does not have the warning level
             Logger::error($messageWritten);
             self::throwErrorIfTest($logLevel, $msg, $e);
-
 
         }
 

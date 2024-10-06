@@ -52,7 +52,7 @@ class FetcherSystem
             $mime = FileSystems::getMime($dokuPath);
         } catch (ExceptionNotFound $e) {
             LogUtility::warning("Warning: The mime is unknown for the path ($dokuPath).", LogUtility::SUPPORT_CANONICAL, $e);
-            $mime = Mime::BINARY_MIME;
+            $mime = new Mime(Mime::BINARY_MIME);
         }
         switch ($mime->toString()) {
             case Mime::SVG:

@@ -40,7 +40,10 @@ class Lock
      * @var mixed|null
      */
     private $perm;
-    private int $timeOut = 5;
+    /**
+     * @var int 1 - no timeout just returns
+     */
+    private int $timeOut = 1;
     /**
      * @var false|resource
      */
@@ -85,7 +88,6 @@ class Lock
          */
         // LOCK_NB to not block the process
         while (!$this->getLock()) {
-            sleep(1);
             /**
              * Old lock ? More than 10 minutes run
              */
@@ -98,6 +100,7 @@ class Lock
             if ($run >= $this->timeOut) {
                 throw new ExceptionTimeOut("Unable to get the lock ($this->lockFile) for ($this->timeOut) seconds");
             }
+            sleep(1);
         }
         if ($this->perm) {
             chmod($this->lockFile, $this->perm);

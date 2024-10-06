@@ -54,7 +54,7 @@ class action_plugin_combo_eventsystem extends DokuWiki_Action_Plugin
             self::$taskRunnerlock->acquire();
         } catch (ExceptionTimeOut $e) {
             // process running
-            print 'ComboLockTaskRunner(): Already running, not acquired' . NL;
+            print 'ComboLockTaskRunner(): Already running, not acquired. Message: ' . $e->getMessage(). NL;
             exit;
         }
         print 'ComboLockTaskRunner(): Locked' . NL;

@@ -660,7 +660,7 @@ class DatabasePageRow
              * Default implements the auto-canonical feature
              */
             try {
-                $values[Canonical::PROPERTY_NAME] = $this->markupPath->getCanonicalOrDefault();
+                $values[Canonical::PROPERTY_NAME] = Canonical::createForPage($this->markupPath)->getValueOrDefault()->toAbsoluteId();
             } catch (ExceptionNotFound $e) {
                 $values[Canonical::PROPERTY_NAME] = null;
             }

@@ -93,6 +93,13 @@ class Router
 
         /**
          * Page Id in the url
+         * Note that if the ID is a permalink, global $ID has already the real id
+         * Why? because unfortunately, DOKUWIKI_STARTED is not the first event
+         * {@link action_plugin_combo_lang::load_lang()} may have already
+         * transformed a permalink into a real dokuwiki id
+         *
+         * We let it here because we don't know for sure that it will stay this way
+         * What fucked up is fucked up
          */
         $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedMarkupPath->getPathObject()->getLastNameWithoutExtension());
         if ($shortPageId != null) {

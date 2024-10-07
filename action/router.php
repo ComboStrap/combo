@@ -270,17 +270,16 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
 
         /**
-         * Redirect only if the page is not found
+         * If the ID is a permalink, it is already the real id
+         * Why? because unfortunately, DOKUWIKI_STARTED is not the first event
+         * {@link action_plugin_combo_lang::load_lang()} may have already
+         * transformed a permalink into a real dokuwiki id
          */
-        $id = Router::getOriginalIdFromRequest();
-        if ($id === null) {
-            return;
-        }
-        $page = MarkupPath::createMarkupFromId($id);
+        global $ID;
+        $page = MarkupPath::createMarkupFromId($ID);
         if (FileSystems::exists($page)) {
             return;
         }
-
 
         /**
          * Doku Rewrite is not supported
@@ -347,6 +346,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      *   * on the same domain
      *   * no HTTP redirect
      *   * id rewrite
+     * It happens when we use the id in the URL
      * @param RouterRedirection $redirection - target page id
      * @return void - return true if the user has the permission and that the redirect was done
      * @throws ExceptionCompile

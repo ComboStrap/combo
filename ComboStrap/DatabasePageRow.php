@@ -654,8 +654,14 @@ class DatabasePageRow
                 throw new ExceptionBadState($message);
             }
 
-            $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->markupPath->getPathObject()->getWikiId();
-            $values[PagePath::PROPERTY_NAME] = $this->markupPath->getPathObject()->toAbsolutePath()->toAbsoluteId();
+            try {
+                $wikiPath = $this->markupPath->toWikiPath();
+            } catch (ExceptionCast $e) {
+                // should not happen but yeah
+                throw new ExceptionBadState("The markup path {$this->markupPath} could not be transformed as wiki path");
+            }
+            $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $wikiPath->getWikiId();
+            $values[PagePath::PROPERTY_NAME] = $wikiPath->toAbsoluteId();
             /**
              * Default implements the auto-canonical feature
              */
@@ -960,8 +966,8 @@ class DatabasePageRow
     private
     function getDatabaseRowFromCanonical($canonicalValue)
     {
-        $canoncialName = Canonical::PROPERTY_NAME;
-        $query = $this->getParametrizedLookupQuery($canoncialName);
+        $canonicalName = Canonical::PROPERTY_NAME;
+        $query = $this->getParametrizedLookupQuery($canonicalName);
         $request = $this->sqlite
             ->createRequest()
             ->setQueryParametrized($query, [$canonicalValue]);
@@ -981,7 +987,7 @@ class DatabasePageRow
                 throw new ExceptionNotFound("No canonical row was found");
             case 1:
                 $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
-                $this->checkCollision($id, $canoncialName, $canonicalValue);
+                $this->checkCollision($id, $canonicalName, $canonicalValue);
                 return $rows[0];
             default:
                 $existingPages = [];
@@ -1000,8 +1006,8 @@ class DatabasePageRow
                          */
                         $canonicalLastNamesCount = SiteConfig::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
                         if ($canonicalLastNamesCount > 0) {
-                            $this->markupPath->unsetMetadata($canoncialName);
-                            $duplicatePage->unsetMetadata($canoncialName);
+                            $this->markupPath->unsetMetadata($canonicalName);
+                            $duplicatePage->unsetMetadata($canonicalName);
                         }
 
                         $existingPages[] = $row;
@@ -1285,7 +1291,7 @@ class DatabasePageRow
     }
 
     private
-    function checkCollision($wikiIdInDatabase, $attribute, $value)
+    function checkCollision($wikiIdInDatabase, $attribute, $value): void
     {
         if ($this->markupPath === null) {
             return;
@@ -1306,7 +1312,7 @@ class DatabasePageRow
                 // of if the sqlite database was deleted and rebuilt.
                 // The chance is really, really low
                 $errorMessage = "The page ($this->markupPath) and the page ($wikiIdInDatabase) have the same $attribute value ($value)";
-                throw new ExceptionRuntimeInternal($errorMessage, self::CANONICAL);
+                LogUtility::error($errorMessage);
                 // What to do ?
                 // The database does not allow two page id with the same value
                 // If it happens, ugh, ugh, ..., a replication process between website may be.

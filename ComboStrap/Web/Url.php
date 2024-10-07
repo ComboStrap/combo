@@ -189,9 +189,15 @@ class Url extends PathAbs
     public static function createFromGetOrPostGlobalVariable(): Url
     {
         /**
-         * $_REQUEST is a merge between get and post property
+         * May be Just ???
+         * Url::createFromString($_SERVER['REQUEST_URI']);
+         */
+        /**
+         * $_REQUEST is a merge between:
+         *   * $_GET: the URL parameters (aka. query string)
+         *   * $_POST: the array of variables when using a POST application/x-www-form-urlencoded or multipart/form-data
          * Shared check between post and get HTTP method
-         * managed and encapsultaed by {@link Input}.
+         * managed and encapsulated by {@link Input}.
          * They add users and other
          * {@link \TestRequest} is using it
          */

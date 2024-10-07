@@ -20,18 +20,17 @@
  */
 
 
-use ComboStrap\BrandingColors;
 use ComboStrap\Canonical;
 use ComboStrap\ContainerTag;
 use ComboStrap\IconDownloader;
 use ComboStrap\Identity;
-use ComboStrap\LazyLoad;
+use ComboStrap\Meta\Field\Region;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Outline;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlType;
 use ComboStrap\Prism;
-use ComboStrap\Meta\Field\Region;
+use ComboStrap\Router;
 use ComboStrap\SiteConfig;
 use ComboStrap\Snippet;
 use ComboStrap\Tag\RelatedTag;
@@ -56,16 +55,16 @@ $conf['disqusDefaultAttributes'] = 'shortName=""';
  */
 $conf['enableRouter'] = 1;
 /**
- * ie {@link action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME}
+ * ie {@link Router::GO_TO_BEST_END_PAGE_NAME}
  */
 $conf['ActionReaderFirst'] = 'GoToBestEndPageName';
 
 /**
- * ie {@link action_plugin_combo_router::GO_TO_BEST_PAGE_NAME}
+ * ie {@link Router::GO_TO_BEST_PAGE_NAME}
  */
 $conf['ActionReaderSecond'] = 'GoToBestPageName';
 /**
- * ie {@link action_plugin_combo_router::GO_TO_SEARCH_ENGINE}
+ * ie {@link Router::GO_TO_SEARCH_ENGINE}
  */
 $conf['ActionReaderThird'] = 'GoToSearchEngine';
 $conf['GoToEditMode'] = 1;

@@ -1,7 +1,6 @@
 <?php
 
 
-use ComboStrap\DatabasePageRow;
 use ComboStrap\DokuwikiId;
 use ComboStrap\ExceptionBadArgument;
 use ComboStrap\ExceptionBadSyntax;
@@ -15,20 +14,17 @@ use ComboStrap\HttpResponseStatus;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
-use ComboStrap\Meta\Field\AliasType;
 use ComboStrap\Mime;
-use ComboStrap\PageId;
 use ComboStrap\PageRules;
-use ComboStrap\PageUrlPath;
-use ComboStrap\PageUrlType;
-use ComboStrap\RouterBestEndPage;
+use ComboStrap\Router;
+use ComboStrap\RouterRedirection;
+use ComboStrap\RouterRedirectionBuilder;
 use ComboStrap\Site;
 use ComboStrap\SiteConfig;
 use ComboStrap\Sqlite;
 use ComboStrap\Web\Url;
 use ComboStrap\Web\UrlEndpoint;
 use ComboStrap\Web\UrlRewrite;
-use ComboStrap\WikiPath;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -48,46 +44,11 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     const URL_MANAGER_ENABLE_CONF = "enableUrlManager";
     const ROUTER_ENABLE_CONF = "enableRouter";
 
-    // The redirect type
-    const REDIRECT_TRANSPARENT_METHOD = 'transparent'; // was (Id)
-    // For permanent, see https://developers.google.com/search/docs/advanced/crawling/301-redirects
-    const REDIRECT_PERMANENT_METHOD = 'permanent'; // was `Http` (301)
-    const REDIRECT_NOTFOUND_METHOD = "notfound"; // 404 (See other) (when best page name is calculated)
-
-    public const PERMANENT_REDIRECT_CANONICAL = "permanent:redirect";
 
     // Where the target id value comes from
-    const TARGET_ORIGIN_WELL_KNOWN = 'well-known';
-    const TARGET_ORIGIN_PAGE_RULES = 'pageRules';
-    /**
-     * Named Permalink (canonical)
-     */
-    const TARGET_ORIGIN_CANONICAL = 'canonical';
-    const TARGET_ORIGIN_ALIAS = 'alias';
-    /**
-     * Identifier Permalink (full page id)
-     */
-    const TARGET_ORIGIN_PERMALINK = "permalink";
-    /**
-     * Extended Permalink (abbreviated page id at the end)
-     */
-    const TARGET_ORIGIN_PERMALINK_EXTENDED = "extendedPermalink";
-    const TARGET_ORIGIN_START_PAGE = 'startPage';
-    const TARGET_ORIGIN_BEST_PAGE_NAME = 'bestPageName';
-    const TARGET_ORIGIN_BEST_NAMESPACE = 'bestNamespace';
-    const TARGET_ORIGIN_SEARCH_ENGINE = 'searchEngine';
-    const TARGET_ORIGIN_BEST_END_PAGE_NAME = 'bestEndPageName';
-    const TARGET_ORIGIN_SHADOW_BANNED = "shadowBanned";
 
 
     // The constant parameters
-    const GO_TO_SEARCH_ENGINE = 'GoToSearchEngine';
-    const GO_TO_BEST_NAMESPACE = 'GoToBestNamespace';
-    const GO_TO_BEST_PAGE_NAME = 'GoToBestPageName';
-    const GO_TO_BEST_END_PAGE_NAME = 'GoToBestEndPageName';
-    const GO_TO_NS_START_PAGE = 'GoToNsStartPage';
-    const GO_TO_EDIT_MODE = 'GoToEditMode';
-    const NOTHING = 'Nothing';
 
     /** @var string - a name used in log and other places */
     const NAME = 'Url Manager';
@@ -127,31 +88,6 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         return substr($refreshHeader, strlen(action_plugin_combo_router::LOCATION_HEADER_PREFIX));
     }
 
-    /**
-     * @return string|null
-     *
-     * Return the original id from the request
-     * ie `howto:how-to-get-started-with-combostrap-m3i8vga8`
-     * if `/howto/how-to-get-started-with-combostrap-m3i8vga8`
-     *
-     * Unfortunately, DOKUWIKI_STARTED is not the first event
-     * The id may have been changed by
-     * {@link action_plugin_combo_lang::load_lang()}
-     * function, that's why we have this function
-     * to get the original requested id
-     */
-    private static function getOriginalIdFromRequest(): ?string
-    {
-        $originalId = $_GET["id"] ?? null;
-        if ($originalId === null) {
-            return null;
-        }
-        // We get a `/` as first character
-        // because we return an id, we need to delete it
-        $originalId = substr($originalId, 1);
-        // transform / to :
-        return str_replace("/", WikiPath::NAMESPACE_SEPARATOR_DOUBLE_POINT, $originalId);
-    }
 
     /**
      * Determine if the request should be banned based on the id
@@ -281,7 +217,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     function ban(&$event)
     {
 
-        $id = self::getOriginalIdFromRequest();
+        $id = Router::getOriginalIdFromRequest();
         if ($id === null) {
             return;
         }
@@ -292,7 +228,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         // Well known
         if (self::isWellKnownFile($id)) {
-            $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
+            $redirection = RouterRedirectionBuilder::createFromOrigin(RouterRedirection::TARGET_ORIGIN_WELL_KNOWN)
+                ->setType(RouterRedirection::REDIRECT_NOTFOUND_METHOD)
+                ->build();
+            $this->logRedirection($redirection);
             ExecutionContext::getActualOrCreateFromEnv()
                 ->response()
                 ->setStatus(HttpResponseStatus::NOT_FOUND)
@@ -302,8 +241,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         // Shadow banned
         if (self::isShadowBanned($id)) {
-            $webSiteHomePage = Site::getIndexPageName();
-            $this->executeTransparentRedirect($webSiteHomePage, self::TARGET_ORIGIN_SHADOW_BANNED);
+            $webSiteHomePage = MarkupPath::createMarkupFromId(Site::getIndexPageName());
+            $redirection = RouterRedirectionBuilder::createFromOrigin(RouterRedirection::TARGET_ORIGIN_SHADOW_BANNED)
+                ->setType(RouterRedirection::REDIRECT_TRANSPARENT_METHOD)
+                ->setTargetMarkupPath($webSiteHomePage)
+                ->build();
+            $this->executeTransparentRedirect($redirection);
         }
 
     }
@@ -312,9 +255,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      * @param $event Doku_Event
      * @param $param
      * @return void
-     * @throws Exception
      */
-    function router(&$event, $param)
+    function router(Doku_Event &$event, $param)
     {
 
         /**
@@ -326,428 +268,76 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             return;
         }
 
+
+        /**
+         * Redirect only if the page is not found
+         */
+        $id = Router::getOriginalIdFromRequest();
+        if ($id === null) {
+            return;
+        }
+        $page = MarkupPath::createMarkupFromId($id);
+        if (FileSystems::exists($page)) {
+            return;
+        }
+
+
+        /**
+         * Doku Rewrite is not supported
+         */
         $urlRewrite = Site::getUrlRewrite();
         if ($urlRewrite == UrlRewrite::VALUE_DOKU_REWRITE) {
             UrlRewrite::sendErrorMessage();
             return;
         }
 
-        global $ID;
-
         /**
-         * Without SQLite, this module does not work further
+         * Try to find a redirection
          */
+        $router = new Router();
         try {
-            Sqlite::createOrGetSqlite();
+            $redirection = $router->getRedirection();
         } catch (ExceptionSqliteNotAvailable $e) {
+            // no Sql Lite
             return;
-        }
-
-        $this->pageRules = new PageRules();
-
-
-        /**
-         * Unfortunately, DOKUWIKI_STARTED is not the first event
-         * The id may have been changed by
-         * {@link action_plugin_combo_lang::load_lang()}
-         * function, that's why we check against the {@link $_REQUEST}
-         * and not the global ID
-         */
-        $originalId = self::getOriginalIdFromRequest();
-
-        /**
-         * Page is an existing id ?
-         */
-        $requestedMarkupPath = MarkupPath::createMarkupFromId($ID);
-        if (FileSystems::exists($requestedMarkupPath)) {
-
-            /**
-             * If this is not the root home page
-             * and if the canonical id is the not the same (the id has changed)
-             * and if this is not a historical page (revision)
-             * redirect
-             */
-            if (
-                $originalId !== $requestedMarkupPath->getUrlId() // The id may have been changed
-                && $ID != Site::getIndexPageName()
-                && !isset($_REQUEST["rev"])
-            ) {
-                /**
-                 * TODO: When saving for the first time, the page is not stored in the database
-                 *   but that's not the case actually
-                 */
-                $databasePageRow = $requestedMarkupPath->getDatabasePage();
-                if ($databasePageRow->exists()) {
-                    /**
-                     * A move may leave the database in a bad state,
-                     * unfortunately (ie page is not in index, unable to update, ...)
-                     * We test therefore if the database page id exists
-                     */
-                    $targetPageId = $databasePageRow->getFromRow("id");
-                    $targetPath = WikiPath::createMarkupPathFromId($targetPageId);
-                    if (FileSystems::exists($targetPath)) {
-                        $this->executePermanentRedirect(
-                            $requestedMarkupPath->getCanonicalUrl()->toAbsoluteUrlString(),
-                            self::TARGET_ORIGIN_PERMALINK_EXTENDED
-                        );
-                    }
-                }
-            }
+        } catch (ExceptionNotFound $e) {
+            // no redirection
+            return;
+        } catch (Exception $e) {
+            // Error
+            LogUtility::error("An unexpected error has occurred while trying to get a redirection", LogUtility::SUPPORT_CANONICAL, $e);
             return;
         }
 
 
-        $identifier = $ID;
-
+        /**
+         * Special Mode where the redirection is just a change of ACT
+         */
+        if ($redirection->getOrigin() === Router::GO_TO_EDIT_MODE) {
+            global $ACT;
+            $ACT = 'edit';
+            return;
+        }
 
         /**
-         * Page Id in the url
+         * Other redirections
          */
-        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($requestedMarkupPath->getPathObject()->getLastNameWithoutExtension());
-        if ($shortPageId != null) {
-            $pageId = PageUrlPath::decodePageId($shortPageId);
-        } else {
-            /**
-             * Permalink with id
-             */
-            $pageId = PageUrlPath::decodePageId($identifier);
-        }
-        if ($pageId !== null) {
-
-            if ($requestedMarkupPath->getParent() === null) {
-                $page = DatabasePageRow::createFromPageId($pageId)->getMarkupPath();
-                if ($page !== null && $page->exists()) {
-                    $this->executePermanentRedirect(
-                        $page->getCanonicalUrl()->toAbsoluteUrlString(),
-                        self::TARGET_ORIGIN_PERMALINK
-                    );
-                    return;
-                }
-            }
-
-            /**
-             * Page Id Abbr ?
-             * {@link PageUrlType::CONF_CANONICAL_URL_TYPE}
-             */
-            $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getMarkupPath();
-            if ($page === null) {
-                // or the length of the abbr has changed
-                $canonicalDatabasePage = new DatabasePageRow();
+        switch ($redirection->getType()) {
+            case RouterRedirection::REDIRECT_TRANSPARENT_METHOD:
                 try {
-                    $row = $canonicalDatabasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
-                    $canonicalDatabasePage->setRow($row);
-                    $page = $canonicalDatabasePage->getMarkupPath();
-                } catch (ExceptionNotFound $e) {
-                    // nothing to do
+                    $this->executeTransparentRedirect($redirection);
+                } catch (ExceptionCompile $e) {
+                    LogUtility::error("Internal Error: A transparent redirect errors has occurred", LogUtility::SUPPORT_CANONICAL, $e);
                 }
-            }
-            if ($page !== null && $page->exists()) {
-                /**
-                 * If the url canonical id has changed, we show it
-                 * to the writer by performing a permanent redirect
-                 */
-                if ($identifier != $page->getUrlId()) {
-                    // Google asks for a redirect
-                    // https://developers.google.com/search/docs/advanced/crawling/301-redirects
-                    // People access your site through several different URLs.
-                    // If, for example, your home page can be reached in multiple ways
-                    // (for instance, http://example.com/home, http://home.example.com, or http://www.example.com),
-                    // it's a good idea to pick one of those URLs as your preferred (canonical) destination,
-                    // and use redirects to send traffic from the other URLs to your preferred URL.
-                    $this->executePermanentRedirect(
-                        $page->getCanonicalUrl()->toAbsoluteUrlString(),
-                        self::TARGET_ORIGIN_PERMALINK_EXTENDED
-                    );
-                    return;
-                }
-
-                $this->executeTransparentRedirect($page->getWikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
                 return;
-
-            }
-            // permanent url not yet in the database
-            // Other permanent such as permanent canonical ?
-            // We let the process go with the new identifier
-
-        }
-
-        // Global variable needed in the process
-        global $conf;
-
-        /**
-         * Identifier is a Canonical ?
-         */
-        $canonicalDatabasePage = DatabasePageRow::createFromCanonical($identifier);
-        $canonicalPage = $canonicalDatabasePage->getMarkupPath();
-        if ($canonicalPage !== null && $canonicalPage->exists()) {
-            /**
-             * Does the canonical url is canonical name based
-             * ie {@link  PageUrlType::CONF_VALUE_CANONICAL_PATH}
-             */
-            if ($canonicalPage->getUrlId() === $identifier) {
-                $res = $this->executeTransparentRedirect(
-                    $canonicalPage->getWikiId(),
-                    self::TARGET_ORIGIN_CANONICAL
-                );
-            } else {
-                $res = $this->executePermanentRedirect(
-                    $canonicalPage->getWikiId(), // not the url because, it allows to add url query redirection property
-                    self::TARGET_ORIGIN_CANONICAL
-                );
-            }
-            if ($res) {
-                return;
-            }
-        }
-
-        /**
-         * Identifier is an alias
-         */
-        $aliasRequestedPage = DatabasePageRow::createFromAlias($identifier)->getMarkupPath();
-        if (
-            $aliasRequestedPage !== null
-            && $aliasRequestedPage->exists()
-            // The build alias is the file system metadata alias
-            // it may be null if the replication in the database was not successful
-            && $aliasRequestedPage->getBuildAlias() !== null
-        ) {
-            $buildAlias = $aliasRequestedPage->getBuildAlias();
-            switch ($buildAlias->getType()) {
-                case AliasType::REDIRECT:
-                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl()->toAbsoluteUrlString(), self::TARGET_ORIGIN_ALIAS);
-                    if ($res) {
-                        return;
-                    }
-                    break;
-                case AliasType::SYNONYM:
-                    $res = $this->executeTransparentRedirect($aliasRequestedPage->getWikiId(), self::TARGET_ORIGIN_ALIAS);
-                    if ($res) {
-                        return;
-                    }
-                    break;
-                default:
-                    LogUtility::msg("The alias type ({$buildAlias->getType()}) is unknown. A permanent redirect was performed for the alias $identifier");
-                    $res = $this->executePermanentRedirect($aliasRequestedPage->getCanonicalUrl()->toAbsoluteUrlString(), self::TARGET_ORIGIN_ALIAS);
-                    if ($res) {
-                        return;
-                    }
-                    break;
-            }
-        }
-
-
-        // If there is a redirection defined in the page rules
-        $result = $this->processingPageRules();
-        if ($result) {
-            // A redirection has occurred
-            // finish the process
-            return;
-        }
-
-        /**
-         *
-         * There was no redirection found, redirect to edit mode if writer
-         *
-         */
-        if (Identity::isWriter() && $this->getConf(self::GO_TO_EDIT_MODE) == 1) {
-
-            $this->gotToEditMode($event);
-            // Stop here
-            return;
-
-        }
-
-        /**
-         *  We are still a reader, the redirection does not exist the user is not allowed to edit the page (public of other)
-         */
-        if ($this->getConf('ActionReaderFirst') == self::NOTHING) {
-            return;
-        }
-
-        // We are reader and their is no redirection set, we apply the algorithm
-        $readerAlgorithms = array();
-        $readerAlgorithms[0] = $this->getConf('ActionReaderFirst');
-        $readerAlgorithms[1] = $this->getConf('ActionReaderSecond');
-        $readerAlgorithms[2] = $this->getConf('ActionReaderThird');
-
-        while (
-            ($algorithm = array_shift($readerAlgorithms)) != null
-        ) {
-
-            switch ($algorithm) {
-
-                case self::NOTHING:
-                    return;
-
-                case self::GO_TO_BEST_END_PAGE_NAME:
-
-                    /**
-                     * @var MarkupPath $bestEndPage
-                     */
-                    list($bestEndPage, $method) = RouterBestEndPage::process($requestedMarkupPath);
-                    if ($bestEndPage != null && $bestEndPage->getWikiId() !== $requestedMarkupPath->getWikiId()) {
-                        $res = false;
-                        switch ($method) {
-                            case self::REDIRECT_PERMANENT_METHOD:
-                                $res = $this->executePermanentRedirect($bestEndPage->getWikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
-                                break;
-                            case self::REDIRECT_NOTFOUND_METHOD:
-                                $res = $this->performNotFoundRedirect($bestEndPage->getWikiId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
-                                break;
-                            default:
-                                LogUtility::msg("This redirection method ($method) was not expected for the redirection algorithm ($algorithm)");
-                        }
-                        if ($res) {
-                            // Redirection has succeeded
-                            return;
-                        }
-                    }
-                    break;
-
-                case self::GO_TO_NS_START_PAGE:
-
-                    // Start page with the conf['start'] parameter
-                    $startPage = getNS($identifier) . ':' . $conf['start'];
-                    if (page_exists($startPage)) {
-                        $res = $this->performNotFoundRedirect($startPage, self::TARGET_ORIGIN_START_PAGE);
-                        if ($res) {
-                            return;
-                        }
-                    }
-
-                    // Start page with the same name than the namespace
-                    $startPage = getNS($identifier) . ':' . curNS($identifier);
-                    if (page_exists($startPage)) {
-                        $res = $this->performNotFoundRedirect($startPage, self::TARGET_ORIGIN_START_PAGE);
-                        if ($res) {
-                            return;
-                        }
-                    }
-                    break;
-
-                case self::GO_TO_BEST_PAGE_NAME:
-
-                    $bestPageId = null;
-
-                    $bestPage = $this->getBestPage($identifier);
-                    $bestPageId = $bestPage['id'];
-                    $scorePageName = $bestPage['score'];
-
-                    // Get Score from a Namespace
-                    $bestNamespace = $this->scoreBestNamespace($identifier);
-                    $bestNamespaceId = $bestNamespace['namespace'];
-                    $namespaceScore = $bestNamespace['score'];
-
-                    // Compare the two score
-                    if ($scorePageName > 0 or $namespaceScore > 0) {
-                        if ($scorePageName > $namespaceScore) {
-                            $this->performNotFoundRedirect($bestPageId, self::TARGET_ORIGIN_BEST_PAGE_NAME);
-                        } else {
-                            $this->performNotFoundRedirect($bestNamespaceId, self::TARGET_ORIGIN_BEST_PAGE_NAME);
-                        }
-                        return;
-                    }
-                    break;
-
-                case self::GO_TO_BEST_NAMESPACE:
-
-                    $scoreNamespace = $this->scoreBestNamespace($identifier);
-                    $bestNamespaceId = $scoreNamespace['namespace'];
-                    $score = $scoreNamespace['score'];
-
-                    if ($score > 0) {
-                        $this->performNotFoundRedirect($bestNamespaceId, self::TARGET_ORIGIN_BEST_NAMESPACE);
-                        return;
-                    }
-                    break;
-
-                case self::GO_TO_SEARCH_ENGINE:
-
-                    $this->redirectToSearchEngine();
-
-                    return;
-
-                // End Switch Action
-            }
-
-            // End While Action
-        }
-
-
-    }
-
-
-    /**
-     * getBestNamespace
-     * Return a list with 'BestNamespaceId Score'
-     * @param $id
-     * @return array
-     */
-    private
-    function scoreBestNamespace($id)
-    {
-
-        global $conf;
-
-        // Parameters
-        $pageNameSpace = getNS($id);
-
-        // If the page has an existing namespace start page take it, other search other namespace
-        $startPageNameSpace = $pageNameSpace . ":";
-        $dateAt = '';
-        // $startPageNameSpace will get a full path (ie with start or the namespace
-        resolve_pageid($pageNameSpace, $startPageNameSpace, $exists, $dateAt, true);
-        if (page_exists($startPageNameSpace)) {
-            $nameSpaces = array($startPageNameSpace);
-        } else {
-            $nameSpaces = ft_pageLookup($conf['start']);
-        }
-
-        // Parameters and search the best namespace
-        $pathNames = explode(':', $pageNameSpace);
-        $bestNbWordFound = 0;
-        $bestNamespaceId = '';
-        foreach ($nameSpaces as $nameSpace) {
-
-            $nbWordFound = 0;
-            foreach ($pathNames as $pathName) {
-                if (strlen($pathName) > 2) {
-                    $nbWordFound = $nbWordFound + substr_count($nameSpace, $pathName);
+            default:
+                try {
+                    $this->executeHttpRedirect($redirection);
+                } catch (ExceptionCompile $e) {
+                    LogUtility::error("Internal Error: A http redirect errors has occurred", LogUtility::SUPPORT_CANONICAL, $e);
                 }
-            }
-            if ($nbWordFound > $bestNbWordFound) {
-                // Take only the smallest namespace
-                if (strlen($nameSpace) < strlen($bestNamespaceId) or $nbWordFound > $bestNbWordFound) {
-                    $bestNbWordFound = $nbWordFound;
-                    $bestNamespaceId = $nameSpace;
-                }
-            }
         }
 
-        $startPageFactor = $this->getConf('WeightFactorForStartPage');
-        $nameSpaceFactor = $this->getConf('WeightFactorForSameNamespace');
-        if ($bestNbWordFound > 0) {
-            $bestNamespaceScore = $bestNbWordFound * $nameSpaceFactor + $startPageFactor;
-        } else {
-            $bestNamespaceScore = 0;
-        }
-
-
-        return array(
-            'namespace' => $bestNamespaceId,
-            'score' => $bestNamespaceScore
-        );
-
-    }
-
-    /**
-     * @param $event
-     */
-    private
-    function gotToEditMode(&$event)
-    {
-        global $ACT;
-        $ACT = 'edit';
 
     }
 
@@ -757,34 +347,23 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      *   * on the same domain
      *   * no HTTP redirect
      *   * id rewrite
-     * @param string $targetPageId - target page id
-     * @param string $targetOriginId - the source of the target (redirect)
-     * @return bool - return true if the user has the permission and that the redirect was done
-     * @throws Exception
+     * @param RouterRedirection $redirection - target page id
+     * @return void - return true if the user has the permission and that the redirect was done
+     * @throws ExceptionCompile
      */
     private
-    function executeTransparentRedirect(string $targetPageId, string $targetOriginId): bool
+    function executeTransparentRedirect(RouterRedirection $redirection): void
     {
-        /**
-         * Because we set the ID globally for the ID redirect
-         * we make sure that this is not a {@link MarkupPath}
-         * object otherwise we got an error in the {@link \ComboStrap\AnalyticsMenuItem}
-         * because the constructor takes it {@link \dokuwiki\Menu\Item\AbstractItem}
-         */
-        if (is_object($targetPageId)) {
-            $class = get_class($targetPageId);
-            LogUtility::msg("The parameters targetPageId ($targetPageId) is an object of the class ($class) and it should be a page id");
+        $markupPath = $redirection->getTargetMarkupPath();
+        if ($markupPath === null) {
+            throw new ExceptionCompile("A transparent redirect should have a wiki path. Origin {$redirection->getOrigin()}");
         }
-
-        if (is_object($targetOriginId)) {
-            $class = get_class($targetOriginId);
-            LogUtility::msg("The parameters targetOriginId ($targetOriginId) is an object of the class ($class) and it should be a page id");
-        }
+        $targetPageId = $redirection->getTargetMarkupPath()->toAbsoluteId();
 
         // If the user does not have the right to see the target page
         // don't do anything
         if (!(Identity::isReader($targetPageId))) {
-            return false;
+            return;
         }
 
         // Change the id
@@ -819,77 +398,65 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
          * We send a warning
          */
         global $conf;
-        if ($conf['send404'] == true) {
+        if ($conf['send404']) {
             LogUtility::msg("The <a href=\"https://www.dokuwiki.org/config:send404\">dokuwiki send404 configuration</a> is on and should be disabled when using the url manager", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
 
         // Redirection
-        $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_TRANSPARENT_METHOD);
-
-        return true;
+        $this->logRedirection($redirection);
 
     }
 
-    private function executePermanentRedirect(string $targetIdOrUrl, $targetOrigin): bool
-    {
-        return $this->executeHttpRedirect($targetIdOrUrl, $targetOrigin, self::REDIRECT_PERMANENT_METHOD);
-    }
 
     /**
      * The general HTTP Redirect method to an internal page
      * where the redirection method decide which type of redirection
-     * @param string $targetIdOrUrl - a dokuwiki id or an url
-     * @param string $targetOrigin - the origin of the target (the algorithm used to get the target origin)
-     * @param string $method - the redirection method
+     * @throws ExceptionCompile - if any error
      */
     private
-    function executeHttpRedirect(string $targetIdOrUrl, string $targetOrigin, string $method): bool
+    function executeHttpRedirect(RouterRedirection $redirection): void
     {
-
-        global $ID;
 
 
         // Log the redirections
-        $this->logRedirection($ID, $targetIdOrUrl, $targetOrigin, $method);
+        $this->logRedirection($redirection);
 
 
-        // An http external url ?
-        try {
-            $isHttpUrl = Url::createFromString($targetIdOrUrl)->isHttpUrl();
-        } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
-            $isHttpUrl = false;
-        }
+        $targetUrl = $redirection->getTargetUrl();
 
-        // If there is a bug in the isValid function for an internal url
-        // We get a loop.
-        // The Url becomes the id, the id is unknown and we do a redirect again
-        //
-        // We check then if the target starts with the base url
-        // if this is the case, it's valid
-        if (!$isHttpUrl && strpos($targetIdOrUrl, DOKU_URL) === 0) {
-            $isHttpUrl = true;
-        }
-        if ($isHttpUrl) {
+        if ($targetUrl !== null) {
 
             // defend against HTTP Response Splitting
             // https://owasp.org/www-community/attacks/HTTP_Response_Splitting
-            $targetUrl = stripctl($targetIdOrUrl);
+            $targetUrl = stripctl($targetUrl->toAbsoluteUrlString());
+
 
         } else {
 
+            global $ID;
 
-            // Explode the page ID and the anchor (#)
-            $link = explode('#', $targetIdOrUrl, 2);
-
-            $url = UrlEndpoint::createDokuUrl();
-
-            $urlParams = [];
             // if this is search engine redirect
-            if ($targetOrigin == self::TARGET_ORIGIN_SEARCH_ENGINE) {
-                $replacementPart = array(':', '_', '-');
-                $query = str_replace($replacementPart, ' ', $ID);
-                $url->setQueryParameter(ExecutionContext::DO_ATTRIBUTE, ExecutionContext::SEARCH_ACTION);
-                $url->setQueryParameter("q", $query);
+            $url = UrlEndpoint::createDokuUrl();
+            switch ($redirection->getOrigin()) {
+                case RouterRedirection::TARGET_ORIGIN_SEARCH_ENGINE:
+                {
+                    $replacementPart = array(':', '_', '-');
+                    $query = str_replace($replacementPart, ' ', $ID);
+                    $url->setQueryParameter(ExecutionContext::DO_ATTRIBUTE, ExecutionContext::SEARCH_ACTION);
+                    $url->setQueryParameter("q", $query);
+                    $url->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $ID);
+                    break;
+                }
+                default:
+
+                    $markupPath = $redirection->getTargetMarkupPath();
+                    if ($markupPath == null) {
+                        // should not happen (Both may be null but only on edit mode)
+                        throw new ExceptionCompile("Internal Error When executing a http redirect, the URL or the wiki page should not be null");
+                    }
+                    $url->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $markupPath->toAbsoluteId());
+
+
             }
 
             /**
@@ -908,18 +475,25 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              *
              * Use HTTP X header for debug
              */
-            if ($method !== self::REDIRECT_PERMANENT_METHOD) {
+            if ($redirection->getType() !== RouterRedirection::REDIRECT_PERMANENT_METHOD) {
                 $url->setQueryParameter(action_plugin_combo_routermessage::ORIGIN_PAGE, $ID);
-                $url->setQueryParameter(action_plugin_combo_routermessage::ORIGIN_TYPE, $targetOrigin);
+                $url->setQueryParameter(action_plugin_combo_routermessage::ORIGIN_TYPE, $redirection->getOrigin());
             }
 
-            $id = $link[0];
-            $url->setQueryParameter(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
-            if (array_key_exists(1, $link)) {
-                $url->setFragment($link[1]);
-            }
+
             $targetUrl = $url->toAbsoluteUrlString();
 
+
+        }
+
+
+        /**
+         * Check that we are not redirecting to the same URL
+         * to avoid the TOO_MANY_REDIRECT error
+         */
+        $requestURL = Url::createFromString($_SERVER['REQUEST_URI'])->toAbsoluteUrlString();
+        if ($requestURL === $targetUrl) {
+            throw new ExceptionCompile("A redirection should not redirect to the requested URL. Redirection Origin: {$redirection->getOrigin()}, Redirection URL:{$targetUrl} ");
         }
 
         /**
@@ -936,18 +510,17 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
         session_write_close(); // always close the session
 
-        switch ($method) {
+        switch ($redirection->getType()) {
 
-            case self::REDIRECT_PERMANENT_METHOD:
+            case RouterRedirection::REDIRECT_PERMANENT_METHOD:
                 ExecutionContext::getActualOrCreateFromEnv()
                     ->response()
                     ->setStatus(HttpResponseStatus::PERMANENT_REDIRECT)
                     ->addHeader(self::LOCATION_HEADER_PREFIX . $targetUrl)
                     ->end();
-                return true;
+                return;
 
-            case self::REDIRECT_NOTFOUND_METHOD:
-
+            case RouterRedirection::REDIRECT_NOTFOUND_METHOD:
 
                 // Empty 404 body to not get the standard 404 page of the browser
                 // but a blank page to avoid a sort of FOUC.
@@ -958,86 +531,13 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     ->addHeader(self::REFRESH_HEADER_PREFIX . $targetUrl)
                     ->setBody(self::PAGE_404, Mime::getHtml())
                     ->end();
-                return true;
+                return;
 
             default:
-                LogUtility::msg("The method ($method) is not an http redirection");
-                return false;
+                throw new ExceptionCompile("The type ({$redirection->getType()}) is not an http redirection");
+
         }
 
-
-    }
-
-    /**
-     * @param $id
-     * @return array
-     */
-    private
-    function getBestPage($id): array
-    {
-
-        // The return parameters
-        $bestPageId = null;
-        $scorePageName = null;
-
-        // Get Score from a page
-        $pageName = noNS($id);
-        $pagesWithSameName = ft_pageLookup($pageName);
-        if (count($pagesWithSameName) > 0) {
-
-            // Search same namespace in the page found than in the Id page asked.
-            $bestNbWordFound = 0;
-
-
-            $wordsInPageSourceId = explode(':', $id);
-            foreach ($pagesWithSameName as $targetPageId => $title) {
-
-                // Nb of word found in the target page id
-                // that are in the source page id
-                $nbWordFound = 0;
-                foreach ($wordsInPageSourceId as $word) {
-                    $nbWordFound = $nbWordFound + substr_count($targetPageId, $word);
-                }
-
-                if ($bestPageId == null) {
-
-                    $bestNbWordFound = $nbWordFound;
-                    $bestPageId = $targetPageId;
-
-                } else {
-
-                    if ($nbWordFound >= $bestNbWordFound && strlen($bestPageId) > strlen($targetPageId)) {
-
-                        $bestNbWordFound = $nbWordFound;
-                        $bestPageId = $targetPageId;
-
-                    }
-
-                }
-
-            }
-            $scorePageName = $this->getConf('WeightFactorForSamePageName') + ($bestNbWordFound - 1) * $this->getConf('WeightFactorForSameNamespace');
-            return array(
-                'id' => $bestPageId,
-                'score' => $scorePageName);
-        }
-        return array(
-            'id' => $bestPageId,
-            'score' => $scorePageName
-        );
-
-    }
-
-
-    /**
-     * Redirect to the search engine
-     */
-    private
-    function redirectToSearchEngine()
-    {
-
-        global $ID;
-        $this->performNotFoundRedirect($ID, self::TARGET_ORIGIN_SEARCH_ENGINE);
 
     }
 
@@ -1052,20 +552,25 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      * @param $algorithmic
      * @param $method - http or rewrite
      */
-    function logRedirection(string $sourcePageId, $targetPageId, $algorithmic, $method)
+    function logRedirection(RouterRedirection $redirection)
     {
+        global $ID;
 
         $row = array(
             "TIMESTAMP" => date("c"),
-            "SOURCE" => $sourcePageId,
-            "TARGET" => $targetPageId,
+            "SOURCE" => $ID,
+            "TARGET" => $redirection->getTargetAsString(),
             "REFERRER" => $_SERVER['HTTP_REFERER'] ?? null,
-            "TYPE" => $algorithmic,
-            "METHOD" => $method
+            "TYPE" => $redirection->getOrigin(),
+            "METHOD" => $redirection->getType()
         );
-        $request = Sqlite::createOrGetBackendSqlite()
-            ->createRequest()
-            ->setTableRow('redirections_log', $row);
+        try {
+            $request = Sqlite::createOrGetBackendSqlite()
+                ->createRequest()
+                ->setTableRow('redirections_log', $row);
+        } catch (ExceptionSqliteNotAvailable $e) {
+            return;
+        }
         try {
             $request
                 ->execute();
@@ -1076,93 +581,6 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
 
 
-    }
-
-    /**
-     * This function check if there is a redirection declared
-     * in the redirection table
-     * @return bool - true if a rewrite or redirection occurs
-     * @throws Exception
-     */
-    private function processingPageRules(): bool
-    {
-        global $ID;
-
-        $calculatedTarget = null;
-        $ruleMatcher = null; // Used in a warning message if the target page does not exist
-        // Known redirection in the table
-        // Get the page from redirection data
-        $rules = $this->pageRules->getRules();
-        foreach ($rules as $rule) {
-
-            $ruleMatcher = strtolower($rule[PageRules::MATCHER_NAME]);
-            $ruleTarget = $rule[PageRules::TARGET_NAME];
-
-            // Glob to Rexgexp
-            $regexpPattern = '/' . str_replace("*", "(.*)", $ruleMatcher) . '/i';
-
-            // Match ?
-            // https://www.php.net/manual/en/function.preg-match.php
-            $pregMatchResult = @preg_match($regexpPattern, $ID, $matches);
-            if ($pregMatchResult === false) {
-                // The `if` to take into account this problem
-                // PHP Warning:  preg_match(): Unknown modifier 'd' in /opt/www/datacadamia.com/lib/plugins/combo/action/router.php on line 972
-                LogUtility::log2file("processing Page Rules An error occurred with the pattern ($regexpPattern)", LogUtility::LVL_MSG_WARNING);
-                return false;
-            }
-            if ($pregMatchResult) {
-                $calculatedTarget = $ruleTarget;
-                foreach ($matches as $key => $match) {
-                    if ($key == 0) {
-                        continue;
-                    } else {
-                        $calculatedTarget = str_replace('$' . $key, $match, $calculatedTarget);
-                    }
-                }
-                break;
-            }
-        }
-
-        if ($calculatedTarget == null) {
-            return false;
-        }
-
-        // If this is an external redirect (other domain)
-        try {
-            $isHttpUrl = Url::createFromString($calculatedTarget)->isHttpUrl();
-        } catch (ExceptionBadSyntax $e) {
-            $isHttpUrl = false;
-        }
-        if ($isHttpUrl) {
-            $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
-            return true;
-        }
-
-        // If the page exist
-        if (page_exists($calculatedTarget)) {
-
-            // This is DokuWiki Id and should always be lowercase
-            // The page rule may have change that
-            $calculatedTarget = strtolower($calculatedTarget);
-            $res = $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
-            if ($res) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } else {
-
-            LogUtility::msg("The calculated target page ($calculatedTarget) (for the non-existing page `$ID` with the matcher `$ruleMatcher`) does not exist", LogUtility::LVL_MSG_ERROR);
-            return false;
-
-        }
-
-    }
-
-    private function performNotFoundRedirect(string $targetId, string $origin): bool
-    {
-        return $this->executeHttpRedirect($targetId, $origin, self::REDIRECT_NOTFOUND_METHOD);
     }
 
 

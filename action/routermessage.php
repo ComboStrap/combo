@@ -5,10 +5,12 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\ExceptionBadSyntax;
 use ComboStrap\Identity;
 use ComboStrap\Index;
-use ComboStrap\LogUtility;
 use ComboStrap\LinkMarkup;
-use ComboStrap\Message;
+use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
+use ComboStrap\Message;
+use ComboStrap\Router;
+use ComboStrap\RouterRedirection;
 use dokuwiki\Extension\ActionPlugin;
 
 
@@ -98,7 +100,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
             switch ($redirectSource) {
 
-                case action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES:
+                case RouterRedirection::TARGET_ORIGIN_PAGE_RULES:
                     if (!$this->showMessageIfPublicAndPlanned()) {
                         return;
                     }
@@ -106,38 +108,38 @@ class action_plugin_combo_routermessage extends ActionPlugin
                         ->addHtmlContent("<p>" . sprintf($this->getLang('message_redirected_by_redirect'), hsc($pageIdOrigin)) . "</p>");
                     break;
 
-                case action_plugin_combo_router::TARGET_ORIGIN_START_PAGE:
+                case RouterRedirection::TARGET_ORIGIN_START_PAGE:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_startpage'], hsc($pageIdOrigin)) . "</p>");
                     break;
-                case  action_plugin_combo_router::TARGET_ORIGIN_BEST_PAGE_NAME:
+                case  RouterRedirection::TARGET_ORIGIN_BEST_PAGE_NAME:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestpagename'], hsc($pageIdOrigin)) . "</p>");
                     break;
-                case  action_plugin_combo_router::TARGET_ORIGIN_BEST_END_PAGE_NAME:
+                case  RouterRedirection::TARGET_ORIGIN_BEST_END_PAGE_NAME:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestendpagename'], hsc($pageIdOrigin)) . "</p>");
                     break;
-                case action_plugin_combo_router::TARGET_ORIGIN_BEST_NAMESPACE:
+                case RouterRedirection::TARGET_ORIGIN_BEST_NAMESPACE:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestnamespace'], hsc($pageIdOrigin)) . "</p>");
                     break;
 
-                case action_plugin_combo_router::TARGET_ORIGIN_SEARCH_ENGINE:
+                case RouterRedirection::TARGET_ORIGIN_SEARCH_ENGINE:
                     $message = Message::createWarningMessage()
                         ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_searchengine'], hsc($pageIdOrigin)) . "</p>");
                     break;
 
-                case action_plugin_combo_router::GO_TO_EDIT_MODE:
+                case Router::GO_TO_EDIT_MODE:
                     $message = Message::createInfoMessage()
                         ->addHtmlContent("<p>" . $this->lang['message_redirected_to_edit_mode'] . "</p>");
                     break;
-                case action_plugin_combo_router::TARGET_ORIGIN_PERMALINK_EXTENDED:
-                case action_plugin_combo_router::TARGET_ORIGIN_PERMALINK:
+                case RouterRedirection::TARGET_ORIGIN_PERMALINK_EXTENDED:
+                case RouterRedirection::TARGET_ORIGIN_PERMALINK:
                     $message = Message::createInfoMessage()
                         ->addHtmlContent("<p>" . $this->lang['message_redirected_from_permalink'] . "</p>");
                     break;
-                case action_plugin_combo_router::TARGET_ORIGIN_CANONICAL:
+                case RouterRedirection::TARGET_ORIGIN_CANONICAL:
                     if (!$this->showMessageIfPublicAndPlanned()) {
                         return;
                     }
@@ -153,7 +155,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
             // Add a list of page with the same name to the message
             // if the redirections is not planned
-            if ($redirectSource != action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
+            if ($redirectSource != RouterRedirection::TARGET_ORIGIN_PAGE_RULES) {
                 $pageOrigin = MarkupPath::createMarkupFromId($pageIdOrigin);
                 $this->addToMessagePagesWithSameName($message, $pageOrigin);
             }

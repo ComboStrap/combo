@@ -5,6 +5,7 @@
  */
 require_once(__DIR__ . '/../vendor/autoload.php');
 
+use ComboStrap\Router;
 use ComboStrap\Tag\AdTag;
 use ComboStrap\Api\QualityMessageHandler;
 use ComboStrap\BlockquoteTag;
@@ -66,12 +67,12 @@ $meta[action_plugin_combo_routermessage::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE] = ar
 $meta[action_plugin_combo_routermessage::CONF_SHOW_MESSAGE_CLASSIC] = array('onoff');
 
 $actionChoices = array('multichoice', '_choices' => array(
-    action_plugin_combo_router::NOTHING,
-    action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME,
-    action_plugin_combo_router::GO_TO_NS_START_PAGE,
-    action_plugin_combo_router::GO_TO_BEST_PAGE_NAME,
-    action_plugin_combo_router::GO_TO_BEST_NAMESPACE,
-    action_plugin_combo_router::GO_TO_SEARCH_ENGINE
+    Router::NOTHING,
+    Router::GO_TO_BEST_END_PAGE_NAME,
+    Router::GO_TO_NS_START_PAGE,
+    Router::GO_TO_BEST_PAGE_NAME,
+    Router::GO_TO_BEST_NAMESPACE,
+    Router::GO_TO_SEARCH_ENGINE
 ));
 $meta['GoToEditMode'] = array('onoff');
 $meta['ActionReaderFirst'] = $actionChoices;

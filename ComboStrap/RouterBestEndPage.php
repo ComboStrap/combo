@@ -27,7 +27,7 @@ class RouterBestEndPage
 
     /**
      * @param MarkupPath $requestedPage
-     * @return array - the best poge id and its score
+     * @return array - the best page id and its score
      * The score is the number of name that matches
      */
     public static function getBestEndPageId(MarkupPath $requestedPage): array
@@ -47,7 +47,6 @@ class RouterBestEndPage
     /**
      * @param MarkupPath $missingPage
      * @return array with the best page and the type of redirect
-     * @throws ExceptionCompile
      */
     public static function process(MarkupPath $missingPage): array
     {
@@ -58,14 +57,19 @@ class RouterBestEndPage
 
         list($bestPage, $bestScore) = self::getBestEndPageId($missingPage);
         if ($bestPage != null) {
-            $redirectType = action_plugin_combo_router::REDIRECT_NOTFOUND_METHOD;
+            $redirectType = RouterRedirection::REDIRECT_NOTFOUND_METHOD;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
-                Aliases::createForPage($bestPage)
-                    ->addAlias($missingPage, AliasType::REDIRECT)
-                    ->sendToWriteStore()
-                    ->setReadStore(MetadataDbStore::getOrCreateFromResource($bestPage))
-                    ->sendToWriteStore();
-                $redirectType = action_plugin_combo_router::REDIRECT_PERMANENT_METHOD;
+                try {
+                    Aliases::createForPage($bestPage)
+                        ->addAlias($missingPage, AliasType::REDIRECT)
+                        ->sendToWriteStore()
+                        ->setReadStore(MetadataDbStore::getOrCreateFromResource($bestPage))
+                        ->sendToWriteStore();
+                } catch (ExceptionBadArgument|ExceptionCompile $e) {
+                    LogUtility::error("Error while creating an alias",LogUtility::SUPPORT_CANONICAL,$e);
+                    return $return;
+                }
+                $redirectType = RouterRedirection::REDIRECT_PERMANENT_METHOD;
             }
             $return = array(
                 $bestPage,

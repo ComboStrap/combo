@@ -132,7 +132,13 @@ class Call
         "tablerow_open",
         "tablerow_close",
         "tablecell_open",
-        "tablecell_close"
+        "tablecell_close",
+        "tableheader",
+        "table_align",
+        "table_row",
+        "tablecell",
+        "table_start",
+        "table_end"
     );
 
     /**

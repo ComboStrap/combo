@@ -123,7 +123,8 @@ class XmlTagProcessing
                 $renderer->doc .= FollowTag::renderExit();
                 return true;
             default:
-                LogUtility::warning("The exit tag (" . $logicalTag . ") was not processed.");
+                $renderer->doc .= htmlspecialchars("</$logicalTag>", ENT_QUOTES, 'UTF-8');
+                LogUtility::warning("The exit tag (" . $logicalTag . ") is unknown and was escaped.");
                 return false;
         }
 
@@ -273,7 +274,8 @@ class XmlTagProcessing
                 $renderer->doc .= RelatedTag::render($tagAttributes);
                 return true;
             default:
-                LogUtility::warning("The enter tag (" . $logicalTag . ") was not processed.");
+                $renderer->doc .= htmlspecialchars("<$logicalTag>", ENT_QUOTES, 'UTF-8');
+                LogUtility::warning("The enter tag (" . $logicalTag . ") is unknown and was escaped.");
                 return false;
         }
     }

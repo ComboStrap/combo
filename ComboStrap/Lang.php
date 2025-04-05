@@ -12,6 +12,7 @@ class Lang extends MetadataText
 {
 
     public const PROPERTY_NAME = "lang";
+    public const PROPERTY_DIR_NAME = "dir";
 
 
     /**

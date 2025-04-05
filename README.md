@@ -3,7 +3,7 @@
 
 > Volatile WebSite Generator based on Easy Markup File, Bootstrap Styled, and the power of a Wiki Platform
 
-![ComboStrap - Easy Markup WebSite Generator](./resources/images/banner-combostrap.png "combostrap website bootstrap dokuwiki")
+![ComboStrap - Easy Markup WebSite Generator](resources/images/banner-combostrap.png "combostrap website bootstrap dokuwiki")
 
 [![Build Status](https://travis-ci.com/ComboStrap/combo.svg?branch=main)](https://travis-ci.com/ComboStrap/combo)
 
@@ -40,3 +40,6 @@
 And more. Discover them at [ComboStrap](https://combostrap.com)
 
 
+## Contrib
+
+See [Contrib](contrib.md)

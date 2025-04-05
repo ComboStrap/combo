@@ -480,9 +480,7 @@ class TemplateForWebPage
             [
                 PageTitle::PROPERTY_NAME => $this->getRequestedTitleOrDefault(),
                 Lang::PROPERTY_NAME => $this->getRequestedLangOrDefault()->getValueOrDefault(),
-                // The direction is not yet calculated from the page, we let the browser determine it from the lang
-                // dokuwiki has a direction config also ...
-                // "dir" => $this->getRequestedLangOrDefault()->getDirection()
+                Lang::PROPERTY_DIR_NAME => $this->getRequestedLangOrDefault()->getDirection()
             ];
 
         if (isset($this->model)) {

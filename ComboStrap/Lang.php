@@ -48,7 +48,7 @@ class Lang extends MetadataText
             if (!$cacheDataUsable) {
 
                 // Language about the data
-                $downloadUrl = "https://raw.githubusercontent.com/unicode-org/cldr-json/master/cldr-json/cldr-misc-modern/main/$langValue/layout.json";
+                $downloadUrl = "https://raw.githubusercontent.com/unicode-org/cldr-json/refs/tags/47.0.0/cldr-json/cldr-misc-full/main/$langValue/layout.json";
 
                 if (PluginUtility::isDevOrTest()) {
                     // phpunit takes over and would catch and cache the error

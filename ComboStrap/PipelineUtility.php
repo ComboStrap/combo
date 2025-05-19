@@ -314,7 +314,8 @@ class PipelineUtility
          * Transform it as locale
          */
         if (strlen(trim($locale)) === 2) {
-            $derivedLocale = strtolower($locale) . $localeSeparator . strtoupper($locale);
+            $region = Site::getLanguageRegion();
+            $derivedLocale = strtolower($region) . $localeSeparator . strtoupper($locale);
         } else {
             $derivedLocale = $locale;
         }

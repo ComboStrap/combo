@@ -256,7 +256,6 @@ class Iso8601Date
      */
     public function formatLocale($pattern = null, $locale = null)
     {
-
         /**
          * https://www.php.net/manual/en/function.strftime.php
          * As been deprecated
@@ -300,8 +299,9 @@ class Iso8601Date
 
         /**
          * Formatter instantiation
+         * // https://www.php.net/manual/en/intldateformatter.create.php
          */
-        $formatter = datefmt_create(
+        $intlDateFormatter = datefmt_create(
             $locale,
             $dateType,
             $timeType,
@@ -309,7 +309,22 @@ class Iso8601Date
             IntlDateFormatter::GREGORIAN,
             $pattern
         );
-        $formatted = datefmt_format($formatter, $this->dateTime);
+        try {
+            $formatted = datefmt_format($intlDateFormatter, $this->dateTime);
+        } catch (\Error $e) {
+            // Found unconstructed IntlDateFormatter
+            // No idea how I can check that before formatting
+            LogUtility::warning("local $locale does not exist on operating system. Using default locale instead", self::CANONICAL);
+            $intlDateFormatter = datefmt_create(
+                null,
+                $dateType,
+                $timeType,
+                $this->dateTime->getTimezone(),
+                IntlDateFormatter::GREGORIAN,
+                $pattern
+            );
+            $formatted = datefmt_format($intlDateFormatter, $this->dateTime);
+        }
         if ($formatted === false) {
             if ($locale === null) {
                 $locale = "";

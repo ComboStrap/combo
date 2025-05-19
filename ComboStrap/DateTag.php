@@ -48,22 +48,16 @@ class DateTag
                 // Set local takes several possible locales value
                 // The lang just works fine but the second argument can be seen in the doc
                 if (strlen(trim($lang)) === 2) {
-                    $derivedLocale = strtolower($lang) . $localeSeparator . strtoupper($lang);
+                    $region = Site::getLanguageRegion();
+                    $derivedLocale = strtolower($region) . $localeSeparator . strtoupper($lang);
                 } else {
                     $derivedLocale = $lang;
                 }
                 $newLocale = setlocale(LC_TIME, $lang, $derivedLocale);
                 if ($newLocale === false) {
                     $newLocale = setlocale(LC_TIME, $lang);
-                    /** @noinspection PhpStatementHasEmptyBodyInspection */
                     if ($newLocale === false) {
-                        /**
-                         * Not the good algorithm as we come here
-                         * everytime on linux.
-                         * strftime is deprecated, we should change this code then
-                         *
-                         */
-                        // throw new ExceptionBadSyntax("The language ($lang) / locale ($derivedLocale) is not available as locale on the server. You can't then format the value ($date) in this language.");
+                        LogUtility::warning("The language ($lang) / locale ($derivedLocale) is not available as locale on the server. You can't then format the value ($date) in this language.");
                     }
                 }
             }

@@ -6,3 +6,4 @@ date    2024-05-13
 name    Combo Plugin
 desc    Professional looking templates (Bootstrap based) and SEO optimized pages.
 url     https://combostrap.com/
+minphp  7.4

@@ -25,6 +25,7 @@ use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Sqlite;
+use dokuwiki\Extension\PluginInterface;
 use splitbrain\phpcli\Options;
 
 /**
@@ -115,11 +116,6 @@ EOF;
         $options->registerCommand(self::PLUGINS_TO_UPDATE, "List the plugins to update");
         $options->registerCommand(self::METADATA_TO_FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
         $options->registerCommand(self::SYNC, "Delete the non-existing pages in the database");
-        $options->registerArgument(
-            'path',
-            "The start path (a page or a directory). For all pages, type the root directory '/'",
-            false
-        );
         $options->registerOption(
             'output',
             "Optional, where to store the analytical data as csv eg. a filename.",
@@ -146,6 +142,26 @@ EOF;
             'f',
             false,
             self::METADATA_TO_DATABASE
+        );
+        $startPathArgName = 'startPath';
+        $startPathHelpDescription = "The start path (a page or a directory). For all pages, type the root directory '/' or ':'";
+        $options->registerArgument(
+            $startPathArgName,
+            $startPathHelpDescription,
+            true,
+            self::METADATA_TO_DATABASE
+        );
+        $options->registerArgument(
+            $startPathArgName,
+            $startPathHelpDescription,
+            true,
+            self::METADATA_TO_FRONTMATTER
+        );
+        $options->registerArgument(
+            $startPathArgName,
+            $startPathHelpDescription,
+            true,
+            self::SYNC
         );
         $options->registerOption(
             'dry',
@@ -218,14 +234,36 @@ EOF;
                      * `http://www.dokuwiki.org/lib/plugins/pluginrepo/api.php?fmt=php&ext[]=`.urlencode($name)
                      */
                     $pluginList = plugin_list('', true);
-                    /* @var helper_plugin_extension_extension $extension */
                     $extension = $this->loadHelper('extension_extension');
+                    if ($extension instanceof PluginInterface) {
+                        /**
+                         * Release 2025-05-14 "Librarian"
+                         * https://www.dokuwiki.org/changes#release_2025-05-14_librarian
+                         * https://www.patreon.com/posts/new-extension-116501986
+                         * ./bin/plugin.php extension list
+                         * @link lib/plugins/extension/cli.php
+                         */
+                        echo "The new extension plugin system is not yet supported";
+                        echo "Check the cli instead: ./bin/plugin.php extension list";
+                        exit(1);
+                    }
+                    if ($extension == null) {
+                        echo "The plugin (extension_extension) could not be loaded";
+                        exit(1);
+                    }
                     foreach ($pluginList as $name) {
+
+                        /* @var helper_plugin_extension_extension $extension
+                         * @noinspection PhpUndefinedClassInspection
+                         */
                         $extension->setExtension($name);
+                        /** @noinspection PhpUndefinedMethodInspection */
                         if ($extension->updateAvailable()) {
                             echo "The extension $name should be updated";
                         }
+
                     }
+
                     break;
                 default:
                     if ($cmd !== "") {

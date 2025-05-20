@@ -1,11 +1,21 @@
 # Contrib
 
-## Main
+## Info
+
+### Main Class
 
 The main entrypoint is the [docustom.php action script](action/docustom.php). ie
 (ie a `do` custom action) that takes over action such as `show` (default).
 
-## Laptop Dev Installation Steps
+### Dependencies Declaration
+
+The dependencies are not in [plugins info](plugin.info.txt) but online in the `dependents`
+property of the [Combo Plugin page](https://www.dokuwiki.org/plugin:combo)
+
+It's used by the [new installer](https://www.patreon.com/posts/new-extension-116501986)
+
+## How To
+### How to install a new Laptop Dev Environment
 
 * Install php7.4 on debian with
   the [sury repo](https://github.com/oerdnj/deb.sury.org/wiki/Frequently-Asked-Questions#how-to-enable-the-debsuryorg-repository)

@@ -17,6 +17,7 @@ use ComboStrap\ExceptionCompile;
 use ComboStrap\ExceptionNotExists;
 use ComboStrap\ExceptionNotFound;
 use ComboStrap\ExceptionRuntime;
+use ComboStrap\ExceptionSqliteNotAvailable;
 use ComboStrap\ExecutionContext;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
@@ -25,7 +26,6 @@ use ComboStrap\Meta\Field\BacklinkCount;
 use ComboStrap\Meta\Field\PageH1;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Sqlite;
-use dokuwiki\Extension\PluginInterface;
 use splitbrain\phpcli\Options;
 
 /**
@@ -67,6 +67,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
     const METADATA_TO_DATABASE = "metadata-to-database";
     const ANALYTICS = "analytics";
     const METADATA_TO_FRONTMATTER = "metadata-to-frontmatter";
+    const BROKEN_LINKS = "broken-links";
     const SYNC = "sync";
     const PLUGINS_TO_UPDATE = "plugins-to-update";
     const FORCE_OPTION = 'force';
@@ -109,19 +110,33 @@ animal=animal-directory-name php ./bin/plugin.php combo
 
 EOF;
 
+        /**
+         * Global Options
+         */
         $options->setHelp($help);
         $options->registerOption('version', 'print version', 'v');
-        $options->registerCommand(self::METADATA_TO_DATABASE, "Replicate the file system metadata into the database");
-        $options->registerCommand(self::ANALYTICS, "Start the analytics and export optionally the data");
-        $options->registerCommand(self::PLUGINS_TO_UPDATE, "List the plugins to update");
-        $options->registerCommand(self::METADATA_TO_FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
-        $options->registerCommand(self::SYNC, "Delete the non-existing pages in the database");
+        /** @noinspection PhpRedundantOptionalArgumentInspection */
+        $options->registerOption(
+            'dry',
+            "Optional, dry-run",
+            'd', false);
         $options->registerOption(
             'output',
             "Optional, where to store the analytical data as csv eg. a filename.",
             'o',
             true
         );
+
+        /**
+         * Command without options
+         */
+        $options->registerCommand(self::ANALYTICS, "Start the analytics and export optionally the data");
+        $options->registerCommand(self::PLUGINS_TO_UPDATE, "List the plugins to update");
+        $options->registerCommand(self::BROKEN_LINKS, "Output Broken Links");
+
+
+        // Metadata to database command
+        $options->registerCommand(self::METADATA_TO_DATABASE, "Replicate the file system metadata into the database");
         $options->registerOption(
             self::HOST_OPTION,
             "The http host name of your server. This value is used by dokuwiki in the rendering cache key",
@@ -151,30 +166,31 @@ EOF;
             true,
             self::METADATA_TO_DATABASE
         );
+
+
+        // Metadata Command definition
+        $options->registerCommand(self::METADATA_TO_FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
         $options->registerArgument(
             $startPathArgName,
             $startPathHelpDescription,
             true,
             self::METADATA_TO_FRONTMATTER
         );
+
+        // Sync Command Definition
+        $options->registerCommand(self::SYNC, "Delete the non-existing pages in the database");
         $options->registerArgument(
             $startPathArgName,
             $startPathHelpDescription,
             true,
             self::SYNC
         );
-        $options->registerOption(
-            'dry',
-            "Optional, dry-run",
-            'd', false);
-
 
     }
 
     /**
      * The main entry
      * @param Options $options
-     * @throws ExceptionCompile
      */
     protected function main(Options $options)
     {
@@ -218,6 +234,9 @@ EOF;
                     $startPath = $this->getStartPath($args);
                     $this->frontmatter($startPath, $depth);
                     break;
+                case self::BROKEN_LINKS:
+                    $this->brokenLinks();
+                    break;
                 case self::ANALYTICS:
                     $startPath = $this->getStartPath($args);
                     $output = $options->getOpt('output', '');
@@ -228,42 +247,7 @@ EOF;
                     $this->deleteNonExistingPageFromDatabase();
                     break;
                 case self::PLUGINS_TO_UPDATE:
-                    /**
-                     * Endpoint:
-                     * self::EXTENSION_REPOSITORY_API.'?fmt=php&ext[]='.urlencode($name)
-                     * `http://www.dokuwiki.org/lib/plugins/pluginrepo/api.php?fmt=php&ext[]=`.urlencode($name)
-                     */
-                    $pluginList = plugin_list('', true);
-                    $extension = $this->loadHelper('extension_extension');
-                    if ($extension instanceof PluginInterface) {
-                        /**
-                         * Release 2025-05-14 "Librarian"
-                         * https://www.dokuwiki.org/changes#release_2025-05-14_librarian
-                         * https://www.patreon.com/posts/new-extension-116501986
-                         * ./bin/plugin.php extension list
-                         * @link lib/plugins/extension/cli.php
-                         */
-                        echo "The new extension plugin system is not yet supported";
-                        echo "Check the cli instead: ./bin/plugin.php extension list";
-                        exit(1);
-                    }
-                    if ($extension == null) {
-                        echo "The plugin (extension_extension) could not be loaded";
-                        exit(1);
-                    }
-                    foreach ($pluginList as $name) {
-
-                        /* @var helper_plugin_extension_extension $extension
-                         * @noinspection PhpUndefinedClassInspection
-                         */
-                        $extension->setExtension($name);
-                        /** @noinspection PhpUndefinedMethodInspection */
-                        if ($extension->updateAvailable()) {
-                            echo "The extension $name should be updated";
-                        }
-
-                    }
-
+                    $this->pluginToUpdate();
                     break;
                 default:
                     if ($cmd !== "") {
@@ -273,8 +257,8 @@ EOF;
                     }
                     exit(1);
             }
-        } catch (\Exception $exception) {
-            fwrite(STDERR, "An internal error has occured. " . $exception->getMessage() . "\n" . $exception->getTraceAsString());
+        } catch (Exception $exception) {
+            fwrite(STDERR, "An internal error has occurred. " . $exception->getMessage() . "\n" . $exception->getTraceAsString());
             exit(1);
         }
 
@@ -447,12 +431,13 @@ EOF;
 
 
     /**
-     * @throws \ComboStrap\ExceptionSqliteNotAvailable
+     * @throws ExceptionSqliteNotAvailable
      */
     private function deleteNonExistingPageFromDatabase()
     {
         LogUtility::msg("Starting: Deleting non-existing page from database");
         $sqlite = Sqlite::createOrGetSqlite();
+        /** @noinspection SqlNoDataSourceInspection */
         $request = $sqlite
             ->createRequest()
             ->setQuery("select id as \"id\" from pages");
@@ -512,7 +497,7 @@ EOF;
             $ID = $id;
             $page = MarkupPath::createMarkupFromId($id);
             $pageCounter++;
-            LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
+            LogUtility::msg("Processing page $id ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
             $executionContext = ExecutionContext::getActualOrCreateFromEnv();
             try {
                 $message = MetadataFrontmatterStore::createFromPage($page)
@@ -551,7 +536,7 @@ EOF;
             $totalNumberOfPages = sizeof($pagesWithError);
             foreach ($pagesWithError as $id => $message) {
                 $pageCounter++;
-                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages): " . $message, LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("Page $id ($pageCounter / $totalNumberOfPages): " . $message);
             }
         } else {
             echo "No error\n";
@@ -564,7 +549,7 @@ EOF;
             $totalNumberOfPages = sizeof($pagesWithChanges);
             foreach ($pagesWithChanges as $id) {
                 $pageCounter++;
-                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("Page $id ($pageCounter / $totalNumberOfPages) ");
             }
         } else {
             echo "No changes\n";
@@ -577,7 +562,7 @@ EOF;
             $totalNumberOfPages = sizeof($pagesWithOthers);
             foreach ($pagesWithOthers as $id => $message) {
                 $pageCounter++;
-                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) " . $message, LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("Page $id ($pageCounter / $totalNumberOfPages) " . $message, LogUtility::LVL_MSG_ERROR);
             }
         }
     }
@@ -601,5 +586,102 @@ EOF;
                 exit(1);
         }
         return $startPath;
+    }
+
+    /**
+     *
+     * Print the extension/plugin to update
+     *
+     * Note, there is also an Endpoint:
+     * self::EXTENSION_REPOSITORY_API.'?fmt=php&ext[]='.urlencode($name)
+     * `http://www.dokuwiki.org/lib/plugins/pluginrepo/api.php?fmt=php&ext[]=`.urlencode($name)
+     *
+     * @noinspection PhpUndefinedClassInspection
+     */
+    private function pluginToUpdate()
+    {
+
+        if (class_exists(Local::class)) {
+            /**
+             * Release 2025-05-14 "Librarian"
+             * https://www.dokuwiki.org/changes#release_2025-05-14_librarian
+             * https://www.patreon.com/posts/new-extension-116501986
+             * ./bin/plugin.php extension list
+             * @link lib/plugins/extension/cli.php
+             * Code based on https://github.com/giterlizzi/dokuwiki-template-bootstrap3/pull/617/files
+             */
+            try {
+                $extensions = (new Local())->getExtensions();
+                Repository::getInstance()->initExtensions(array_keys($extensions));
+                foreach ($extensions as $extension) {
+                    if ($extension->isEnabled() && $extension->isUpdateAvailable()) {
+                        echo "The extension {$extension->getDisplayName()} should be updated";
+                    }
+                }
+            } /** @noinspection PhpUndefinedClassInspection */ catch (ExtensionException $ignore) {
+                // Ignore the exception
+            }
+            return;
+        }
+
+
+        $pluginList = plugin_list('', true);
+        $extension = $this->loadHelper('extension_extension');
+        foreach ($pluginList as $name) {
+
+            /* @var helper_plugin_extension_extension $extension
+             * old extension manager until Kaos
+             */
+            $extension->setExtension($name);
+            /** @noinspection PhpUndefinedMethodInspection */
+            if ($extension->updateAvailable()) {
+                echo "The extension $name should be updated";
+            }
+        }
+
+
+    }
+
+    /**
+     * @return void
+     * Print the broken Links
+     * @throws ExceptionSqliteNotAvailable
+     */
+    private function brokenLinks()
+    {
+        LogUtility::msg("Broken Links Started");
+        $sqlite = Sqlite::createOrGetSqlite();
+        $request = $sqlite
+            ->createRequest()
+            ->setQuery("with validPages as (select path, analytics
+                     from pages
+                     where json_valid(analytics) = 1)
+select path,
+       json_extract(analytics, '$.statistics.internal_broken_link_count') as broken_link,
+       json_extract(analytics, '$.statistics.media.internal_broken_count') as broken_media
+from validPages
+where json_extract(analytics, '$.statistics.internal_broken_link_count') is not null
+   or json_extract(analytics, '$.statistics.media.internal_broken_count') != 0");
+        $rows = [];
+        try {
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCompile $e) {
+            LogUtility::msg("Error while getting the id pages. {$e->getMessage()}");
+            return;
+        } finally {
+            $request->close();
+        }
+        LogUtility::msg("Broken Links:");
+        foreach ($rows as $row) {
+            $path = $row["path"];
+            $broken_link = $row["broken_link"];
+            $broken_media = $row["broken_media"];
+            echo "$path (Page: $broken_link, Media: $broken_media)    \n";
+        }
+        if (count($rows) != 0) {
+            exit(1);
+        }
     }
 }

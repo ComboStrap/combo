@@ -673,6 +673,10 @@ where json_extract(analytics, '$.statistics.internal_broken_link_count') is not 
         } finally {
             $request->close();
         }
+        if (count($rows) == 0) {
+            LogUtility::msg("No Broken Links");
+            exit();
+        }
         LogUtility::msg("Broken Links:");
         foreach ($rows as $row) {
             $path = $row["path"];

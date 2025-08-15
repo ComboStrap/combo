@@ -41,7 +41,7 @@ cat /etc/php/7.4/mods-available/xdebug.ini
 ```
 
 * Clone Dokuwiki to get:
-    * the base DokuWikiTest class
+    * the base `_test\core\DokuWikiTest` class
     * and `_test\phpunit.xml`
 
 ```bash
@@ -122,4 +122,21 @@ Interpreter_cli: use wsl
 Interpreter_options: |
     # put this ip if you are not in mirrored mode and intellij keep using 127.0.0.1
     -dxdebug.client_host=$(echo $(ip route list default | awk '{print $3}'))
+```
+
+
+## Start it
+
+```bash
+docker run \
+  --name combo \
+  -d \
+  -p 8082:80 \
+  --user 1000:1000 \
+  -e DOKU_DOCKER_ENV=dev \
+  -e DOKU_DOCKER_ACL_POLICY='public' \
+  -e DOKU_DOCKER_ADMIN_NAME='admin' \
+  -e DOKU_DOCKER_ADMIN_PASSWORD='welcome' \
+  -v $PWD:/var/www/html \
+  ghcr.io/combostrap/dokuwiki:php8.3-latest
 ```

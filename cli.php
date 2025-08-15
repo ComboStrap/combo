@@ -244,6 +244,7 @@ EOF;
                     $this->analytics($startPath, $output, $depth);
                     break;
                 case self::SYNC:
+                    // php "$DOKUWIKI_HOME"/bin/indexer.php -q
                     $this->deleteNonExistingPageFromDatabase();
                     break;
                 case self::PLUGINS_TO_UPDATE:

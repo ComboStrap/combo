@@ -148,13 +148,13 @@ class Url extends PathAbs
              *   * first party url
              */
             $requestHost = $_SERVER['HTTP_HOST'] ?? null;
-            if (!(
+            if(!(
                 // relative url
                 $this->host == null
                 ||
                 // first party url
                 ($requestHost != null && $this->host == $requestHost))
-            ) {
+            ){
                 $this->withRewrite = false;
             }
 
@@ -305,11 +305,13 @@ class Url extends PathAbs
         return new Url($url);
     }
 
-
+    /**
+     * @throws ExceptionNotFound
+     */
     public function getScheme(): string
     {
         if ($this->scheme === null) {
-            return "";
+            throw new ExceptionNotFound("The scheme was not found");
         }
         return $this->scheme;
     }
@@ -403,7 +405,9 @@ class Url extends PathAbs
         if ($this->isLocal()) {
             return $this;
         }
-        if ($this->getScheme() == "") {
+        try {
+            $this->getScheme();
+        } catch (ExceptionNotFound $e) {
             /**
              * See {@link getBaseURL()}
              */

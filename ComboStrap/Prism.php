@@ -278,7 +278,11 @@ EOD;
             case "antlr":
                 $language = "g4";
                 break;
-
+            case "ansi":
+                $language = "txt";
+                $snippetManager = PluginUtility::getSnippetManager();
+                $snippetManager->attachJavascriptFromComponentId("prism-ansi-to-html");
+                break;
         }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);
@@ -307,7 +311,7 @@ EOD;
         /**
          * Command line prompt
          * (Line element and prompt cannot be chosen together
-         * otherwise they endup on top of each other)
+         * otherwise they end up on top of each other)
          */
         if (!$lineNumberEnabled) {
             if ($attributes->hasComponentAttribute("prompt")) {
@@ -353,9 +357,9 @@ EOD;
          * Line highlight
          */
         if ($attributes->hasComponentAttribute("line-highlight")) {
-            $lineHiglight = $attributes->getValueAndRemove("line-highlight");
-            if(!empty($lineHiglight)) {
-                $attributes->addOutputAttributeValue('data-line', $lineHiglight);
+            $lineHighlight = $attributes->getValueAndRemove("line-highlight");
+            if(!empty($lineHighlight)) {
+                $attributes->addOutputAttributeValue('data-line', $lineHighlight);
             }
         }
 

@@ -48,21 +48,21 @@ class RouterRedirection
     public const TARGET_ORIGIN_SHADOW_BANNED = "shadowBanned";
 
 
-    private RouterRedirectionBuilder $routerBuidler;
+    private RouterRedirectionBuilder $routerBuilder;
 
     public function __construct(RouterRedirectionBuilder $routerRedirectionBuilder)
     {
-        $this->routerBuidler=$routerRedirectionBuilder;
+        $this->routerBuilder=$routerRedirectionBuilder;
     }
 
     public function getOrigin(): string
     {
-        return $this->routerBuidler->getOrigin();
+        return $this->routerBuilder->getOrigin();
     }
 
     public function getType(): string
     {
-        return $this->routerBuidler->getType();
+        return $this->routerBuilder->getType();
     }
 
     public function getTargetAsString(): string
@@ -82,12 +82,12 @@ class RouterRedirection
 
     public function getTargetUrl(): ?Web\Url
     {
-        return $this->routerBuidler->getTargetUrl();
+        return $this->routerBuilder->getTargetUrl();
     }
 
     public function getTargetMarkupPath(): ?MarkupPath
     {
-        return $this->routerBuidler->getTargetMarkupPath();
+        return $this->routerBuilder->getTargetMarkupPath();
     }
 
 

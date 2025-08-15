@@ -15,7 +15,6 @@ use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\MarkupPath;
 use ComboStrap\Mime;
-use ComboStrap\PageRules;
 use ComboStrap\Router;
 use ComboStrap\RouterRedirection;
 use ComboStrap\RouterRedirectionBuilder;
@@ -58,12 +57,6 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     const REFRESH_HEADER_PREFIX = self::REFRESH_HEADER_NAME . ': 0;url=';
     const LOCATION_HEADER_PREFIX = HttpResponse::LOCATION_HEADER_NAME . ": ";
     public const URL_MANAGER_NAME = "Router";
-
-
-    /**
-     * @var PageRules
-     */
-    private $pageRules;
 
 
     function __construct()

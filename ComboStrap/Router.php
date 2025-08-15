@@ -454,10 +454,13 @@ class Router
         // If this is an external redirect (other domain)
         try {
             $url = Url::createFromString($calculatedTarget);
-            return RouterRedirectionBuilder::createFromOrigin(RouterRedirection::TARGET_ORIGIN_PAGE_RULES)
-                ->setTargetUrl($url)
-                ->setType(RouterRedirection::REDIRECT_PERMANENT_METHOD)
-                ->build();
+            // The page id `my:page` is a valid url after parsing with the scheme `my`
+            if (strpos($url->getScheme(), "http") === 0) {
+                return RouterRedirectionBuilder::createFromOrigin(RouterRedirection::TARGET_ORIGIN_PAGE_RULES)
+                    ->setTargetUrl($url)
+                    ->setType(RouterRedirection::REDIRECT_PERMANENT_METHOD)
+                    ->build();
+            }
         } catch (ExceptionBadSyntax|ExceptionBadArgument $e) {
             // not an URL
         }

@@ -140,3 +140,14 @@ docker run \
   -v $PWD:/var/www/html \
   ghcr.io/combostrap/dokuwiki:php8.3-latest
 ```
+
+
+## Release
+
+* Change the date in the [plugin.info](plugin.info.txt)
+* Commit
+* Create a Release on GitHub that points to the release page of https://combostrap.com
+* Modify the pages
+  * https://www.dokuwiki.org/plugin:combo
+  * https://www.dokuwiki.org/template:strap
+

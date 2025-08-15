@@ -299,7 +299,8 @@ class Iso8601Date
 
         /**
          * Formatter instantiation
-         * // https://www.php.net/manual/en/intldateformatter.create.php
+         * https://www.php.net/manual/en/intldateformatter.create.php
+         * List of local: with ResourceBundle::getLocales('')
          */
         $intlDateFormatter = datefmt_create(
             $locale,
@@ -314,7 +315,7 @@ class Iso8601Date
         } catch (\Error $e) {
             // Found unconstructed IntlDateFormatter
             // No idea how I can check that before formatting
-            LogUtility::warning("local $locale does not exist on operating system. Using default locale instead", self::CANONICAL);
+            LogUtility::warning("Locale value ($locale) is an unknown ICU locale. Using default locale instead", self::CANONICAL);
             $intlDateFormatter = datefmt_create(
                 null,
                 $dateType,

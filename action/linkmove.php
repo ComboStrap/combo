@@ -265,6 +265,13 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
      */
     public function rewrite_combo($match, $state, $pos, $plugin, helper_plugin_move_handler $handler)
     {
+        // Wiki text was introduced
+        // https://github.com/michitux/dokuwiki-plugin-move/commit/74ee74225777949c09b76ccc9caf218f15070b44
+        $useWikiText = true;
+        if (!property_exists($handler, 'wikitext')) {
+            // old move plugin
+            $useWikiText = false;
+        }
         /**
          * The goal is to recreate the document
          * in the {@link helper_plugin_move_handler::$calls}
@@ -281,7 +288,11 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          */
         if ($state !== DOKU_LEXER_ENTER) {
             // Description and ending
-            $handler->calls .= $match;
+            if ($useWikiText) {
+                $handler->wikitext .= $match;
+            } else {
+                $handler->calls .= $match;
+            }
             return;
         }
 
@@ -302,7 +313,11 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 
         if (!$isWikiUri) {
             // Other type of links
-            $handler->calls .= $match;
+            if ($useWikiText) {
+                $handler->wikitext .= $match;
+            } else {
+                $handler->calls .= $match;
+            }
             return;
         }
 
@@ -317,8 +332,14 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          * that delete the ]]
          */
         $suffix = "]]";
-        if (substr($handler->calls, -strlen($suffix)) === $suffix) {
-            $handler->calls = substr($handler->calls, 0, strlen($handler->calls) - strlen($suffix));
+        if ($useWikiText) {
+            if (substr($handler->wikitext, -strlen($suffix)) === $suffix) {
+                $handler->wikitext = substr($handler->wikitext, 0, strlen($handler->wikitext) - strlen($suffix));
+            }
+        } else {
+            if (substr($handler->calls, -strlen($suffix)) === $suffix) {
+                $handler->calls = substr($handler->calls, 0, strlen($handler->calls) - strlen($suffix));
+            }
         }
 
 

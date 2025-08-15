@@ -235,7 +235,7 @@ class Outline
                          */
                         $shouldWeCreateASection = true;
                         $this->enterHeading($actualCall);
-                        // The dokuiki heading call (header) is a one call for the whole heading,
+                        // The dokuwiki heading call (header) is a one call for the whole heading,
                         // It enters and exits at the same time
                         $this->exitHeading();
                     }
